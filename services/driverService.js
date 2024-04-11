@@ -166,6 +166,8 @@ module.exports.getDriverTaskList = async function (req, res) {
 		}
 
         let driverName = req.body.driverName
+
+        driverName = sequelizeObj.escape(driverName);
         let user = await checkUser(req.cookies.userId);
         let baseSQL = `
             SELECT dt.*, d.driverName, vr.vehicleNo, r.fromAddress, r.toAddress, dt.id AS driverTaskId, d.unitId FROM driver_task dt
