@@ -84,6 +84,9 @@ let TaskUtils = {
     getTaskByDriverId: async function(driverId, newHub, newNode, newUnit) {
         newNode = newNode && newNode != 'null' ? newNode : null;
         newUnit = newUnit && newUnit != 'null' ? newUnit : null;
+
+
+        driverId = sequelizeObj.escape(driverId);
         let validTask = await sequelizeObj.query(
             `
             SELECT * FROM task WHERE driverId = ${ driverId } 
