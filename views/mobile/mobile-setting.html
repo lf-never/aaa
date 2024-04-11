@@ -1,0 +1,74 @@
+<script type="module" src="../scripts/mobile/mobile-setting.js"></script>
+
+<div class="modal fade" id="view-mobile-setting" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Mobile & Chat Setting</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label>Mobile Settings</label><br>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Send Location Frequency :</label>
+                    </div>
+                    <div class="col-sm-3">
+                        <input type="number" class="form-control form-control-sm mobileUploadPositionFrequency" step="1" min="1" max="100">
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Receive Incident Frequency :</label>
+                    </div>
+                    <div class="col-sm-3">
+                        <input type="number" class="form-control form-control-sm mobileReceiveIncidentFrequency" step="1" min="1" max="100">
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Receive peer unit update :</label>
+                    </div>
+                    <div class="col-sm-3">
+                        <input type="number" class="form-control form-control-sm mobilePeerUnitFrequency" step="1" min="1" max="100">
+                    </div>
+                </div>
+                <label>Chat Settings</label><br>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Allow Audio/Image Files :</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input allowAudioImgFile" style="cursor: pointer; margin-top: 0.6em;" type="checkbox" role="switch" checked>
+                          </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Allow Audio/Video Calls :</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input allowAudioRadioCall" style="cursor: pointer; margin-top: 0.6em;" type="checkbox" role="switch" checked>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-6 text-end">
+                        <label>Allow Notice :</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input allowNotice" style="cursor: pointer; margin-top: 0.6em;" type="checkbox" role="switch" checked>
+                          </div>
+                    </div>
+                </div>  
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary custom-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary custom-btn update-systemConf">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,618 @@
+
+html{
+    width: 100%;
+    height: 100%;
+}
+body *{
+    /*width: 100%;*/
+    /*height: 100%;*/
+    font-family: TwCenMtStd !important;
+    font-size: 13px;
+}
+
+.statement{
+    position: absolute;
+    /*background-color: rgba(0,0,0,0.5);*/
+    color: #686667;
+    padding: 5px;
+    /*border-radius: 5px;*/
+    bottom: 10px;
+    right: 10px;
+    /*font-weight: bolder;*/
+}
+
+.emoji-icons{
+    cursor: pointer;
+    width: 30px;
+    margin-right: 2px;
+    margin-top: 2px;
+}
+/*.title{
+    width: 100%;
+    height: 60px;
+    background-color: #0a2041;
+    color: #f6bc12;
+}*/
+.title_font{
+    font-weight: bolder;
+    padding-top: 8px;
+    font-size: xx-large;
+}
+.title_image{
+    height: 80%;
+    margin-bottom: 12px;
+}
+.menu, .menu-zone, .menu-user-zone{
+    z-index: 1000;
+    width: 280px;
+    font-weight: 100;
+    height: calc(100% - 2px) !important;
+    background-color: white;
+    position: absolute ! important;
+    right: 2px;
+    top: 1px;
+    bottom: 1px;
+    border-radius: 5px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.menu1{
+    font-size: 16px;
+}
+.menu2{
+    font-size: 13px;
+    margin-left: 30px;
+    cursor: pointer;
+    height: 30px;
+    display: inline-block;
+    border: 0;
+    color: white;
+    background-color: rgba(0, 0, 0, 0);
+}
+.menu0:hover{
+    color: #f6bc12;
+    font-weight: 900;
+    cursor: pointer;
+}
+table.dataTable tbody tr{
+    background-color: rgba(0,0,0,0.1) !important;
+}
+.line-color,.line-color-zone,.line-color-user-zone{
+    cursor: pointer;
+    background-color:red;
+    width: 45px;
+    border-radius: 5px;
+    height:20px;
+    float: left;
+}
+.line-color-selected,.line-color-zone-selected,.line-color-user-zone-selected{
+    border: solid 2px white;
+}
+.content-convoy,.content-convoy-edit{
+    z-index: 1000;
+    min-height: 320px;
+    max-height: 555px;
+    width: 58%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 12%;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-incident{
+    z-index: 1000;
+    max-height: 555px;
+    width: 68%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 8%;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-route_notification{
+    z-index: 1000;
+    max-height: 555px;
+    width: 58%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 12%;
+    top: 10%;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-view-incident{
+    z-index: 1000;
+    width: 68%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    position: absolute !important;
+    left: 5%;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-dashboard{
+    z-index: 1000;
+    /*max-height: 650px;*/
+    width: 85%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 8%;
+    top: 5%;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-setting{
+    z-index: 1000;
+    width: 38%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 32%;
+    top: 12%;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-convoy-confirm{
+    z-index: 1000;
+    width: 38%;
+    height: 420px;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 25%;
+    top: 20%;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-convoy-view,.content-vehicle-view,.content-convoy-delete,.content-userzone-view,.content-convoy-show,.content-upload-waypoint,.content-upload-convoylist,.content-upload-vehiclelist,
+.content-convoy-create-waypoint,.content-create-poi,.content-convoy-update-waypoint,.content-convoy-mileage,
+.content-convoy-create-incident{
+    z-index: 1000;
+    width: 58%;
+    background-color: rgba(53, 49, 50, 1);
+    color: white;
+    position: absolute !important;
+    left: 12%;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: -2px 2px 5px #888888;
+}
+.content-font{
+    font-weight: bolder;
+    font-size: x-large;
+    height: 40px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: black;
+    color: white;
+}
+.layui-colorpicker{
+    border-radius: 0px !important;
+}
+.layui-colorpicker-trigger-span{
+    border-radius: 5px !important;
+}
+.map{
+    width: 100%;
+    background-color: #fff;
+}
+.convoy_input{
+    color: white;
+    background-color: rgba(0,0,0,0.2);
+    width: 100%;
+    display: block;
+    padding: 3px 12px;
+    line-height: 1.0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+}
+.full_height{
+    height: 100%;
+}
+.cursor_pointer{
+    cursor: pointer;
+}
+.tb_convoy,.tb_convoy_show{
+    width: 80%;
+    margin-left: 15%;
+    margin-top: 10px;
+    border-collapse:separate;
+    border-spacing:0px 10px;
+}
+.tb_route,.tb_route2{
+    width: 90%;
+    margin-left: 5%;
+    margin-top: 20px;
+    border-collapse:separate;
+    border-spacing:0px 10px;
+}
+.tb_setting{
+    width: 70%;
+    margin-left: 13%;
+    margin-top: 10px;
+    border-collapse:separate;
+    border-spacing:0px 10px;
+}
+.tb_setting>tbody>tr>td:first-child{
+    text-align: right;
+}
+.tb_convoy>tbody>tr,.tb_convoy_show>tbody>tr{
+    margin-bottom: 20px;
+}
+.tb_convoy>tbody>tr>td:first-child,.tb_convoy_show>tbody>tr>td:first-child{
+    text-align: right;
+    padding-right: 20px;
+}
+.tb_convoy_info>tbody>tr>td:first-child,.tb_convoy_show>tbody>tr>td:first-child{
+     text-align: center;
+     padding-right: 20px;
+}
+.select_vehicle_no{
+    padding-left: 12px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+.select_vehicle_no:hover{
+    background-color: #aaaaaa;
+}
+.content-create-route,.content-edit-route,.content-create-zone,.content-create-user-zone{
+    z-index: 1000;
+    width: 320px;
+    background-color: white;
+    position: absolute !important;
+    right: 0px;
+    top: 0px;
+    height: 100% !important;
+    border-radius: 5px;
+    padding-bottom: 10px;
+    box-shadow: -2px 2px 5px #888888;
+    color: white;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+}
+.content-approve-route{
+    z-index: 1000;
+    width: 320px;
+    background-color: white;
+    position: absolute !important;
+    right: 0px;
+    top: 0px;
+    height: 100% !important;
+    border-radius: 5px;
+    padding-bottom: 10px;
+    box-shadow: -2px 2px 5px #888888;
+    color: white;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+}
+.content-create-point{
+    z-index: 1000;
+    width: 320px;
+    background-color: white;
+    position: absolute !important;
+    right: 0px;
+    top: 0px;
+    height: 100% !important;
+    border-radius: 5px;
+    padding-bottom: 10px;
+    box-shadow: -2px 2px 5px #888888;
+    color: white;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+}
+.content-notification{
+    z-index: 1000;
+    width: 320px;
+    background-color: white;
+    position: absolute !important;
+    right: 0px;
+    top: 0px;
+    height: 100% !important;
+    border-radius: 5px;
+    padding-bottom: 10px;
+    box-shadow: -2px 2px 5px #888888;
+    color: white;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+}
+
+.convoy-select{
+    height: 20px;
+    padding: 0px;
+    padding-left: 10px;
+}
+
+.content-search{
+    position: fixed ! important;
+    width: 100%;
+    left: 41%;
+    top: 50px;
+    border-radius: 5px;
+    padding-top: 20px;
+    display: none;
+}
+.tb_create_route>tbody>tr{
+    border-bottom:1px solid #FFF;
+}
+.position-search{
+    color: #0b2c69;
+    padding-left: 30px;
+    outline: 5px;
+    border: 1px solid #99b1fe;
+    border-radius: 5px;
+    -webkit-box-shadow: #99b1fe 0px 0px 1px;
+    -moz-box-shadow: #99b1fe 0px 0px 1px;
+    box-shadow: #99b1fe 0px 0px 1px;
+    height: 30px;
+    width: 360px;
+    background-image: url('../images/search-white.png');
+    background-repeat: no-repeat;
+    background-size: 15px;
+    background-position:5px center;
+}
+.content-popup{
+    z-index: 1000;
+}
+input::-webkit-input-placeholder {
+    color: #d7dfea;
+    font-size: small;
+    text-align: left;
+}
+hr{
+    margin-bottom: 15px;
+    margin-top: 15px;
+    border: 0;
+    border-top: solid 1px #eee;
+}
+.convoy-btn{
+    background-color: #337ab7;
+    border-color: #337ab7;
+    color: white;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.grey-btn{
+    background-color: grey;
+    border-color: grey;
+    color: white;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.route_way{
+    width: 90%;
+    height: 50px;
+    padding:20px 15px 5px 15px;
+    border-bottom: 1px solid #cccccc29;
+}
+.route_way_best{
+    width: 90%;
+    height: 50px;
+    padding:20px 15px 5px 15px;
+    border-bottom: 1px solid #cccccc29;
+    border-radius: 5px;
+    background-color: rgba(128, 128, 128, 0.22);
+}
+.route_way_div1{
+    float: left;
+    width: 86%;
+    font-size: small;
+}
+.route_way_div2{
+    float: left;
+    width: 100%;
+}
+.route_way_best_label1{
+    font-size: smaller;
+    float: left;
+    color: #c3c3c3;
+}
+.route_way_best_label2{
+    font-size: smaller;
+    float: right;
+    color: #39d21d;
+}
+.route_way_label{
+    font-size: smaller;
+    float: right;
+    color: #c29642;
+}
+.incident_div{
+    width: 80%;
+    padding-left: 8%;
+    height: 30px;
+}
+.arrived_div{
+    width: 80%;
+    height: 30px;
+    padding-left: 10%;
+}
+.route_div{
+    width: 80%;
+    padding-left: 10%;
+}
+.incident_info{
+    width: 70%;
+    height: 40px;
+    padding-left: 6%;
+}
+.incident_icon{
+    float: right;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background-color: #00FF00;
+}
+.incident_icon2{
+    float: right;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+.incident_icon3{
+    float: left;
+    width: 14px;
+    height: 14px;
+    margin-left: 20px;
+    border-radius: 7px;
+    background-color: #00FF00;
+}
+.layui-colorpicker{
+    width: 66px !important;
+    border: 1px solid #e6e6e640 !important;
+    padding: 0px !important;
+    
+}
+.layui-colorpicker-trigger-span{
+    text-align: right !important;
+    padding-right: 10px !important;
+}
+::-webkit-scrollbar {
+    width: 8px; height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,.3);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #ddd;
+    border-radius: 6px;
+}
+
+#DataTables_Table_0_wrapper{
+    height: 90%;
+}
+#DataTables_Table_0_previous,#DataTables_Table_3_previous,#DataTables_Table_4_previous,#DataTables_Table_5_previous{
+    color: white !important;
+}
+#DataTables_Table_0_next,#DataTables_Table_3_next,#DataTables_Table_4_next,#DataTables_Table_5_next{
+    color: white !important;
+}
+#DataTables_Table_1_wrapper{
+    height: 90%;
+}
+#DataTables_Table_1_previous, #DataTables_Table_2_previous{
+    color: white !important;
+}
+#DataTables_Table_1_next, #DataTables_Table_2_next{
+    color: white !important;
+}
+.paginate_button {
+    color: white !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button{
+    color: white !important;
+}
+.tb_route>tbody>tr{
+    cursor: pointer;
+}
+.incident_list>tbody>tr{
+    /*cursor: pointer;*/
+}
+.tb_route>tbody>tr:hover{
+    background-color: gray !important;
+}
+.incident_list>tbody>tr:hover{
+    background-color: gray !important;
+}
+.createMarker{
+    cursor: Crosshair !important;
+}
+.tb_convoy_info>tbody>tr{
+    cursor: pointer;
+}
+.tb_convoy_info>tbody>tr:hover{
+    background-color: gray !important;
+}
+
+
+
+.layui-layer-dialog{
+    border-radius: 10px !important;
+}
+.layui-layer-title{
+    font-size: medium !important;
+    font-weight: bolder !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+.layui-layer-content{
+    font-size: medium !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+}
+.layui-layer-btn{
+    font-size: medium !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border-bottom-left-radius: 10px !important;
+    border-bottom-right-radius: 10px !important;
+}
+.layui-layer-btn0{
+    font-size: small !important;
+}
+.self-layui-input{
+    color: white;
+    background-color: rgba(0,0,0,0.6);
+    height: 20px;
+    font-size: small;
+    width: 80%;
+    margin-top: 10px;
+    margin-left: 1.2vw;
+    border: 1px solid gray;
+    border-radius: 3px;
+    padding-left: 6px;
+}
+
+/**
+    Map popup
+ */
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/**
+    Map tooltip
+ */
+.leaflet-tooltip{
+    border-radius: 17px !important;
+    /*background-color: rgba(255, 82, 82, 0.51) !important;*/
+    /*border-color: red !important;*/
+    min-width: 20px;
+    text-align: center;
+}
+.leaflet-tooltip-top:before{
+    /*border-top-color: red !important;*/
+}
+
+.noticejs{width: 260px !important;}
+.noticejs .item .close:hover{opacity:.5;color:#000;cursor: pointer;}
+.noticejs .item .close{float:right;cursor: pointer;font-size:18px;font-weight:700;line-height:1;color:#fff;text-shadow:0 1px 0 #fff;opacity:1;margin-right:7px;margin-top: 7px;}
+.noticejs .popup-notice{background-color:rgba(51, 49, 50, .8);}
+.noticejs .popup-notice .noticejs-heading{background-color:rgba(51, 49, 50, .8);color: #ffc40b;padding:10px;font-size: 16px;}
+.noticejs .popup-notice .noticejs-body{color:#ffc40b;padding:12px;font-size: 16px;}
+.noticejs .popup-notice .noticejs-body:hover{visibility:visible!important;}
+.noticejs .popup-notice .noticejs-content{visibility:visible;font-size: 16px;}
