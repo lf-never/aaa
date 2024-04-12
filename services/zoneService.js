@@ -43,10 +43,8 @@ module.exports.getUserZoneList = async function (req, res) {
             userZoneList = await UserZone.findAll()
         } else {
             let unitIdList = await unitService.getUnitPermissionIdList(user);
-            // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
             let option = []
             if (unitIdList.length) option.push({ unitId: unitIdList })
-            // if (groupUserIdList.length) option.push({ creator: groupUserIdList })
             if (option.length) {
                 userZoneList = await UserZone.findAll({ where: { owner: option } })
             }
@@ -92,7 +90,7 @@ module.exports.createUserZone = async function (req, res) {
             userZone.polygon = userZone.polygon.map(position => { return [position.lat, position.lng] })
             await UserZone.create({ zoneName: userZone.zoneName, color: userZone.color, polygon: JSON.stringify(userZone.polygon), owner: userZone.owner })
             
-            // TODO: send mq
+            // send mq
             let polygonStr = userZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
             polygonStr = polygonStr.join(',');
             polygonStr = 'CreateCAZone:' + userZone.owner + '=' + polygonStr;
@@ -114,7 +112,7 @@ module.exports.updateUserZone = async function (req, res) {
             userZone.polygon = userZone.polygon.map(position => { return [position.lat, position.lng] })
             await UserZone.update({ zoneName: userZone.zoneName, color: userZone.color, polygon: userZone.polygon }, { where: { id: userZone.id } })
             
-            // TODO: send mq
+            // send mq
             let polygonStr = userZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
             polygonStr = polygonStr.join(',');
             polygonStr = 'CreateCAZone:' + userZone.owner + '=';
@@ -142,7 +140,7 @@ module.exports.deleteUserZone = async function (req, res) {
 
             checkUserZone(userZone);
             await UserZone.destroy({ where: { id: userZone.id } })
-            // TODO: userZone is deleted, then the waypoint in this zone will be released
+            // userZone is deleted, then the waypoint in this zone will be released
             await Waypoint.update({ owner: 0 }, { where: { owner: userZone.owner } })
 
             SOCKET.publicSocketMsg(CONTENT.BROADCAST_EVENT.USER_ZONE_NOTICE, userZone.id);
@@ -181,7 +179,6 @@ module.exports.checkNogoZoneName = async function (req, res) {
 module.exports.getNogoZoneList = async function (req, res) {
     try {
         let userId = req.cookies.userId;
-        // let user = await User.findByPk(userId);
         let user = await userService.getUserDetailInfo(userId)
         if (!user) {
             log.warn(`User ${ userId } does not exist.`)
@@ -192,7 +189,6 @@ module.exports.getNogoZoneList = async function (req, res) {
         let { zoneName } = req.body
         let nogoZoneList = []
         if (zoneName) {
-            // nogoZoneList = await NogoZone.findAll({ where: { zoneName, deleted: 0 } })
             nogoZoneList = await sequelizeObj.query(`
                 SELECT nz.*, 
                 GROUP_CONCAT(CONCAT(DATE_FORMAT(nt.startTime, '%H:%i'), ' - ', DATE_FORMAT(nt.endTime, '%H:%i'))) AS selectedTimes 
@@ -202,7 +198,6 @@ module.exports.getNogoZoneList = async function (req, res) {
                 GROUP BY nz.id
             `, { type: QueryTypes.SELECT, replacements: [ `%${ zoneName }%` ] })
         } else {
-            // nogoZoneList = await NogoZone.findAll({ where: { deleted: 0 } })
 
             let sql = `
                 SELECT nz.*, u.unitId, u.userType, u.fullName as creator, un.unit as hub, un.subUnit as node,
@@ -284,7 +279,7 @@ module.exports.createNogoZone = async function (req, res) {
         let nogoZone = req.body.nogoZone;
         let userId = req.cookies.userId;
         await sequelizeObj.transaction(async transaction => {
-            // TODO: transfer polygon to string
+            // transfer polygon to string
             nogoZone.polygon = nogoZone.polygon.map(position => { return [position.lat, position.lng] })
 
             if (nogoZone.alertType == '0') {
@@ -331,23 +326,6 @@ module.exports.createNogoZone = async function (req, res) {
                 remarks: null
             })
 
-            // TODO: send mq
-            // let polygonStr = nogoZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
-            // polygonStr = polygonStr.join(',');
-            // polygonStr = 'NoGoZone=' + polygonStr;
-            // ActiveMQ.publicNoGoZone(Buffer.from(JSON.stringify(polygonStr)));
-
-            // TODO: notice mobile
-            // let mobileUserList = await User.findAll({ where: { userType: CONTENT.USER_TYPE.MOBILE } })
-            // let recordList = [];
-            // for (let mobileUser of mobileUserList) {
-            //     recordList.push({ userId: mobileUser.userId, state: CONTENT.RECORD_STATE.NEW_NO_GO_ZONE });
-            // }
-            // if (recordList.length) {
-            //     await StateRecord.destroy({ where: { state: CONTENT.RECORD_STATE.NEW_NO_GO_ZONE } });
-            //     await StateRecord.bulkCreate(recordList);
-            // }
-
             await scheduleNoGoZone()
         }).catch(error => {
             throw error
@@ -364,7 +342,7 @@ module.exports.updateNogoZone = async function (req, res) {
         let nogoZone = req.body.nogoZone;
         await sequelizeObj.transaction(async transaction => {
             let oldZone = await NogoZone.findByPk(nogoZone.id)
-            // TODO: transfer polygon to string
+            // transfer polygon to string
             nogoZone.polygon = nogoZone.polygon.map(position => { return [position.lat, position.lng] })
 
             if (nogoZone.alertType == '0') {
@@ -414,23 +392,6 @@ module.exports.updateNogoZone = async function (req, res) {
                 remarks: null
             })
 
-            // // TODO: send mq
-            // let polygonStr = nogoZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
-            // polygonStr = polygonStr.join(',');
-            // polygonStr = 'NoGoZone=' + polygonStr;
-            // ActiveMQ.publicNoGoZone(Buffer.from(JSON.stringify(polygonStr)));
-
-            // // TODO: notice mobile
-            // let mobileUserList = await User.findAll({ where: { userType: CONTENT.USER_TYPE.MOBILE } })
-            // let recordList = [];
-            // for (let mobileUser of mobileUserList) {
-            //     recordList.push({ userId: mobileUser.userId, state: CONTENT.RECORD_STATE.NEW_NO_GO_ZONE });
-            // }
-            // if (recordList.length) {
-            //     await StateRecord.destroy({ where: { state: CONTENT.RECORD_STATE.NEW_NO_GO_ZONE } });
-            //     await StateRecord.bulkCreate(recordList);
-            // }
- 
             await scheduleNoGoZone();
         }).catch(error => {
             throw error
@@ -465,18 +426,6 @@ module.exports.deleteNogoZone = async function (req, res) {
                 remarks: null
             })
 
-            // SOCKET.publicSocketMsg(CONTENT.BROADCAST_EVENT.USER_ZONE_NOTICE, nogoZone.id);
-
-            // Notice mobile
-            // let mobileUserList = await User.findAll({ where: { userType: CONTENT.USER_TYPE.MOBILE } })
-            // let recordList = [];
-            // for (let mobileUser of mobileUserList) {
-            //     recordList.push({ userId: mobileUser.userId, state: CONTENT.RECORD_STATE.DELETE_NO_GO_ZONE });
-            // }
-            // if (recordList.length) {
-            //     await StateRecord.destroy({ where: { state: CONTENT.RECORD_STATE.DELETE_NO_GO_ZONE } });
-            //     await StateRecord.bulkCreate(recordList);
-            // }
         }).catch(error => {
             throw error
         });

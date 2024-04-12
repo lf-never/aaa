@@ -100,14 +100,14 @@ module.exports.getEventDashboardInfo = async function (req, res) {
         let resultLatestTrackList = await getLatestTrackList(groupUserIdList);
 
         let result = { list: resultLatestTrackList, hardBraking: 0, rapidAcc: 0, speeding: 0, idleTime: 0, outOfService: 0, parked: 0, onRoad: 0 };
-        // TODO: calculate different offence count
+        // calculate different offence count
 		for (let track of latestTrackList) {
             if (track.violationType === CONTENT.ViolationType.HardBraking) result.hardBraking += track.count;
             else if (track.violationType === CONTENT.ViolationType.RapidAcc) result.rapidAcc += track.count;
             else if (track.violationType === CONTENT.ViolationType.Speeding) result.speeding += track.count;
             else if (track.violationType === CONTENT.ViolationType.IDLETime) result.idleTime += track.count;
         }
-		// TODO: find out latest different device & mobile
+		// find out latest different device & mobile
         let devicePositionList = await Device.findAll({
             where: {
                 updatedAt: {
@@ -128,7 +128,7 @@ module.exports.getEventDashboardInfo = async function (req, res) {
                 }
             }
         });
-		// TODO: calculate different device & mobile state count
+		// calculate different device & mobile state count
         for (let position of devicePositionList) {
             if (position.state === CONTENT.DEVICE_STATE.PARKED) result.parked++;
             else if (position.state === CONTENT.DEVICE_STATE.ON_ROAD) result.onRoad++;

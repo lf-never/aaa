@@ -3,7 +3,6 @@ const conf = require('../conf/conf')
 const utils = require('../util/utils');
 
 const _ = require('lodash');
-// const fs = require('fs');
 const fs = require('graceful-fs');
 const readline = require('readline')
 const { openSync, closeSync, appendFileSync } = require('fs');
@@ -13,6 +12,7 @@ const checkFilePath = function (path) {
     try {
         if (!fs.existsSync(path)) fs.mkdirSync(path);
     } catch (error) {
+        log.error(error);
         throw error
     }
 }
@@ -20,6 +20,7 @@ const checkFileExist = function (filePath) {
     try {
         return fs.existsSync(filePath);
     } catch (error) {
+        log.error(error);
         throw error
     }
 }
@@ -32,6 +33,7 @@ const checkDataExist = async function (deviceId, vehicleNo, date, timezone) {
             return false;
         }
     } catch (error) {
+        log.error(error);
         return false;
     }
 }
@@ -49,6 +51,7 @@ const writeFile = async function (list, deviceId, date) {
         closeSync(fd);
         log.warn(`End write deviceId => ${ deviceId } (${ moment().format('YYYY-MM-DD HH:mm:ss') }) - Count(${ list.length })`)
     } catch (error) {
+        log.error(error);
         throw error
     }
 }
@@ -56,7 +59,7 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
     try {
         log.warn(`Start read => deviceId: ${ deviceId }, vehicleNo: ${ vehicleNo } (${ moment().format('YYYY-MM-DD HH:mm:ss') })`)
         if (!Array.isArray(timezone) || timezone.length !== 2){
-            throw `Wrong timezone ${ JSON.stringify(timezone) }`
+            throw Error(`Wrong timezone ${ JSON.stringify(timezone) }`)
         }
         let filePath = `${ conf.dataPath }/${ deviceId }/${ date }.txt`
         if (!checkFileExist(filePath)) {
@@ -75,9 +78,6 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
                         if (moment(data.createdAt).isSameOrAfter(moment(timezone[0])) && moment(data.createdAt).isSameOrBefore(moment(timezone[1]))) {
                             result.push(data)
                         }
-                        // if (moment(data.createdAt).isAfter(moment(timezone[1]))) {
-                        //     rl.close();
-                        // }
                     }
                 })
                 rl.on('close', () => {
@@ -96,6 +96,7 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
             }
         })
     } catch (error) {
+        log.error(error);
         throw error
     }
 }
@@ -185,6 +186,7 @@ module.exports = {
             }
             return dateList;
         } catch (error) {
+            log.error(error);
             throw error
         }
     },

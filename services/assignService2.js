@@ -115,8 +115,9 @@ let TaskUtils = {
         let pageLength = option.pageLength;
     
         let replacements = []
+        let replacements2 = []
         let sql = ` 
-            SELECT '${operationList}' as operation, sys.* FROM (
+            SELECT ? as operation, sys.* FROM (
                 SELECT b.id as taskId, a.referenceId, a.tripNo, b.createdAt, a.preParkDate, b.executionDate, d.vehicleNumber, 
                 b.executionTime, b.driverNo, a.noOfDriver, a.vehicleType, b.mobiusUnit, a.pickupDestination,r.purposeType,
                 a.dropoffDestination,b.poc,b.pocNumber,c.\`name\`, c.contactNumber, c.nric, c.driverId, a.instanceId, 
@@ -136,6 +137,7 @@ let TaskUtils = {
                 LEFT JOIN request r ON a.requestId = r.id 
                 where a.approve = 1 and r.purposeType != 'Urgent'
         `;
+        replacements.push(operationList)
         let sql2 = `
             SELECT COUNT(sys.id) jobTotal, sys.taskStatus FROM (
                 SELECT a.serviceTypeId, a.vehicleType, b.createdAt, b.executionDate, 
@@ -163,11 +165,13 @@ let TaskUtils = {
                 sql += ` and a.serviceTypeId = ? `
                 sql2 += ` and a.serviceTypeId = ? `
                 replacements.push(serviceTypeIdList[0].id)
+                replacements2.push(serviceTypeIdList[0].id)
             } else {
                 sql += ` and a.serviceTypeId in (?) `
                 sql2 += ` and a.serviceTypeId in (?) `
                 let newserviceTypeIdList = serviceTypeIdList.map(item => item.id)
                 replacements.push(newserviceTypeIdList)
+                replacements2.push(newserviceTypeIdList)
             }
         }
         // 2024-02-20 atms indent 
@@ -185,12 +189,14 @@ let TaskUtils = {
             sql += ` and a.vehicleType = ?`
             sql2 += ` and a.vehicleType = ?`
             replacements.push(vehicleType)
+            replacements2.push(vehicleType)
         }
        
         if (created_date) {
             sql += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
             sql2 += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
             replacements.push(created_date)
+            replacements2.push(created_date)
         }
         if (execution_date) {
             if (execution_date.indexOf('~') != -1) {
@@ -199,10 +205,13 @@ let TaskUtils = {
                 sql2 += ` and (b.executionDate >= ? and b.executionDate <= ?)`
                 replacements.push(dates[0])
                 replacements.push(dates[1])
+                replacements2.push(dates[0])
+                replacements2.push(dates[1])
             } else {
                 sql += ` and b.executionDate = ?`
                 sql2 += ` and b.executionDate = ?`
                 replacements.push(execution_date)
+                replacements2.push(execution_date)
             }
         }
     
@@ -210,12 +219,14 @@ let TaskUtils = {
             sql += ` and a.tripNo like ?`
             sql2 += ` and a.tripNo like ?`
             replacements.push(`%${ tripNo }%`)
+            replacements2.push(`%${ tripNo }%`)
         }
 
         if (unitId && unitId != null && unitId != '') {
             sql += ` AND b.mobiusUnit in (?) `
             sql2 += ` AND b.mobiusUnit in (?) `
             replacements.push(unitId);
+            replacements2.push(unitId);
         } else {
             sql += ` and b.mobiusUnit is not null `
             sql2 += ` and b.mobiusUnit is not null `
@@ -225,12 +236,14 @@ let TaskUtils = {
             sql += ` and d.vehicleNumber like ?`
             sql2 += ` and d.vehicleNumber like ?`
             replacements.push('%' + vehicleNo + '%')
+            replacements2.push('%' + vehicleNo + '%')
         }
 
         if(driverName) {
             sql += ` and c.name like ?`
             sql2 += ` and c.name like ?`
             replacements.push('%' + driverName + '%')
+            replacements2.push('%' + driverName + '%')
         }
         sql += ' ) sys'
         sql2 += ' ) sys'
@@ -238,113 +251,135 @@ let TaskUtils = {
             sql += ` WHERE sys.taskStatus = ?`
             sql2 += ` WHERE sys.taskStatus = ?`
             replacements.push(taskStatus)
+            replacements2.push(taskStatus)
         }
         if (endDateOrder) {
-            sql += ' ORDER BY sys.endDate ' + endDateOrder
+            if(endDateOrder.toLowerCase() == 'desc'){
+                sql += ' ORDER BY sys.endDate desc ' 
+            }
+            if(endDateOrder.toLowerCase() == 'asc'){
+                sql += ' ORDER BY sys.endDate asc ' 
+            }
         } else {
             sql += ' ORDER BY sys.taskId desc'
         }
         log.warn(`task assing sql ==>${sql}`)
         log.warn(`task assing count sql ==>${sql2}`)
-        let countResult = await sequelizeSystemObj.query(sql2, { replacements: replacements, type: QueryTypes.SELECT })
+        let countResult = await sequelizeSystemObj.query(sql2, { replacements: replacements2, type: QueryTypes.SELECT })
         let totalRecord = countResult[0].jobTotal
-        let pageResult = await sequelizeSystemObj.query(
-            sql + ` limit ${ pageNum ? pageNum : 0 }, ${ pageLength ? pageLength : 50 }; `,
+        pageNum = pageNum ?? 0;
+        pageLength = pageLength ?? 10;
+        pageNum = Number(pageNum)
+        pageLength = Number(pageLength)
+        if(pageNum && pageLength) {
+            sql += ' limit ?, ?' 
+            replacements.push(...[pageNum, pageLength])
+        } 
+        
+        let pageResult = await sequelizeSystemObj.query(sql,
             {
-                replacements: replacements,
                 type: QueryTypes.SELECT
+                , replacements: replacements,
             }
         );
         
         return { data: pageResult, recordsFiltered: totalRecord, recordsTotal: totalRecord }
     },
-    findOutMBTaskList: async function (option){
-        let { vehicleType, execution_date, created_date, unitId, vehicleNo, driverName, endDateOrder, taskIdOrder, pageNum, pageLength } = option;
-        let replacements = []
-        let sql = `SELECT m.id, m.driverNum, m.vehicleType, m.startDate, m.endDate, t.taskId, t.mobileStartTime,
-        m.reportingLocation, m.destination, m.poc, m.mobileNumber, m.vehicleNumber,m.indentId, m.cancelledDateTime, 
-        t.vehicleStatus, m.cancelledCause, m.amendedBy, us.fullName as amendedByUsername, m.purpose, m.needVehicle, m.driverId,
-        m.dataType,m.unitId, d.nric, d.driverName, d.contactNumber FROM mt_admin m
-        LEFT JOIN task t ON t.indentId = m.id
-        LEFT JOIN user us ON us.userId = m.amendedBy
-        LEFT JOIN (select driverId, nric, driverName, contactNumber from driver union all select driverId, nric, driverName, contactNumber from driver_history) d ON d.driverId = m.driverId
-        WHERE m.dataType = 'mb' `;
-        let sql2 = `SELECT COUNT(DISTINCT m.id) taskTotal FROM mt_admin m 
-        LEFT JOIN task t ON t.indentId = m.id
-        LEFT JOIN (select driverId, nric, driverName, contactNumber from driver union all select driverId, nric, driverName, contactNumber from driver_history)  d ON d.driverId = m.driverId
-        WHERE m.dataType = 'mb' `
+    // findOutMBTaskList: async function (option){
+    //     let { vehicleType, execution_date, created_date, unitId, vehicleNo, driverName, endDateOrder, taskIdOrder, pageNum, pageLength } = option;
+    //     let replacements = []
+    //     let sql = `SELECT m.id, m.driverNum, m.vehicleType, m.startDate, m.endDate, t.taskId, t.mobileStartTime,
+    //     m.reportingLocation, m.destination, m.poc, m.mobileNumber, m.vehicleNumber,m.indentId, m.cancelledDateTime, 
+    //     t.vehicleStatus, m.cancelledCause, m.amendedBy, us.fullName as amendedByUsername, m.purpose, m.needVehicle, m.driverId,
+    //     m.dataType,m.unitId, d.nric, d.driverName, d.contactNumber FROM mt_admin m
+    //     LEFT JOIN task t ON t.indentId = m.id
+    //     LEFT JOIN user us ON us.userId = m.amendedBy
+    //     LEFT JOIN (select driverId, nric, driverName, contactNumber from driver union all select driverId, nric, driverName, contactNumber from driver_history) d ON d.driverId = m.driverId
+    //     WHERE m.dataType = 'mb' `;
+    //     let sql2 = `SELECT COUNT(DISTINCT m.id) taskTotal FROM mt_admin m 
+    //     LEFT JOIN task t ON t.indentId = m.id
+    //     LEFT JOIN (select driverId, nric, driverName, contactNumber from driver union all select driverId, nric, driverName, contactNumber from driver_history)  d ON d.driverId = m.driverId
+    //     WHERE m.dataType = 'mb' `
           
-        if (vehicleType) {
-            sql += ` and m.vehicleType = ?`
-            sql2 += ` and m.vehicleType = ?`
-            replacements.push(vehicleType)
-        }
-        if (created_date) {
-            sql += ` and DATE_FORMAT(m.createdAt,'%Y-%m-%d') = ?`
-            sql2 += ` and DATE_FORMAT(m.createdAt,'%Y-%m-%d') = ?`
-            replacements.push(created_date)
-        }
-        if (execution_date) {
-            if (execution_date.indexOf('~') != -1) {
-                const dates = execution_date.split(' ~ ')
-                sql += ` and (m.endDate >= ? and m.endDate <= ?)`
-                sql2 += ` and (m.endDate >= ? and m.endDate <= ?)`
-                replacements.push(dates[0])
-                replacements.push(dates[1])
-            } else {
-                sql += ` and m.endDate = ?`
-                sql2 += ` and m.endDate = ?`
-                replacements.push(execution_date)
-            }
-        }
+    //     if (vehicleType) {
+    //         sql += ` and m.vehicleType = ?`
+    //         sql2 += ` and m.vehicleType = ?`
+    //         replacements.push(vehicleType)
+    //     }
+    //     if (created_date) {
+    //         sql += ` and DATE_FORMAT(m.createdAt,'%Y-%m-%d') = ?`
+    //         sql2 += ` and DATE_FORMAT(m.createdAt,'%Y-%m-%d') = ?`
+    //         replacements.push(created_date)
+    //     }
+    //     if (execution_date) {
+    //         if (execution_date.indexOf('~') != -1) {
+    //             const dates = execution_date.split(' ~ ')
+    //             sql += ` and (m.endDate >= ? and m.endDate <= ?)`
+    //             sql2 += ` and (m.endDate >= ? and m.endDate <= ?)`
+    //             replacements.push(dates[0])
+    //             replacements.push(dates[1])
+    //         } else {
+    //             sql += ` and m.endDate = ?`
+    //             sql2 += ` and m.endDate = ?`
+    //             replacements.push(execution_date)
+    //         }
+    //     }
         
-        if (unitId && unitId != null && unitId != '') {
-            sql += ` AND m.unitId in (?) `
-            sql2 += ` AND m.unitId in (?) `
-            replacements.push(unitId);
-        } else {
-            sql += ` and m.unitId is not null `
-            sql2 += ` and m.unitId is not null `
-        }
+    //     if (unitId && unitId != null && unitId != '') {
+    //         sql += ` AND m.unitId in (?) `
+    //         sql2 += ` AND m.unitId in (?) `
+    //         replacements.push(unitId);
+    //     } else {
+    //         sql += ` and m.unitId is not null `
+    //         sql2 += ` and m.unitId is not null `
+    //     }
 
-        if(vehicleNo) {
-            sql += ` and m.vehicleNumber like ?`
-            sql2 += ` and m.vehicleNumber like ?`
-            replacements.push('%' + vehicleNo + '%')
-        }
+    //     if(vehicleNo) {
+    //         sql += ` and m.vehicleNumber like ?`
+    //         sql2 += ` and m.vehicleNumber like ?`
+    //         replacements.push('%' + vehicleNo + '%')
+    //     }
 
-        if(driverName) {
-            sql += ` and d.driverName like ?`
-            sql2 += ` and d.driverName like ?`
-            replacements.push('%' + driverName + '%')
-        }
+    //     if(driverName) {
+    //         sql += ` and d.driverName like ?`
+    //         sql2 += ` and d.driverName like ?`
+    //         replacements.push('%' + driverName + '%')
+    //     }
         
-        let orderSql = [];
-        if (endDateOrder) {
-            orderSql.push(` m.endDate ${ endDateOrder }`)
-        } 
-        if(taskIdOrder) {
-            orderSql.push(` m.id ${ taskIdOrder }`)
-        }
-        if(orderSql.length > 0) {
-            sql += ` GROUP BY m.id ORDER BY ${ orderSql.join(' , ') }`
-        } else {
-            sql += ` GROUP BY m.id ORDER BY m.id desc`
-        }
+    //     let orderSql = [];
+    //     if (endDateOrder) {
+    //         orderSql.push(` m.endDate ?`)
+    //         replacements.push(endDateOrder)
+    //     } 
+    //     if(taskIdOrder) {
+    //         orderSql.push(` m.id ?`)
+    //         replacements.push(taskIdOrder)
+    //     }
+    //     if(orderSql.length > 0) {
+    //         sql += ' GROUP BY m.id ORDER BY' + orderSql.join(' , ')
+    //     } else {
+    //         sql += ` GROUP BY m.id ORDER BY m.id desc`
+    //     }
         
-        let countResult = await sequelizeObj.query(sql2, { replacements: replacements, type: QueryTypes.SELECT })
-        let totalRecord = countResult[0].taskTotal
+    //     let countResult = await sequelizeObj.query(sql2, { replacements: replacements, type: QueryTypes.SELECT })
+    //     let totalRecord = countResult[0].taskTotal
+        
+    //     if(pageNum && pageLength) {
+    //         sql + ` limit ?, ?;`
+    //         replacements.push(pageNum)
+    //         replacements.push(pageLength)
+    //     } else {
+    //         sql + `  limit 0, 10; `
+    //     }
+    //     let pageResult = await sequelizeObj.query(sql,
+    //         {
+    //             replacements: replacements,
+    //             type: QueryTypes.SELECT
+    //         }
+    //     );
     
-        let pageResult = await sequelizeObj.query(
-            sql + `  limit ${ pageNum ? pageNum : 0 }, ${ pageLength ? pageLength : 10 }; `,
-            {
-                replacements: replacements,
-                type: QueryTypes.SELECT
-            }
-        );
-    
-        return { data: pageResult, recordsFiltered: totalRecord, recordsTotal: totalRecord }
-    }
+    //     return { data: pageResult, recordsFiltered: totalRecord, recordsTotal: totalRecord }
+    // }
 }
 
 module.exports = {
@@ -444,21 +479,28 @@ module.exports = {
                         item.autoMatchResourceTask = 1;
                     }
                     if(loanByTaskId) {
-                        let taskByVehicleOrDriver = await sequelizeObj.query(
-                            `
+                        let taskByVehicleOrDriverSql = `
                             SELECT taskId, driverId, vehicleNumber, vehicleStatus 
                             FROM task 
                             WHERE taskId LIKE 'CU-%'
                             AND vehicleStatus NOT IN ('Cancelled', 'completed') 
-                            ${ loanByTaskId.driverId ? ` and driverId = ${ loanByTaskId.driverId }` : '' }
-                            ${ loanByTaskId.vehicleNo ? ` and vehicleNumber = '${ loanByTaskId.vehicleNo }'` : '' }
-                            AND ((('${ item.startDate }' >= indentStartTime AND '${ item.startDate }' <= indentEndTime) 
-                            OR ('${ item.endDate }' >= indentStartTime AND '${ item.endDate }' <= indentEndTime) 
-                            OR ('${ item.startDate }' < indentStartTime AND '${ item.endDate }' > indentEndTime))
-                            OR vehicleStatus = 'started'
-                            )
-                            group by taskId
-                            `, { type: QueryTypes.SELECT }
+                            AND (((? >= indentStartTime AND ? <= indentEndTime) 
+                            OR (? >= indentStartTime AND ? <= indentEndTime) 
+                            OR (? < indentStartTime AND ? > indentEndTime))
+                            OR vehicleStatus = 'started')
+                        `
+                        let taskByVehicleOrDriverByReplacements = [item.startDate, item.startDate, item.endDate, item.endDate, item.startDate, item.endDate]
+                        if(loanByTaskId.driverId){
+                            taskByVehicleOrDriverSql += ` and driverId = ?`
+                            taskByVehicleOrDriverByReplacements.push(loanByTaskId.driverId)
+                        }
+                        if(loanByTaskId.vehicleNo){
+                            taskByVehicleOrDriverSql += ` and vehicleNumber = ?` 
+                            taskByVehicleOrDriverByReplacements.push(loanByTaskId.vehicleNo)
+                        }
+                        taskByVehicleOrDriverSql += ` group by taskId`
+                        let taskByVehicleOrDriver = await sequelizeObj.query(taskByVehicleOrDriverSql, 
+                            { type: QueryTypes.SELECT, replacements: taskByVehicleOrDriverByReplacements }
                         );
                         // log.warn(`task driver/vehilce ${ JSON.stringify(taskByVehicleOrDriver ? taskByVehicleOrDriver[0] : '') }`)
                         if(taskByVehicleOrDriver[0]){

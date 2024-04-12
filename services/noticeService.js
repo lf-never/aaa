@@ -4,7 +4,6 @@ const conf = require('../conf/conf');
 const CONTENT = require('../util/content');
 const SOCKET = require('../socket/socket');
 const ACTIVEMQ = require('../activemq/activemq');
-// const fs = require('fs');
 const fs = require('graceful-fs');
 const moment = require('moment');
 
@@ -45,9 +44,7 @@ let NoticeUtils = {
                 let limitCondition = [], replacements = []
                 let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(user.userId)
 
-                if ([CONTENT.USER_TYPE.ADMINISTRATOR].includes(user.userType)) {
-
-                } else if ([CONTENT.USER_TYPE.HQ].includes(user.userType)) {
+                if ([CONTENT.USER_TYPE.HQ].includes(user.userType)) {
                     let tempSqlList = []
                     if (unitIdList.length) {
                         for (let unitId of unitIdList) {
@@ -108,6 +105,7 @@ let NoticeUtils = {
                 return []
             }
         } catch (error) {
+            log.error(error)
             throw error
         }
     },
@@ -132,19 +130,21 @@ let NoticeUtils = {
                 `
 
                 let limitCondition = [], replacements = []
-                // TODO: for mobile get effective notice list.(Need check datetime)
+                // for mobile get effective notice list.(Need check datetime)
                 if (option.selectedDateTime) {
-                    limitCondition.push(` ( ${ option.selectedDateTime } >= n.startDateTime AND ${ option.selectedDateTime } <= n.endDateTime ) `)
+                    limitCondition.push(` ( ? >= n.startDateTime AND ? <= n.endDateTime ) `)
+                    replacements.push(option.selectedDateTime)
+                    replacements.push(option.selectedDateTime)
                 }
 
-                // TODO: for laptop get effective notice list.(Only check date)
+                // for laptop get effective notice list.(Only check date)
                 if (option.selectedDate) {
-                    limitCondition.push(` ( DATE(${ option.selectedDate }) >= DATE(n.startDateTime) AND DATE(${ option.selectedDate }) <= DATE(n.endDateTime) ) `)
+                    limitCondition.push(` ( DATE(?) >= DATE(n.startDateTime) AND DATE(?) <= DATE(n.endDateTime) ) `)
+                    replacements.push(option.selectedDate)
+                    replacements.push(option.selectedDate)
                 }
 
-                if ([ CONTENT.USER_TYPE.ADMINISTRATOR ].includes(user.userType)) {
-
-                } else if ([ CONTENT.USER_TYPE.HQ ].includes(user.userType)) {
+                if ([ CONTENT.USER_TYPE.HQ ].includes(user.userType)) {
                     let tempSqlList = []
                     if (unitIdList.length) {
                         for (let unitId of unitIdList) {
@@ -192,14 +192,16 @@ let NoticeUtils = {
                 }
 
                 if (option.createdAt) {
-                    limitCondition.push(` DATE(n.createdAt) = ${ option?.createdAt } `)
+                    limitCondition.push(` DATE(n.createdAt) = ? `)
+                    replacements.push(option.createdAt)
                 }
 
                 if (option.title) {
-                    limitCondition.push(` n.title like \'%${ option?.title }%\' `)
+                    limitCondition.push(` n.title like ` + sequelizeObj.escape("%" + option.title + "%"))
                 }
                 if (option.type) {
-                    limitCondition.push(` n.type = \'${ option?.type }\' `)
+                    limitCondition.push(` n.type = ? `)
+                    replacements.push(option.type)
                 }
 
                 if (limitCondition.length) {
@@ -213,7 +215,9 @@ let NoticeUtils = {
 
                 let pageResult = []
                 if (option.start && option.length) {
-                    let pageSql = sql + ` LIMIT ${ option.start }, ${ option.length } `
+                    let pageSql = sql + ` LIMIT ?, ? `
+                    replacements.push(option.start)
+                    replacements.push(option.length)
                     console.log(pageSql)
                     pageResult = await sequelizeObj.query(pageSql, { type: QueryTypes.SELECT, replacements })
                 }
@@ -225,6 +229,7 @@ let NoticeUtils = {
                 return []
             }
         } catch (error) {
+            log.error(error);
             throw error
         }
     },
@@ -232,7 +237,7 @@ let NoticeUtils = {
         try {
             let unitList = await Unit.findAll();
             for (let notice of list) {
-                // TODO: HUB/NODE User
+                // HUB/NODE User
                 notice.hubNodeList = [];
                 let laptopHubNodeList = notice.laptopHubNodeList ? notice.laptopHubNodeList.split(',') : []
                 for (let unitId of laptopHubNodeList) {
@@ -244,7 +249,7 @@ let NoticeUtils = {
                     })
                 }
 
-                // TODO: TO Driver User
+                // TO Driver User
                 notice.toUserList = [];
                 let driverHubNodeList = notice.driverHubNodeList ? notice.driverHubNodeList.split(',') : []
                 for (let unitId of driverHubNodeList) {
@@ -258,6 +263,7 @@ let NoticeUtils = {
             }
             return list;
         } catch (error) {
+            log.error(error);
             throw error
         }
     }
@@ -285,7 +291,7 @@ module.exports = {
             if (!userId) userId = req.cookies.userId;
 
             let user = await UserUtils.getUserDetailInfo(userId);
-            if (!user) throw `User ${ userId } does not exist.`;
+            if (!user) throw Error(`User ${ userId } does not exist.`);
 
             let result = await NoticeUtils.getLaptopNoticeList(user);
 
@@ -305,7 +311,7 @@ module.exports = {
             if (!userId) userId = req.cookies.userId;
 
             let user = await UserUtils.getUserDetailInfo(userId);
-            if (!user) throw `User ${ userId } does not exist.`;
+            if (!user) throw Error(`User ${ userId } does not exist.`);
 
             let { pageResult } = await NoticeUtils.getNoticeList(user, { start, type, title, length, idOrder });
 
@@ -359,19 +365,13 @@ module.exports = {
             let notification = req.body;
             notification.creator = req.cookies.userId;
             
-            // if (notification.type.toLowerCase() == 'urgent') {
-            //     // Urgent notification need send directly
-            //     notification.startDateTime = moment().format('YYYY-MM-DD HH:mm:00')
-            //     notification.endDateTime = notification.startDateTime
-            // }
-
             if (!notification.startDateTime || notification.startDateTime == 'Invalid date') {
                 log.error(`(createOrUpdateNotice) startDateTime is ${ notification.startDateTime }`)
-                throw `Start date time is not correct.`
+                throw Error(`Start date time is not correct.`)
             }
             if (!notification.endDateTime || notification.endDateTime == 'Invalid date') {
                 log.error(`(createOrUpdateNotice) endDateTime is ${ notification.endDateTime }`)
-                throw `End date time is not correct.`
+                throw Error(`End date time is not correct.`)
             }
 
             if (notification.coverImage) {
@@ -417,48 +417,14 @@ module.exports = {
                             remarks: null
                         })
 
-                        // TODO: for schedule
+                        // for schedule
                         log.info(`Old notification => ${ notification.id } type is ${ result.type }`)
                         log.info(`New notification => ${ notification.id } type is ${ notification.type }`)
                         log.info(` ${ result.type } => ${ notification.type } `)
 
                         await UpdateNotificationSchedule(result.id);
-
-                        // if (notification.type.toLowerCase() == 'urgent') {
-                        //     // send firebase directly
-                        //     let notificationList = []
-
-                        //     // Need find out all in urgent duty driver
-                        //     let driverList = await urgentService.UrgentUtil.getUrgentDutyDriverList(notification.driverHubNodeList)
-                        //     for (let driver of driverList) {
-                        //         notificationList.push({
-                        //             driverId: driver.driverId,
-                        //             type: 'Urgent Notification'
-                        //         })
-                        //     }
-
-                        //     FirebaseService.createFirebaseNotification2(notificationList, 'New Urgent Task Notification', notification.title)
-                        // } else {
-                        //     await UpdateNotificationSchedule(result.id);
-                        // }
-
-
-                        // if (notification.type.toLowerCase() == 'scheduled') {
-                        //     if (result.type.toLowerCase() == notification.type.toLowerCase()) {
-                        //         log.warn(`Update Notification Schedule`)
-                        //         await UpdateNotificationSchedule(result.id);
-                        //     } else {
-                        //         log.warn(`Add Notification Schedule`)
-                        //         await AddNotificationSchedule(result.id);
-                        //     }
-                        // } else {
-                        //     if (result.type.toLowerCase() == 'scheduled') {
-                        //         log.warn(`Old notification ${ result.id } will be canceled`)
-                        //         CancelNotificationSchedule(result.id)
-                        //     }
-                        // }
                     } else {
-                        throw `Notification id ${ notification.id } does not exist.`
+                        throw Error(`Notification id ${ notification.id } does not exist.`)
                     }
                 } ).catch(error => {
                     throw error
@@ -481,27 +447,6 @@ module.exports = {
                     optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                     remarks: null
                 })
-
-                // if (notification.type.toLowerCase() == 'urgent') {
-                //     // send firebase directly
-                //     let notificationList = []
-
-                //     // Need find out all in urgent duty driver
-                //     let driverList = await urgentService.UrgentUtil.getUrgentDutyDriverList(notification.driverHubNodeList)
-                //     for (let driver of driverList) {
-                //         notificationList.push({
-                //             driverId: driver.driverId
-                //         })
-                //     }
-
-                //     FirebaseService.createFirebaseNotification2(notificationList, 'New Urgent Task Notification', notification.title)
-                // } else {
-                //     // TODO: for schedule
-                //     // if (notification.type.toLowerCase() == 'scheduled') {
-                //         log.warn(`Add Notification Schedule => ${ result.id }`)
-                //         AddNotificationSchedule(result.id);
-                //     // }
-                // }
 
                 log.warn(`Add Notification Schedule => ${ result.id }`)
                 AddNotificationSchedule(result.id);

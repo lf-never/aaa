@@ -132,8 +132,8 @@ const UrgentUtil = {
     getUnitByGroupId: async function(groupId) {
         let groupList = await sequelizeSystemObj.query(`
             SELECT * FROM \`group\`
-            where id = ${ groupId }
-        `, { type: QueryTypes.SELECT })
+            where id = ?
+        `, { type: QueryTypes.SELECT, replacements: [groupId] })
         let unit = await Unit.findOne({ where: { group: `${ groupList[0].groupName }` } })
         return unit
     },
@@ -143,8 +143,8 @@ const UrgentUtil = {
         left join urgent_duty ud on ud.id = ui.dutyId
         left JOIN urgent_config ug on ug.id = ud.configId
         where ui.status != 'cancelled' and ui.id is not null
-        and ug.id = ${ configId }
-        `, { type: QueryTypes.SELECT })
+        and ug.id = ?
+        `, { type: QueryTypes.SELECT, replacements: [configId] })
         return urgentIndentList
     },
     getIndentDetail: async function (idList) {
@@ -322,20 +322,30 @@ const getVehicleByGroupId = async function (req, res) {
         if(!user) return res.json(utils.response(0, `User ${ newUserId } does not exist.`));
         log.info(`user groupId ${ JSON.stringify(user.unitId) }`)
         let groupId = user.unitId
-        let vehicleList = await sequelizeObj.query(`
+        let sql = `
             SELECT v.vehicleNo, v.groupId as unitId, v.vehicleType FROM vehicle v 
             WHERE v.vehicleNo not in (
                 select ifnull(vl.vehicleNo, -1) from vehicle_leave_record vl 
                 where vl.status = 1 
-                AND ( ('${ startDate }' >= vl.startTime AND '${ startDate }' <= vl.endTime) 
-                OR ('${ endDate }' >= vl.startTime AND '${ endDate }' <= vl.endTime) 
-                OR ('${ startDate }' < vl.startTime AND '${ endDate }' > vl.endTime))
+                AND ( (? >= vl.startTime AND ? <= vl.endTime) 
+                OR (? >= vl.startTime AND ? <= vl.endTime) 
+                OR (? < vl.startTime AND ? > vl.endTime))
                 GROUP BY vl.vehicleNo
             )
-            ${ vehicleType ? ` and v.vehicleType = '${ vehicleType }'` : '' }
-            ${ groupId ? ` and v.groupId = ${ groupId }` : ' and v.groupId is not null' }
-            GROUP BY v.vehicleNo
-        `, { type: QueryTypes.SELECT })
+        `
+        let replacements = [startDate, startDate, endDate, endDate, startDate, endDate]
+        if(vehicleType){
+            sql += ` and v.vehicleType = ?`
+            replacements.push(vehicleType)
+        }
+        if(groupId){
+            sql += ` and v.groupId = ?`
+            replacements.push(groupId)
+        } else {
+            sql += ` and v.groupId is not null`
+        }
+        sql += ` GROUP BY v.vehicleNo`
+        let vehicleList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return res.json(utils.response(1, vehicleList));
     } catch (error) {
         log.error(error);
@@ -351,24 +361,36 @@ const getDriverByGroupId = async function (req, res) {
         if(!user) return res.json(utils.response(0, `User ${ newUserId } does not exist.`));
         log.info(`user groupId ${ JSON.stringify(user.unitId) }`)
         let unitId = user.unitId
-        let driverList = await sequelizeObj.query(`
+        let sql = `
             select d.driverId, d.driverName, d.contactNumber, u.unitId from driver d
             LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
             LEFT JOIN user u ON u.driverId = d.driverId
             where d.driverId is not null and u.role in ('DV', 'LOA') and d.permitStatus != 'invalid'
-            ${ vehicleType ? ` and dc.vehicleType = '${ vehicleType }'` : '' }
-            ${ unitId ? ` and u.unitId = ${ unitId }` : ' ' }
-            ${ endDate ? ` and (d.operationallyReadyDate > '${ moment(endDate).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)`
-            : ' and (d.operationallyReadyDate > CURDATE() OR d.operationallyReadyDate is null)' }
             and d.driverId not in (
                 SELECT ifnull(dl.driverId, -1) FROM driver_leave_record dl WHERE dl.status = 1  
-                AND ( ('${ startDate }' >= dl.startTime AND '${ startDate }' <= dl.endTime) 
-                OR ('${ endDate }' >= dl.startTime AND '${ endDate }' <= dl.endTime) 
-                OR ('${ startDate }' < dl.startTime AND '${ endDate }' > dl.endTime)
+                AND ( (? >= dl.startTime AND ? <= dl.endTime) 
+                OR (? >= dl.startTime AND ? <= dl.endTime) 
+                OR (? < dl.startTime AND ? > dl.endTime)
                 ) GROUP BY dl.driverId
             )
-            GROUP BY d.driverId
-        `, { type: QueryTypes.SELECT })
+        `
+        let replacements = [startDate, startDate, endDate, endDate, startDate, endDate]
+        if(vehicleType){
+            sql += ` and dc.vehicleType = ?`
+            replacements.push(vehicleType)
+        }
+        if(unitId){
+            sql += ` and u.unitId = ?`
+            replacements.push(unitId)
+        }
+        if(endDate){
+            sql += ` and (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null)`
+            replacements.push(moment(endDate).format('YYYY-MM-DD'))
+        } else {
+            sql += ' and (d.operationallyReadyDate > CURDATE() OR d.operationallyReadyDate is null)' 
+        }
+        sql += ` GROUP BY d.driverId`
+        let driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return res.json(utils.response(1, driverList));
     } catch (error) {
         log.error(error);
@@ -397,11 +419,23 @@ const createUrgentConfig = async function (req, res) {
         let urgentConfigList = await sequelizeObj.query(`
         select id from urgent_config 
         where cancelledDateTime is null 
-        and (driverId = ${ urgentConfig.driverId } or vehicleNo = '${ urgentConfig.vehicleNo }')
-        and (('${ urgentConfig.indentStartDate }' >= indentStartDate AND '${ urgentConfig.indentStartDate }' <= indentEndDate) 
-        OR ('${ urgentConfig.indentEndDate }' >= indentStartDate AND '${ urgentConfig.indentEndDate }' <= indentEndDate) 
-        OR ('${ urgentConfig.indentStartDate }' < indentStartDate AND '${ urgentConfig.indentEndDate }' > indentEndDate))
-        `,{ type: QueryTypes.SELECT })
+        and (driverId = ? or vehicleNo = ?)
+        and ((? >= indentStartDate AND ? <= indentEndDate) 
+        OR (? >= indentStartDate AND ? <= indentEndDate) 
+        OR (? < indentStartDate AND ? > indentEndDate))
+        `,{ 
+            type: QueryTypes.SELECT, 
+            replacements: [
+                urgentConfig.driverId,
+                urgentConfig.vehicleNo,
+                urgentConfig.indentStartDate,
+                urgentConfig.indentStartDate,
+                urgentConfig.indentEndDate,
+                urgentConfig.indentEndDate,
+                urgentConfig.indentStartDate,
+                urgentConfig.indentEndDate
+            ] 
+        })
         if(urgentConfigList.length > 0) {
             return res.json(utils.response(0, ` Please re-select. There is already a driver/vehicle in the same time frame.`));
         }
@@ -479,8 +513,10 @@ const getUrgentConfig = async function (req, res) {
         log.info(`duty unitIdList ${ JSON.stringify(unitIdList) }`)
         let pageList = await userService.getUserPageList(req.cookies.userId, 'Urgent Duty')
         let operationList = pageList.map(item => `${ item.action }`).join(',')
+        let replacements = []
+        let replacements2 = []
         let sql = `
-            select '${ operationList }' as operation, uc.*, d.contactNumber, d.driverName, ud.mobileStartTime, ud.mobileEndTime, ud.status, us.fullName as cancelledName 
+            select ? as operation, uc.*, d.contactNumber, d.driverName, ud.mobileStartTime, ud.mobileEndTime, ud.status, us.fullName as cancelledName 
             from urgent_config uc 
             left join (select * from urgent_duty group by id ORDER BY mobileEndTime DESC, mobileStartTime DESC) ud on ud.configId = uc.id
             left join (
@@ -491,6 +527,7 @@ const getUrgentConfig = async function (req, res) {
             left join user us on us.userId = uc.amendedBy
             where 1=1
         `
+        replacements.push(operationList)
          let sql2 = `
             select COUNT(DISTINCT uc.id) as total from urgent_config uc 
             left join (select * from urgent_duty group by id ORDER BY mobileEndTime DESC, mobileStartTime DESC) ud on ud.configId = uc.id
@@ -502,36 +539,52 @@ const getUrgentConfig = async function (req, res) {
             where 1=1
         `     
         if(selectedDate){
-            sql += ` and '${ selectedDate }' BETWEEN uc.indentStartDate and uc.indentEndDate`
-            sql2 += ` and '${ selectedDate }' BETWEEN uc.indentStartDate and uc.indentEndDate`
+            sql += ` and ? BETWEEN uc.indentStartDate and uc.indentEndDate`
+            sql2 += ` and ? BETWEEN uc.indentStartDate and uc.indentEndDate`
+            replacements.push(selectedDate)
+            replacements2.push(selectedDate)
         }
         if(taskStatus){
-            sql += ` and ud.status = '${ taskStatus }'`
-            sql2 += ` and ud.status = '${ taskStatus }'`
+            sql += ` and ud.status = ?`
+            sql2 += ` and ud.status = ?`
+            replacements.push(taskStatus)
+            replacements2.push(taskStatus)
         }  
         if(purpose) {
-            sql += ` and uc.purpose = '${ purpose }'`
-            sql2 += ` and uc.purpose = '${ purpose }'`
+            sql += ` and uc.purpose = ?`
+            sql2 += ` and uc.purpose = ?`
+            replacements.push(purpose)
+            replacements2.push(purpose)
         }
         if(createDate) {
-            sql += ` and uc.createdAt like '${ createDate }%'`
-            sql2 += ` and uc.createdAt like '${ createDate }%'`
+            sql += ` and uc.createdAt like ?`
+            sql2 += ` and uc.createdAt like ?`
+            replacements.push(createDate + '%')
+            replacements2.push(createDate + '%')
         }
         if(vehicleNo) {
-            sql += ` and uc.vehicleNo like '${ vehicleNo }%'`
-            sql2 += ` and uc.vehicleNo like '${ vehicleNo }%'`
+            sql += ` and uc.vehicleNo like ?`
+            sql2 += ` and uc.vehicleNo like ?`
+            replacements.push(`'${ vehicleNo }%'`)
+            replacements2.push(`'${ vehicleNo }%'`)
         }
         if(driverName) {
-            sql += ` and d.driverName like '${ driverName }%'`
-            sql2 += ` and d.driverName like '${ driverName }%'`
+            sql += ` and d.driverName like ?`
+            sql2 += ` and d.driverName like ?`
+            replacements.push(`'${ driverName }%'`)
+            replacements2.push(`'${ driverName }%'`)
         }
         if(resource) {
-            sql += ` and uc.vehicleType = '${ resource }'`
-            sql2 += ` and uc.vehicleType = '${ resource }'`
+            sql += ` and uc.vehicleType = ?`
+            sql2 += ` and uc.vehicleType = ?`
+            replacements.push(resource)
+            replacements2.push(resource)
         }
         if(groupId) {
-            sql += ` and uc.groupId = ${ groupId }`
-            sql2 += ` and uc.groupId = ${ groupId }`
+            sql += ` and uc.groupId = ?`
+            sql2 += ` and uc.groupId = ?`
+            replacements.push(groupId)
+            replacements2.push(groupId)
         } else {
             // if(hub){
             //     sql += ` and uc.hub = '${ hub }'`
@@ -542,27 +595,38 @@ const getUrgentConfig = async function (req, res) {
             //     sql2 += ` and uc.node = '${ node }'`
             // }
             if(unitIdList.length > 0) {
-                sql += ` and uc.unitId in(${ unitIdList.join(",") })`
-                sql2 += ` and uc.unitId in(${ unitIdList.join(",") })`
+                sql += ` and uc.unitId in(?)`
+                sql2 += ` and uc.unitId in(?)`
+                replacements.push(unitIdList.join(","))
+                replacements2.push(unitIdList.join(","))
             }
         }
         let orderSql = [];
         if (endDateOrder) {
-            orderSql.push(` uc.indentEndDate ${ endDateOrder }`)
+            orderSql.push(` uc.indentEndDate ` + endDateOrder)
         } 
         if(idDateOrder) {
-            orderSql.push(` uc.id ${ idDateOrder }`)
+            orderSql.push(` uc.id ` + idDateOrder)
         }
         if(orderSql.length > 0) {
             sql += ` group by uc.id ORDER BY ${ orderSql.join(' , ') }`
         } else {
             sql += ` group by uc.id ORDER BY uc.id desc`
         }
-        let data = await sequelizeObj.query(sql+ ` limit ${ pageNum ? pageNum : 0 }, ${ pageLength };`,{ 
+        pageNum = pageNum ?? 0
+        pageLength = pageLength ?? 10
+        if(pageNum && pageLength){
+            sql += ` limit ?,?`
+            replacements.push(...[Number(pageNum), Number(pageLength)])
+        }
+
+        let data = await sequelizeObj.query(sql,{ 
             type: QueryTypes.SELECT 
+            , replacements: replacements
         })
         let dataTotal = await sequelizeObj.query(sql2, { 
             type: QueryTypes.SELECT 
+            , replacements: replacements2
         })
         dataTotal = dataTotal[0].total
         return res.json({ data: data, recordsFiltered: dataTotal, recordsTotal: dataTotal })
@@ -578,9 +642,10 @@ const getUrgentDutyById = async function (req, res){
         let data = await sequelizeObj.query(`
             select uc.*, d.contactNumber, d.driverName from urgent_config uc 
             left join driver d on d.driverId = uc.driverId
-            where uc.id = ${ id } LIMIT 1
+            where uc.id = ? LIMIT 1
         `,{ 
             type: QueryTypes.SELECT 
+            , replacements: [id]
         })
         return res.json(utils.response(1, data[0]));
     } catch (error) {
@@ -600,12 +665,22 @@ const updateUrgentDutyById = async function (req, res) {
         let urgentConfigList = await sequelizeObj.query(`
         select id from urgent_config 
         where cancelledDateTime is null
-        and (driverId = ${ urgentConfig.driverId } or vehicleNo = '${ urgentConfig.vehicleNo }')
-        and (('${ urgentConfig.indentStartDate }' >= indentStartDate AND '${ urgentConfig.indentStartDate }' <= indentEndDate) 
-        OR ('${ urgentConfig.indentEndDate }' >= indentStartDate AND '${ urgentConfig.indentEndDate }' <= indentEndDate) 
-        OR ('${ urgentConfig.indentStartDate }' < indentStartDate AND '${ urgentConfig.indentEndDate }' > indentEndDate))
-        and id != ${ id }
-        `,{ type: QueryTypes.SELECT })
+        and (driverId = ? or vehicleNo = ?)
+        and ((? >= indentStartDate AND ? <= indentEndDate) 
+        OR (? >= indentStartDate AND ? <= indentEndDate) 
+        OR (? < indentStartDate AND ? > indentEndDate))
+        and id != ?
+        `,{ type: QueryTypes.SELECT, replacements: [
+            urgentConfig.driverId,
+            urgentConfig.vehicleNo,
+            urgentConfig.indentStartDate,
+            urgentConfig.indentStartDate,
+            urgentConfig.indentEndDate,
+            urgentConfig.indentEndDate,
+            urgentConfig.indentStartDate,
+            urgentConfig.indentEndDate,
+            id
+        ] })
         if(urgentConfigList.length > 0) {
             return res.json(utils.response(0, ` Please re-select. There is already a driver/vehicle in the same time frame.`));
         }
@@ -618,8 +693,8 @@ const updateUrgentDutyById = async function (req, res) {
         let urgentDutyList = await sequelizeObj.query(`
             select ui.id, ui.mobileEndTime from urgent_duty ud
             left join urgent_indent ui on ui.dutyId = ud.id 
-            where ui.id is not null and ud.configId = ${ id } and (ui.mobileStartTime is not null and ui.status != 'cancelled')
-        `,{ type: QueryTypes.SELECT })
+            where ui.id is not null and ud.configId = ? and (ui.mobileStartTime is not null and ui.status != 'cancelled')
+        `,{ type: QueryTypes.SELECT, replacements: [id] })
         if(urgentDutyList.length > 0){
             if(urgentDutyList[0].mobileEndTime) return res.json(utils.response(0, ` Operation failed, emergency indentation has been completed.`));
             return res.json(utils.response(0, ` The operation failed and Urgent indent has begun.`));
@@ -648,8 +723,8 @@ const updateUrgentDutyById = async function (req, res) {
                 let urgentDutyList = await sequelizeObj.query(`
                     select ui.id, ud.mobileStartTime from urgent_duty ud
                     left join urgent_indent ui on ui.dutyId = ud.id 
-                    where ui.id is not null and ud.configId = ${ id } and ud.mobileEndTime is null and ui.status != 'cancelled'
-                `,{ type: QueryTypes.SELECT })
+                    where ui.id is not null and ud.configId = ? and ud.mobileEndTime is null and ui.status != 'cancelled'
+                `,{ type: QueryTypes.SELECT, replacements: [id] })
                 if(urgentDutyList.length > 0){
                     throw ` The operation failed. Emergency indentation already exists and cannot change the time and Resource.`
                 }
@@ -713,8 +788,8 @@ const updateUrgentDutyById = async function (req, res) {
             let urgentDutyList = await sequelizeObj.query(`
                 select ui.id, ui.indentId, ud.mobileStartTime from urgent_duty ud
                 left join urgent_indent ui on ui.dutyId = ud.id 
-                where ui.id is not null and ud.configId = ${ id } and ud.mobileEndTime is null and ui.status not in ('completed', 'cancelled')
-            `,{ type: QueryTypes.SELECT })
+                where ui.id is not null and ud.configId = ? and ud.mobileEndTime is null and ui.status not in ('completed', 'cancelled')
+            `,{ type: QueryTypes.SELECT, replacements: [id] })
             if(urgentDutyList.length > 0){
                 for(let item of urgentDutyList){
                     let driver = await Driver.findOne({ where: { driverId: urgentConfig.driverId } })
@@ -810,11 +885,16 @@ const getUrgentIndentList = async function (req, res) {
         `
 
         let replacements = [], limitCondition = []
+        let replacements2 = []
         if (user.userType.toLowerCase() == 'customer') {
-            limitCondition.push(` ui.groupId = ${ user.unitId } `)
+            limitCondition.push(` ui.groupId = ? `)
+            replacements.push(user.unitId)
+            replacements2.push(user.unitId)
         } else if (user.userType.toLowerCase() == 'administrator') {
             if (group) {
-                limitCondition.push(` ui.groupId = ${ group } `)
+                limitCondition.push(` ui.groupId = ? `)
+                replacements.push(group)
+                replacements2.push(group)
             } 
         } else if (user.userType.toLowerCase() == 'hq') {
             let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(user.userId)
@@ -822,10 +902,13 @@ const getUrgentIndentList = async function (req, res) {
             // HQ user has group permission
             if (user.group?.length) {
                 if (group) {
-                    limitCondition.push(` ui.groupId = ${ group } `)
+                    limitCondition.push(` ui.groupId = ? `)
+                    replacements.push(group)
+                    replacements2.push(group)
                 } else if (group == 0) {
                     limitCondition.push(` ui.groupId in (?) `)
                     replacements.push(groupIdList)
+                    replacements2.push(groupIdList)
                 } 
                 // else {
                 //     limitCondition.push(` ui.groupId IS NULL `)
@@ -836,10 +919,12 @@ const getUrgentIndentList = async function (req, res) {
             if (unitIdList.length) {
                 tempSqlList.push(` un.id IN (?) `)
                 replacements.push(unitIdList);
+                replacements2.push(unitIdList);
             }
             if (groupIdList.length) {
                 tempSqlList.push(` ui.groupId in (?) `)
                 replacements.push(groupIdList);
+                replacements2.push(groupIdList);
             }
             
             if (tempSqlList.length) {
@@ -852,9 +937,12 @@ const getUrgentIndentList = async function (req, res) {
                 limitCondition.push(` ( ui.hub <=> ? AND ui.node <=> ? ) `)
                 replacements.push(user.hub);
                 replacements.push(user.node);
+                replacements2.push(user.hub);
+                replacements2.push(user.node);
             } else {
                 limitCondition.push(` ( ui.hub = ? ) `)
                 replacements.push(user.hub);
+                replacements2.push(user.hub);
             }
         }
 
@@ -865,31 +953,49 @@ const getUrgentIndentList = async function (req, res) {
             } else if (taskStatus.toLowerCase() == 'waitcheck') {
                 limitCondition.push(` (ui.status LIKE '%waitcheck%' and now() < ui.endTime)`)
             } else {
-                limitCondition.push(` ui.status LIKE '%${ taskStatus }%' `)
+                limitCondition.push(` ui.status LIKE ? `)
+                replacements.push(`'%${ taskStatus }%'`)
+                replacements2.push(`'%${ taskStatus }%'`)
             }
         }
 
         if (taskId) {
-            limitCondition.push(` ui.indentId LIKE '%${ taskId }%' or ui.requestId LIKE '%${ taskId }%' `)
+            limitCondition.push(` ui.indentId LIKE ? or ui.requestId LIKE ? `)
+            replacements.push(`'%${ taskId }%'`)
+            replacements.push(`'%${ taskId }%'`)
+            replacements2.push(`'%${ taskId }%'`)
+            replacements2.push(`'%${ taskId }%'`)
         }
 
         if (hub) {
-            limitCondition.push(` ui.hub = '${ hub }' `)
+            limitCondition.push(` ui.hub = ? `)
+            replacements.push(hub)
+            replacements2.push(hub)
         }
         if (node) {
-            limitCondition.push(` ui.node = '${ node }' `)
+            limitCondition.push(` ui.node = ? `)
+            replacements.push(node)
+            replacements2.push(node)
         }
         if (driverName) {
-            limitCondition.push(` d.driverName LIKE '%${ driverName }%' `)
+            limitCondition.push(` d.driverName LIKE ? `)
+            replacements.push(`'%${ driverName }%'`)
+            replacements2.push(`'%${ driverName }%'`)
         }
         if (vehicleNo) {
-            limitCondition.push(` ud.vehicleNo LIKE '%${ vehicleNo }%' `)
+            limitCondition.push(` ud.vehicleNo LIKE  ?`)
+            replacements.push(`'%${ vehicleNo }%'`)
+            replacements2.push(`'%${ vehicleNo }%'`)
         }
         if (indentId) {
-            limitCondition.push(` ui.id LIKE '%${ indentId }%' `)
+            limitCondition.push(` ui.id LIKE ? `)
+            replacements.push(`'%${ indentId }%'`)
+            replacements2.push(`'%${ indentId }%'`)
         }
         if (selectedDate) {
-            limitCondition.push(` Date(ui.startTime) LIKE '%${ selectedDate }%' `)
+            limitCondition.push(` Date(ui.startTime) LIKE  ?`)
+            replacements.push(`'%${ selectedDate }%'`)
+            replacements2.push(`'%${ selectedDate }%'`)
         }
 
         if (limitCondition.length) {
@@ -897,11 +1003,16 @@ const getUrgentIndentList = async function (req, res) {
             baseSql2 += ' WHERE ' + limitCondition.join(' AND ');
         }
 
-        let totalList = await sequelizeObj.query(baseSql2, { type: QueryTypes.SELECT, replacements });
+        let totalList = await sequelizeObj.query(baseSql2, { type: QueryTypes.SELECT, replacements: replacements2 });
         
-        baseSql += ` order by ui.startTime, ui.indentId  asc limit ${ pageNum }, ${ pageLength }`
+        baseSql += ` order by ui.startTime, ui.indentId  asc `
+        if(pageNum && pageLength){
+            baseSql += ` limit ?,?`
+            replacements.push(...[Number(pageNum), Number(pageLength)])
+        }
+      
         console.log(baseSql)
-        let indentList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements })
+        let indentList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: replacements })
 
         let groupList = await Group.findAll()
 

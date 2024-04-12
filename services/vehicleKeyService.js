@@ -10,7 +10,6 @@ const conf = require('../conf/conf');
 const CONTENT = require('../util/content');
 
 const path = require('path');
-// const fs = require('fs');
 const fs = require('graceful-fs');
 const xlsx = require('node-xlsx');
 const formidable = require('formidable');
@@ -102,8 +101,10 @@ module.exports = {
             ) kk on kk.siteId = ks.siteId
             where ks.status = 1
         `;
+        let params = []
         if (hub) {
-            baseSQL += ` and un.unit ='${hub}' `;
+            baseSQL += ` and un.unit =? `;
+            params.push(hub);
         } else {
             if (user.userType == CONTENT.USER_TYPE.HQ) {
                 let hqUnitIds = await unitService.getUnitPermissionIdList(user);
@@ -118,24 +119,23 @@ module.exports = {
             if (node == '-') {
                 baseSQL += ` and un.subUnit is null `;
             } else {
-                baseSQL += ` and un.subUnit = '${node}' `;
+                baseSQL += ` and un.subUnit = ? `;
+                params.push(node);
             }
         }
         if (searchParam) {
+            let likeParams = sequelizeObj.escape("%" + searchParam + "%");
             baseSQL += ` and (
-                ks.boxName like '%${searchParam}%'
-                or ks.locationName like '%${searchParam}%'
-                or ks.type like '%${searchParam}%'
-                or un.unit like '%${searchParam}%'
-                or un.subUnit like '%${searchParam}%'
-            ) `;
+                ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + ` or ks.type like `+ likeParams 
+                + ` or un.unit like `+ likeParams + ` or un.subUnit like `+ likeParams + `) `;
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
-
-        baseSQL += ` ORDER BY ks.boxName ASC limit ${pageNum}, ${pageLength} `;
-        let keyBoxList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        params.push(pageNum);
+        params.push(pageLength);
+        baseSQL += ` ORDER BY ks.boxName ASC limit ?, ? `;
+        let keyBoxList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
 
         return res.json({respMessage: keyBoxList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
     },
@@ -177,12 +177,15 @@ module.exports = {
             LEFT JOIN unit un on un.id = ks.unitId
             where ks.status=1
         `;
+        let params = [];
         if (siteId) {
-            baseSQL += ` and kd.siteId = '${siteId}' `;
+            baseSQL += ` and kd.siteId = ? `;
+            params.push(siteId);
         }
 
         if (hub) {
-            baseSQL += ` and un.unit ='${hub}' `;
+            baseSQL += ` and un.unit =? `;
+            params.push(hub);
         } else {
             if (user.userType == CONTENT.USER_TYPE.HQ) {
                 let hqUnitIds = await unitService.getUnitPermissionIdList(user);
@@ -197,27 +200,24 @@ module.exports = {
             if (node == '-') {
                 baseSQL += ` and un.subUnit is null `;
             } else {
-                baseSQL += ` and un.subUnit = '${node}' `;
+                baseSQL += ` and un.subUnit = ? `;
+                params.push(node);
             }
         }
 
         if (searchParam) {
+            let likeParams = sequelizeObj.escape("%" + searchParam + "%");
             baseSQL += ` and (
-                ks.boxName like '%${searchParam}%'
-                or ks.locationName like '%${searchParam}%'
-                or kd.keyTagId like '%${searchParam}%'
-                or veh.vehicleNo like '%${searchParam}%'
-                or ks.type like '%${searchParam}%'
-                or un.unit like '%${searchParam}%'
-                or un.subUnit like '%${searchParam}%'
-            ) `;
+                ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + ` or kd.keyTagId like `+ likeParams 
+                + ` or veh.vehicleNo like `+ likeParams + ` or ks.type like `+ likeParams + ` or un.unit like `+ likeParams + ` or un.subUnit like `+ likeParams + `) `;
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
-
-        baseSQL += ` ORDER BY ks.boxName ASC, kd.slotId ASC limit ${pageNum}, ${pageLength} `;
-        let keyBoxDetailList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        params.push(pageNum);
+        params.push(pageLength);
+        baseSQL += ` ORDER BY ks.boxName ASC, kd.slotId ASC limit ?, ? `;
+        let keyBoxDetailList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
 
         return res.json({respMessage: keyBoxDetailList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
     },
@@ -265,11 +265,14 @@ module.exports = {
             LEFT JOIN unit un on un.id = ks.unitId
             where ko.optType in('withdrawConfirm', 'returnConfirm', 'withdrawConfirmUpload', 'returnConfirmUpload', 'withdrawConfirmQrcode', 'returnConfirmQrcode', 'Mustering') 
         `;
+        let params = [];
         if (siteId) {
-            baseSQL += ` and ko.siteId = '${siteId}' `;
+            baseSQL += ` and ko.siteId = ? `;
+            params.push(siteId)
         }
         if (hub) {
-            baseSQL += ` and un.unit ='${hub}' `;
+            baseSQL += ` and un.unit =? `;
+            params.push(hub)
         } else {
             if (user.userType == CONTENT.USER_TYPE.HQ) {
                 let hqUnitIds = await unitService.getUnitPermissionIdList(user);
@@ -284,24 +287,23 @@ module.exports = {
             if (node == '-') {
                 baseSQL += ` and un.subUnit is null `;
             } else {
-                baseSQL += ` and un.subUnit = '${node}' `;
+                baseSQL += ` and un.subUnit = ? `;
+                params.push(node)
             }
         }
         if (searchParam) {
+            let likeParams = sequelizeObj.escape("%" + searchParam + "%");
             baseSQL += ` and (
-                ks.boxName like '%${searchParam}%'
-                or ko.keyTagId like '%${searchParam}%'
-                or ko.vehicleNo like '%${searchParam}%'
-                or un.unit like '%${searchParam}%'
-                or un.subUnit like '%${searchParam}%'
-            ) `;
+                ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + ` or kd.keyTagId like `+ likeParams 
+                + ` or ks.type like `+ likeParams + ` or un.unit like `+ likeParams + ` or un.subUnit like `+ likeParams + `) `;
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
-
-        baseSQL += ` ORDER BY ko.createdAt DESC limit ${pageNum}, ${pageLength} `;
-        let keyTransactionsList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        params.push(pageNum)
+        params.push(pageLength)
+        baseSQL += ` ORDER BY ko.createdAt DESC limit ?, ? `;
+        let keyTransactionsList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
 
         return res.json({respMessage: keyTransactionsList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
     },
@@ -309,13 +311,6 @@ module.exports = {
     parseKeyBoxQRCode: async function (req, res) {
         try {
             let { decodedText, decodedResult, userId, siteId } = req.body;
-            // {
-            //     "SiteID":"1",
-            //     "TransactDateTime":"2023-02-15 15:48:12",
-            //     "AvaiKeyList":"1:0000011112,2:0000011113,3:0000011116,4:0000011119,60: 0000011121"…,
-            //     "GetNextInfo":"1/3",
-            //     "GeneratedBy":"0"
-            // }
             let optTime = moment().format('YYYY-MM-DD HH:mm:ss');
             let newKeyOptRecord = {
                 taskId: '-',
@@ -335,17 +330,6 @@ module.exports = {
                 if (httpResult.code == 0) {
                     log.info(httpResult.message)
                     if (httpResult.data && httpResult.data.codeResult == 0) {
-                    //     let resultJson = {
-                    //         "SiteID":"1",
-                    //         "TransactDateTime":"2023-02-15 15:48:12",
-                    //         // "AvaiKeyList":"1:0000011112,2:0000011113,3:0000011116,4:0000011119,8:0000011121",
-                    //         // "GetNextInfo":"1/3",
-                    //         // "AvaiKeyList":"11:0000011122,13:0000011123,17:0000011126",
-                    //         // "GetNextInfo":"2/3",
-                    //         "AvaiKeyList":"22:0000011132,23:0000011133,27:0000011136",
-                    //         "GetNextInfo":"3/3",
-                    //         "GeneratedBy":"0"
-                    //    };
                         let resultJson = JSON.parse(httpResult.data.codeString);
                         newKeyOptRecord.dataJson = httpResult.data.codeString;
                         
@@ -382,11 +366,6 @@ module.exports = {
                         let siteKeyDetail = [];
                         await VehicleKeyOptRecord.create(newKeyOptRecord);
                         siteKeyDetail = caclSiteSlotInfo(siteId);
-                        // } else {
-                        //     newKeyOptRecord.optStatus = 'Wrong QRCode';
-                        //     await VehicleKeyOptRecord.create(newKeyOptRecord);
-                        //     return res.json(utils.response(0, 'Parse QRCode failed, wrong QRCode!'));
-                        // }
 
                         return res.json(utils.response(1, {siteId, siteName, siteLocation, siteKeyDetail}));
                     } else {
@@ -510,7 +489,7 @@ module.exports = {
                 }
                 // log.info('fields: ', JSON.stringify(fields))
                 // log.info('files: ', JSON.stringify(files))
-                // TODO: change to array object(allow multi files upload)
+                // change to array object(allow multi files upload)
                 if (files.constructor !== Array) files.file = [files.file];
 
                 let fileDataList = [];
@@ -591,12 +570,15 @@ module.exports = {
             LEFT JOIN unit un on un.id = ks.unitId
             where veh.keyTagId IS NOT NULL AND ks.id IS NOT NULL
         `;
+        let params = [];
         if (siteId) {
-            baseSQL += ` and kd.siteId = '${siteId}' `;
+            baseSQL += ` and kd.siteId = ? `;
+            params.push(siteId);
         }
 
         if (hub) {
-            baseSQL += ` and un.unit ='${hub}' `;
+            baseSQL += ` and un.unit =? `;
+            params.push(hub);
         } else {
             if (user.userType == CONTENT.USER_TYPE.HQ) {
                 let hqUnitIds = await unitService.getUnitPermissionIdList(user);
@@ -611,28 +593,25 @@ module.exports = {
             if (node == '-') {
                 baseSQL += ` and un.subUnit is null `;
             } else {
-                baseSQL += ` and un.subUnit = '${node}' `;
+                baseSQL += ` and un.subUnit = ? `;
+                params.push(node);
             }
         }
 
         if (searchParam) {
+            let likeParams = sequelizeObj.escape("%" + searchParam + "%");
             baseSQL += ` and (
-                ks.boxName like '%${searchParam}%'
-                or ks.locationName like '%${searchParam}%'
-                or kd.keyTagId like '%${searchParam}%'
-                or veh.vehicleNo like '%${searchParam}%'
-                or ks.type like '%${searchParam}%'
-                or un.unit like '%${searchParam}%'
-                or un.subUnit like '%${searchParam}%'
-            ) `;
+                ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + ` or kd.keyTagId like `+ likeParams 
+                + ` or veh.vehicleNo like `+ likeParams + ` or ks.type like `+ likeParams + ` or un.unit like `+ likeParams + ` or un.subUnit like `+ likeParams + `) `;
         }
 
         baseSQL += ` GROUP BY ks.id, veh.vehicleType `;
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
-
-        baseSQL += ` ORDER BY ks.id, veh.vehicleType limit ${pageNum}, ${pageLength} `;
-        let keyBoxSummaryList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        params.push(pageNum);
+        params.push(pageLength);
+        baseSQL += ` ORDER BY ks.id, veh.vehicleType limit ?, ? `;
+        let keyBoxSummaryList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
 
         return res.json({respMessage: keyBoxSummaryList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
     },
@@ -644,7 +623,6 @@ module.exports = {
         let siteId = req.body.siteId;
         let selectedHub = req.body.hub;
         let selectedNode = req.body.node;
-        let vehicleType = null;
 
         let userId = req.cookies.userId
         let user = await userService.getUserDetailInfo(req.cookies.userId)
@@ -678,12 +656,15 @@ module.exports = {
                 LEFT JOIN unit un on un.id = ks.unitId
                 where kd.keyTagId IS NOT NULL AND ks.unitId IS NOT NULL
             `;
+            let params = [];
             if (siteId) {
-                baseSQL += ` and kd.siteId = '${siteId}' `;
+                baseSQL += ` and kd.siteId = ? `;
+                params.push(siteId);
             }
 
             if (selectedHub) {
-                baseSQL += ` and un.unit ='${selectedHub}' `;
+                baseSQL += ` and un.unit =? `;
+                params.push(selectedHub);
             } else {
                 if (user.userType == CONTENT.USER_TYPE.HQ) {
                     let hqUnitIds = await unitService.getUnitPermissionIdList(user);
@@ -698,23 +679,24 @@ module.exports = {
                 if (selectedNode == '-') {
                     baseSQL += ` and un.subUnit is null `;
                 } else {
-                    baseSQL += ` and un.subUnit = '${selectedNode}' `;
+                    baseSQL += ` and un.subUnit = ? `;
+                    params.push(selectedNode);
                 }
             }
 
             if (searchParam) {
-                baseSQL += ` and (
-                    ks.boxName like '%${searchParam}%'
-                    or ks.locationName like '%${searchParam}%'
-                ) `;
+                let likeParams = sequelizeObj.escape("%" + searchParam + "%");
+                baseSQL += ` and (ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + `) `;
             }
 
             baseSQL += ` GROUP BY ks.unitId, veh.vehicleType `;
-            let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+            let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
             let totalRecord = countResult.length
 
-            baseSQL += ` ORDER BY un.unit, un.subUnit, veh.vehicleType limit ${pageNum}, ${pageLength} `;
-            let unitKeyStatList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT });
+            params.push(pageNum);
+            params.push(pageLength);
+            baseSQL += ` ORDER BY un.unit, un.subUnit, veh.vehicleType limit ?, ? `;
+            let unitKeyStatList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params });
     
             return res.json({respMessage: unitKeyStatList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
         } catch (error) {

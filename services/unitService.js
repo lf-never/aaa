@@ -16,9 +16,6 @@ const { sequelizeSystemObj } = require('../db/dbConf_system.js');
 
 module.exports.getAllHubNodeList = async function (req, res) {
     try {
-        let { userId } = req.body;
-        let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(userId)
-
         let unitList = await sequelizeObj.query(` 
             SELECT id, unit, IFNULL(subUnit, '-') AS subUnit FROM unit GROUP BY unit, subUnit ; 
         `, { type: QueryTypes.SELECT });
@@ -35,7 +32,7 @@ module.exports.getAllHubNodeList = async function (req, res) {
 
         for (let unit of unitList) {
             if (unit.subUnit == '-') {
-                // TODO: add 'ALL' as first one before subUnit is '-'
+                // add 'ALL' as first one before subUnit is '-'
                 for (let _unit of groupResult) {
                     if (_unit.unit == unit.unit) {
                         result.push(_unit)
@@ -233,9 +230,6 @@ module.exports.getSubUnitPermissionList2 = async function (req, res) {
             allSubUnitList = await Unit.findAll({
                 where: {
                     unit: unitName,
-                    // subUnit: {
-                    //     [Op.is]: null
-                    // }
                 }
             });
         }
@@ -261,8 +255,6 @@ const getPermitUnitList2 = async function (userId = null) {
     try {
         let result = { hubNodeList: [], hubNodeIdList: [] }
         let user = await userService.UserUtils.getUserDetailInfo(userId);
-        // log.info(`getPermitUnitList2 Request => `)
-        // log.info(JSON.stringify(user, null, 4))
         if (!user) {
             // Empty collection
         } else if ([ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.LICENSING_OFFICER ].indexOf(user.userType) > -1) {
@@ -334,9 +326,6 @@ const getPermitUnitList2 = async function (userId = null) {
         }
 
         result.user = user
-
-        // log.info(`getPermitUnitList2 Result => `)
-        // log.info(JSON.stringify(result, null, 4))
         return result
     } catch (error) {
         throw error
@@ -348,8 +337,6 @@ const UnitUtils = {
     getPermitUnitList: async function (userId) {
         try {
             let user = await userService.UserUtils.getUserDetailInfo(userId);
-            // log.info(`getPermitUnitList Request => `)
-            // log.info(JSON.stringify(user, null, 4))
             let result = { unitList: [], subUnitList: [], unitIdList: [] }
             if ([ CONTENT.USER_TYPE.ADMINISTRATOR ].indexOf(user.userType) > -1) {
                 let unitList = await Unit.findAll();
@@ -396,8 +383,6 @@ const UnitUtils = {
             result.unitList = Array.from(new Set(result.unitList))
             result.subUnitList = Array.from(new Set(result.subUnitList))
 
-            // log.info(`getPermitUnitList Result => `)
-            // log.info(JSON.stringify(result, null, 4))
             return result
         } catch (error) {
             throw error
@@ -410,7 +395,6 @@ const UnitUtils = {
             let unit = await Unit.findAll()
             unitId = unit.map(item => { return item.id });
             unitId = Array.from(new Set(unitId));
-            // unitId = (unitId.toString()).split(',')
         } else {
             if(node){
                 let unit = await Unit.findOne({ where: { unit: hub, subUnit: node } })
@@ -419,7 +403,6 @@ const UnitUtils = {
                 let unit = await Unit.findAll({ where: { unit: hub } })
                 unitId = unit.map(item => { return item.id });
                 unitId = Array.from(new Set(unitId));
-                // unitId = (unitId.toString()).split(',')
             }
         }
         

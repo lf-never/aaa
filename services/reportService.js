@@ -22,7 +22,7 @@ const checkNumber = function (number) {
         || number == -Infinity 
         || number == null 
         || number == '' 
-        || number == NaN 
+        || isNaN(number)
         || typeof number == 'undefined') {
         return false
     } else if (isNaN(number)) {
@@ -46,11 +46,11 @@ const getQuarterMonthList = function (month) {
     ]
 
     if (!month) {
-        throw `(getQuarterMonthList): param ${ month } is not correct`
+        throw Error(`(getQuarterMonthList): param ${ month } is not correct`)
     }
-    // TODO: need -1 to find array index
+    // need -1 to find array index
     let quarter = quarterList[ moment(month).quarter() - 1 ];
-    // TODO: need -1 to find month index
+    // need -1 to find month index
     return quarter.map(item => moment().month(item - 1))
 }
 
@@ -60,7 +60,7 @@ const getServiceTypeIdList = async function (category) {
 }
 const getIndentsData = async function (month, groupId) {
     try {
-        // TODO: find out serviceType Id where category is 'MV'
+        // find out serviceType Id where category is 'MV'
         let serviceTypeIdList = await getServiceTypeIdList('MV');
         if (serviceTypeIdList.length) {
             let systemSql = `
@@ -85,7 +85,7 @@ const getIndentsData = async function (month, groupId) {
 }
 const getIndentsDataGroupByTripNo = async function (month, groupId) {
     try {
-        // TODO: find out serviceType Id where category is 'MV'
+        // find out serviceType Id where category is 'MV'
         let serviceTypeIdList = await getServiceTypeIdList('MV');
         if (serviceTypeIdList.length) {
             let systemSql = `
@@ -202,13 +202,13 @@ const getIndentsReport = async function (month, groupId) {
         }
     }
     const resultHandler = function () {
-        // TODO: Calculate averageQty
+        // Calculate averageQty
         result.total.averageQty = (result.total.preMonthQty + result.total.currentMonthQty) / 2
         result.late.averageQty = (result.late.preMonthQty + result.late.currentMonthQty) / 2
         result.amendment.averageQty = (result.amendment.preMonthQty + result.amendment.currentMonthQty) / 2
         result.cancel.averageQty = (result.cancel.preMonthQty + result.cancel.currentMonthQty) / 2
 
-        // TODO: Calculate change
+        // Calculate change
         result.total.change = (result.total.currentMonthQty - result.total.preMonthQty) / result.total.preMonthQty
         result.late.change = (result.late.currentMonthQty - result.late.preMonthQty) / result.late.preMonthQty
         result.amendment.change = (result.amendment.currentMonthQty - result.amendment.preMonthQty) / result.amendment.preMonthQty
@@ -253,7 +253,7 @@ const getIndentsReport = async function (month, groupId) {
             if (indent.taskStatus?.toLowerCase() == 'cancelled' && getDateLength(indent.cancellationTime, indent.executionDate + ' ' + indent.executionTime) < 7) {
                 result.cancel[target]++;
             } else if (indent.taskStatus?.toLowerCase() !== 'cancelled') {
-                // TODO: If both lat and amendment, select late, so judge late first here
+                // If both lat and amendment, select late, so judge late first here
                 if (getDateLength(indent.createdAt, indent.executionDate + ' ' + indent.executionTime) < 7) {
                     result.late[target]++;
                 } else if (getDateLength(indent.updatedAt, indent.executionDate + ' ' + indent.executionTime) < 7) {
@@ -320,13 +320,13 @@ const getIndentSafetyReport = async function (month, groupId) {
                 HardBrakingQty: 0,
                 SpeedingQty: 0,
             }
-            // TODO: get tripNo for checkout task data
+            // get tripNo for checkout task data
             let systemIndentsData = await getIndentsDataGroupByTripNo(quarterMonth, groupId)
             let tripNoList = systemIndentsData.map(item => item.tripNo)
             if (tripNoList.length) {
-                // TODO: cover RapidAccQty, HardBrakingQty, SpeedingQty
+                // cover RapidAccQty, HardBrakingQty, SpeedingQty
                 result[ monthStr ] = await getOffenceCount(tripNoList)
-                // TODO: add key IncidentQty
+                // add key IncidentQty
                 result[ monthStr ].IncidentQty = await getSafetyCount(tripNoList)
             } else {
                 log.warn(`(getIndentSafetyReport): tripNoList is empty, return 0`)
@@ -344,9 +344,9 @@ const getTOReport = async function (month, groupId) {
         dvQty: 0,
         loaQty: 0,
     }
-    // TODO: get current driver where assign to group task
+    // get current driver where assign to group task
     try {
-        // TODO: search by system task
+        // search by system task
         let serviceTypeIdList = await getServiceTypeIdList('MV');
         if (serviceTypeIdList.length) {
             let toResult = await sequelizeSystemObj.query(`
@@ -365,17 +365,6 @@ const getTOReport = async function (month, groupId) {
             log.warn(`(getTOReport) there is no service type category named 'MV'`)
         }
 
-        // TODO: get dv/loa driver info, ignore month(from jada)
-        // dv/loa driver has no month data flag.
-        // (ignore loan out data, can not search by month)
-        // let dvLoaResult = await sequelizeObj.query(`
-        //     SELECT COUNT(*) AS \`count\`, \`role\`
-        //     FROM \`user\` 
-        //     WHERE userType = 'MOBILE'
-        //     AND \`role\` IN ('dv', 'loa')
-        //     AND unitId = ?
-        //     GROUP BY \`role\`
-        // `, { type: QueryTypes.SELECT, replacements: [ groupId ] })
         let dvLoaResult = await sequelizeObj.query(`
             SELECT COUNT(*) AS \`count\`, u.role 
             FROM \`user\` u
@@ -409,9 +398,9 @@ const getVehicleReport = async function (month, groupId) {
         Training: 0,
         Admin: 0,
     }
-    // TODO: get current vehicle where assign to group task
+    // get current vehicle where assign to group task
     try {
-        // TODO: search by system task
+        // search by system task
         let serviceTypeIdList = await getServiceTypeIdList('MV');
         if (serviceTypeIdList.length) {
             let vehicleResult = await sequelizeSystemObj.query(`
@@ -448,7 +437,7 @@ const getVehicleReport = async function (month, groupId) {
 const getUnitFeedback = async function (month, groupId) {
     let commentResult = []
     try {
-        // TODO: find out serviceType Id where category is 'MV'
+        // find out serviceType Id where category is 'MV'
         let serviceTypeIdList = await getServiceTypeIdList('MV');
         if (serviceTypeIdList.length) {
             let sql = `
@@ -1924,7 +1913,7 @@ module.exports = {
         try {
             let { month, groupId } = req.body
             if (!month || !groupId) {
-                throw `Month or unit is needed.`
+                throw Error(`Month or unit is needed.`)
             } else {
                 month = moment(month, 'YYYY-MM')
             }
@@ -1939,7 +1928,7 @@ module.exports = {
             // Not ready
             result.unitFeedback = await getUnitFeedback(month, groupId)
 
-            // TODO: get tripNo for checkout task data
+            // get tripNo for checkout task data
             let systemIndentsData = await getIndentsDataGroupByTripNo(month, groupId)
             let tripNoList = systemIndentsData.map(item => item.tripNo)
             result.tosFeedback = await getTOSFeedback(tripNoList)
@@ -2075,7 +2064,7 @@ module.exports = {
             pageLength = Number.parseInt(pageLength)
 
             let user = await userService.UserUtils.getUserDetailInfo(userId);
-            if (!user) throw `User ${ userId } does not exist.`;
+            if (!user) throw Error(`User ${ userId } does not exist.`);
             if (![ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.HQ, CONTENT.USER_TYPE.UNIT ].includes(user.userType)) {
                 log.warn(`Only hq, unit, admin user can view arb report`)
                 return []
@@ -2231,7 +2220,7 @@ module.exports = {
             pageLength = Number.parseInt(pageLength)
 
             let user = await userService.UserUtils.getUserDetailInfo(userId);
-            if (!user) throw `User ${ userId } does not exist.`;
+            if (!user) throw Error(`User ${ userId } does not exist.`);
             if (![ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.HQ, CONTENT.USER_TYPE.UNIT ].includes(user.userType)) {
                 log.warn(`Only hq, unit, admin user can view arb report`)
                 return []
@@ -2448,9 +2437,6 @@ module.exports = {
         }
         let startDate = req.body.startDate;
         let endDate = req.body.endDate;
-        // startDate = '2023-11-14';
-        // endDate = '2023-11-21';
-        let selectedHub = req.body.selectedHub;
         if (!startDate || startDate == 'Invalid date') {
             startDate = moment().add(-7, 'day').format('YYYY-MM-DD');
         }
@@ -2546,8 +2532,3 @@ module.exports = {
          }
     }
 }
-
-
-// getIndentsReport().then(result => console.log(result))
-// console.log(getQuarterMonthList('2023-06-10 12:00:00'))
-// console.log(moment().format('MMM'))

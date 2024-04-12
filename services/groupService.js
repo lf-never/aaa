@@ -43,14 +43,13 @@ module.exports.getUserListWithNoGroup = async function (req, res) {
 
 module.exports.createUserGroup = async function (req, res) {
     try {
-        // userGroup => { groupName: '', userIdList: [] }
         let userGroup = req.body.userGroup;
         await sequelizeObj.transaction(async transaction => {
             const checkUserGroup = async function (userGroup) {
                 if (!userGroup.groupName) {
                     throw `GroupName can not be empty.`
                 }
-                // TODO: check if exist in userGroup
+                // check if exist in userGroup
                 let userGroupResult = await UserGroup.findOne({ where: { groupName: userGroup.groupName } })
                 if (userGroupResult) {
                     throw `UserGroup ${ userGroup.groupName } already exist.`
@@ -61,7 +60,7 @@ module.exports.createUserGroup = async function (req, res) {
                 for (let userId of userGroup.userIdList) {
                     newUserGroupList.push({ groupName: userGroup.groupName, userId })
                 }
-                // TODO: at least one record, while userId is empty
+                // at least one record, while userId is empty
                 if (!newUserGroupList.length) newUserGroupList.push({ groupName: userGroup.groupName })
                 await UserGroup.bulkCreate(newUserGroupList);
             }
@@ -80,18 +79,12 @@ module.exports.createUserGroup = async function (req, res) {
 
 module.exports.updateUserGroup = async function (req, res) {
     try {
-        // userGroup => { groupName: '', userIdList: [] }
         let userGroup = req.body.userGroup;
         await sequelizeObj.transaction(async transaction => {
             const checkUserGroup = async function (userGroup) {
                 if (!userGroup.groupName) {
                     throw `GroupName can not be empty.`
                 }
-                // // TODO: check if exist in userGroup
-                // let userGroupResult = await UserGroup.findOne({ where: { groupName: userGroup.groupName } })
-                // if (!userGroupResult) {
-                //     throw `UserGroup ${ userGroup.groupName } does not exist.`
-                // }
             }
             const updateUserGroup = async function (userGroup) {
                 await UserGroup.destroy({ where: { groupName: userGroup.groupName } })
@@ -99,7 +92,7 @@ module.exports.updateUserGroup = async function (req, res) {
                 for (let userId of userGroup.userIdList) {
                     newUserGroupList.push({ groupName: userGroup.groupName, userId })
                 }
-                // TODO: at least one record, while userId is empty
+                // at least one record, while userId is empty
                 if (newUserGroupList.length) {
                     await UserGroup.bulkCreate(newUserGroupList);
                 } else {

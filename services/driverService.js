@@ -11,7 +11,6 @@ const { sequelizeObj } = require('../db/dbConf')
 const { sequelizeSystemObj } = require('../db/dbConf_system')
 
 const path = require('path');
-// const fs = require('fs');
 const fs = require('graceful-fs');
 const xlsx = require('node-xlsx');
 
@@ -84,12 +83,9 @@ let TaskUtils = {
     getTaskByDriverId: async function(driverId, newHub, newNode, newUnit) {
         newNode = newNode && newNode != 'null' ? newNode : null;
         newUnit = newUnit && newUnit != 'null' ? newUnit : null;
-
-
-        driverId = sequelizeObj.escape(driverId);
         let validTask = await sequelizeObj.query(
             `
-            SELECT * FROM task WHERE driverId = ${ driverId } 
+            SELECT * FROM task WHERE driverId = ${ Number(driverId) } 
             AND vehicleStatus NOT IN ('completed', 'cancelled') 
             AND (NOW() BETWEEN indentStartTime AND indentEndTime
             OR vehicleStatus = 'started' 
@@ -109,10 +105,8 @@ let TaskUtils = {
                         if(oldUint.subUnit == newNode){
                             validTask = []
                         }
-                    } else {
-                        if(!newNode){
-                            validTask = []
-                        }
+                    } else if (!newNode) {
+                        validTask = []
                     }
                 }
             }
@@ -160,14 +154,12 @@ module.exports.getDriverTaskList = async function (req, res) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-                throw `User ${ userId } does not exist.`;
+                throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
 
         let driverName = req.body.driverName
-
-        driverName = sequelizeObj.escape(driverName);
         let user = await checkUser(req.cookies.userId);
         let baseSQL = `
             SELECT dt.*, d.driverName, vr.vehicleNo, r.fromAddress, r.toAddress, dt.id AS driverTaskId, d.unitId FROM driver_task dt
@@ -178,23 +170,19 @@ module.exports.getDriverTaskList = async function (req, res) {
         let driverList = [];
         if (user.userType === CONTENT.USER_TYPE.HQ) {
             if (driverName) {
-                baseSQL += ` WHERE d.driverName like '%${ driverName }%' `
+                baseSQL += ` WHERE d.driverName like ` + sequelizeObj.escape("%" + driverName + "%")
             }
             driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [] })
         } else {
             let driverUnitIdList = await unitService.getUnitPermissionIdList(user);
-            // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
             let paramList = []
             if (driverUnitIdList.length) {
                 paramList.push(` d.unitId IN (${ driverUnitIdList }) `)
             }
-            // if (groupUserIdList.length) {
-            //     paramList.push(` d.creator IN (${ groupUserIdList }) `)
-            // }
             if (paramList.length) {
                 baseSQL += ' WHERE ' + paramList.join(' AND ')
                 if (driverName) {
-                    baseSQL += ` d.driverName like '%${ driverName }%' `
+                    baseSQL += ` d.driverName like ` + sequelizeObj.escape("%" + driverName + "%")
                 }
                 driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
             }
@@ -232,7 +220,7 @@ module.exports.createDriverTask = async function (req, res) {
             const checkDriver = async function (driver) {
                 let driverResult = await Driver.findByPk(driver.driverId)
                 if (!driverResult) {
-                    throw `DriverId ${ driver.DriverId } does not exist!`
+                    throw Error(`DriverId ${ driver.DriverId } does not exist!`)
                 }
                 return driverResult;
             }
@@ -241,7 +229,7 @@ module.exports.createDriverTask = async function (req, res) {
                 if (vehicleRelationResult) {
                     return vehicleRelationResult
                 } else {
-                    // TODO: check if exist driverId or vehicleNo id null
+                    // check if exist driverId or vehicleNo id null
                     let option = [{ driverId: { [Op.is]: null }, vehicleNo: vehicleRelation.vehicleNo }, { driverId: vehicleRelation.driverId, vehicleNo: { [Op.is]: null } }]
                     vehicleRelationResult = await VehicleRelation.findOne({ where: { [Op.or]: option } })
                     if (vehicleRelationResult) {
@@ -251,13 +239,13 @@ module.exports.createDriverTask = async function (req, res) {
                         await vehicleRelationResult.save();
                         return vehicleRelationResult;
                     } else {
-                        // TODO: create new 
+                        // create new 
                         return await VehicleRelation.create(vehicleRelation, { returning: true })
                     }
                 }
             }
             const createDriverTask = async function (driverTask) {
-                // TODO: init arrive waypoint info
+                // init arrive waypoint info
                 let routeWaypointList = await RouteWaypoint.findAll({ where: { routeNo: driverTask.routeNo } });
                 driverTask.arrivedInfo = [];
                 for (let routeWaypoint of routeWaypointList) {
@@ -265,7 +253,7 @@ module.exports.createDriverTask = async function (req, res) {
                 }
                 driverTask.arrivedInfo = JSON.stringify(driverTask.arrivedInfo)
 
-                // TODO: check if exist same vehicle_relation data
+                // check if exist same vehicle_relation data
                 let __driverTask = await DriverTask.findOne({ where: { vehicleRelationId: driverTask.vehicleRelationId } })
                 if (__driverTask) {
                     await DriverTask.update(driverTask, { where: { vehicleRelationId: driverTask.vehicleRelationId } });
@@ -299,14 +287,14 @@ module.exports.deleteDriverTask = async function (req, res) {
             const checkDriverTask = async function (driverTaskId) {
                 let driverTask = await DriverTask.findByPk(driverTaskId);
                 if (!driverTask) {
-                    throw `DriverTask ID ${ driverTaskId } does not exist.`
+                    throw Error(`DriverTask ID ${ driverTaskId } does not exist.`)
                 }
                 return driverTask;
             }
             
             let driverTask = await checkDriverTask(driverTaskId)
             if (driverTask.startTime) {
-                throw `Can not delete driverTask, because it has started.`
+                throw Error(`Can not delete driverTask, because it has started.`)
             }
             await driverTask.destroy();
         }).catch(error => {
@@ -326,13 +314,13 @@ module.exports.updateDriverTask = async function (req, res) {
             const checkDriverTask = async function (driverTaskId) {
                 let driverTask = await DriverTask.findByPk(driverTaskId);
                 if (!driverTask) {
-                    throw `DriverTask ID ${ driverTaskId } does not exist.`
+                    throw Error(`DriverTask ID ${ driverTaskId } does not exist.`)
                 }
                 return driverTask
             }
             
             const getNewRouteInfo = async function (routeNo) {
-                // TODO: init arrive waypoint info
+                // init arrive waypoint info
                 let routeWaypointList = await RouteWaypoint.findAll({ where: { routeNo: routeNo } });
                 let arrivedInfo = [];
                 for (let routeWaypoint of routeWaypointList) {
@@ -344,7 +332,7 @@ module.exports.updateDriverTask = async function (req, res) {
 
             let checkedDriverTask = await checkDriverTask(driverTask.driverTaskId)
             if (checkedDriverTask.startTime) {
-                throw `Can not update driverTask, because it has started.`
+                throw Error(`Can not update driverTask, because it has started.`)
             }
             // Update driver unitId
             let vehicleRelation = await VehicleRelation.findByPk(checkedDriverTask.vehicleRelationId)
@@ -374,55 +362,13 @@ module.exports.updateDriverTask = async function (req, res) {
     }
 };
 
-module.exports.getAvailableCreateDriverTaskLis = async function (req, res) {
-    try {
-        const checkUser = async function (userId) {
-            let user = await userService.getUserDetailInfo(userId)
-			if (!user) {
-				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
-			}
-			return user;
-		}
-
-        let user = await checkUser(req.cookies.userId);
-        let baseSQL = `
-            SELECT d.driverId, d.driverName, u.unit, u.subUnit FROM driver d
-            LEFT JOIN unit u ON u.id = d.unitId
-        `
-        let driverList = [];
-        if (user.userType === CONTENT.USER_TYPE.HQ) {
-            driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
-        } else {
-            let driverUnitIdList = await unitService.getUnitPermissionIdList(user);
-            // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
-            let paramList = []
-            if (driverUnitIdList.length) {
-                paramList.push(` d.unitId IN (${ driverUnitIdList }) `)
-            }
-            // if (groupUserIdList.length) {
-            //     paramList.push(` d.creator IN (${ groupUserIdList }) `)
-            // }
-            if (paramList.length) {
-                baseSQL += ' WHERE ' + paramList.join(' AND ')
-                driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
-            }
-        }
-        
-        return res.json(utils.response(1, driverList));
-    } catch (error) {
-        log.error('(getAvailableCreateDriverTaskLis) : ', error);
-        return res.json(utils.response(0, error));
-    }
-} 
-
 module.exports.getDriverList = async function (req, res) {
     try {
         const checkUser = async function (userId) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
@@ -447,14 +393,10 @@ module.exports.getDriverList = async function (req, res) {
             driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
         } else {
             let driverUnitIdList = await unitService.getUnitPermissionIdList(user);
-            // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
             let paramList = [ ]
             if (driverUnitIdList.length) {
                 paramList.push(` dd.unitId IN (${ driverUnitIdList }) `)
             }
-            // if (groupUserIdList.length) {
-            //     paramList.push(` d.creator IN (${ groupUserIdList }) `)
-            // }
             if (paramList.length) {
                 baseSQL += ' WHERE ' + paramList.join(' AND ')
                 baseSQL += ` GROUP BY dd.driverId  `;
@@ -474,11 +416,11 @@ module.exports.createDriver = async function (req, res) {
         await sequelizeObj.transaction(async transaction => {
             const checkDriver = async function (driver) {
                 if (!driver.driverName) {
-                    throw `There is no driverName`
+                    throw Error(`There is no driverName`)
                 }
                 let driverList = await Driver.findAll({ where: { driverName: driver.driverName } })
                 if (driverList.length) {
-                    throw `DriverName ${ driver.driverName } already exist!`
+                    throw Error(`DriverName ${ driver.driverName } already exist!`)
                 }
             }
             const createDriver = async function (driver) {
@@ -496,20 +438,20 @@ module.exports.createDriver = async function (req, res) {
                     newUserList.push({ driverId: newDriver.driverId, username: newDriver.driverName, userType: CONTENT.USER_TYPE.MOBILE })
                 }
                 let createNewUserResultList = await User.bulkCreate(newUserList, { returning: true });
-                // TODO: create friendship
+                // create friendship
                 let laptopUserList = await User.findAll({
                     where: {
                         userType: [CONTENT.USER_TYPE.ACE, CONTENT.USER_TYPE.CA]
                     }
                 });
                 let friendList = [];
-                // TODO: add laptop friends
+                // add laptop friends
                 for (let createNewUserResult of createNewUserResultList) {
                     for (let laptopUser of laptopUserList) {
                         friendList.push({ driverId: createNewUserResult.userId, friendId: laptopUser.userId })
                     }
                 }
-                // TODO: add same driverName as friends
+                // add same driverName as friends
                 for (let createNewUserResult1 of createNewUserResultList) {
                     for (let createNewUserResult2 of createNewUserResultList) {
                         if (createNewUserResult1.driverName === createNewUserResult2.driverName
@@ -535,7 +477,7 @@ module.exports.createDriver = async function (req, res) {
             }
             const createDriverTask = async function (driver, newDriverList) {
                 for (let newDriver of newDriverList) {
-                    // TODO: find out vehicleRelation
+                    // find out vehicleRelation
                     let vehicleRelation = await VehicleRelation.findOne({ where: { driverId: newDriver.driverId, vehicleNo: driver.vehicleNo } })
                     if (!vehicleRelation) {
                         log.warn(`There is no \${ driverId: ${ newDriver.driverId }, vehicleNo: ${ driver.vehicleNo } }  in vehicleRelation table`);
@@ -564,122 +506,6 @@ module.exports.createDriver = async function (req, res) {
     }
 };
 
-module.exports.editDriverFromResource = async function (req, res) {
-    try {
-        let { driverId, driverName, vocation, role, unit, vehicleType, rank, enlistmentDate, operationallyReadyDate, nric, birthday, contactNumber } = req.body;
-        let newNric = ((nric).toString()).substr(0, 1)+((nric).toString()).substr(((nric).toString()).length-4, 4);
-        let loginName = newNric + ((driverName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
-        const action = req.body.action;
-        let userId = req.cookies.userId;
-        let user = await userService.getUserDetailInfo(req.cookies.userId)
-        if (!user) {
-            log.warn(`User ${ userId } does not exist.`);
-            return res.json(utils.response(0, `User ${ userId } does not exist.`));
-        }
-        let password
-        let hub = req.body.hub && req.body.hub != '' ? req.body.hub : null;
-        let node = req.body.node ? req.body.node : null;
-        // 2023-08-31 Determine whether there is a task when changing the hub/node or unit.
-        if(driverId) {
-            let validTask = await TaskUtils.getTaskByDriverId(driverId, hub, node, unit);
-            if(validTask.length > 0){
-                return res.json(utils.response(0, `TO still has pending tasks, please re-assign before shifting TO unit.`));
-            }    
-        }
-        let oldDriver = await Driver.findByPk(driverId);
-        // if(unit){
-        //     let group = await TaskUtils.getGroupById(unit);
-        //     if(!group) return res.json(utils.response(0, `The current user's unit does not exist.`));
-        //     // let unitObj = await Unit.findOne({ where: { group: group.groupName, subUnit: { [Op.not]: null } } })
-        //     // if(!unitObj) return res.json(utils.response(0, `The current user's unit does not exist.`));
-        //     // password = utils.generateMD5Code((nric.substr((nric.length)-4, 4)) + unitObj.unit).toUpperCase();
-        //     password = utils.generateMD5Code((nric.substr((nric.length)-4, 4)) + group.groupName).toUpperCase();
-        // } else {
-        //     if(hub) password = utils.generateMD5Code((nric.substr((nric.length)-4, 4)) + hub).toUpperCase();
-        // }
-        //2023-11-23 password nric+contactNumber
-        password = utils.generateMD5Code((nric.substr((nric.length)-4, 4)) + contactNumber.substr(0, 4)).toUpperCase();
-        // 2023-08-29 Encrypt the nric.
-        nric = utils.generateAESCode(nric).toUpperCase();
-
-        //opt log
-        let operationRecord = {
-            operatorId: req.cookies.userId,
-            businessType: 'driver',
-            businessId: driverId,
-            optType: 'create',
-            beforeData: '',
-            afterData: '',
-            optTime: moment().format('yyyy-MM-DD HH:mm:ss'),
-            remarks: 'Server user update driver.'
-        }
-
-        if (action.toLowerCase() == 'edit') {
-            operationRecord.optType = 'update';
-            operationRecord.beforeData = oldDriver ? JSON.stringify(oldDriver) : '';
-            operationRecord.afterData = oldDriver ? JSON.stringify(oldDriver) : '';
-            log.info(`Edit driver info ...`)
-            await sequelizeObj.transaction(async transaction => {
-                // TODO: create hub/node
-                let unitId = null
-                if(hub) unitId = await unitService.UnitUtils.checkOrCreateHubNode(hub, node)
-                // let unitId
-                // if(node && node != 'null') {
-                //     unitId = await Unit.findOne({where: {unit: hub, subUnit: node}})
-                // } else {
-                //     unitId = await Unit.findOne({where: {unit: hub, subUnit: {[Op.is]: null}}})
-                // }
-                // unitId = unitId.id
-                let updateDriverInfo = { loginName: loginName, driverName, nric, vehicleType: vehicleType, contactNumber, unit, unitId, groupId: !unitId ? unit : null, enlistmentDate, operationallyReadyDate, birthday, vocation, rank, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') };
-                operationRecord.afterData = JSON.stringify(updateDriverInfo);
-
-                await checkDriver({ driverId, loginName })
-                await Driver.update(updateDriverInfo, {
-                    where: { driverId }
-                })
-                
-                await User.update({ username: loginName, nric, unitId: unit && unit != '' ? unit : unitId, userType: CONTENT.USER_TYPE.MOBILE, role, password: password, fullName: driverName, contactNumber }, { where: { driverId } })
-                await OperationRecord.create(operationRecord);
-            }).catch(error => {
-                throw error
-            })
-            
-        } else if (action.toLowerCase() == 'create') {
-            log.info(`Create driver info ...`)
-            await sequelizeObj.transaction(async transaction => {
-                // TODO: create hub/node
-                let unitId = null
-                if(hub) unitId = await unitService.UnitUtils.checkOrCreateHubNode(hub, node)
-                // let unitId
-                // if(node && node != 'null') {
-                //     unitId = await Unit.findOne({where: {unit: hub, subUnit: node}})
-                // } else {
-                //     unitId = await Unit.findOne({where: {unit: hub, subUnit: {[Op.is]: null}}})
-                // }
-                // unitId = unitId.id
-                // TODO: create driver
-                let newDriverInfo = { loginName: loginName, driverName, vehicleType: vehicleType, nric, contactNumber, unit, unitId, groupId: !unitId ? unit : null, enlistmentDate, operationallyReadyDate, birthday, vocation, rank, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') };
-                operationRecord.afterData = JSON.stringify(newDriverInfo);
-               
-                let newDriverId = await createDriver2(newDriverInfo, userId)
-                // create user
-                if (newDriverId) {
-                    await User.create({ username: loginName, nric, unitId: unit && unit != '' ? unit : unitId, userType: CONTENT.USER_TYPE.MOBILE, driverId: newDriverId, role, password: password, fullName: driverName, contactNumber })
-                }
-                operationRecord.businessId = newDriverId;
-                await OperationRecord.create(operationRecord);
-            }).catch(error => {
-                throw error
-            })
-        }
-        
-        return res.json(utils.response(1, 'success')); 
-    } catch (err) {
-        log.error(err)
-        return res.json(utils.response(0, err)); 
-    }
-}
-
 module.exports.deleteDriver = async function (req, res) {
     try {
         let driverId = req.body.driverId;
@@ -690,7 +516,11 @@ module.exports.deleteDriver = async function (req, res) {
             return res.json(utils.response(0, `User ${ userId } does not exist.`));
         }
         let driver = await Driver.findByPk(driverId);
-            
+        if (!driver) {
+            log.warn(`Driver ${ driverId } does not exist.`);
+            return res.json(utils.response(0, `Driver ${ driverId } does not exist.`));
+        }
+        driverId = driver.driverId;
         let driverTaskList = await sequelizeObj.query(`
             SELECT t.taskId, t.indentId, t.driverStatus, t.indentStartTime, t.indentEndTime, t.purpose, t.dataFrom from task t
             where driverId='${driverId}' and t.driverStatus != 'Cancelled' and t.driverStatus != 'completed' and (t.indentEndTime > NOW() or t.driverStatus = 'started') 
@@ -708,7 +538,6 @@ module.exports.deleteDriver = async function (req, res) {
         await sequelizeObj.transaction(async transaction => {
             const deleteDriverAccount = async function (driverId) {
                 await User.update({enable: 0}, { where: { driverId: driverId } })
-                //await User.destroy({ where: { driverId: driverId } })
             }
             const deleteDriver = async function (driverId) {
                 let oldDriver = await Driver.findByPk(driverId);
@@ -729,9 +558,6 @@ module.exports.deleteDriver = async function (req, res) {
                     }
                     await OperationRecord.create(operationRecord);
                 }
-                //await DriverMileage.destroy({ where: { driverId: driverId } })
-                //await DriverPosition.destroy({ where: { driverId: driverId} })
-                //await VehicleRelation.destroy({where: {driverId: driverId}});
             }
 
             let startedTask = driverTaskList ? driverTaskList.find(item => item.driverStatus.toLowerCase() == 'started') : null;
@@ -769,8 +595,6 @@ module.exports.deleteDriver = async function (req, res) {
 
             await deleteDriverAccount(driverId);
             await deleteDriver(driverId);
-            
-            // return res.json(utils.response(1, 'Deactivate driver success!'));  
         }).catch(error => {
             throw error
         }); 
@@ -818,53 +642,13 @@ module.exports.deleteDriver = async function (req, res) {
     }
 };
 
-module.exports.updateDriver = async function (req, res) {
-    try {
-        let driverTask = req.body.driverTask;
-        await sequelizeObj.transaction(async transaction => {
-            const checkDriverTask = async function (driverTask) {
-                let _driverTask = await DriverTask.findByPk(driverTask.driverTaskId)
-                if (!_driverTask) {
-                    throw `DriverTask ${ driverTask.driverTaskId } does not exist.`;
-                }
-                return _driverTask
-            }
-            const updateDriver = async function (driver) {
-                await Driver.update({ 
-                    unitId: driver.unitId, 
-                }, { where: { driverId: driver.driverId } })
-            }
-            const updateVehicleRelation = async function (driver) {
-                let driverIdList = await Driver.findAll({ where: { driverName: driver.driverName } }, { attributes: ['driverId'] })
-                await VehicleRelation.update({ vehicleNo: driver.vehicleNo }, { where: { driverId: driverIdList } })
-            }
-            const updateDriverTask = async function (driverTask) {
-                await DriverTask.update(driverTask, { where: { id: driverTask.driverTaskId } }) 
-            }
-            
-            let driverTask = await checkDriverTask(driverTask);
-            if (driverTask.startTime) throw `Driver has started task, can not updated.`
-            await updateDriver(driverTask);
-            // await updateVehicleRelation(driver);
-            await updateDriverTask(driverTask);
-        }).catch(error => {
-            throw error
-        });  
-        return res.json(utils.response(1, 'success'));  
-    } catch (err) {
-        log.error('(updateDriver) : ', err);
-        return res.json(utils.response(0, 'Server error!'));
-    }
-};
-
-
 const createOrUpdateVehicleRelation = async function (driverId, vehicleNo) {
     try {
         let vehicleRelationResult = await VehicleRelation.findOne({ where: { driverId, vehicleNo } })
         if (vehicleRelationResult) {
             return vehicleRelationResult
         } else {
-            // TODO: check if exist driverId or vehicleNo id null
+            // check if exist driverId or vehicleNo id null
             let option = [{ driverId: { [Op.is]: null }, vehicleNo }, { driverId, vehicleNo: { [Op.is]: null } }]
             vehicleRelationResult = await VehicleRelation.findOne({ where: { [Op.or]: option } })
             if (vehicleRelationResult) {
@@ -874,7 +658,7 @@ const createOrUpdateVehicleRelation = async function (driverId, vehicleNo) {
                 await vehicleRelationResult.save();
                 return vehicleRelationResult;
             } else {
-                // TODO: create new 
+                // create new 
                 return await VehicleRelation.create({ driverId, vehicleNo }, { returning: true })
             }
         }
@@ -899,7 +683,7 @@ module.exports.getTODriverList = async function (req, res) {
         let user = await userService.getUserDetailInfo(userId)
         if (!user) {
             log.warn(`User ${ userId } does not exist.`);
-            throw `User ${ userId } does not exist.`;
+            throw Error(`User ${ userId } does not exist.`);
         }
         return user;
     }
@@ -952,23 +736,6 @@ module.exports.getTODriverList = async function (req, res) {
             }
             return res.json(result);
         }
-
-        // let driverIdList = [], selectDriverIdList = [];
-        // if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
-        //     driverIdList = await sequelizeObj.query(`
-        //         select l.driverId from loan l where l.groupId=${user.unitId} and l.driverId IS NOT NULL and now() BETWEEN l.startDate and l.endDate
-        //     `, { type: QueryTypes.SELECT });
-        //     driverIdList = driverIdList.map(item => item.driverId)
-        // } else if (user.userType == CONTENT.USER_TYPE.HQ || user.userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
-        //     // While HQ want to see customer driver info
-        //     let sql = ` select l.driverId from loan l where l.driverId IS NOT NULL and now() BETWEEN l.startDate and l.endDate `
-        //     if (groupId) {
-        //         sql = ` select l.driverId from loan l where l.driverId IS NOT NULL and l.groupId=${ groupId } and now() BETWEEN l.startDate and l.endDate `
-        //     }
-        //     selectDriverIdList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT });
-        //     selectDriverIdList = selectDriverIdList.map(item => item.driverId)
-        // }
-
         
         //driver current task
         let currentTaskList = await sequelizeObj.query(`
@@ -1047,7 +814,8 @@ module.exports.getTODriverList = async function (req, res) {
                 unit = null;
                 subUnit = null;
                 if (groupId) {
-                    baseSQL += ` and dd.groupId = ${ groupId } `;
+                    baseSQL += ` and dd.groupId = ? `;
+                    replacements.push(groupId);
                 } else {
                     let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
                     let hqUserGroupIds = groupList.map(item => item.id);
@@ -1065,18 +833,19 @@ module.exports.getTODriverList = async function (req, res) {
                 unit = null;
                 subUnit = null;
                 if (groupId) {
-                    baseSQL += ` and dd.groupId = ${ groupId } `;
+                    baseSQL += ` and dd.groupId = ? `;
+                    replacements.push(groupId);
                 } else {
                     baseSQL += ` and dd.groupId is not null `
                 }
             } else if (selectGroup == '0') {
-                // unit = null;
-                // subUnit = null;
                 baseSQL += ` and dd.groupId is null `
             }
         }
         if (unit) {
-            baseSQL += ` and (dd.currentUnit ='${unit}' or dd.unit = '${unit}') `;
+            baseSQL += ` and (dd.currentUnit =? or dd.unit = ?) `;
+            replacements.push(unit);
+            replacements.push(unit);
         } else {
             if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
                 let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
@@ -1095,7 +864,9 @@ module.exports.getTODriverList = async function (req, res) {
             if (subUnit == 'null') {
                 baseSQL += ` and (dd.currentSubUnit is null or dd.subUnit is null) `
             } else {
-                baseSQL += ` and (dd.currentSubUnit ='${subUnit}' or dd.subUnit ='${subUnit}') `
+                baseSQL += ` and (dd.currentSubUnit =? or dd.subUnit =?) `
+                replacements.push(subUnit);
+                replacements.push(subUnit);
             }
         }
        
@@ -1103,12 +874,13 @@ module.exports.getTODriverList = async function (req, res) {
             let list = permitType.split(',')
             let permitTypeSql = []
             for (let item of list) {
-                permitTypeSql.push(` FIND_IN_SET(\'${ item }\', dd.permitType) `)
+                permitTypeSql.push(` FIND_IN_SET('${ item }', dd.permitType) `)
             }
             limitSQL.push(` ( ${ permitTypeSql.join(' OR ') } ) `)
         }
         if (driverStatus) {
-            limitSQL.push(` FIND_IN_SET(dd.currentStatus,'${driverStatus}') `);
+            limitSQL.push(` FIND_IN_SET(dd.currentStatus, ?) `);
+            replacements.push(driverStatus);
         }
         if (driverORDStatus) {
             if (driverORDStatus.toLowerCase() == 'effective') {
@@ -1118,20 +890,13 @@ module.exports.getTODriverList = async function (req, res) {
             }
         }
         if (searchCondition) {
+            let likeCondition = sequelizeObj.escape("%" +searchCondition+ "%");
             limitSQL.push(` ( 
-                dd.driverName LIKE '%${ searchCondition }%' 
-                OR dd.nric = '${ utils.generateAESCode(searchCondition) }' 
-                OR dd.currentUnit LIKE '%${ searchCondition }%'
-                OR dd.currentSubUnit LIKE '%${ searchCondition }%'
-                OR dd.permitType LIKE '%${ searchCondition }%'
-                OR dd.status LIKE '%${ searchCondition }%'
+                dd.driverName LIKE `+likeCondition+` OR dd.currentUnit LIKE `+likeCondition+` OR dd.currentSubUnit LIKE `+likeCondition
+                +` OR dd.permitType LIKE `+likeCondition+` OR dd.status LIKE `+likeCondition
+                +` OR dd.nric = '${ utils.generateAESCode(searchCondition) }' 
             ) `);
         }
-        // if (startDate && endDate && moment(endDate).isAfter(moment(startDate))) {
-        //     limitSQL.push(` ( t.indentStartTime >= ? AND t.indentStartTime <= ? ) `);
-        //     replacements.push(startDate);
-        //     replacements.push(endDate);
-        // }
         if (limitSQL.length) {
             baseSQL += ' and ' + limitSQL.join(' AND ') ;
         }
@@ -1154,7 +919,9 @@ module.exports.getTODriverList = async function (req, res) {
             baseSQL += ' ORDER BY dd.updatedAt desc'
         }
 
-        baseSQL += ` limit ${ pageNum }, ${ pageLength }`
+        baseSQL += ` limit ?, ?`
+        replacements.push(pageNum);
+        replacements.push(pageLength);
         let driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
 
         // upcoming leave
@@ -1299,17 +1066,21 @@ const getDeactivateDriver = async function(req) {
             where 1=1
         `;
 
+        let params = [];
         if (searchCondition) {
-            baseSQL += ` and d.driverName LIKE '%${ searchCondition }%' OR d.nric LIKE '%${ searchCondition }%' `
+            let likeCondition = sequelizeObj.escape("%" +searchCondition+ "%");
+            baseSQL += ` and d.driverName LIKE `+likeCondition+` OR d.nric LIKE `+likeCondition
         }
         if (unit) {
-            baseSQL += ` and u.unit = '${ unit }' `            
+            baseSQL += ` and u.unit = ? `;    
+            params.push(unit);
             if (subUnit) {
-                baseSQL += ` and u.subUnit = '${ subUnit }' `            
+                baseSQL += ` and u.subUnit = ? `;   
+                params.push(subUnit);
             }
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
 
         let driverNameOrder = req.body.driverNameOrder;
@@ -1327,8 +1098,10 @@ const getDeactivateDriver = async function(req) {
             baseSQL += ' ORDER BY d.updatedAt desc'
         }
 
-        baseSQL += ` limit ${pageNum}, ${pageLength}`
-        let driverInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        baseSQL += ` limit ?, ?`
+        params.push(pageNum);
+        params.push(pageLength);
+        let driverInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         for(let item of driverInfoList){
             if(item.nric) {
                 if(item.nric.length > 9) item.nric = utils.decodeAESCode(item.nric);
@@ -1348,10 +1121,7 @@ module.exports.reactivateDriver = async function(req, res) {
         if (!user) {
             log.warn(`User ${ userId } does not exist.`);
             return res.json(utils.response(0, `User ${ userId } does not exist.`));
-        } 
-        // else if (user.userType != 'HQ') {
-        //     return res.json(utils.response(0, `User ${ userId } do not HQ, can't reactivate driver!`));
-        // }
+        }
 
         let driverId = req.body.driverId;
         if (driverId) {
@@ -1407,9 +1177,13 @@ module.exports.getTODriverAssignedTasks = async function (req, res) {
     let warningStatus = Number(req.body.warningStatus);
 
     let paramList = []
-    paramList.push(` tt.driverId = '${ driverId }' `)
+    paramList.push(` tt.driverId = '${ Number(driverId) }' `)
     if (searchCondition) {
-        paramList.push(` (tt.purpose like '%${ searchCondition }%' or tt.vehicleNumber like '%${ searchCondition }%' or  tt.pickupDestination like '%${ searchCondition }%' or tt.dropoffDestination like '%${ searchCondition }%' ) `)
+        let likeCondition = sequelizeObj.escape("%" + searchCondition + "%");
+        paramList.push(` (tt.purpose like `+likeCondition
+            +` or tt.vehicleNumber like `+likeCondition
+            +` or  tt.pickupDestination like `+likeCondition
+            +` or tt.dropoffDestination like `+likeCondition +`)` )
     }
     if (past == 0) {
         paramList.push(` tt.indentStartTime > now() `)
@@ -1438,8 +1212,8 @@ module.exports.getTODriverAssignedTasks = async function (req, res) {
     let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
     let totalRecord = countResult.length
 
-    baseSQL += ` ORDER BY tt.indentStartTime DESC limit ${pageNum}, ${pageLength} `;
-    let driverAssignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+    baseSQL += ` ORDER BY tt.indentStartTime DESC limit ?, ? `;
+    let driverAssignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [pageNum, pageLength] })
 
     let userId = req.cookies.userId
     let pageList = await userService.getUserPageList(userId, 'TO', 'Indent')
@@ -1456,7 +1230,7 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
         let user = await userService.getUserDetailInfo(userId)
         if (!user) {
             log.warn(`User ${ userId } does not exist.`);
-            throw `User ${ userId } does not exist.`;
+            throw Error(`User ${ userId } does not exist.`);
         }
         return user;
     }
@@ -1470,9 +1244,9 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
             driverId, taskId, indentStartTime, indentEndTime, purpose, dataFrom
         FROM task
         WHERE driverStatus IN ('waitcheck', 'ready', 'started', 'completed') and ( 
-            DATE_FORMAT(indentStartTime,'%Y-%m-%d') BETWEEN '${startDate}' AND '${endDate}'
-            or DATE_FORMAT(indentEndTime,'%Y-%m-%d') BETWEEN '${startDate}' AND '${endDate}'
-            or (DATE_FORMAT(indentStartTime,'%Y-%m-%d') < '${startDate}' and DATE_FORMAT(indentEndTime,'%Y-%m-%d') > '${endDate}')
+            DATE_FORMAT(indentStartTime,'%Y-%m-%d') BETWEEN ? AND ?
+            or DATE_FORMAT(indentEndTime,'%Y-%m-%d') BETWEEN ? AND ?
+            or (DATE_FORMAT(indentStartTime,'%Y-%m-%d') < ? and DATE_FORMAT(indentEndTime,'%Y-%m-%d') > ?)
         ) 
     `;
     if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
@@ -1480,15 +1254,15 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
     } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
         taskSql += ` and taskId not like 'CU-%' `
     }
-    let allTaskList = await sequelizeObj.query(taskSql, { type: QueryTypes.SELECT, replacements: [] })
+    let allTaskList = await sequelizeObj.query(taskSql, { type: QueryTypes.SELECT, replacements: [startDate, endDate, startDate, endDate, startDate, endDate] })
         
     let tempLeaveList = await sequelizeObj.query(`
         SELECT
             driverId, startTime as indentStartTime, date_add(endTime, interval 1 second) as indentEndTime, reason
         FROM
             driver_leave_record dl
-        where status=1 and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}' order by dl.startTime asc
-    `, { type: QueryTypes.SELECT, replacements: [] })    
+        where status=1 and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ? order by dl.startTime asc
+    `, { type: QueryTypes.SELECT, replacements: [startDate, endDate] })    
 
     //Merge consecutive times.
     let allDriverLeaveList = [];
@@ -1554,7 +1328,8 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
     }
 
     if (unit) {
-        limitSQL.push(` dd.unit ='${unit}' `);
+        limitSQL.push(` dd.unit =? `);
+        replacements.push(unit);
     } else {
         if (user.userType == CONTENT.USER_TYPE.HQ) {
             let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
@@ -1570,10 +1345,16 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
         }
     }
     if (subUnit) {
-        limitSQL.push(` ${subUnit == 'null' ? ` dd.currentSubUnit is null` : ` dd.currentSubUnit ='${subUnit}'`} `);
+        if (subUnit == 'null') {
+            limitSQL.push(` dd.currentSubUnit is null `);
+        } else {
+            limitSQL.push(` dd.currentSubUnit =? `);
+            replacements.push(subUnit);
+        }
+        
     }
     if (driverName) {
-        limitSQL.push(` dd.driverName LIKE '%${ driverName }%' `);
+        limitSQL.push(` dd.driverName LIKE `+ sequelizeObj.escape("%" + driverName + "%"));
     }
     if (limitSQL.length) {
         baseSQL += ' and ' + limitSQL.join(' AND ') ;
@@ -1614,9 +1395,9 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
         let currentTaskList = await sequelizeObj.query(`
             SELECT DISTINCT tt.driverId as driverId
             FROM task tt
-            WHERE tt.driverId =${driverId} and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed'
+            WHERE tt.driverId =? and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed'
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
-        `, { type: QueryTypes.SELECT , replacements: []})
+        `, { type: QueryTypes.SELECT , replacements: [driverId]})
         let currentTaskLength = currentTaskList.length;
 
         let baseSql = `
@@ -1659,10 +1440,10 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
         let currentAssignedDriverIdBaseSql = `
             SELECT taskId
             FROM task tt
-            WHERE tt.driverId =${driverId} and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' 
+            WHERE tt.driverId =? and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' 
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
         `;
-        let currentAssignedTasks = await sequelizeObj.query(currentAssignedDriverIdBaseSql, { type: QueryTypes.SELECT })
+        let currentAssignedTasks = await sequelizeObj.query(currentAssignedDriverIdBaseSql, { type: QueryTypes.SELECT, replacements: [driverId] })
         if (currentAssignedTasks && currentAssignedTasks.length > 0) {
             if (currentDriver && currentDriver.currentStatus == 'Deployable') {
                 currentDriver.currentStatus = 'Deployed'
@@ -1698,8 +1479,8 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
         let driverDemeritPointsObj = await sequelizeObj.query(`
             SELECT sum(demeritPoint) as driverDemeritPoints
             FROM sos
-            WHERE driverId = ${driverId} and demeritPoint > 0 and optAt IS NOT NULL and DATE_FORMAT(optAt, '%Y-%m-%d') >= '${oneYearsAgoDateStr}'
-        `, { replacements: [], type: QueryTypes.SELECT });
+            WHERE driverId = ? and demeritPoint > 0 and optAt IS NOT NULL and DATE_FORMAT(optAt, '%Y-%m-%d') >= '${oneYearsAgoDateStr}'
+        `, { replacements: [driverId], type: QueryTypes.SELECT });
         let driverDemeritPoints = 0;
         if (driverDemeritPointsObj && driverDemeritPointsObj.length > 0) {
             driverDemeritPoints = driverDemeritPointsObj[0].driverDemeritPoints;
@@ -1805,7 +1586,6 @@ module.exports.reassignDriverTask = async function (req, res) {
 
             // Update vehicle-relation db
             await vehicleService.createVehicleRelation(driverId, vehicleNo)
-            await vehicleMaintenanceInfoCalcUtils.reCalcVehicleMaintenanceInfo(vehicleNo, task.indentStartTime, task.indentEndTime);
         }).catch(error => {
             throw error
         })
@@ -1856,8 +1636,8 @@ module.exports.getDriverLeaveDays = async function (req, res) {
             endTime
         FROM
             driver_leave_record dl
-        where driverId=${driverId} and status=1
-    `, { type: QueryTypes.SELECT, replacements: [] });
+        where driverId=? and status=1
+    `, { type: QueryTypes.SELECT, replacements: [driverId] });
     let leaveDayArray = [];
     if (driverLeaveRecords && driverLeaveRecords.length > 0) {
         for (let leaveRecord of driverLeaveRecords) {
@@ -1897,10 +1677,11 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
             and ('${ moment(currentTask.indentStartTime).format('YYYY-MM-DD HH:mm') }' >= DATE_FORMAT(jt.startDate, '%Y-%m-%d %H:%i:%s') and '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD HH:mm') }' <= DATE_FORMAT(jt.endDate, '%Y-%m-%d %H:%i:%s'))
         `
         if(vehicleType) {
-            sql += ` and v.vehicleType = '${ vehicleType }'`
+            sql += ` and v.vehicleType = `+ sequelizeSystemObj.escape(vehicleType)
         }
         let vehicleList = await sequelizeSystemObj.query(sql + ` GROUP BY v.vehicleNumber`, {
             type: QueryTypes.SELECT,
+            replacements: []
         });
         driverVchicleArray.vehicleList = vehicleList;
 
@@ -1916,7 +1697,7 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
             sql += ` and d.unit = '${ taskCreator.unitId }'`
         }
         if(vehicleType) {
-            sql += ` and FIND_IN_SET('${ vehicleType }', dc.vehicleType)`
+            sql += ` and FIND_IN_SET(`+sequelizeSystemObj.escape(vehicleType)+`, dc.vehicleType)`
         }
         if(currentTask.indentEndTime) {
             sql += ` and (d.operationallyReadyDate > '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)`
@@ -1996,14 +1777,14 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
                 FROM vehicle vv
                 LEFT JOIN (select ho.vehicleNo, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and ho.startDateTime < '${indentStartTimeStr}'  AND ho.endDateTime > '${indentEndTimeStr}') hh ON hh.vehicleNo = vv.vehicleNo
                 LEFT JOIN task tt ON vv.vehicleNo=tt.vehicleNumber
-                where vv.vehicleType='${vehicleType}' GROUP BY vv.vehicleNo 
+                where vv.vehicleType=`+sequelizeSystemObj.escape(vehicleType)+` GROUP BY vv.vehicleNo 
             ) rr where rr.currentUnitId is not null ${(unitIdArray && unitIdArray.length > 0) ? ' and rr.currentUnitId in(?) ' : ''} 
         `, {
             replacements: (unitIdArray && unitIdArray.length > 0) ? [unitIdArray] : [],
             type: QueryTypes.SELECT,
         });
         vehicleList = vehicleList.filter(vehicle => hotoOthersVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
-        canUseVehicles = vehicleList.filter(vehicle => leaveVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
+        let canUseVehicles = vehicleList.filter(vehicle => leaveVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
 
         //drivers: user unit driver + hoto user unit driver - hoto others unit driver - markAsUnavailable driver
         // query hoto others unit driver
@@ -2041,12 +1822,6 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
         let needUnitFilter = currentTask.purpose && currentTask.purpose.toLowerCase() != 'familiarisation'
         let driverReplacements = []
         if (needVehicleTypeFilter) {
-            // let driverIdArray = []
-            // let vehicleTypeDrivers = await sequelizeObj.query(`SELECT distinct driverId as driverId FROM driver_platform_conf WHERE vehicleType = '${vehicleType}'`,
-            //     {replacements: [], type: QueryTypes.SELECT});
-            // for(let driverinfo of vehicleTypeDrivers) {
-            //     driverIdArray.push(driverinfo.driverId);
-            // }
             driverReplacements.push(vehicleType);
         }
         if (needUnitFilter && unitIdArray && unitIdArray.length > 0) {
@@ -2154,9 +1929,9 @@ module.exports.cancelMarkAsUnavailable = async function (req, res) {
         //cancel driver leave
         await sequelizeObj.query(`
             UPDATE driver_leave_record
-                SET status=0, cancelRemarks='${additionalNotes}'
-            WHERE driverId=${driverId} and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}'
-        `, { type: QueryTypes.UPDATE, replacements: [] })
+                SET status=0, cancelRemarks=?
+            WHERE driverId=? and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+        `, { type: QueryTypes.UPDATE, replacements: [additionalNotes, driverId, startDate, endDate] })
 
         return res.json(utils.response(1, 'Cancel MarkAsUnavailable Success!'));  
     } catch(error) {
@@ -2200,14 +1975,14 @@ module.exports.markAsUnavailable = async function (req, res) {
             FROM
                 task tt
             WHERE
-                driverId = ${driverId}
+                driverId = ?
             AND tt.driverId is not null and tt.driverStatus != 'completed' and tt.driverStatus != 'Cancelled' and (indentEndTime > now() or tt.driverStatus != 'started')
             AND (
                 (indentStartTime >= '${startTimeStr}' AND indentStartTime <= '${endTimeStr}')
                 OR (indentEndTime >= '${startTimeStr}' AND indentEndTime <= '${endTimeStr}')
                 OR (indentStartTime < '${startTimeStr}' AND indentEndTime > '${endTimeStr}')
             )
-        `, { type: QueryTypes.SELECT, replacements: [] });
+        `, { type: QueryTypes.SELECT, replacements: [driverId] });
 
         if (assignedTaskList && assignedTaskList.length > 0) {
             return res.json(utils.response(0, 'Please reassign the task executionTime during ' + startTimeStr + ' - ' + endTimeStr));  
@@ -2219,8 +1994,8 @@ module.exports.markAsUnavailable = async function (req, res) {
                     SELECT
                         id
                     FROM driver_leave_record dl
-                    WHERE dl.driverId = ${driverId} AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = '${startDate}'
-                `, { type: QueryTypes.SELECT, replacements: [] })
+                    WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = ?
+                `, { type: QueryTypes.SELECT, replacements: [driverId, startDate] })
                 let recordId = null;
                 if (exitLeaveReocrds && exitLeaveReocrds.length > 0) {
                     recordId = exitLeaveReocrds[0].id
@@ -2237,8 +2012,8 @@ module.exports.markAsUnavailable = async function (req, res) {
                     SELECT
                         id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
                     FROM driver_leave_record dl
-                    WHERE dl.driverId = ${driverId} AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}'
-                `, { type: QueryTypes.SELECT, replacements: [] });
+                    WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+                `, { type: QueryTypes.SELECT, replacements: [driverId, startDate, endDate] });
 
                 while(index <= leaveDays) {
                     momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
@@ -2280,8 +2055,8 @@ module.exports.getLeaveRecordByDate = async function (req, res) {
         let exitLeaveReocrds = await sequelizeObj.query(`
             SELECT reason, remarks, dayType
             FROM driver_leave_record dl
-            WHERE dl.driverId = ${driverId} AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = '${currentDate}' limit 1
-        `, { type: QueryTypes.SELECT, replacements: [] })
+            WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = ? limit 1
+        `, { type: QueryTypes.SELECT, replacements: [driverId, currentDate] })
 
         let pageList = await userService.getUserPageList(userId, 'Resources', 'TO List')
         let operationList = pageList.map(item => `${ item.action }`).join(',')
@@ -2369,14 +2144,11 @@ module.exports.getDriverMileageStatInfo = async function (req, res) {
             SELECT veh.permitType, sum(m.mileageTraveled) as permitMileage
             FROM mileage m
             LEFT JOIN vehicle veh ON m.vehicleNo = veh.vehicleNo
-            WHERE m.driverId = ${driverId} and m.endMileage IS NOT NULL 
+            WHERE m.driverId = ? and m.endMileage IS NOT NULL 
             GROUP BY veh.permitType
         `, { 
-            type: QueryTypes.SELECT, replacements: []
+            type: QueryTypes.SELECT, replacements: [driverId]
         });
-        // for (let taskMileage of driverPermitTaskMileageList) {
-        //     permitTypes.add(taskMileage.permitType);
-        // }
             
         let driverMileageStatList = await sequelizeObj.query(`
             SELECT
@@ -2457,7 +2229,7 @@ const checkDriver = async function (driver) {
         let driver1 = await Driver.findOne({ where: { nric: driver.nric, driverId: { [Op.ne]: driver.driverId } } })
         if (driver1) {
             log.error(`NRIC already exist!`)
-            throw `NRIC already exist!`
+            throw Error(`NRIC already exist!`)
         }
     }
 
@@ -2465,7 +2237,7 @@ const checkDriver = async function (driver) {
         let driver2 = await Driver.findOne({ where: { loginName: driver.loginName, driverId: { [Op.ne]: driver.driverId } } })
         if (driver2) {
             log.error(`The user already exist, please change your NRIC or Name.`)
-            throw `The user already exist, please change your NRIC or Name.`
+            throw Error(`The user already exist, please change your NRIC or Name.`)
         }
     }
     
@@ -2473,7 +2245,7 @@ const checkDriver = async function (driver) {
         let driver3 = await Driver.findOne({ where: { driverName: driver.driverName, driverId: { [Op.ne]: driver.driverId } } })
         if (driver3) {
             log.error(`DriverName already exist!`)
-            throw `DriverName already exist!`
+            throw Error(`DriverName already exist!`)
         }
     }
 }
@@ -2482,13 +2254,13 @@ const createDriver = async function (driver, creator) {
     let driver1 = await Driver.findOne({ where: { nric: driver.nric } })
     if (driver1) {
         log.error(`NRIC already exist!`)
-        throw `NRIC already exist!`
+        throw Error(`NRIC already exist!`)
     }
     
     let driver2 = await Driver.findOne({ where: { driverName: driver.driverName } })
     if (driver2) {
         log.error(`DriverName already exist!`)
-        throw `DriverName already exist!`
+        throw Error(`DriverName already exist!`)
     }
     let newDriver = await Driver.create({ ...driver, creator })
     return newDriver.driverId;
@@ -2498,7 +2270,7 @@ const createDriver2 = async function (driver, creator) {
     let driver1 = await Driver.findOne({ where: { loginName: driver.loginName } })
     if (driver1) {
         log.error(`The user already exist, please change your NRIC or Name.`)
-        throw `The user already exist, please change your NRIC or Name.`
+        throw Error(`The user already exist, please change your NRIC or Name.`)
     }
     let newDriver = await Driver.create({ ...driver, creator })
     return newDriver.driverId;
@@ -2519,11 +2291,11 @@ module.exports.getDriverByDriverId = async function (req, res) {
                 driver d
             LEFT JOIN unit un on un.id = d.unitId
             LEFT JOIN user u on u.driverId = d.driverId
-            where d.driverId = '${ driverId }' limit 1
+            where d.driverId = ? limit 1
         `;
  
         let currentDriver = null;
-        let driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: [driverId] })
         // 2023-08-29 Get decrypted is nric.
         for(let item of driverList){
             if(item.nric){
@@ -2559,16 +2331,6 @@ module.exports.updateDriverStatus = async function (req, res) {
         let userId = req.cookies.userId
         if (statusDataList && statusDataList.length > 0) {
             for (let temp of statusDataList) {
-                // if (temp.overrideStatus == 'On Leave') {
-                //     //check driver has effective task
-                //     const effectiveTasks = await sequelizeObj.query(
-                //         `SELECT tt.taskId FROM task tt
-                //         WHERE tt.driverId = '${temp.driverId}' AND tt.driverStatus != 'Cancelled' AND tt.driverStatus != 'completed' AND tt.indentEndTime > NOW()`,
-                //     {type: QueryTypes.SELECT});
-                //     if (effectiveTasks && effectiveTasks.length > 0) {
-                //         return res.json(utils.response(0, 'Cannot modify status, there are uncompleted tasks!'));
-                //     }
-                // }
 
                 let oldDriver = await Driver.findOne({where: {driverId: temp.driverId}});
                 if (oldDriver) {
@@ -2706,7 +2468,7 @@ module.exports.createDriverIncident = async function (req, res) {
         } });
         if (trackCurrent) {
             log.error(`This driver can not create incident at same time`);
-            throw `This driver can not create incident at same time`
+            throw Error(`This driver can not create incident at same time`)
         }
         
         await sequelizeObj.transaction(async transaction => {
@@ -2760,7 +2522,7 @@ module.exports.getLicensingDriverList = async function (req, res) {
         let user = await userService.getUserDetailInfo(userId)
         if (!user) {
             log.warn(`User ${ userId } does not exist.`);
-            throw `User ${ userId } does not exist.`;
+            throw Error(`User ${ userId } does not exist.`);
         }
         return user;
     }
@@ -2828,8 +2590,6 @@ module.exports.getLicensingDriverList = async function (req, res) {
         if (userType && userType.toUpperCase() == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
             limitSQL.push(` (LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
-        } else {
-            //limitSQL.push(` da.\`status\` in('Pending Approval', 'Submitted', 'Endorsed', 'Verified') `);
         }
         
         if (unit) {
@@ -2869,10 +2629,7 @@ module.exports.getLicensingDriverList = async function (req, res) {
             replacements.push(applyStatus);
         }
         if (searchCondition) {
-            limitSQL.push(` ( 
-                d.driverName LIKE '%${ searchCondition }%' 
-                OR d.nric LIKE '%${ searchCondition }%'
-            ) `);
+            limitSQL.push(` d.driverName LIKE `+ sequelizeObj.escape("%" +searchCondition+ "%"));
         }
 
         if (limitSQL.length) {
@@ -2882,7 +2639,9 @@ module.exports.getLicensingDriverList = async function (req, res) {
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
-        baseSQL += ` ORDER BY da.applyDate desc, d.driverName asc, da.permitType asc  limit ${ pageNum }, ${ pageLength }`
+        baseSQL += ` ORDER BY da.applyDate desc, d.driverName asc, da.permitType asc  limit ?, ?`
+        replacements.push(pageNum);
+        replacements.push(pageLength);
         let driverExchangePermitApplyList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
         if (driverExchangePermitApplyList) {
             for (let apply of driverExchangePermitApplyList) {
@@ -3086,8 +2845,8 @@ module.exports.getVehicleTypeByDriverId = async function (req, res) {
         let driverSupportVehicleTypes = await sequelizeObj.query(`
             select DISTINCT vc.vehicleName as typeOfVehicle
             from vehicle_category vc 
-            where FIND_IN_SET(vc.vehicleClass, (select dd.permitType from driver dd where dd.driverId=${driverId}))
-        `, { type: QueryTypes.SELECT, replacements: []});
+            where FIND_IN_SET(vc.vehicleClass, (select dd.permitType from driver dd where dd.driverId=?))
+        `, { type: QueryTypes.SELECT, replacements: [driverId]});
 
         return res.json(utils.response(1, driverSupportVehicleTypes));
     } catch (error) {
@@ -3110,14 +2869,10 @@ module.exports.updatePlatformConf = async function (req, res) {
         let vehicleType = req.body.vehicleType;
         let assessmentDate = req.body.assessmentDate;
         let lastDrivenDate = req.body.lastDrivenDate;
-        //let baseMileage = req.body.baseMileage ? req.body.baseMileage : 0;
 
         if (!vehicleType || !assessmentDate) {
             return res.json(utils.response(0, `Vehicle Type and Assessment Date are required.`));
         }
-        // if (baseMileage < 0) {
-        //     return res.json(utils.response(0, `Mileage must more than 0.`));
-        // }
         let driver = await Driver.findOne({where: {driverId: driverId}});
         if (!driver) {
             return res.json(utils.response(0, `Driver ${ driverId } does not exist.`));
@@ -3133,12 +2888,9 @@ module.exports.updatePlatformConf = async function (req, res) {
                     approveStatus = 'Approved';
                 }
 
-                //let totalMileage = oldConf.totalMileage - oldConf.baseMileage + baseMileage;
                 let updateObj = {
                     permitType,
                     assessmentDate,
-                    // baseMileage,
-                    // totalMileage: totalMileage,
                     updatedAt: moment(),
                     approveStatus: approveStatus
                 }
@@ -3158,8 +2910,6 @@ module.exports.updatePlatformConf = async function (req, res) {
                 permitType,
                 vehicleType,
                 assessmentDate,
-                // baseMileage,
-                // totalMileage: baseMileage,
                 creator: userId,
                 approveStatus: 'Edited'
             }
@@ -3221,8 +2971,8 @@ module.exports.getPermitTypeDetailList = async function (req, res) {
                 h.driverId, h.permitType, h.passDate, h.baseMileage, h.attemptNums, h.testerCode, h.score, h.demeritPoint, h.deleteAt, h.deleteReason, h.deleteBy, uu.fullName as deleteUser
             FROM driver_permittype_detail_history h
             LEFT JOIN user uu on uu.userId = h.deleteBy
-            where h.driverId = ${driverId} order by deleteAt desc
-        `, { type: QueryTypes.SELECT, replacements: [] });
+            where h.driverId = ? order by deleteAt desc
+        `, { type: QueryTypes.SELECT, replacements: [driverId] });
 
         if (permitTypeDetailHistoryList && permitTypeDetailHistoryList.length > 0) {
             for (let temp of permitTypeDetailHistoryList) {
@@ -3267,18 +3017,14 @@ module.exports.updatePermitTypeDetail = async function (req, res) {
         if (!passDate) {
             emptyField += emptyField ? ', Assessment Date' : 'Assessment Date';
         }
-        // if (!baseMileage) {
-        //     emptyField += emptyField ? ', Mileage' : 'Mileage';
-        // }
+
         if (!attemptNums) {
             emptyField += emptyField ? ', No of Attempts' : 'No of Attempts';
         }
         if (!testerCode) {
             emptyField += emptyField ? ', Tester Code' : 'Tester Code';
         }
-        // if (!score) {
-        //     emptyField += emptyField ? ', Score' : 'Score';
-        // }
+
         let errorMsg = ``;
         if (emptyField) {
             errorMsg = emptyField + ' is required;'
@@ -3286,9 +3032,7 @@ module.exports.updatePermitTypeDetail = async function (req, res) {
         if (attemptNums <= 0) {
             errorMsg += `No of Attempts must more than 0;`;
         }
-        // if (baseMileage <= 0) {
-        //     errorMsg += `Mileage must more than 0;`;
-        // }
+
         let driver = await Driver.findOne({where: {driverId: driverId}});
         if (!driver) {
             errorMsg += `Driver ${ driverId } does not exist;`;
@@ -3534,7 +3278,7 @@ module.exports.getDriverPermitLogs = async function (req, res) {
             FROM driver_permit_log dl
             LEFT JOIN driver dd on dl.driverId = dd.driverId
             LEFT JOIN user uu on dl.creator = uu.userId
-            WHERE dl.driverId = ${driverId} ORDER BY dl.optTime DESC
+            WHERE dl.driverId = ? ORDER BY dl.optTime DESC
         `, { type: QueryTypes.SELECT, replacements: [driverId]});
 
         return res.json(utils.response(1, logs));
@@ -3641,8 +3385,8 @@ module.exports.updateTaskMileageStatus = async function (req, res) {
 const updateTaskVehicleMileage = async function(taskId, vehicleNo, newEndMileage) {
     //vehicle last complete task.
     let vehicleLastCompleteTask = await sequelizeObj.query(`
-        select taskId from task where vehicleNumber = '${vehicleNo}' and driverStatus = 'completed' ORDER BY mobileEndTime desc LIMIT 1;
-    `, { type: QueryTypes.SELECT, replacements: []});
+        select taskId from task where vehicleNumber = ? and driverStatus = 'completed' ORDER BY mobileEndTime desc LIMIT 1;
+    `, { type: QueryTypes.SELECT, replacements: [vehicleNo]});
     let vehicleLastCompleteTaskId = '';
     if (vehicleLastCompleteTask && vehicleLastCompleteTask.length > 0) {
         vehicleLastCompleteTaskId = vehicleLastCompleteTask[0].taskId;
@@ -3826,7 +3570,7 @@ module.exports.getSystemGroup = async function (req, res) {
         let { checkRole } = req.body;
         let sql = ` select id, groupName from \`group\` `
         let user = await User.findOne({ where: { userId: req.cookies.userId } });
-        if (!user) throw `User does not exist.`
+        if (!user) throw Error(`User does not exist.`)
 
         let replacements = []
         if(user.userType.toUpperCase() == 'CUSTOMER') {
@@ -3853,191 +3597,12 @@ module.exports.getSystemGroup = async function (req, res) {
     }
 }
 
-module.exports.getDriverListByGroup = async function (req, res) {
-    const getUpcomingLeave = function(list){
-        let data = []
-        for(let row of list){
-            data.push(row)
-            if(!row.nextTime){
-                break
-            }
-        }
-        if(data.length > 0){
-            let startTime = moment(data[0].startTime).format("YYYY-MM-DD HH:mm")
-            let endTime = moment(data[data.length-1].endTime).format("YYYY-MM-DD HH:mm")
-            return {
-                startTime: startTime,
-                endTime: endTime,
-            }
-        }
-        return null
-    }
-
-    let userId = req.cookies.userId;
-    let { permitType, driverStatus, searchCondition, paradeDate, driverORDStatus, pageLength, pageNum } = req.body;
-
-    if (!paradeDate) {
-        paradeDate = moment().format("YYYY-MM-DD");
-    }
-
-    try {
-        let user = await User.findOne({ where: { userId: userId } })
-        if(!user) return res.json(utils.response(0, `User ${ userId } does not exist.`));
-        log.info(`user groupId ${ JSON.stringify(user.unitId) }`)
-
-        //driver current task
-        let currentTaskList = await sequelizeObj.query(`
-            SELECT GROUP_CONCAT(DISTINCT tt.driverId) as todayAssignedDriverIdStr
-            FROM task tt
-            WHERE tt.driverId is not null and tt.driverId != '' and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed'
-            and  now() BETWEEN tt.indentStartTime and tt.indentEndTime
-        `, { type: QueryTypes.SELECT , replacements: []})
-
-        let currentDriverIdStr = currentTaskList && currentTaskList.length > 0 ? currentTaskList[0].todayAssignedDriverIdStr : '';
-        
-        let replacements = [];
-        let baseSQL = `
-            select * from (
-                SELECT 
-                    d.driverId, d.driverName, d.nric, d.totalMileage, d.permitType, d.operationallyReadyDate,
-                    d.status, d.overrideStatus, lr.updatedAt as lastLoginTime, d.updatedAt,
-                    u.unit, u.subUnit, hh.toHub as hotoUnit,hh.toNode as hotoSubUnit,
-                    uu.unitId as groupId,
-                    IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
-                    IF(hh.toHub is NULL, d.unitId, hh.unitId) as unitId,
-                    IF(ll.reason != '' and ll.reason is not null, 'On Leave', IF(FIND_IN_SET(d.driverId, '${currentDriverIdStr}'), 'Deployed', 'Deployable')) as currentStatus
-                FROM driver d 
-                LEFT JOIN unit u ON u.id = d.unitId
-                LEFT JOIN user uu on d.driverId =uu.driverId and uu.userType='MOBILE'
-                LEFT JOIN login_record lr on lr.userId = uu.userId
-                left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and NOW() BETWEEN ho.startDateTime AND ho.endDateTime) hh ON hh.driverId = d.driverId
-                left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status=1 and NOW() BETWEEN dl.startTime AND dl.endTime) ll ON ll.driverId = d.driverId
-                where uu.role in('dv', 'loa')
-                GROUP BY d.driverId
-            ) dd 
-        `;
-        let limitSQL = []
-        if(user.unitId){
-            limitSQL.push(` dd.groupId = '${ user.unitId }'`)
-        }
-        if (permitType) {
-            let list = permitType.split(',')
-            let permitTypeSql = []
-            for (let item of list) {
-                permitTypeSql.push(` FIND_IN_SET(\'${ item }\', dd.permitType) `)
-            }
-            limitSQL.push(` ( ${ permitTypeSql.join(' OR ') } ) `)
-        }
-        if (driverStatus) {
-            limitSQL.push(` FIND_IN_SET(dd.currentStatus,'${driverStatus}') `);
-        }
-        if (driverORDStatus) {
-            if (driverORDStatus.toLowerCase() == 'effective') {
-                limitSQL.push(` (dd.operationallyReadyDate is null OR dd.operationallyReadyDate >= DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
-            } else {
-                limitSQL.push(` (dd.operationallyReadyDate is not null and dd.operationallyReadyDate < DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
-            }
-        }
-        if (searchCondition) {
-            limitSQL.push(` ( 
-                dd.driverName LIKE '%${ searchCondition }%' 
-                OR dd.nric LIKE '%${ searchCondition }%' 
-                OR dd.currentUnit LIKE '%${ searchCondition }%'
-                OR dd.currentSubUnit LIKE '%${ searchCondition }%'
-                OR dd.permitType LIKE '%${ searchCondition }%'
-                OR dd.status LIKE '%${ searchCondition }%'
-            ) `);
-        }
-
-        if (limitSQL.length) {
-            baseSQL = baseSQL + ' WHERE ' + limitSQL.join(' AND ') ;
-        }
-
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
-        let totalRecord = countResult.length
-
-        let driverNameOrder = req.body.driverNameOrder;
-        let orderList = [];
-        if (driverNameOrder) {
-            orderList.push(` dd.driverName ` + driverNameOrder);
-        }
-        let hubOrder = req.body.hubOrder;
-        if (hubOrder) {
-            orderList.push(` dd.unit ` + hubOrder);
-        }
-        if (orderList.length) {
-            baseSQL += ' ORDER BY ' + orderList.join(' , ')
-        } else {
-            baseSQL += ' ORDER BY dd.updatedAt desc'
-        }
-
-        baseSQL += ` limit ${ pageNum }, ${ pageLength }`
-        let driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
-
-        // upcoming leave
-        let driverLeaveRecords = []
-        if(driverList.length > 0){
-            let driverIdList = driverList.map(a=>a.driverId)
-            driverLeaveRecords = await sequelizeObj.query(`
-                select a.*, b.startTime as nextTime from 
-                (
-                    select driverId, startTime, endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?)
-                ) a 
-                LEFT JOIN 
-                (
-                select driverId, startTime, endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?) 
-                ) b on a.endTime = b.startTime and a.driverId = b.driverId
-                ORDER BY a.driverId, a.startTime
-            `, { type: QueryTypes.SELECT, replacements: [driverIdList, driverIdList] })
-        }
-
-        // Update vehicleTypeList, update position
-        for (let driver of driverList) {
-            if (driver.permitType) {
-                let permitTypeList = await PermitType.findAll({ where: { permitType: driver.permitType.split(',') } })
-                driver.vehicleTypeList = permitTypeList.map(permitType => permitType.vehicleType)
-            } else {
-                driver.vehicleTypeList = ''
-            }
-
-            //find out upcoming task
-            let latestTask = await sequelizeObj.query(`
-                SELECT * FROM task t
-                WHERE t.driverId = ? AND t.driverStatus != 'Cancelled' and t.driverStatus != 'completed'
-                and DATE_FORMAT(NOW(), '%Y-%m-%d') BETWEEN DATE_FORMAT(t.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(t.indentEndTime, '%Y-%m-%d')
-                order by t.indentEndTime desc
-                LIMIT 1
-            `, { type: QueryTypes.SELECT , replacements: [ driver.driverId ]})
-            if (latestTask.length > 0) {
-                driver.taskId = latestTask[0].taskId
-                driver.indentId = latestTask[0].indentId
-                driver.indentStartTime = latestTask[0].indentEndTime
-                driver.purpose = latestTask[0].purpose
-            } else {
-                driver.taskId = ''
-                driver.indentId = ''
-                driver.indentStartTime = ''
-                driver.purpose = ''
-            }
-
-            // upcoming leave
-            let records = driverLeaveRecords.filter(a=>a.driverId == driver.driverId)
-            driver.upcomingLeave = getUpcomingLeave(records)
-        }
-
-        return res.json({ respMessage: driverList, recordsFiltered: totalRecord, recordsTotal: totalRecord });
-    } catch(error) {
-        log.error(error)
-		return res.json(utils.response(0, error));
-    }
-}
-
 module.exports.downloadDriverPermitExchangeApply = async function (req, res) {
     const checkUser = async function (userId) {
         let user = await userService.getUserDetailInfo(userId)
         if (!user) {
             log.warn(`User ${ userId } does not exist.`);
-            throw `User ${ userId } does not exist.`;
+            throw Error(`User ${ userId } does not exist.`);
         }
         return user;
     }
@@ -4096,10 +3661,7 @@ module.exports.downloadDriverPermitExchangeApply = async function (req, res) {
         replacements.push(permitType);
     }
     if (searchCondition) {
-        limitSQL.push(` ( 
-            d.driverName LIKE '%${ searchCondition }%' 
-            OR d.nric LIKE '%${ searchCondition }%'
-        ) `);
+        limitSQL.push(`d.driverName LIKE ` + sequelizeObj.escape("%" + searchCondition + "%"));
     }
     if (limitSQL.length) {
         baseSQL = baseSQL + ' WHERE d.driverId is not null and ' + limitSQL.join(' AND ');
@@ -4184,17 +3746,20 @@ module.exports.getDriverHoto = async function (req, res) {
         LEFT JOIN unit u ON u.id = d.unitId
         where 1=1
        `
+       let params = [];
        if(driverIdList) {
         if(driverIdList instanceof Array) {
             if(driverIdList.length > 0) {
-                sql += ` and d.driverId in(${ driverIdList.join(",") })`
+                sql += ` and d.driverId in(?)`
+                params.push(driverIdList.join(","));
             }
         } else {
-            sql += ` and d.driverId = ${ driverIdList }`
+            sql += ` and d.driverId = ?`
+            params.push(driverIdList);
         }
        }
        let driverHoto = await sequelizeObj.query(sql, {
-            type: QueryTypes.SELECT,
+            type: QueryTypes.SELECT, replacements: params
         });
         return res.json(utils.response(1, driverHoto));
     } catch(error) {
@@ -4202,70 +3767,6 @@ module.exports.getDriverHoto = async function (req, res) {
 		return res.json(utils.response(0, error));
     }
 }
-
-// module.exports.getDriverInfo = async function (option = {}) {
-//     try {
-//         // Need check hoto_record/loan_record table
-//         let baseSql = `
-//             SELECT d.driverId, us.fullName, u.id AS rootUnitId, u.unit AS rootHub, u.subUnit AS rootNode,
-//             hh.id AS hotoId, 
-//             IF(hh.id IS NOT NULL, hh.unitId, u.id) AS unitId,
-//             IF(hh.id IS NOT NULL, hh.toHub, u.unit) AS hub,
-//             IF(hh.id IS NOT NULL, hh.toNode, u.subUnit) AS node,
-//             ll.id AS loanId,
-//             IF(ll.id IS NOT NULL, ll.groupId, IF(us.role IN ('DV', 'LOA'), us.unitId, NULL)) AS groupId
-//             FROM driver d
-//             LEFT JOIN USER us ON us.driverId = d.driverId
-//             LEFT JOIN unit u ON u.id = d.unitId
-//             LEFT JOIN (
-//                 SELECT ho.id, ho.driverId, ho.unitId, ho.toHub, ho.toNode FROM hoto ho WHERE ${ option.selectedDate ? `'${ option.selectedDate }'` : 'NOW()' } BETWEEN ho.startDateTime AND ho.endDateTime
-//             ) hh ON hh.driverId = d.driverId
-//             LEFT JOIN (
-//                 SELECT lo.id, lo.driverId, lo.groupId FROM loan lo WHERE ${ option.selectedDate ? `'${ option.selectedDate }'` : 'NOW()' } BETWEEN lo.startDate AND lo.endDate
-//             ) ll ON ll.driverId = d.driverId
-//         `
-
-//         let sql = ` SELECT * FROM ( ${ baseSql } ) dd WHERE 1=1 `
-//         let replacements = []
-//         if (option.hub) {
-//             sql += ` AND dd.hub = ? `
-//             replacements.push(option.hub);
-//         }
-//         if (option.node) {
-//             sql += ` AND dd.node = ? `
-//             replacements.push(option.node);
-//         }
-
-//         // Default search ignore group
-//         if (option.groupId == null || option.groupId == undefined) option.groupId = -1;
-//         if (option.groupId > 0) {
-//             // Limit group
-//             sql += ` AND dd.groupId = ? `
-//             replacements.push(option.groupId);
-//         } else if (option.groupId == 0) {
-//             // No limit
-
-//         } else if (option.groupId < 0) {
-//             // ignore group driver
-//             sql += ` AND dd.groupId IS NULL `
-//         }
-
-//         if (option.unitId) {
-//             sql += ` AND dd.unitId = ? `
-//             replacements.push(option.unitId);
-//         }
-//         if (option.driverId) {
-//             sql += ` AND dd.driverId = ? `
-//             replacements.push(option.driverId);
-//         }
-//         // sql += ` GROUP BY dd.driverId `
-//         console.log(sql)
-//         let result = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements });
-//         return result;
-//     } catch (error) {
-//         throw error
-//     }
-// }
 
 module.exports.getDriverInfo = async function (option = {}) {
     try {
@@ -4343,7 +3844,6 @@ module.exports.getDriverInfo = async function (option = {}) {
             sql += ` AND dd.driverId = ? `
             replacements.push(option.driverId);
         }
-        // sql += ` GROUP BY dd.driverId `
         console.log(sql)
         let result = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements });
         return result;
@@ -4432,67 +3932,6 @@ module.exports.getDriverInfoSQL = async function (option = {}) {
     }
 }
 
-// module.exports.getVehicleInfo = async function (option) {
-//     try {
-//         let baseSql = `
-//             SELECT v.vehicleNo, u.id AS rootUnitId, u.unit AS rootHub, u.subUnit AS rootNode,
-//             hh.id AS hotoId,
-//             IF(hh.id IS NOT NULL, hh.unitId, u.id) AS unitId,
-//             IF(hh.id IS NOT NULL, hh.toHub, u.unit) AS hub,
-//             IF(hh.id IS NOT NULL, hh.toNode, u.subUnit) AS node,
-//             ll.id AS loanId,
-//             IF(ll.id IS NOT NULL, ll.groupId, NULL) AS groupId
-//             FROM vehicle v
-//             LEFT JOIN unit u ON u.id = v.unitId
-//             LEFT JOIN (
-//                 SELECT ho.id, ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode FROM hoto ho WHERE ${ option.selectedDate ? `'${ option.selectedDate }'` : 'NOW()' }  BETWEEN ho.startDateTime AND ho.endDateTime
-//             ) hh ON hh.vehicleNo = v.vehicleNo
-//             LEFT JOIN (
-//                 SELECT lo.id, lo.vehicleNo, lo.groupId FROM loan lo WHERE ${ option.selectedDate ? `'${ option.selectedDate }'` : 'NOW()' }  BETWEEN lo.startDate AND lo.endDate
-//             ) ll ON ll.vehicleNo = v.vehicleNo
-//         `
-//         let sql = ` SELECT * FROM ( ${ baseSql } ) vv WHERE 1=1 `
-//         let replacements = []
-//         if (option.hub) {
-//             sql += ` AND vv.hub = ? `
-//             replacements.push(option.hub);
-//         }
-//         if (option.node) {
-//             sql += ` AND vv.node = ? `
-//             replacements.push(option.node);
-//         }
-
-//         // Default search ignore group
-//         if (option.groupId == null || option.groupId == undefined) option.groupId = -1;
-//         if (option.groupId > 0) {
-//             // Limit group
-//             sql += ` AND vv.groupId = ? `
-//             replacements.push(option.groupId);
-//         } else if (option.groupId == 0) {
-//             // No limit
-
-//         } else if (option.groupId < 0) {
-//             // ignore group driver
-//             sql += ` AND vv.groupId IS NULL `
-//         }
-
-//         if (option.unitId) {
-//             sql += ` AND vv.unitId = ? `
-//             replacements.push(option.unitId);
-//         }
-//         if (option.vehicleNo) {
-//             sql += ` AND vv.vehicleNo = ? `
-//             replacements.push(option.vehicleNo);
-//         }
-
-//         // sql += ` GROUP BY vv.vehicleNo `
-//         // console.log(sql)
-//         let vehicleList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements });
-//         return vehicleList
-//     } catch (error) {
-//         throw error
-//     }
-// }
 
 module.exports.getVehicleInfo = async function (option) {
     try {
@@ -4568,7 +4007,6 @@ module.exports.getVehicleInfo = async function (option) {
             replacements.push(option.vehicleNo);
         }
 
-        // sql += ` GROUP BY vv.vehicleNo `
         console.log(sql)
         let vehicleList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements });
         return vehicleList
@@ -4618,9 +4056,9 @@ module.exports.getDriverAchievementData = async function (req, res) {
 					d.driverName, dm.month, dm.taskPerfectHours
 				FROM driver_month_achievement dm
 				LEFT JOIN driver d on dm.driverId = d.driverId
-				WHERE taskPerfectHours > 0 and dm.month='${selectDate}'
+				WHERE taskPerfectHours > 0 and dm.month=?
 				ORDER BY taskPerfectHours DESC LIMIT 10
-			`, { replacements: [], type: QueryTypes.SELECT });
+			`, { replacements: [selectDate], type: QueryTypes.SELECT });
 
 			result.driverAchievementInfo = driverAchievementInfo;
 			result.allNodeTaskHoursLeaderBoardTop10 = allNodeTop10;
@@ -4632,7 +4070,7 @@ module.exports.getDriverAchievementData = async function (req, res) {
 				FROM driver_month_achievement dm
 				LEFT JOIN driver d on dm.driverId = d.driverId
 				LEFT JOIN unit u on d.unitId = u.id
-				WHERE taskPerfectHours > 0 and dm.month='${selectDate}'
+				WHERE taskPerfectHours > 0 and dm.month=?
 			`;
 			if (groupId) {
 				baseSql += ` and d.groupId = ${groupId} `;
@@ -4645,7 +4083,7 @@ module.exports.getDriverAchievementData = async function (req, res) {
 				}
 			}
 			baseSql += ` ORDER BY taskPerfectHours DESC LIMIT 20 `;
-			let myNodeTop20 = await sequelizeObj.query(baseSql, { replacements: [], type: QueryTypes.SELECT });
+			let myNodeTop20 = await sequelizeObj.query(baseSql, { replacements: [selectDate], type: QueryTypes.SELECT });
 
 			result.driverNodeTaskHoursLeaderBoardTop20 = myNodeTop20;
 
@@ -4664,7 +4102,6 @@ module.exports.getDriverAchievementData = async function (req, res) {
 
 module.exports.approveAssessmentRecord = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let recordId = req.body.recordId;
         let newStatus = req.body.newStatus;
 
@@ -4683,7 +4120,6 @@ module.exports.approveAssessmentRecord = async function (req, res) {
 
 module.exports.approvePermitTypeDetail = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let recordId = req.body.recordId;
         let newStatus = req.body.newStatus;
 
@@ -4702,7 +4138,6 @@ module.exports.approvePermitTypeDetail = async function (req, res) {
 
 module.exports.approvePlatformConf = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let recordId = req.body.recordId;
         let newStatus = req.body.newStatus;
 
@@ -4721,7 +4156,6 @@ module.exports.approvePlatformConf = async function (req, res) {
 
 module.exports.getDriverEffectiveData = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let driverId = req.body.driverId;
 
         let baseSql = ` 
@@ -4739,8 +4173,8 @@ module.exports.getDriverEffectiveData = async function (req, res) {
                 ud.indentStartDate as indentStartTime, ud.indentEndDate as indentEndTime, uc.purpose, 'DUTY' as dataFrom
             FROM urgent_duty ud
             LEFT JOIN urgent_config uc on ud.configId = uc.id
-            where ud.driverId='${driverId}' and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
-        `, { type: QueryTypes.SELECT });
+            where ud.driverId=? and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
+        `, { type: QueryTypes.SELECT, replacements: [driverId]});
 
         driverEffectiveTaskList = driverEffectiveTaskList.concat(driverUrgentTaskList);
 
@@ -4749,12 +4183,12 @@ module.exports.getDriverEffectiveData = async function (req, res) {
                 ho.id, ho.requestId, ho.startDateTime, ho.endDateTime, ht.purpose
             from hoto ho 
             LEFT JOIN hoto_request ht on ho.requestId = ht.id
-            where ho.driverId='${driverId}' and ho.status='Approved'
+            where ho.driverId=? and ho.status='Approved'
          `;
 		let driverEffectiveHotoList = await sequelizeObj.query(baseSql, { replacements: [driverId], type: QueryTypes.SELECT });
 
         baseSql = ` 
-            select l.id, l.indentId, l.startDate, l.endDate, l.purpose from loan l where l.driverId ='${driverId}'
+            select l.id, l.indentId, l.startDate, l.endDate, l.purpose from loan l where l.driverId =?
          `;
 		let driverEffectiveLoanList = await sequelizeObj.query(baseSql, { replacements: [driverId], type: QueryTypes.SELECT });
         

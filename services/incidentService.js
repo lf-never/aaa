@@ -44,21 +44,7 @@ module.exports.getIncidentList = async function (req, res) {
         let unitIdList = await unitService.getUnitPermissionIdList(user)
 
         let incidentList = []
-        // if (incident) {
-        //     if (incident.incidentNo) {
-        //         incidentList = await Incident.findAll({ where: { incidentNo: incident.incidentNo } });
-        //     } else if (incident.incidentName) {
-        //         incidentList = await Incident.findAll({ where: { incidentName: { [Op.like]: '%' + incident.incidentName + '%' } } });
-        //     } else {
-        //         incidentList = await Incident.findAll();
-        //     }
-        // } else {
-        //     if (unitIdList.length) {
-        //         incidentList = await Incident.findAll({ where: { unitId: unitIdList } });
-        //     } else {
-        //         incidentList = await Incident.findAll();
-        //     }
-        // }
+        
         let option = {}
         if (unitIdList.length) {
             option.unitId = unitIdList;

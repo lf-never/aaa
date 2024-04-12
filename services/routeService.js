@@ -37,22 +37,6 @@ module.exports.getRouteList = async function (req, res) {
                 routeList = await Route.findAll();
             }
 
-            // if (user.userType === CONTENT.USER_TYPE.HQ) {
-            //     if (routeName) {
-            //         routeList = await Route.findAll({ where: { routeName: { [Op.substring]: routeName } } });
-            //     } else {
-            //         routeList = await Route.findAll();
-            //     }
-            // } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
-            //     // Route has no unit info
-            //     let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
-            //     if (routeName) {
-            //         routeList = await Route.findAll({ where: { creator: groupUserIdList, routeName: { [Op.substring]: routeName } } });
-            //     } else {
-            //         routeList = await Route.findAll({ where: { creator: groupUserIdList } });
-            //     }
-            // }
-
             let pageList = await userService.getUserPageList(req.cookies.userId, 'Driver Control', 'View Route')
             let operationList = pageList.map(item => `${ item.action }`).join(',')
 
@@ -115,10 +99,8 @@ module.exports.reRouteLine = async function (req, res) {
         let fromPoint = req.body.fromPoint;
         let toPoint = req.body.toPoint;
         let waypointList = req.body.waypointList;
-        let routeNo = req.body.routeNo;
         let incidentNo = req.body.incidentNo;
 
-        // let incidentList = await incidentDao.getIncidentByIncidentNo(incidentNo);
         let incident = await Incident.findByPk(incidentNo);
 
         let newMsg = `Obstacle:${ incident.lat }:${ incident.lng },FromAddr:${ fromPoint.lat }:${ fromPoint.lng },ToAddr:${ toPoint.lat }:${ toPoint.lng },`;
@@ -143,7 +125,7 @@ module.exports.createRoute = async function (req, res) {
         let route = req.body.route;
         let waypointList = route.waypointList;
         await sequelizeObj.transaction(async transaction => {
-            // TODO: update route
+            // update route
             route.routeNo = 'Route-' + moment().format('YYYYMMDD') + utils.generateUniqueKey();
             route.state = CONTENT.ROUTE_STATUS.UNASSIGNED;
             route.creator = req.cookies.userId;
@@ -152,22 +134,8 @@ module.exports.createRoute = async function (req, res) {
             route.toPosition = JSON.stringify(route.toPosition)
             route.line = JSON.stringify(route.line)
 
-            // TODO: check userZoneId
-            // if (route.affectZone) {
-            //     let affectZoneList = route.affectZone.split(',')
-            //     // TODO: clear empty userZoneId
-            //     affectZoneList = affectZoneList.filter(affectZone => { return affectZone !== '' });
-            //     if (affectZoneList.length > 1) {
-            //         log.warn(`There should not more than one zone each route!`)
-            //     } else {
-            //         route.userZoneId = affectZoneList[0]
-            //     }
-            // } else {
-            //     log.info(`This route has no userZone`)
-            // }
-
             await Route.create(route);
-            // TODO: update route waypoint
+            // update route waypoint
             let routeWaypointList = waypointList.map(routeWaypoint => {
                 return { routeNo: route.routeNo, waypointId: routeWaypoint.id }
             })
@@ -196,19 +164,19 @@ module.exports.deleteRoute = async function (req, res) {
     try {
         let routeNo = req.body.routeNo;
         await sequelizeObj.transaction(async transaction => {
-            // TODO: find out route
+            // find out route
             let route = await Route.findByPk(routeNo);
             if (!route) {
-                throw `RouteNo ${ routeNo } does not exist`
+                throw Error(`RouteNo ${ routeNo } does not exist`)
             } 
-            // TODO: check route state
+            // check route state
             if (route.state === CONTENT.ROUTE_STATUS.ASSIGNED) {
-                throw `RouteNo ${ routeNo }'s state is ${ route.state }, can not delete!`
+                throw Error(`RouteNo ${ routeNo }'s state is ${ route.state }, can not delete!`)
             }
-            // TODO: clear route info
+            // clear route info
             await Route.destroy({ where: { routeNo } });
             await RouteWaypoint.destroy({ where: { routeNo } })
-            // TODO: broadcast to browser
+            // broadcast to browser
             SOCKET.publicSocketMsg(CONTENT.BROADCAST_EVENT.ROUTE_UPDATE, null);
 
             await OperationRecord.create({
@@ -263,6 +231,7 @@ module.exports.updateRoute = async function (req, res) {
                 remarks: null
             })
         }).catch(error => {
+            log.error(error);
             throw error
         });
         return res.json(utils.response(1, 'success'));  
@@ -279,7 +248,7 @@ module.exports.copyRoute = async function (req, res) {
             const checkRoute = async function (routeNo) {
                 let routeResult = await Route.findByPk(routeNo)
                 if (!routeResult) {
-                    throw `RouteNo ${ routeNo } does not exist.`
+                    throw Error(`RouteNo ${ routeNo } does not exist.`)
                 }
                 return routeResult;
             }
@@ -287,11 +256,11 @@ module.exports.copyRoute = async function (req, res) {
             let route = await checkRoute(routeNo);
             route = route.dataValues;
             
-            // TODO: create Route
+            // create Route
             route.routeNo = 'Route-' + moment().format('YYYYMMDD') + utils.generateUniqueKey();
             route.state = CONTENT.ROUTE_STATUS.UNASSIGNED;
 
-            // TODO: create RouteWaypoint
+            // create RouteWaypoint
             let routeWaypointList = await RouteWaypoint.findAll({ where: { routeNo } })
             let newRouteWaypoint = []
             for (let routeWaypoint of routeWaypointList) {
@@ -342,14 +311,6 @@ module.exports.getWaypointList = async function (req, res) {
         
         if (user) {
             waypointList = await Waypoint.findAll();
-
-            // if (user.userType === CONTENT.USER_TYPE.HQ) {
-            //     waypointList = await Waypoint.findAll();
-            // } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
-            //     // Waypoint do not has unit info, so check group here
-            //     let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
-            //     waypointList = await Waypoint.findAll({ where: { creator: groupUserIdList } });
-            // }
         } else {
             log.warn(`UserId ${ userId } does not exist.`)
         }
@@ -409,11 +370,11 @@ module.exports.deleteWaypoint = async function (req, res) {
         let waypoint = req.body.waypoint;
         await sequelizeObj.transaction(async transaction => {
             const checkWaypoint = async function (waypoint) {
-                // TODO: check if exist in routeWaypoint
+                // check if exist in routeWaypoint
                 let routeWaypointResult = await RouteWaypoint.findOne({ where: { waypointId: waypoint.id } })
                 if (routeWaypointResult) {
                     log.warn(`Waypoint  ${ waypoint.id } is been used yet, can not delete.`)
-                    throw `Waypoint is been used yet, can not delete.`;
+                    throw Error(`Waypoint is been used yet, can not delete.`);
                 }
             }
             
@@ -443,10 +404,10 @@ module.exports.updateWaypoint = async function (req, res) {
         let waypoint = req.body.waypoint;
         await sequelizeObj.transaction(async transaction => {
             const checkWaypoint = async function (waypoint) {
-                // TODO: check if exist in routeWaypoint
+                // check if exist in routeWaypoint
                 let waypointResult = await Waypoint.findOne({ where: { id: waypoint.id } })
                 if (!waypointResult) {
-                    throw `Waypoint ${ waypointResult.waypointName } does not exist.`
+                    throw Error(`Waypoint ${ waypointResult.waypointName } does not exist.`)
                 }
             }
             
@@ -507,7 +468,7 @@ module.exports.getNameByPositionName = async function (req, res) {
         let position = req.body.position;
         log.info('(getNameByPositionName) position: ', position);
         let allList = await sequelizeSystemObj.query(`
-            SELECT *  FROM location WHERE locationName LIKE '%${ position }%' LIMIT 20
+            SELECT *  FROM location WHERE locationName LIKE `+sequelizeSystemObj.escape("%"+position+"%")+` LIMIT 20
         `, { type: QueryTypes.SELECT })
         log.info(allList);
         return res.json(utils.response(1, allList.slice(0, 20)));

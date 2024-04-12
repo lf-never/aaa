@@ -43,7 +43,7 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
@@ -51,7 +51,7 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
         const getAvailableDriverAndDeviceList = async function (selectDate) {
             try {
                 let availableDeviceIdList = [], availableDriverIdList = []
-                let pattern = new RegExp(/^[0-9]*$/)
+                let pattern = new RegExp(/^\d*$/)
                 let deviceList = fs.readdirSync(conf.dataPath);
                 for (let device of deviceList) {
                     let result = fs.existsSync(`${ conf.dataPath }/${ device }/${ moment(selectDate, 'YYYY-MM-DD').format('YYYYMMDD') }.txt`)
@@ -73,6 +73,16 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
 
         const getDriverList = async function (user, selectedDate, groupDriver, availableDriverIdList) {
             let driverList = []
+
+            let replacements = []
+            let dateSelectSql = `NOW()`;
+            if(selectedDate){
+                dateSelectSql = '?'
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+            }
             let baseSqL = `
                 SELECT dp.driverId, dp.vehicleNo, dp.lat, dp.lng, dp.speed, dp.state, dp.updatedAt, d.driverName, vr.limitSpeed, 
                 
@@ -96,44 +106,48 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
                 LEFT JOIN (
                     SELECT ho.id, ho.driverId, ho.unitId, ho.toHub, ho.toNode 
                     FROM hoto ho 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN ho.startDateTime AND ho.endDateTime
+                    WHERE ${ dateSelectSql } BETWEEN ho.startDateTime AND ho.endDateTime
                     and ho.status = 'Approved'
                 ) hh ON hh.driverId = d.driverId
                 LEFT JOIN (
                     SELECT ho2.id, ho2.driverId, u.id AS unitId, ho2.toHub, ho2.toNode 
                     FROM hoto_record ho2 
                     LEFT JOIN unit u ON u.unit = ho2.toHub AND u.subUnit = ho2.toNode
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN ho2.startDateTime AND ho2.returnDateTime
+                    WHERE ${ dateSelectSql } BETWEEN ho2.startDateTime AND ho2.returnDateTime
                     and ho2.status = 'Approved'
                 ) hh2 ON hh2.driverId = d.driverId
                 LEFT JOIN (
                     SELECT lo.id, lo.driverId, lo.groupId 
                     FROM loan lo 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN lo.startDate AND lo.endDate
+                    WHERE ${ dateSelectSql } BETWEEN lo.startDate AND lo.endDate
                 ) ll ON ll.driverId = d.driverId
                 LEFT JOIN (
                     SELECT lo2.id, lo2.driverId, lo2.groupId 
                     FROM loan_record lo2 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN lo2.startDate AND lo2.returnDate
+                    WHERE ${ dateSelectSql } BETWEEN lo2.startDate AND lo2.returnDate
                 ) ll2 ON ll2.driverId = d.driverId
                 
                 WHERE dp.lat != 0 and dp.lng != 0
-
-                ${ availableDriverIdList.length ? ` and dp.driverId in (${ availableDriverIdList.join(',') }) ` : ' and 1=2 ' }
             `
+            if(availableDriverIdList.length){
+                baseSqL += ` and dp.driverId in (?)`
+                replacements.push(availableDriverIdList.join(','))
+            } else {
+                baseSqL += ` and 1=2`
+            }
             let sql = ` SELECT * FROM ( ${ baseSqL } ) tt WHERE 1=1 `
 
-            if (user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
-                
-            } else if (user.userType === CONTENT.USER_TYPE.HQ) {
+            if (user.userType === CONTENT.USER_TYPE.HQ) {
                 let { unitIdList, groupIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId);
                 
                 let tempSqlList = []
                 if (unitIdList.length) {
-                    tempSqlList.push(` ( tt.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND tt.groupId IS NULL ) `) 
+                    tempSqlList.push(` ( tt.unitId IN ( ? ) AND tt.groupId IS NULL ) `) 
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 }
                 if (groupIdList.length) {
-                    tempSqlList.push(` tt.groupId in (${ groupIdList.map(item => `'${ item }'`).join(',') }) `) 
+                    tempSqlList.push(` tt.groupId in (?) `) 
+                    replacements.push(groupIdList.map(item => `'${ item }'`).join(','))
                 }
                 
                 if (tempSqlList.length) {
@@ -144,12 +158,14 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
             } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let { unitIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId);
                 if (unitIdList.length) {
-                    sql += ` AND ( tt.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND tt.groupId IS NULL ) `
+                    sql += ` AND ( tt.unitId IN ( ? ) AND tt.groupId IS NULL ) `
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 } else {
                     sql += ` AND 1 = 2 `;
                 }
             } else if (user.userType === CONTENT.USER_TYPE.CUSTOMER) {
-                sql += ` AND tt.groupId = ${ user.unitId } `
+                sql += ` AND tt.groupId = ? `
+                replacements.push(user.unitId)
             }
 
             if (groupDriver) {
@@ -158,7 +174,7 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
                 sql += ` GROUP BY tt.driverId, tt.vehicleNo `
             }
             log.info(sql)
-            driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+            driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
 
             let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
             for (let driver of driverList) {
@@ -176,6 +192,16 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
         }
         const getDeviceList = async function (user, selectedDate, availableDeviceIdList) {
             let deviceList = [];
+            
+            let replacements = []
+            let selectedDateSql = `NOW()`
+            if(selectedDate){
+                selectedDateSql = ` ? `
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+            }
             let baseSqL = ` 
                 SELECT d.deviceId, v.vehicleNo, d.speed, d.lat, d.lng, v.limitSpeed, d.updatedAt, 
                 
@@ -197,45 +223,48 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
                 LEFT JOIN (
                     SELECT ho.id, ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode 
                     FROM hoto ho 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN ho.startDateTime AND ho.endDateTime
+                    WHERE ${ selectedDateSql }  BETWEEN ho.startDateTime AND ho.endDateTime
                     and ho.status = 'Approved'
                 ) hh ON hh.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT ho2.id, ho2.vehicleNo, u.id AS unitId, ho2.toHub, ho2.toNode 
                     FROM hoto_record ho2 
                     LEFT JOIN unit u ON u.unit = ho2.toHub AND u.subUnit = ho2.toNode
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN ho2.startDateTime AND ho2.returnDateTime
+                    WHERE ${ selectedDateSql }  BETWEEN ho2.startDateTime AND ho2.returnDateTime
                     and ho2.status = 'Approved'
                 ) hh2 ON hh2.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT lo.id, lo.vehicleNo, lo.groupId 
                     FROM loan lo 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN lo.startDate AND lo.endDate 
+                    WHERE ${ selectedDateSql }  BETWEEN lo.startDate AND lo.endDate 
                 ) ll ON ll.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT lo2.id, lo2.vehicleNo, lo2.groupId 
                     FROM loan_record lo2 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN lo2.startDate AND lo2.returnDate
+                    WHERE ${ selectedDateSql }  BETWEEN lo2.startDate AND lo2.returnDate
                 ) ll2 ON ll2.vehicleNo = v.vehicleNo
 
                 WHERE 1=1 AND d.lat != 0 and d.lng != 0
-
-                ${ availableDeviceIdList.length ? ` and d.deviceId in (${ availableDeviceIdList.map(item => `'${ item }'`).join(',') }) ` : ' and 1=2 ' }
             `
-
+            if(availableDeviceIdList.length){
+                baseSqL += ` and d.deviceId in (?)`
+                replacements.push(availableDeviceIdList.map(item => `'${ item }'`).join(','))
+            } else {
+                baseSqL += ` and 1=2`
+            }
             let sql = ` SELECT * FROM ( ${ baseSqL } ) vv WHERE 1=1 `
 
-            if (user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
-                
-            } else if (user.userType === CONTENT.USER_TYPE.HQ) {
+            if (user.userType === CONTENT.USER_TYPE.HQ) {
                 let { unitIdList, groupIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId);
                 
                 let tempSqlList = []
                 if (unitIdList.length) {
-                    tempSqlList.push(` ( vv.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND vv.groupId IS NULL ) `) 
+                    tempSqlList.push(` ( vv.unitId IN ( ? ) AND vv.groupId IS NULL ) `) 
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 }
                 if (groupIdList.length) {
-                    tempSqlList.push(` vv.groupId in (${ groupIdList.map(item => `'${ item }'`).join(',') }) `) 
+                    tempSqlList.push(` vv.groupId in (?) `) 
+                    replacements.push(groupIdList.map(item => `'${ item }'`).join(','))
                 }
                 
                 if (tempSqlList.length) {
@@ -246,16 +275,18 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
             } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let unitIdList = await unitService.getUnitPermissionIdList(user);
                 if (unitIdList.length) {
-                    sql += ` AND ( vv.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND vv.groupId IS NULL ) `
+                    sql += ` AND ( vv.unitId IN ( ? ) AND vv.groupId IS NULL ) `
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 } else {
                     sql += ` AND 1 = 2 `
                 }
             } else if (user.userType === CONTENT.USER_TYPE.CUSTOMER) {
-                sql += ` AND vv.groupId = ${ user.unitId } `
+                sql += ` AND vv.groupId = ? `
+                replacements.push(user.unitId)
             }
             sql += ` group by d.deviceId `
             log.info(sql)
-			deviceList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })	
+			deviceList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })	
             
             let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
 			for (let device of deviceList) {
@@ -273,7 +304,6 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
         }
 
         const checkTimeIfMissing = function (time) {
-            // let flag = Cookies.get('VehicleMissingFrequency');
             let flag = conf.VehicleMissingFrequency;
             flag = flag ? flag : 0;
             flag = Number.parseInt(flag);
@@ -306,13 +336,23 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
 
         const getDriverList = async function (user, selectedDate, groupDriver) {
             let driverList = []
+            
+            let replacements = []
+            let selectedDateDriverSql = 'NOW()'
+            if(selectedDate){
+                selectedDateDriverSql = ` ? `
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+            }
             let baseSqL = `
                 SELECT dp.driverId, dp.vehicleNo, dp.lat, dp.lng, dp.speed, dp.state, dp.updatedAt, d.driverName, vr.limitSpeed, 
                 
@@ -336,44 +376,45 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
                 LEFT JOIN (
                     SELECT ho.id, ho.driverId, ho.unitId, ho.toHub, ho.toNode 
                     FROM hoto ho 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN ho.startDateTime AND ho.endDateTime
+                    WHERE ${ selectedDateDriverSql } BETWEEN ho.startDateTime AND ho.endDateTime
                     and ho.status = 'Approved'
                 ) hh ON hh.driverId = d.driverId
                 LEFT JOIN (
                     SELECT ho2.id, ho2.driverId, u.id AS unitId, ho2.toHub, ho2.toNode 
                     FROM hoto_record ho2 
                     LEFT JOIN unit u ON u.unit = ho2.toHub AND u.subUnit = ho2.toNode
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN ho2.startDateTime AND ho2.returnDateTime
+                    WHERE ${ selectedDateDriverSql } BETWEEN ho2.startDateTime AND ho2.returnDateTime
                     and ho2.status = 'Approved'
                 ) hh2 ON hh2.driverId = d.driverId
                 LEFT JOIN (
                     SELECT lo.id, lo.driverId, lo.groupId 
                     FROM loan lo 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN lo.startDate AND lo.endDate
+                    WHERE ${ selectedDateDriverSql } BETWEEN lo.startDate AND lo.endDate
                 ) ll ON ll.driverId = d.driverId
                 LEFT JOIN (
                     SELECT lo2.id, lo2.driverId, lo2.groupId 
                     FROM loan_record lo2 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' } BETWEEN lo2.startDate AND lo2.returnDate
+                    WHERE ${ selectedDateDriverSql } BETWEEN lo2.startDate AND lo2.returnDate
                 ) ll2 ON ll2.driverId = d.driverId
                 
                 WHERE dp.lat != 0 and dp.lng != 0
             `
             let sql = ` SELECT * FROM ( ${ baseSqL } ) tt WHERE 1=1 `
             if (selectedDate) {
-                sql += ` AND tt.updatedAt LIKE \'${ selectedDate }%\' `
+                sql += ` AND tt.updatedAt LIKE ? `
+                replacements.push(selectedDate+'%')
             }
-            if (user.userType === CONTENT.USER_TYPE.HQ || user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
-                
-            } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
+            if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let { unitIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId);
                 if (unitIdList.length) {
-                    sql += ` AND ( tt.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND tt.groupId IS NULL ) `
+                    sql += ` AND ( tt.unitId IN ( ? ) AND tt.groupId IS NULL ) `
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 } else {
                     sql += ` AND 1 = 2 `;
                 }
             } else if (user.userType === CONTENT.USER_TYPE.CUSTOMER) {
-                sql += ` AND tt.groupId = ${ user.unitId } `
+                sql += ` AND tt.groupId = ? `
+                replacements.push(user.unitId)
             }
             log.info(sql)
 
@@ -382,7 +423,7 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
             } else {
                 sql += ` GROUP BY tt.driverId, tt.vehicleNo `
             }
-            driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+            driverList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
 
             let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
             for (let driver of driverList) {
@@ -400,6 +441,15 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
         }
         const getDeviceList = async function (user, selectedDate) {
             let deviceList = [];
+            let replacements = [];
+            let selectedDateDeviceSql = 'NOW()'
+            if(selectedDate){
+                selectedDateDeviceSql = ' ? '
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+                replacements.push(selectedDate)
+            }
             let baseSqL = ` 
                 SELECT d.deviceId, v.vehicleNo, d.speed, d.lat, d.lng, v.limitSpeed, d.updatedAt, 
                 
@@ -421,25 +471,25 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
                 LEFT JOIN (
                     SELECT ho.id, ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode 
                     FROM hoto ho 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN ho.startDateTime AND ho.endDateTime
+                    WHERE ${ selectedDateDeviceSql }  BETWEEN ho.startDateTime AND ho.endDateTime
                     and ho.status = 'Approved'
                 ) hh ON hh.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT ho2.id, ho2.vehicleNo, u.id AS unitId, ho2.toHub, ho2.toNode 
                     FROM hoto_record ho2 
                     LEFT JOIN unit u ON u.unit = ho2.toHub AND u.subUnit = ho2.toNode
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN ho2.startDateTime AND ho2.returnDateTime
+                    WHERE ${ selectedDateDeviceSql }  BETWEEN ho2.startDateTime AND ho2.returnDateTime
                     and ho2.status = 'Approved'
                 ) hh2 ON hh2.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT lo.id, lo.vehicleNo, lo.groupId 
                     FROM loan lo 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN lo.startDate AND lo.endDate 
+                    WHERE ${ selectedDateDeviceSql }  BETWEEN lo.startDate AND lo.endDate 
                 ) ll ON ll.vehicleNo = v.vehicleNo
                 LEFT JOIN (
                     SELECT lo2.id, lo2.vehicleNo, lo2.groupId 
                     FROM loan_record lo2 
-                    WHERE ${ selectedDate ? `'${ selectedDate }'` : 'NOW()' }  BETWEEN lo2.startDate AND lo2.returnDate
+                    WHERE ${ selectedDateDeviceSql }  BETWEEN lo2.startDate AND lo2.returnDate
                 ) ll2 ON ll2.vehicleNo = v.vehicleNo
 
                 WHERE 1=1 AND d.lat != 0 and d.lng != 0
@@ -448,23 +498,26 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
             let sql = ` SELECT * FROM ( ${ baseSqL } ) vv WHERE 1=1 `
 
             if (selectedDate) {
-                sql += ` AND vv.updatedAt LIKE \'${ selectedDate }%\' `
+                sql += ` AND vv.updatedAt LIKE ? `
+                replacements.push(selectedDate+'%')
             }
             if (user.userType === CONTENT.USER_TYPE.HQ || user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
                 
             } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let unitIdList = await unitService.getUnitPermissionIdList(user);
                 if (unitIdList.length) {
-                    sql += ` AND ( vv.unitId IN ( ${ unitIdList.map(item => `'${ item }'`).join(',') } ) AND vv.groupId IS NULL ) `
+                    sql += ` AND ( vv.unitId IN ( ? ) AND vv.groupId IS NULL ) `
+                    replacements.push(unitIdList.map(item => `'${ item }'`).join(','))
                 } else {
                     sql += ` AND 1 = 2 `
                 }
             } else if (user.userType === CONTENT.USER_TYPE.CUSTOMER) {
-                sql += ` AND vv.groupId = ${ user.unitId } `
+                sql += ` AND vv.groupId = ? `
+                replacements.push(user.unitId)
             }
             sql += ` group by d.deviceId `
             log.info(sql)
-			deviceList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })	
+			deviceList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })	
             
             let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
 			for (let device of deviceList) {
@@ -482,7 +535,6 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
         }
 
         const checkTimeIfMissing = function (time) {
-            // let flag = Cookies.get('VehicleMissingFrequency');
             let flag = conf.VehicleMissingFrequency;
             flag = flag ? flag : 0;
             flag = Number.parseInt(flag);
@@ -513,7 +565,7 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
@@ -523,7 +575,6 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
             for (let driver of driverList) {
                 let list = [];
                 try {
-                    // list = await outputService.readFromFile(driver.driverId, driver.vehicleNo, [startDateTime, endDateTime])
                     list = await outputService.readFromFile(driver.driverId, null, [startDateTime, endDateTime])
                 } catch (error) {
                     log.error(error);
@@ -550,16 +601,6 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
                     log.error(error);
                 }
                 
-                // let list = await DevicePositionHistory.findAll({
-                //     where: {
-                //         deviceId: device.deviceId,
-                //         createdAt: {
-                //             [Op.gte]: startDateTime,
-                //             [Op.lte]: endDateTime,
-                //         }
-                //     },
-                //     attributes: ['deviceId', 'lat', 'lng', 'speed', 'createdAt']
-                // });
                 let deviceName = device.vehicleNo ? device.vehicleNo : device.deviceId
                 
                 let limitSpeed = 0;
@@ -612,43 +653,25 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
 module.exports.getTrackDashboardInfo = async function (req, res) {
     try {
         let userId = req.cookies.userId;
-        let userType = req.cookies.userType;
 
         const checkUser = async function (userId) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
 
         let user = await checkUser(userId)
-        let userIdList = [], unitIdList = null;
+        let unitIdList = null;
         
         unitIdList = await unitService.getUnitPermissionIdList(user)
-        // if (userType === CONTENT.USER_TYPE.HQ) {
-        //     let userList = await User.findAll({ where: { userType: [CONTENT.USER_TYPE.HQ, CONTENT.USER_TYPE.UNIT] } })
-        //     userIdList = userList.map(user => user.userId)
-        // } else {
-        //     // let groupUserIdList = await groupService.getGroupUserIdListByUser(user)
-        //     if (unitIdList.length) {
-        //         let unitUserList = await User.findAll({ where: { userType: CONTENT.USER_TYPE.UNIT, unitId: unitIdList } })
-        //         let unitUserIdList = unitUserList.map(unitUser => unitUser.userId)
-        //         // userIdList = [].concat(groupUserIdList, unitUserIdList)
-        //         userIdList = [].concat(unitUserIdList)
-        //         userIdList = Array.from(new Set(userIdList));
-        //     }
-        // }
-        log.info(`*************************`)
-        // log.info(userIdList)
-        log.info(unitIdList)
-
+        
         let result = {}
         if (!unitIdList.length) {
             unitIdList = await Unit.findAll();
             unitIdList = unitIdList.map(item => item.id);
-            // return res.json(utils.response(1, result));
         } 
         let latestTrackList = await sequelizeObj.query(`
             SELECT t.deviceId, t.violationType, t.count, t.dataFrom, vr.vehicleNo, d.driverName, t.occTime 
@@ -657,7 +680,7 @@ module.exports.getTrackDashboardInfo = async function (req, res) {
             LEFT JOIN driver d ON d.driverId = vr.driverId
             LEFT JOIN device de ON de.deviceId = t.deviceId
             WHERE t.dataFrom = 'obd' 
-            AND t.violationType NOT IN ('${ CONTENT.ViolationType.IDLETime }')
+            AND t.violationType NOT IN (?)
             AND d.unitId IN (?)
             UNION
             SELECT t.deviceId, t.violationType, t.count, t.dataFrom, t.vehicleNo, d.driverName, t.occTime 
@@ -665,11 +688,10 @@ module.exports.getTrackDashboardInfo = async function (req, res) {
             LEFT JOIN vehicle_relation vr ON vr.driverId = t.deviceId
             LEFT JOIN driver d ON d.driverId = vr.driverId
             WHERE t.dataFrom = 'mobile' 
-            AND t.violationType NOT IN ('${ CONTENT.ViolationType.IDLETime }')
+            AND t.violationType NOT IN (?)
             AND d.unitId IN (?)
-        `, { replacements: [ unitIdList, unitIdList ], type: QueryTypes.SELECT })
+        `, { replacements: [ CONTENT.ViolationType.IDLETime, unitIdList, CONTENT.ViolationType.IDLETime, unitIdList ], type: QueryTypes.SELECT })
 
-        // console.log(`latestTrackList => `, latestTrackList.length)
         let differentDeviceIdAndVehicleNoList = [];
         for (let latestTrack of latestTrackList) {
             let ifExist = differentDeviceIdAndVehicleNoList.some(obj => {
@@ -681,8 +703,6 @@ module.exports.getTrackDashboardInfo = async function (req, res) {
                 differentDeviceIdAndVehicleNoList.push({ deviceId: latestTrack.deviceId, vehicleNo: latestTrack.vehicleNo });
             }
         }
-        // console.log(JSON.stringify(differentDeviceIdAndVehicleNoList, null, 4))
-        // console.log(`differentDeviceIdAndVehicleNoList => `, differentDeviceIdAndVehicleNoList.length)
         let resultLatestTrackList = [];
         for (let deviceIdAndVehicleNo of differentDeviceIdAndVehicleNoList) {
             let device = { 
@@ -803,6 +823,7 @@ module.exports.getEventHistory = async function (req, res) {
         }
         let trackHistoryList = []
         let sql = ``
+        let replacements = []
         if (dataFrom == 'mobile') {
             sql = `
                 SELECT th.*, d.driverName, z.*, nt.selectedTimes   
@@ -811,7 +832,7 @@ module.exports.getEventHistory = async function (req, res) {
                 LEFT JOIN (
                     SELECT t.driverId, t.taskId, t.mobileStartTime, t.mobileEndTime, t.hub, t.node, t.vehicleNumber, t.groupId 
                     FROM task t WHERE
-                    ( (Date('${ date }') BETWEEN Date(t.mobileStartTime) AND Date(t.mobileEndTime)) and t.mobileStartTime is not null )
+                    ( (Date(?) BETWEEN Date(t.mobileStartTime) AND Date(t.mobileEndTime)) and t.mobileStartTime is not null )
                     OR 
                     t.driverStatus = 'started'
 
@@ -820,7 +841,7 @@ module.exports.getEventHistory = async function (req, res) {
                     SELECT ui.driverId, CONCAT('DUTY-', ui.dutyId) as taskId, ui.mobileStartTime, ui.mobileEndTime, 
                     ui.hub, ui.node, ui.vehicleNo as vehicleNumber, ui.groupId
                     FROM urgent_indent ui 
-                    WHERE ( (Date('${ date }') BETWEEN Date(ui.mobileStartTime) AND Date(ui.mobileEndTime)) and ui.mobileStartTime is not null )
+                    WHERE ( (Date(?) BETWEEN Date(ui.mobileStartTime) AND Date(ui.mobileEndTime)) and ui.mobileStartTime is not null )
                     OR ui.status IN ('started', 'ready')
                 ) tt ON tt.driverId = th.deviceId 
                 left join unit u on u.unit = tt.hub and u.subUnit <=> tt.node
@@ -831,12 +852,18 @@ module.exports.getEventHistory = async function (req, res) {
                     GROUP BY nt.zoneId
                 ) nt ON nt.zoneId = z.id
                 WHERE (th.occTime >= tt.mobileStartTime AND (tt.mobileEndTime is null or th.occTime <= tt.mobileEndTime ) )
-                AND th.occTime LIKE '${ date }%'
-                AND th.deviceId = '${ deviceId }'
-                AND th.vehicleNo = '${ vehicleNo }'
+                AND th.occTime LIKE ?
+                AND th.deviceId = ?
+                AND th.vehicleNo = ?
             `;
+            replacements.push(date)
+            replacements.push(date)
+            replacements.push(date+'%')
+            replacements.push(deviceId)
+            replacements.push(vehicleNo)
             if (violationType !== 'all') {
-                sql += ` AND th.violationType = '${ violationType }' `
+                sql += ` AND th.violationType = ? `
+                replacements.push(violationType)
             }
             sql += ` ORDER BY th.occTime DESC  `
         } else if (dataFrom == 'obd') {
@@ -847,7 +874,7 @@ module.exports.getEventHistory = async function (req, res) {
                 LEFT JOIN (
                     SELECT t.driverId, t.taskId, t.mobileStartTime, t.mobileEndTime, t.hub, t.node, t.vehicleNumber, t.groupId  
                     FROM task t WHERE
-                    ( (Date('${ date }') BETWEEN Date(t.mobileStartTime) AND Date(t.mobileEndTime)) and t.mobileStartTime is not null )
+                    ( (Date(?) BETWEEN Date(t.mobileStartTime) AND Date(t.mobileEndTime)) and t.mobileStartTime is not null )
                     OR 
                     t.driverStatus = 'started'
 
@@ -856,7 +883,7 @@ module.exports.getEventHistory = async function (req, res) {
                     SELECT ui.driverId, CONCAT('DUTY-', ui.dutyId) as taskId, ui.mobileStartTime, ui.mobileEndTime, 
                     ui.hub, ui.node, ui.vehicleNo as vehicleNumber, ui.groupId
                     FROM urgent_indent ui 
-                    WHERE ( (Date('${ date }') BETWEEN Date(ui.mobileStartTime) AND Date(ui.mobileEndTime)) and ui.mobileStartTime is not null )
+                    WHERE ( (Date(?) BETWEEN Date(ui.mobileStartTime) AND Date(ui.mobileEndTime)) and ui.mobileStartTime is not null )
                     OR ui.status IN ('started', 'ready')
                     
                 ) tt ON tt.vehicleNumber = v.vehicleNo
@@ -868,17 +895,22 @@ module.exports.getEventHistory = async function (req, res) {
                     GROUP BY nt.zoneId
                 ) nt ON nt.zoneId = z.id
                 WHERE (th.occTime >= tt.mobileStartTime AND (tt.mobileEndTime is null or th.occTime <= tt.mobileEndTime ) )
-                AND th.occTime LIKE '${ date }%'
-                AND th.deviceId = '${ deviceId }'
+                AND th.occTime LIKE ?
+                AND th.deviceId = ?
             `;
+            replacements.push(date)
+            replacements.push(date)
+            replacements.push(date+'%')
+            replacements.push(deviceId)
             if (violationType !== 'all') {
-                sql += ` AND th.violationType = '${ violationType }' `
+                sql += ` AND th.violationType = ? `
+                replacements.push(violationType)
             }
             sql += ` ORDER BY th.occTime DESC  `
         }
         log.info(sql)
         if (sql) {
-            trackHistoryList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+            trackHistoryList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         }
         
         return res.json(utils.response(1, trackHistoryList));
@@ -909,20 +941,23 @@ module.exports.getAllEventHistory = async function (req, res) {
             SELECT th.*, d.driverName 
             FROM track_history th
             LEFT JOIN driver d ON d.driverId = th.deviceId
-            WHERE th.deviceId = '${ deviceId }'
+            WHERE th.deviceId = ?
             
         `;
+        let replacements = [deviceId]
         if (vehicleNo == null || vehicleNo == 'null') {
             sql += ` AND th.vehicleNo is null `
         } else {
-            sql += ` AND th.vehicleNo = '${ vehicleNo }' `
+            sql += ` AND th.vehicleNo = ? `
+            replacements.push(vehicleNo)
         }
         if (violationType !== 'all') {
-            sql += ` AND th.violationType = '${ violationType }' `
+            sql += ` AND th.violationType = ? `
+            replacements.push(violationType)
         }
         sql += ` ORDER BY th.occTime DESC  `
 
-        let trackHistoryList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let trackHistoryList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         
         return res.json(utils.response(1, trackHistoryList));
     } catch (error) {
@@ -945,7 +980,6 @@ module.exports.getEventLatestSpeedInfo = async function (req, res) {
         let list = [], limitSpeed = 0;
         if (type === 'mobile') {
             list = await DriverOffenceHistory.findAll({
-            // list = await DriverPositionHistory.findAll({
                 where: {
                     driverId: deviceId,
                     vehicleNo,
@@ -963,7 +997,6 @@ module.exports.getEventLatestSpeedInfo = async function (req, res) {
             limitSpeed = limitSpeed ?? 60
         } else if (type === 'obd') {
             list = await DeviceOffenceHistory.findAll({
-            // list = await DevicePositionHistory.findAll({
                 where: {
                     deviceId,
                     createdAt: {
@@ -1048,7 +1081,6 @@ module.exports.getDriverLastPosition = async function (req, res) {
 
 module.exports.getDriverLastPositionByVehicleNo = async function (req, res) {
     let { vehicleNoList } = req.body;
-    // let driverList = await Driver.findAll({ where: { driverId: vehicleNoList } })
     let vehiclePosList = [];
     for (let vehicleNo of vehicleNoList) {
         let vehiclePos = {vehicleNo: vehicleNo};

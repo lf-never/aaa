@@ -64,33 +64,37 @@ let TaskUtils = {
         startDate = moment(startDate).format('YYYY-MM-DD HH:mm:ss')
         endDate = moment(endDate).format('YYYY-MM-DD HH:mm:ss')
         let sql = `SELECT taskId, vehicleNumber, driverId from task where 1=1 `
+        let replacements = []
         let groupSql = ''
         if(vehicleNo) {
-            sql += ` and vehicleStatus not in ('completed', 'cancelled') and vehicleNumber = '${ vehicleNo }'`
+            sql += ` and vehicleStatus not in ('completed', 'cancelled') and vehicleNumber = ?`
             groupSql = ` group by vehicleNumber`
+            replacements.push(vehicleNo)
         }
         if(driverId) {
-            sql += ` and driverStatus not in ('completed', 'cancelled') and driverId = ${ driverId }`
+            sql += ` and driverStatus not in ('completed', 'cancelled') and driverId = ?`
             groupSql = ` group by driverId`
+            replacements.push(driverId)
         }
         
         if(unfinishedTask){
              //Unfinished task (In this time frame started but not completed)
             sql += ` and (mobileStartTime is not null and mobileEndTime is null)
-                    and (indentStartTime >= '${ startDate }' and indentEndTime <= '${ endDate }')
+                    and (indentStartTime >= ? and indentEndTime <= ?)
             `
+            replacements.push(startDate, endDate)
         } else {
              //Valid task (during this time period or started but not ended)
             sql += `
-            and ((('${ startDate }' >= indentStartTime AND '${ startDate }' <= indentEndTime) 
-            OR ('${ endDate }' >= indentStartTime AND '${ endDate }' <= indentEndTime) 
-            OR ('${ startDate }' < indentStartTime AND '${ endDate }' > indentEndTime))
-            OR vehicleStatus = 'started'
-            )
+            and (((? >= indentStartTime AND ? <= indentEndTime) 
+            OR (? >= indentStartTime AND ? <= indentEndTime) 
+            OR (? < indentStartTime AND ? > indentEndTime))
+            OR vehicleStatus = 'started')
             `
+            replacements.push(startDate, startDate, endDate, endDate, startDate, endDate)
         }
         sql += groupSql;
-        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT })
+        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT, replacements: replacements })
         return result;
     },
     // verifyDriverOrVehicleByDate2: async function (vehicleNo, driverId, startDate, endDate) {
@@ -130,71 +134,90 @@ let TaskUtils = {
         left join (select * from urgent_indent where status not in ('completed', 'cancelled')) ui on ud.id = ui.dutyId
         where ud.status not in ('completed', 'cancelled')
         `
+        let replacements = []
         if(vehicleNo){
-            sql += ` and ud.vehicleNo = '${ vehicleNo }'`
+            sql += ` and ud.vehicleNo = ?`
+            replacements.push(vehicleNo)
         }
         if(driverId){
-            sql += ` and ud.driverId = ${ driverId }`
+            sql += ` and ud.driverId = ?`
+            replacements.push(driverId)
         }
         if(unfinishedUrgent) {
             if(unfinishedUrgent.toLowerCase() == 'true') {
-            //Unfinished task (In this time frame started but not completed)
-            sql += ` and (ud.mobileStartTime is not null and ud.mobileEndTime is null)
-            and (ud.indentStartDate >= '${ startDate }' and ud.indentEndDate <= '${ endDate }') `
+                //Unfinished task (In this time frame started but not completed)
+                sql += ` and (ud.mobileStartTime is not null and ud.mobileEndTime is null)
+                and (ud.indentStartDate >= ? and ud.indentEndDate <= ?) `
+                replacements.push(startDate, endDate)
             } else {
                 sql += ` and (ud.mobileStartTime is null and ud.mobileEndTime is null)
-                and (ud.indentStartDate >= '${ startDate }' and ud.indentEndDate <= '${ endDate }') `
+                and (ud.indentStartDate >= ? and ud.indentEndDate <= ?) `
+                replacements.push(startDate, endDate)
             }
             
         } else {
             //Valid task (during this time period or started but not ended)
             sql += `
-            and ((('${ startDate }' >= ud.indentStartDate AND '${ startDate }' <= ud.indentEndDate) 
-            OR ('${ endDate }' >= ud.indentStartDate AND '${ endDate }' <= ud.indentEndDate) 
-            OR ('${ startDate }' < ud.indentStartDate AND '${ endDate }' > ud.indentEndDate))
-            OR ud.status = 'started'
-            )
+            and (((? >= ud.indentStartDate AND ? <= ud.indentEndDate) 
+            OR (? >= ud.indentStartDate AND ? <= ud.indentEndDate) 
+            OR (? < ud.indentStartDate AND ? > ud.indentEndDate))
+            OR ud.status = 'started')
             `
+            replacements.push(startDate, startDate, endDate, endDate, startDate, endDate)
         }
-        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT })
+        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT, replacements: replacements })
         return result;
     },
     getLoanOutDriverOrVehicle: async function (vehicleNo, driverId, startDate, endDate) {
         startDate = moment(startDate).format('YYYY-MM-DD HH:mm:ss')
         endDate = moment(endDate).format('YYYY-MM-DD HH:mm:ss')
-        let loanOutDriverOrVehicle = await sequelizeObj.query(
-            `SELECT vehicleNo, driverId, startDate, endDate
+        let sql = `
+            SELECT vehicleNo, driverId, startDate, endDate
             FROM loan 
-            WHERE (('${ startDate }' >= startDate AND '${ startDate }' <= endDate) 
-            OR ('${ endDate }' >= startDate AND '${ endDate }' <= endDate) 
-            OR ('${ startDate }' < startDate AND '${ endDate }' > endDate))
-            ${ vehicleNo ? ` 
-            and vehicleNo = '${ vehicleNo }'
-            group by vehicleNo` : '' }
-            ${ driverId ? ` 
-            and driverId = ${ driverId }
-            group by driverId` : '' }
-            `,
+            WHERE ((? >= startDate AND ? <= endDate) 
+            OR (? >= startDate AND ? <= endDate) 
+            OR (? < startDate AND ? > endDate))
+        `
+        let replacements = [startDate, startDate, endDate, endDate, startDate, endDate];
+        if(vehicleNo) {
+            sql += ` and vehicleNo = ? group by vehicleNo`
+            replacements.push(vehicleNo)
+        }
+        if(driverId) {
+            sql += ` and driverId = ? group by driverId`
+            replacements.push(driverId)
+        }
+        let loanOutDriverOrVehicle = await sequelizeObj.query(sql,
         {
             type: QueryTypes.SELECT
+            , replacements: replacements
         })
         return loanOutDriverOrVehicle[0]
     },
     getHotoDriverOrVehicle: async function (vehicleNo, driverId, startDate, endDate){
         startDate = moment(startDate).format('YYYY-MM-DD HH:mm:ss')
         endDate = moment(endDate).format('YYYY-MM-DD HH:mm:ss')
-        let hotoVehicleList = await sequelizeObj.query(
-            `select vehicleNo, driverId, startDateTime, endDateTime
+        let sql = `
+            select vehicleNo, driverId, startDateTime, endDateTime
             from hoto 
-            where (('${ startDate }' >= startDateTime AND '${ startDate }' <= endDateTime) 
-            OR ('${ endDate }' >= startDateTime AND '${ endDate }' <= endDateTime) 
-            OR ('${ startDate }' < startDateTime AND '${ endDate }' > endDateTime))
+            where ((? >= startDateTime AND ? <= endDateTime) 
+            OR (? >= startDateTime AND ? <= endDateTime) 
+            OR (? < startDateTime AND ? > endDateTime))
             and status = 'Approved'
-            ${ vehicleNo ? ` and vehicleNo = '${ vehicleNo }' group by vehicleNo` : '' }
-            ${ driverId ? ` and driverId = ${ driverId } group by driverId` : '' }
-            `,
+        `
+        let replacements = [startDate, startDate, endDate, endDate, startDate, endDate]
+        if(vehicleNo){
+            sql += ` and vehicleNo = ? group by vehicleNo`
+            replacements.push(vehicleNo)
+        }
+        if(driverId){
+            sql += ` and driverId = ? group by driverId`
+            replacements.push(driverId)
+        }
+        let hotoVehicleList = await sequelizeObj.query(sql,
         {
             type: QueryTypes.SELECT
+            , replacements: replacements
         })
         return hotoVehicleList[0]
     },
@@ -205,18 +228,18 @@ let TaskUtils = {
         if(vehicleNo) {
             statusVehicle = await sequelizeObj.query(`
             SELECT groupId, vehicleNo FROM vehicle
-            WHERE vehicleNo = '${ vehicleNo }' and groupId IS NOT NULL group by vehicleNo
+            WHERE vehicleNo = ? and groupId IS NOT NULL group by vehicleNo
             `, 
-            { type: QueryTypes.SELECT });
+            { type: QueryTypes.SELECT, replacements: [vehicleNo] });
             statusVehicle = statusVehicle[0]
         }
         if(driverId) {
             statusDriver = await sequelizeObj.query(`
             SELECT us.role, d.permitStatus FROM driver d
             LEFT JOIN USER us ON us.driverId = d.driverId 
-            WHERE (us.role IN ('dv', 'loa') OR d.permitStatus = 'invalid') AND d.driverId = ${ driverId } group by d.driverId
+            WHERE (us.role IN ('dv', 'loa') OR d.permitStatus = 'invalid') AND d.driverId = ? group by d.driverId
             `, 
-            { type: QueryTypes.SELECT });
+            { type: QueryTypes.SELECT, replacements: [driverId] });
             statusDriver = statusDriver[0]
         }
         if(statusDriver || statusVehicle){
@@ -240,39 +263,52 @@ let TaskUtils = {
     },
     getFiltrationDriverOrVehicle: async function(indentStartTime, indentEndTime, type, requestId, taskState){
         if(indentStartTime && indentEndTime) {
-            let hotoData = await sequelizeObj.query(`
-                 SELECT vehicleNo, driverId FROM hoto 
-                 WHERE 1=1
-                 ${ type == 'vehicle' ? ` and vehicleNo IS NOT NULL` : '' }
-                 ${ type == 'driver' ? ` and driverId IS NOT NULL` : '' }
-                 AND (('${ indentStartTime }' >= startDateTime AND '${ indentStartTime }' <= endDateTime) 
-                 OR ('${ indentEndTime }' >= startDateTime AND '${ indentEndTime }' <= endDateTime) 
-                 OR ('${ indentStartTime }' < startDateTime AND '${ indentEndTime }' > endDateTime)
-                 OR '${ indentStartTime }' >= startDateTime) and status = 'Approved'
-                 ${ requestId ? ` and requestId != ${ requestId }` : '' }
-                 ${ type == 'vehicle' ? ` GROUP BY vehicleNo` : '' }
-                 ${ type == 'driver' ? ` GROUP BY driverId` : '' }
-             `, { type: QueryTypes.SELECT })
+            let sql = `
+                SELECT vehicleNo, driverId FROM hoto 
+                WHERE ((? >= startDateTime AND ? <= endDateTime) 
+                OR (? >= startDateTime AND ? <= endDateTime) 
+                OR (? < startDateTime AND ? > endDateTime)
+                OR ? >= startDateTime) and status = 'Approved'
+            `
+            let replacements = [indentStartTime, indentStartTime, indentEndTime, 
+                indentEndTime, indentStartTime, indentEndTime, indentStartTime]
+            if(requestId){
+                sql += ` and requestId != ?`
+                replacements.push(requestId)
+            }
+            if(type == 'vehicle'){
+                sql += ` and vehicleNo IS NOT NULL GROUP BY vehicleNo`
+            }
+            if(type == 'driver'){
+                sql += ` and driverId IS NOT NULL GROUP BY driverId`
+            }
+            
+            let hotoData = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
              if(type == 'vehicle'){
                 hotoData = hotoData.map(item => item.vehicleNo)
              } else {
                 hotoData = hotoData.map(item => item.driverId)
              }
              log.warn(`hoto assign hoto data ${ JSON.stringify(hotoData) }`)
- 
-             let taskData = await sequelizeObj.query(`
-                 SELECT t.vehicleNumber, t.driverId FROM task t
-                 WHERE t.vehicleStatus not in ('completed', 'cancelled')
-                 ${ type == 'vehicle' ? ` and t.vehicleNumber IS NOT NULL` : '' }
-                 ${ type == 'driver' ? ` and t.driverId IS NOT NULL` : '' }
-                 AND ((('${ indentStartTime }' >= t.indentStartTime AND '${ indentStartTime }' <= t.indentEndTime) 
-                 OR ('${ indentEndTime }' >= t.indentStartTime AND '${ indentEndTime }' <= t.indentEndTime) 
-                 OR ('${ indentStartTime }' < t.indentStartTime AND '${ indentEndTime }' > t.indentEndTime))
-                 OR t.vehicleStatus = 'started'
-                 )
-                 ${ type == 'vehicle' ? ` GROUP BY t.vehicleNumber` : '' }
-                 ${ type == 'driver' ? ` GROUP BY t.driverId` : '' }
-             `, { type: QueryTypes.SELECT })
+             
+             let taskDataSql = `
+                SELECT t.vehicleNumber, t.driverId FROM task t
+                WHERE t.vehicleStatus not in ('completed', 'cancelled')
+                AND (((? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? < t.indentStartTime AND ? > t.indentEndTime))
+                OR t.vehicleStatus = 'started')
+             `
+             let replacements2 = [indentStartTime, indentStartTime, indentEndTime, 
+                indentEndTime, indentStartTime, indentEndTime]
+             if(type == 'vehicle'){
+                taskDataSql += ` and t.vehicleNumber IS NOT NULL GROUP BY t.vehicleNumber`
+             }
+             if(type == 'driver'){
+                taskDataSql += ` and t.driverId IS NOT NULL GROUP BY t.driverId`
+             }
+             console.log(taskDataSql)
+             let taskData = await sequelizeObj.query(taskDataSql, { type: QueryTypes.SELECT, replacements: replacements2 })
              if(type == 'vehicle'){
                 taskData = taskData.map(item => item.vehicleNumber)
              } else {
@@ -298,26 +334,30 @@ let TaskUtils = {
         FROM task t
         LEFT JOIN vehicle v ON v.vehicleNo = t.vehicleNumber
         WHERE 1=1 `
+        let replacements = []
         if(vehicleNo) {
-            sql += ` and t.vehicleStatus not in ('completed', 'cancelled') and t.vehicleNumber = '${ vehicleNo }'`
+            sql += ` and t.vehicleStatus not in ('completed', 'cancelled') and t.vehicleNumber = ?`
+            replacements.push(vehicleNo)
         }
         if(driverId) {
-            sql += ` and t.driverStatus not in ('completed', 'cancelled') and t.driverId = ${ driverId }`
+            sql += ` and t.driverStatus not in ('completed', 'cancelled') and t.driverId = ?`
+            replacements.push(driverId)
         }
 
         sql += `
             and (t.mobileStartTime is null and t.mobileEndTime is null)
-            AND (t.indentStartTime >= '${ startDate }' AND t.indentEndTime <= '${ endDate }')
+            AND (t.indentStartTime >= ? AND t.indentEndTime <= ?)
         `
+        replacements.push(startDate, endDate)
         sql += ` group by t.taskId`;
-        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT })
+        let result = await sequelizeObj.query(sql, {  type: QueryTypes.SELECT, replacements: replacements })
         return result;
     },
     driverTypeByVehicleType: async function (driverId, vehicleType) {
         let result = await sequelizeObj.query(`SELECT d.driverId, dc.vehicleType FROM driver d
         LEFT JOIN driver_platform_conf dc ON dc.driverId = d.driverId AND dc.approveStatus='Approved'
-        WHERE d.driverId = ${ driverId } AND dc.vehicleType = '${ vehicleType }'`, 
-        {  type: QueryTypes.SELECT })
+        WHERE d.driverId = ? AND dc.vehicleType = ?`, 
+        {  type: QueryTypes.SELECT, replacements: [driverId, vehicleType] })
         return result;
     }
 }
@@ -342,8 +382,7 @@ module.exports.getHubNode = async function (req, res) {
         log.error(error)
         return res.json(utils.response(0, error));
     }
-    
-},
+}
 
 module.exports.getVehicleTypeList = async function (req, res) {
     try {
@@ -408,6 +447,8 @@ module.exports.getVehicleList = async function (req, res) {
            notUnitId = unitList.map(item => item.id)
         }
         let excludeData = await TaskUtils.getFiltrationDriverOrVehicle(indentStartTime, indentEndTime, 'vehicle', requestId, true);
+        let replacements = [];
+        let replacements2 = [];
         let sql = `
         select vv.vehicleNo, vv.unit, vv.subUnit, vv.groupId, vv.toHub, vv.toNode,  vv.id, vv.vehicleType,
         vv.returnDateTime, vv.hotoDateTime, vv.startDateTime, vv.endDateTime, vv.hotoId, vv.status, vv.updatedAt
@@ -427,10 +468,11 @@ module.exports.getVehicleList = async function (req, res) {
                 SELECT vehicleNo, nextMptTime, nextAviTime, nextWpt2Time, nextWpt3Time, nextWpt1Time, unitId, groupId, vehicleType FROM vehicle_history
             ) v
             LEFT JOIN unit u ON u.id = v.unitId
-            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ${ requestId }) h ON h.vehicleNo = v.vehicleNo
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
+            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ?) h ON h.vehicleNo = v.vehicleNo
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
         ) vv where vv.groupId IS NULL and vv.unit is not null        
-        `// v.onhold = 0
+        `
+        replacements.push(requestId, requestId)
         let sql2 = `
         select COUNT(DISTINCT vv.vehicleNo) total, vv.unit, vv.subUnit, vv.groupId, vv.requestId, vv.id, vv.vehicleType, vv.status, vv.endDateTime from (
             SELECT v.vehicleNo, u.unit, u.subUnit, v.groupId, u.id, v.vehicleType,
@@ -443,35 +485,44 @@ module.exports.getVehicleList = async function (req, res) {
                 SELECT vehicleNo, nextMptTime, nextAviTime, nextWpt2Time, nextWpt3Time, nextWpt1Time, unitId, groupId, vehicleType FROM vehicle_history
             ) v
             LEFT JOIN unit u ON u.id = v.unitId
-            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ${ requestId }) h ON h.vehicleNo = v.vehicleNo
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
+            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ?) h ON h.vehicleNo = v.vehicleNo
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
         ) vv where vv.groupId IS NULL and vv.unit is not null   
-        `  //  v.onhold = 0
+        `  
+        replacements2.push(requestId, requestId)
         if(dataType != 'assign'){
-            sql += ` and vv.requestId = ${ requestId }`
-            sql2 += ` and vv.requestId = ${ requestId }`
+            sql += ` and vv.requestId = ?`
+            sql2 += ` and vv.requestId = ?`
             if(dataType == 'return') {
                 sql += ` and vv.status in('Approved', 'Completed')`
                 sql2 += ` and vv.status in('Approved', 'Completed')`
             }
+            replacements.push(requestId)
+            replacements2.push(requestId)
         } else {
             if(excludeData.length > 0){
-                sql += ` and vv.vehicleNo not in ('${ excludeData.join("','") }')`
-                sql2 += ` and vv.vehicleNo not in ('${ excludeData.join("','") }')`
+                sql += ` and vv.vehicleNo not in (?)`
+                sql2 += ` and vv.vehicleNo not in (?)`
+                replacements.push(`'${ excludeData.join("','") }'`)
+                replacements2.push(`'${ excludeData.join("','") }'`)
             }
             if(unitIdList.length > 0){
                 if(notUnitId.length > 0) unitIdList = unitIdList.filter(item => !notUnitId.includes(item));
                 if(unitIdList.length > 0) {
-                    sql += ` and vv.id in(${ unitIdList.join(",") })`
-                    sql2 += ` and vv.id in(${ unitIdList.join(",") })`
+                    sql += ` and vv.id in(?)`
+                    sql2 += ` and vv.id in(?)`
+                    replacements.push(unitIdList.join(","))
+                    replacements2.push(unitIdList.join(","))
                 } else {
                     sql += ` and 1=2`
                     sql2 += ` and 1=2`
                 }
             } else {
                 if(notUnitId.length > 0){
-                    sql += ` and vv.id not in (${ notUnitId.join(',') })`
-                    sql2 += ` and vv.id not in (${ notUnitId.join(',') })`
+                    sql += ` and vv.id not in (?)`
+                    sql2 += ` and vv.id not in (?)`
+                    replacements.push(notUnitId.join(','))
+                    replacements2.push(notUnitId.join(','))
                 }
             }
             // if(hub){
@@ -494,29 +545,43 @@ module.exports.getVehicleList = async function (req, res) {
             // }
             
             if(vehicleNo) {
-                sql += ` and vv.vehicleNo like '%${ vehicleNo }%'`
-                sql2 += ` and vv.vehicleNo like '%${ vehicleNo }%'`
+                sql += ` and vv.vehicleNo like ?`
+                sql2 += ` and vv.vehicleNo like ?`
+                replacements.push(`'%${ vehicleNo }%'`)
+                replacements2.push(`'%${ vehicleNo }%'`)
             }
         }
         if(vehicleType){
-            sql += ` and vv.vehicleType = '${ vehicleType }'`
-            sql2 += ` and vv.vehicleType = '${ vehicleType }'`
+            sql += ` and vv.vehicleType = ?`
+            sql2 += ` and vv.vehicleType = ?`
+            replacements.push(vehicleType)
+            replacements2.push(vehicleType)
         }
         if(requestState || dataType == 'approve') {
             sql += ` and vv.status != 'Completed'`
             sql2 += ` and vv.status != 'Completed'`
         }
         if(dataType.toLowerCase() == 'replace'){
-            sql += ` and vv.endDateTime > '${ moment().format('YYYY-MM-DD HH:mm') }'`
-            sql += ` and vv.endDateTime > '${ moment().format('YYYY-MM-DD HH:mm') }'`
+            sql += ` and vv.endDateTime > ?`
+            sql += ` and vv.endDateTime > ?`
+            replacements.push(moment().format('YYYY-MM-DD HH:mm'))
+            replacements2.push(moment().format('YYYY-MM-DD HH:mm'))
         }
-        let countResult = await sequelizeObj.query(sql2, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(sql2, { type: QueryTypes.SELECT, replacements: replacements2 })
         let totalRecord = countResult[0].total
         pageLength = pageLength ? pageLength : 10
-        let pageResult = await sequelizeObj.query(
-            sql + ` GROUP BY vv.vehicleNo order by vv.hotoDateTime desc, vv.updatedAt desc limit ${ pageNum ? pageNum : 0 }, ${ pageLength }; `,
+        pageNum = pageNum ? pageNum : 0
+        pageNum = Number(pageNum)
+        pageLength = Number(pageLength)
+        sql += ` GROUP BY vv.vehicleNo order by vv.hotoDateTime desc, vv.updatedAt desc `
+        if(pageNum && pageLength){
+            sql += ` limit ?,?`
+            replacements.push(...[pageNum, pageLength])
+        }
+        let pageResult = await sequelizeObj.query(sql,
             {
                 type: QueryTypes.SELECT
+                , replacements: replacements
             }
         );
         if(dataType == 'view'){
@@ -624,29 +689,34 @@ module.exports.getVehicleListByReplace = async function (req, res) {
             if(h.status is null, 'Completed', h.status) status
             FROM vehicle v
             LEFT JOIN unit u ON u.id = v.unitId
-            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ${ requestId }) h ON h.vehicleNo = v.vehicleNo
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
+            LEFT JOIN (select ho.* from hoto ho WHERE ho.requestId = ?) h ON h.vehicleNo = v.vehicleNo
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.vehicleNo = v.vehicleNo
         ) vv where vv.groupId IS NULL and vv.unit is not null        
-        `// v.onhold = 0
+        `
+        let replacements = [requestId, requestId]
         if(dataType != 'assign'){
-            sql += ` and vv.requestId = ${ requestId }`
+            sql += ` and vv.requestId = ?`
+            replacements.push(requestId)
             if(dataType == 'return') {
                 sql += ` and vv.status = 'Approved'`
             }
         } else {
             if(excludeData.length > 0){
-                sql += ` and vv.vehicleNo not in ('${ excludeData.join("','") }')`
+                sql += ` and vv.vehicleNo not in (?)`
+                replacements.push(`'${ excludeData.join("','") }'`)
             }
             if(unitIdList.length > 0){
                 if(notUnitId.length > 0) unitIdList = unitIdList.filter(item => !notUnitId.includes(item));
                 if(unitIdList.length > 0) {
-                    sql += ` and vv.id in(${ unitIdList.join(",") })`
+                    sql += ` and vv.id in(?)`
+                    replacements.push(unitIdList.join(","))
                 } else {
                     sql += ` and 1=2`
                 }
             } else {
                 if(notUnitId.length > 0){
-                    sql += ` and vv.id not in (${ notUnitId.join(',') })`
+                    sql += ` and vv.id not in (?)`
+                    replacements.push(notUnitId.join(','))
                 }
             }
             // if(hub){
@@ -666,16 +736,19 @@ module.exports.getVehicleListByReplace = async function (req, res) {
 
            
             if(vehicleNo) {
-                sql += ` and vv.vehicleNo like '%${ vehicleNo }%'`
+                sql += ` and vv.vehicleNo like ?`
+                replacements.push(`%${ vehicleNo }%`)
             }
         }
         if(vehicleType){
-            sql += ` and vv.vehicleType = '${ vehicleType }'`
+            sql += ` and vv.vehicleType = ?`
+            replacements.push(vehicleType)
         }
         let dataList = await sequelizeObj.query(
             sql + ` GROUP BY vv.vehicleNo order by vv.hotoDateTime desc; `,
             {
                 type: QueryTypes.SELECT
+                , replacements: replacements
             }
         );
         return res.json(utils.response(1, dataList));
@@ -756,6 +829,8 @@ module.exports.getDriverList = async function (req, res) {
             // node = null;
             unitIdList = []
         }
+        let replacements = []
+        let replacements2 = []
         let sql = `
         SELECT dd.driverId, dd.driverName, dd.unit, dd.subUnit, dd.toHub, dd.toNode, dd.requestId, dd.permitType, dd.updatedAt,
         dd.returnDateTime, dd.status, dd.hotoDateTime, dd.startDateTime, dd.endDateTime, dd.hotoId, dd.id, dd.vehicleType
@@ -777,12 +852,17 @@ module.exports.getDriverList = async function (req, res) {
             LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
             LEFT JOIN unit u ON u.id = d.unitId
             LEFT JOIN USER us ON us.driverId = d.driverId
-            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ${ requestId }) h ON h.driverId = d.driverId
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
+            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ?) h ON h.driverId = d.driverId
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
             WHERE d.permitStatus != 'invalid' AND us.role IN('TO', 'TL')
-            ${ indentEndTime ? ` AND (d.operationallyReadyDate > '${ moment(indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate IS NULL)` : '' }
-        ) dd WHERE dd.unit is not null
         `
+        replacements.push(requestId)
+        replacements.push(requestId)
+        if(indentEndTime){
+            sql += ` AND (d.operationallyReadyDate > ? OR d.operationallyReadyDate IS NULL)`
+            replacements.push(moment(indentEndTime).format('YYYY-MM-DD'))
+        }
+        sql += `  ) dd WHERE dd.unit is not null`
         let sql2 = `
         select COUNT(DISTINCT dd.driverId) total, dd.driverName, dd.unit, dd.subUnit, dd.requestId, dd.id, dd.permitType, dd.vehicleType, dd.status, dd.endDateTime from (
             SELECT d.driverId, d.driverName, u.unit, u.subUnit, u.id, d.permitType, dc.vehicleType,
@@ -797,37 +877,50 @@ module.exports.getDriverList = async function (req, res) {
             LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
             LEFT JOIN unit u ON u.id = d.unitId
             LEFT JOIN USER us ON us.driverId = d.driverId
-            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ${ requestId }) h ON h.driverId = d.driverId
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
+            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ?) h ON h.driverId = d.driverId
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
             WHERE d.permitStatus != 'invalid' AND us.role IN('TO', 'TL')
-            ${ indentEndTime ? ` AND (d.operationallyReadyDate > '${ moment(indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate IS NULL)` : '' }
-        ) dd where dd.unit is not null   
         `  
+        replacements2.push(requestId)
+        replacements2.push(requestId)
+        if(indentEndTime){
+            sql2 += ` AND (d.operationallyReadyDate > ? OR d.operationallyReadyDate IS NULL)`
+            replacements2.push(moment(indentEndTime).format('YYYY-MM-DD'))
+        }
+        sql2 += ` ) dd where dd.unit is not null   `
         if(dataType != 'assign') {
-            sql += ` and dd.requestId = ${ requestId }`
-            sql2 += ` and dd.requestId = ${ requestId }`
+            sql += ` and dd.requestId = ?`
+            sql2 += ` and dd.requestId = ?`
+            replacements.push(requestId)
+            replacements2.push(requestId)
             if(dataType == 'return') {
                 sql += ` and dd.status in('Approved', 'Completed')`
                 sql2 += ` and dd.status in('Approved', 'Completed')`
             }
         } else {
             if(excludeData.length > 0) {
-                sql += ` and dd.driverId not in (${ excludeData.join(",") })`
-                sql2 += ` and dd.driverId not in (${ excludeData.join(",") })`
+                sql += ` and dd.driverId not in (?)`
+                sql2 += ` and dd.driverId not in (?)`
+                replacements.push(excludeData.join(","))
+                replacements2.push(excludeData.join(","))
             }
             if(unitIdList.length > 0){
                 if(notUnitId.length > 0) unitIdList = unitIdList.filter(item => !notUnitId.includes(item));
                 if(unitIdList.length > 0) {
-                    sql += ` and dd.id in (${ unitIdList.join(',') })`
-                    sql2 += ` and dd.id in (${ unitIdList.join(',') })`
+                    sql += ` and dd.id in (?)`
+                    sql2 += ` and dd.id in (?)`
+                    replacements.push(unitIdList.join(','))
+                    replacements2.push(unitIdList.join(','))
                 } else {
                     sql += ` and 1=2`
                     sql2 += ` and 1=2`
                 }
             } else {
                 if(notUnitId.length > 0){
-                    sql += ` and dd.id not in (${ notUnitId.join(',') })`
-                    sql2 += ` and dd.id not in (${ notUnitId.join(',') })`
+                    sql += ` and dd.id not in (?)`
+                    sql2 += ` and dd.id not in (?)`
+                    replacements.push(notUnitId.join(','))
+                    replacements2.push(notUnitId.join(','))
                 }
             }
             // if(hub){
@@ -852,7 +945,9 @@ module.exports.getDriverList = async function (req, res) {
                 let permitTypeSql = []
                 let list = permitType.split(',')
                 for (let item of list) {
-                    permitTypeSql.push(` FIND_IN_SET(\'${ item }\', dd.permitType) `)
+                    permitTypeSql.push(` FIND_IN_SET(?, dd.permitType) `)
+                    replacements.push(item)
+                    replacements2.push(item)
                 }
                 if(permitTypeSql.length > 0){
                     sql += `  and ( ${ permitTypeSql.join(' OR ') } )`
@@ -860,29 +955,42 @@ module.exports.getDriverList = async function (req, res) {
                 }
             }
             if(driverName){
-                sql += ` and dd.driverName like '%${ driverName }%'`
-                sql2 += ` and dd.driverName like '%${ driverName }%'`
+                sql += ` and dd.driverName like ?`
+                sql2 += ` and dd.driverName like ?`
+                replacements.push(`'%${ driverName }%'`)
+                replacements2.push(`'%${ driverName }%'`)
             }
         }
         if(vehicleType){
-            sql += ` and dd.vehicleType = '${ vehicleType }'`
-            sql2 += ` and dd.vehicleType = '${ vehicleType }'`
+            sql += ` and dd.vehicleType = ?`
+            sql2 += ` and dd.vehicleType = ?`
+            replacements.push(vehicleType)
+            replacements2.push(vehicleType)
         }
         if(requestState || dataType == 'approve') {
             sql += ` and dd.status != 'Completed'`
             sql2 += ` and dd.status != 'Completed'`
         }
         if(dataType.toLowerCase() == 'replace'){
-            sql += ` and dd.endDateTime > '${ moment().format('YYYY-MM-DD HH:mm') }'`
-            sql += ` and dd.endDateTime > '${ moment().format('YYYY-MM-DD HH:mm') }'`
+            sql += ` and dd.endDateTime > ?`
+            sql += ` and dd.endDateTime > ?`
+            replacements.push(moment().format('YYYY-MM-DD HH:mm'))
+            replacements.push(moment().format('YYYY-MM-DD HH:mm'))
         }
-        let countResult = await sequelizeObj.query(sql2, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(sql2, { type: QueryTypes.SELECT, replacements: replacements2 })
         let totalRecord = countResult[0].total
         pageLength = pageLength ? pageLength : 10
-        let pageResult = await sequelizeObj.query(
-            sql + ` GROUP BY dd.driverId order by dd.hotoDateTime desc, dd.updatedAt desc limit ${ pageNum ? pageNum : 0 }, ${ pageLength }; `,
+        pageNum = pageNum ? pageNum : 0
+        sql += ` GROUP BY dd.driverId order by dd.hotoDateTime desc, dd.updatedAt desc`
+        if(pageNum && pageLength){
+            sql += ` limit ?,?`
+            replacements.push(...[Number(pageNum), Number(pageLength)])
+        }
+
+        let pageResult = await sequelizeObj.query(sql,
             {
                 type: QueryTypes.SELECT
+                , replacements: replacements
             }
         );
         if(dataType == 'view'){
@@ -980,8 +1088,8 @@ module.exports.getDriverListByReplace = async function (req, res) {
         } 
         if(purpose.toLowerCase() == 'familiarisation') {
             vehicleType = null
-            hub = null;
-            node = null;
+            // hub = null;
+            // node = null;
         }
         let sql = `
         SELECT dd.driverId, dd.driverName, dd.unit, dd.subUnit, dd.toHub, dd.toNode, dd.requestId, dd.permitType,
@@ -1000,31 +1108,39 @@ module.exports.getDriverListByReplace = async function (req, res) {
             LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
             LEFT JOIN unit u ON u.id = d.unitId
             LEFT JOIN USER us ON us.driverId = d.driverId
-            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ${ requestId }) h ON h.driverId = d.driverId
-            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ${ requestId } ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
+            LEFT JOIN (SELECT ho.* FROM hoto ho WHERE ho.requestId = ?) h ON h.driverId = d.driverId
+            LEFT JOIN (select hr.* from hoto_record hr WHERE hr.requestId = ? ORDER BY hr.returnDateTime DESC) hr ON hr.driverId = d.driverId
             WHERE d.permitStatus != 'invalid' AND us.role IN('TO', 'TL')
-            ${ indentEndTime ? ` AND (d.operationallyReadyDate > '${ moment(indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate IS NULL)` : '' }
         ) dd WHERE dd.unit is not null
         `
+        let replacements = [requestId, requestId]
+        if(indentEndTime){
+            sql += ` AND (d.operationallyReadyDate > ? OR d.operationallyReadyDate IS NULL)`
+            replacements.push(moment(indentEndTime).format('YYYY-MM-DD'))
+        }
         if(dataType != 'assign') {
-            sql += ` and dd.requestId = ${ requestId }`
+            sql += ` and dd.requestId = ?`
+            replacements.push(requestId)
             if(dataType == 'return') {
                 sql += ` and dd.status = 'Approved'`
             }
         } else {
             if(excludeData.length > 0) {
-                sql += ` and dd.driverId not in (${ excludeData.join(",") })`
+                sql += ` and dd.driverId not in (?)`
+                replacements.push(excludeData.join(","))
             }
             if(unitIdList.length > 0){
                 if(notUnitId.length > 0) unitIdList = unitIdList.filter(item => !notUnitId.includes(item));
                 if(unitIdList.length > 0) {
-                    sql += ` and dd.id in (${ unitIdList.join(',') })`
+                    sql += ` and dd.id in (?)`
+                    replacements.push(unitIdList.join(','))
                 } else {
                     sql += ` and 1=2`
                 }
             } else {
                 if(notUnitId.length > 0){
-                    sql += ` and dd.id not in (${ notUnitId.join(',') })`
+                    sql += ` and dd.id not in (?)`
+                    replacements.push(notUnitId.join(','))
                 }
             }
 
@@ -1046,24 +1162,28 @@ module.exports.getDriverListByReplace = async function (req, res) {
                 let permitTypeSql = []
                 let list = permitType.split(',')
                 for (let item of list) {
-                    permitTypeSql.push(` FIND_IN_SET(\'${ item }\', dd.permitType) `)
+                    permitTypeSql.push(` FIND_IN_SET(?, dd.permitType) `)
+                    replacements.push(item)
                 }
                 if(permitTypeSql.length > 0){
                     sql += `  and ( ${ permitTypeSql.join(' OR ') } )`
                 }
             }
             if(driverName){
-                sql += ` and dd.driverName like '%${ driverName }%'`
+                sql += ` and dd.driverName like ?`
+                replacements.push(`'%${ driverName }%'`)
             }
         }
         if(vehicleType){
-            sql += ` and dd.vehicleType = '${ vehicleType }'`
+            sql += ` and dd.vehicleType = ?`
+            replacements.push(vehicleType)
         }
 
         let pageResult = await sequelizeObj.query(
             sql + ` GROUP BY dd.driverId order by dd.hotoDateTime desc; `,
             {
                 type: QueryTypes.SELECT
+                , replacements: replacements
             }
         );
         return res.json(utils.response(1, pageResult));
@@ -1122,12 +1242,19 @@ module.exports.operateRequestById = async function (req, res) {
         await sequelizeObj.transaction(async transaction => {
             let oldHotoRequest = await HOTORequest.findOne({ where: { id: requestId } })
             let oldHotoList = await HOTO.findAll({ where: { requestId: requestId } })
-            let hotoDriverOrVehicleList = await sequelizeObj.query(`
-            SELECT driverId, vehicleNo, startDateTime, endDateTime FROM hoto WHERE requestId = ${ requestId }
-            ${ hotoIdList ? hotoIdList.length > 0 ? ` and id in(${ hotoIdList.join(',') })` : '' : '' }
-            ${ operateType.toLowerCase() == 'cancelled' || operateType.toLowerCase() == 'rejected' ?  ` and status = 'Approved'` : '' }
-            group by id
-            `, { type: QueryTypes.SELECT })
+            let hotoDriverOrVehicleListSql = `
+                SELECT driverId, vehicleNo, startDateTime, endDateTime FROM hoto WHERE requestId = ?
+            `
+            let replacementsByhotoDriverOrVehicleList = [requestId]
+            if(hotoIdList?.length > 0){
+                hotoDriverOrVehicleListSql += ` and id in(?)`
+                replacementsByhotoDriverOrVehicleList.push(hotoIdList.join(','))
+            }
+            if(operateType.toLowerCase() == 'cancelled' || operateType.toLowerCase() == 'rejected'){
+                hotoDriverOrVehicleListSql += ` and status = 'Approved'`
+            }
+            hotoDriverOrVehicleListSql += ` group by id`
+            let hotoDriverOrVehicleList = await sequelizeObj.query(hotoDriverOrVehicleListSql, { type: QueryTypes.SELECT, replacements: replacementsByhotoDriverOrVehicleList })
             let errorList = []
             for(let item of hotoDriverOrVehicleList){
                 let driver = null;
@@ -1186,7 +1313,7 @@ module.exports.operateRequestById = async function (req, res) {
                 if(operateType.toLowerCase() != 'endorsed') {
                     await HOTO.update({ status: operateType, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') }, { where: { requestId: requestId } })
                 }
-                remarksName = `hoto request ${ statusName ? statusName : '' }`
+                remarksName = `hoto request ${ statusName ?? '' }`
                 dataList = [requestId]
             }
             if(operateType.toLowerCase() == 'approved'){
@@ -1227,15 +1354,22 @@ const operateRequestById2 = async function (operateType, requestId, hotoIdList, 
         // 2023-09-18 If hoto has returned data, it cannot cancel.
         if(operateType.toLowerCase() == 'cancelled'){
             let hotoRecordList = await HOTORecord.findAll({ where: { requestId: requestId } })
-            if(hotoRecordList.length > 0) throw [` Data has been returned and cannot be canceled.`]
+            if(hotoRecordList.length > 0) throw new RangeError([` Data has been returned and cannot be canceled.`])
         }
         await sequelizeObj.transaction(async transaction => {
-            let hotoDriverOrVehicleList = await sequelizeObj.query(`
-            SELECT driverId, vehicleNo, startDateTime, endDateTime FROM hoto WHERE requestId = ${ requestId }
-            ${ hotoIdList ? hotoIdList.length > 0 ? ` and id in(${ hotoIdList.join(',') })` : '' : '' }
-            ${ operateType.toLowerCase() == 'cancelled' || operateType.toLowerCase() == 'rejected' ?  ` and status = 'Approved'` : '' }
-            group by id
-            `, { type: QueryTypes.SELECT })
+            let hotoDriverOrVehicleListSql = `
+            SELECT driverId, vehicleNo, startDateTime, endDateTime FROM hoto WHERE requestId = ?
+            `
+            let hotoDriverOrVehicleListByReplacements = [requestId]
+            if(hotoIdList?.length > 0){
+                hotoDriverOrVehicleListSql += ` and id in(?)`
+                hotoDriverOrVehicleListByReplacements.push(hotoIdList.join(','))
+            }
+            if(operateType.toLowerCase() == 'cancelled' || operateType.toLowerCase() == 'rejected'){
+                hotoDriverOrVehicleListSql += ` and status = 'Approved'`
+            }
+            hotoDriverOrVehicleListSql += `  group by id`
+            let hotoDriverOrVehicleList = await sequelizeObj.query(hotoDriverOrVehicleListSql, { type: QueryTypes.SELECT, replacements: hotoDriverOrVehicleListByReplacements })
             let errorList = []
             for(let item of hotoDriverOrVehicleList){
                 let driver = null;
@@ -1294,7 +1428,7 @@ const operateRequestById2 = async function (operateType, requestId, hotoIdList, 
                 if(operateType.toLowerCase() != 'endorsed') {
                     await HOTO.update({ status: operateType, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') }, { where: { requestId: requestId } })
                 }
-                remarksName = `hoto request ${ statusName ? statusName : '' }`
+                remarksName = `hoto request ${ statusName ?? '' }`
                 dataList = [requestId]
             }
             if(operateType.toLowerCase() == 'approved'){
@@ -1526,11 +1660,12 @@ module.exports.getHubNodeByUser = async function (req, res) {
         let hubNodeList = await sequelizeObj.query(`
         SELECT u.unit, u.subUnit FROM unit u
         LEFT JOIN USER us ON us.unitId = u.id
-        WHERE us.userId = ${ userId } and us.userType != 'CUSTOMER'
+        WHERE us.userId = ? and us.userType != 'CUSTOMER'
         GROUP BY u.id
         `,
         {
             type: QueryTypes.SELECT
+            , replacements: [userId]
         })
         return res.json(utils.response(1, hubNodeList));
     } catch (error) {
@@ -1595,7 +1730,6 @@ module.exports.editHotoRequest = async function (req, res) {
 
 module.exports.getHotoRequestById = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let requestId = req.body.requestId;
         let request = await HOTORequest.findOne({ where: { id: requestId } })
         let hotoRecordList = await HOTORecord.findAll({ where: { requestId: request.id } })
@@ -1654,11 +1788,6 @@ module.exports.getHotoRequest = async function (req, res) {
         LEFT JOIN hoto_record he ON he.requestId = hr.id and hr.status = 'Approved'
         LEFT JOIN USER us ON us.userId = hr.creator
         where 1=1
-        ${ unitIdList.length > 0 ? ` and un.id in(${ unitIdList.join(",") })` : '' }
-        ${ purpose ? `  and hr.purpose = '${ purpose }'` : '' }
-        ${ type ? ` and hr.vehicleType = '${ type }'` : '' }
-        ${ resource ? ` and hr.resource = '${ resource }'` : '' }
-        ${ createDate ? ` and hr.createdAt like '${ createDate }%'` : '' }
         `
 
          let sql2 = `
@@ -1668,13 +1797,39 @@ module.exports.getHotoRequest = async function (req, res) {
         LEFT JOIN hoto_record he ON he.requestId = hr.id and hr.status = 'Approved'
         LEFT JOIN USER us ON us.userId = hr.creator
         where 1=1
-        ${ unitIdList.length > 0 ? ` and un.id in(${ unitIdList.join(",") })` : '' }
-        ${ purpose ? `  and hr.purpose = '${ purpose }'` : '' }
-        ${ type ? ` and hr.vehicleType = '${ type }'` : '' }
-        ${ resource ? ` and hr.resource = '${ resource }'` : '' }
-        ${ createDate ? ` and hr.createdAt like '${ createDate }%'` : '' }
         `
-        let replacements = []
+        let replacements = [];
+        let replacements2 = [];
+        if(unitIdList.length > 0){
+            sql += ` and un.id in(?)`
+            sql2 += ` and un.id in(?)`
+            replacements.push(unitIdList.join(","))
+            replacements2.push(unitIdList.join(","))
+        }
+        if(purpose) {
+            sql += ` and hr.purpose = ?`
+            sql2 += ` and hr.purpose = ?`
+            replacements.push(purpose)
+            replacements2.push(purpose)
+        }
+        if(type){
+            sql += ` and hr.vehicleType = ?`
+            sql2 += ` and hr.vehicleType = ?`
+            replacements.push(type)
+            replacements2.push(type)
+        }
+        if(resource){
+            sql += ` and hr.resource = ?`
+            sql2 += ` and hr.resource = ?`
+            replacements.push(resource)
+            replacements2.push(resource)
+        }
+        if(createDate){
+            sql += ` and hr.createdAt like ?`
+            sql2 += ` and hr.createdAt like ?`
+            replacements.push(`'${ createDate }%'`)
+            replacements2.push(`'${ createDate }%'`)
+        }
         if (execution_date) {
             if (execution_date.indexOf('~') != -1) {
                 const dates = execution_date.split(' ~ ')
@@ -1682,10 +1837,13 @@ module.exports.getHotoRequest = async function (req, res) {
                 sql2 += ` and (hr.startTime >= ? and hr.startTime <= ?)`
                 replacements.push(moment(`${ dates[0] } 00:00:00`).format('YYYY-MM-DD HH:mm:ss'))
                 replacements.push(moment(`${ dates[1] } 23:59:59`).format('YYYY-MM-DD HH:mm:ss'))
+                replacements2.push(moment(`${ dates[0] } 00:00:00`).format('YYYY-MM-DD HH:mm:ss'))
+                replacements2.push(moment(`${ dates[1] } 23:59:59`).format('YYYY-MM-DD HH:mm:ss'))
             } else {
                 sql += ` and hr.startTime = ?`
                 sql2 += ` and hr.startTime = ?`
                 replacements.push(moment(execution_date).format('YYYY-MM-DD HH:mm:ss'))
+                replacements2.push(moment(execution_date).format('YYYY-MM-DD HH:mm:ss'))
             }
         }
 
@@ -1727,20 +1885,33 @@ module.exports.getHotoRequest = async function (req, res) {
                     sql += ` and hr.status = ?`
                     sql2 += ` and hr.status = ?`
                     replacements.push(newStatus)
+                    replacements2.push(newStatus)
                 }
             }
         }
         if(idOrder) {
-            sql += ` GROUP BY hr.id order by hr.id ${ idOrder }`
+            if(idOrder.toLowerCase() == 'desc'){
+                sql += '  GROUP BY hr.id order by hr.id desc ' 
+            }
+            if(idOrder.toLowerCase() == 'asc'){
+                sql += '  GROUP BY hr.id order by hr.id asc ' 
+            }
         } else {
             sql += ` GROUP BY hr.id order by hr.id desc`
         }
-        let hotoRecord = await sequelizeObj.query(sql+ ` limit ${ pageNum ? pageNum : 0 }, ${ pageLength };`,{ 
-            replacements: replacements,
-            type: QueryTypes.SELECT 
+        pageNum = pageNum ?? 0
+        pageLength = pageLength ?? 10
+        if(pageNum && pageLength){
+            sql += ` limit ?,?`
+            replacements.push(...[Number(pageNum), Number(pageLength)])
+        }
+       
+        let hotoRecord = await sequelizeObj.query(sql,{ 
+            type: QueryTypes.SELECT
+            , replacements: replacements,
         })
         let hotoRecordTotal = await sequelizeObj.query(sql2, { 
-            replacements: replacements,
+            replacements: replacements2,
             type: QueryTypes.SELECT 
         })
         let data = []
@@ -1802,8 +1973,8 @@ module.exports.cancelAssignHotoById = async function (req, res) {
         let dataList = []
         await sequelizeObj.transaction(async transaction => {
             let hotoDriverOrVehicleList = await sequelizeObj.query(`
-            SELECT id, driverId, vehicleNo, startDateTime, endDateTime, status FROM hoto WHERE id in(${ hotoIdList.join(',') }) group by id
-            `, { type: QueryTypes.SELECT })
+            SELECT id, driverId, vehicleNo, startDateTime, endDateTime, status FROM hoto WHERE id in(?) group by id
+            `, { type: QueryTypes.SELECT, replacements: [hotoIdList.join(',')] })
             // let hotoDriverOrVehicleList2 = await sequelizeObj.query(`
             // SELECT driverId, vehicleNo, startDateTime, endDateTime FROM hoto 
             // WHERE id not in(${ hotoIdList.join(',') }) and requestId = ${ requestId }

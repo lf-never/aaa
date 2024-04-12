@@ -44,9 +44,10 @@ let TaskUtils = {
     getGroupById: async function (id) {
         return await sequelizeSystemObj.transaction(async t => {
             let group = await sequelizeSystemObj.query(
-                `select id, groupName from \`group\` where id = ${ id }`,
+                `select id, groupName from \`group\` where id = ?`,
                 {
                     type: QueryTypes.SELECT
+                    , replacements: [id]
                 }
             );
             return group[0]
@@ -438,34 +439,34 @@ let TaskUtils = {
             }
         }
 
-        if(loginName && password) {
+        if(loginName) {
             if(userBase) {
                 if(userBase.cvUserId){
-                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName, password: password } })
+                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName } })
                     if(dataList.length > 0){
                         return ` This loginName already exists.`
                     }
                 }
                 if(userBase.mvUserId){
-                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName, password: password } })
+                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName } })
                     if(dataList.length > 0){
                         return ` This loginName already exists.`
                     }
                 }
-                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName, password: password } })
+                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName } })
                 if(dataList.length > 0) {
                     return ` This loginName already exists.`
                 }
             } else {
-                dataList = await _SysUser.USER.findAll({ where: { loginName: loginName, password: password } })
+                dataList = await _SysUser.USER.findAll({ where: { loginName: loginName } })
                 if(dataList.length > 0){
                     return ` This loginName already exists.`
                 }
-                dataList = await User.findAll({ where: { username: loginName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, password: password } })
+                dataList = await User.findAll({ where: { username: loginName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
                 if(dataList.length > 0){
                     return ` This loginName already exists.`
                 }
-                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName, password: password } })
+                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName } })
                 if(dataList.length > 0) {
                     return ` This loginName already exists.`
                 }
@@ -503,11 +504,12 @@ const getMobileUserList = async function (option = {}) {
             WHERE us.userType = 'MOBILE'
         `
         let sql = ` SELECT uu.* FROM (${ baseSQL }) uu WHERE 1=1 `
-        
+        let replacements = []
         // Default search ignore group
         if (option.groupId == null || option.groupId == undefined) option.groupId = -1;
         if (option.groupId > 0) {
-            sql += ` AND uu.groupId = ${ option.groupId } `
+            sql += ` AND uu.groupId = ? `
+            replacements.push(option.groupId)
         } else if (option.groupId == 0) {
             // No limit
 
@@ -517,20 +519,23 @@ const getMobileUserList = async function (option = {}) {
         }
 
         if (option.unitId?.length) {
-            sql += ` AND uu.unitId IN (${ option.unitId }) `
+            sql += ` AND uu.unitId IN (?) `
+            replacements.push(option.unitId)
         } else {
             sql += ` AND 1=2 `
         }
 
         if (option.enable) {
-            sql += ` AND uu.enable = ${ option.enable } `
+            sql += ` AND uu.enable = ? `
+            replacements.push(option.enable)
         }
         
         if (option.username) {
-            sql += ` AND uu.fullName like '%${ option.username }%' `
+            sql += ` AND uu.fullName like ? `
+            replacements.push('%'+ option.username +'%')
         }
 
-        let mobileUserList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let mobileUserList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return mobileUserList
     } catch (error) {
         throw error
@@ -706,7 +711,7 @@ module.exports.login = async function (req, res) {
         }
 
         let jwtToken = utils.generateTokenKey({ userId: user.userId })
-        // TODO: Update User info
+        // Update User info
         user.online = 1;
         user.lastLoginTime = moment();
         user.pwdErrorTimes = 0;
@@ -723,7 +728,7 @@ module.exports.login = async function (req, res) {
 
         let unit = await Unit.findByPk(user.unitId)
 
-        // TODO: Store User into cookie
+        // Store User into cookie
         res.cookie('token', jwtToken, { expires: utils.expiresCookieDate() });
         req.session.token = jwtToken
         res.cookie('userId', user.userId, { expires: utils.expiresCookieDate() });
@@ -738,15 +743,11 @@ module.exports.login = async function (req, res) {
         res.cookie('hub', unit ? unit.unit : '', { expires: utils.expiresCookieDate() });
         res.cookie('node', (unit && unit.subUnit) ? unit.subUnit: '', { expires: utils.expiresCookieDate() });
         res.cookie('VehicleMissingFrequency', conf.VehicleMissingFrequency, { expires: utils.expiresCookieDate() });
-        // TODO: Store System Conf into cookie
+        // Store System Conf into cookie
         res.cookie('sysConf', {
             allow_audio_img_file: 1,
             allow_audio_radio_call: 1,
-        }, { expires: utils.expiresCookieDate() });
-        // TODO: Store Chat Conf into cookie
-        res.cookie('chatRobot', conf.ChatRobot, { expires: utils.expiresCookieDate() });
-        res.cookie('chatServer', conf.ChatServer, { expires: utils.expiresCookieDate() });
-        res.cookie('gitsiServer', conf.GitsiServer, { expires: utils.expiresCookieDate() });
+        }, { expires: utils.expiresCookieDate() }); 
 
         let newOptRecord = {
             operatorId: user.userId,
@@ -812,7 +813,7 @@ module.exports.loginUseSingpass = async function (req, res) {
         }
 
         let jwtToken = utils.generateTokenKey({ userId: user.userId });
-        // TODO: Update User info
+        // Update User info
         user.online = 1;
         user.lastLoginTime = moment();
         user.pwdErrorTimes = 0;
@@ -829,7 +830,7 @@ module.exports.loginUseSingpass = async function (req, res) {
         }
 
         let unit = await Unit.findByPk(user.unitId)
-        // TODO: Store User into cookie
+        // Store User into cookie
         res.cookie('token', jwtToken, { expires: utils.expiresCookieDate() });
         req.session.token = jwtToken;
         res.cookie('userId', user.userId, { expires: utils.expiresCookieDate() });
@@ -844,15 +845,11 @@ module.exports.loginUseSingpass = async function (req, res) {
         res.cookie('hub', unit ? unit.unit : '', { expires: utils.expiresCookieDate() });
         res.cookie('node', (unit && unit.subUnit) ? unit.subUnit: '', { expires: utils.expiresCookieDate() });
         res.cookie('VehicleMissingFrequency', conf.VehicleMissingFrequency, { expires: utils.expiresCookieDate() });
-        // TODO: Store System Conf into cookie
+        // Store System Conf into cookie
         res.cookie('sysConf', {
             allow_audio_img_file: 1,
             allow_audio_radio_call: 1,
-        }, { expires: utils.expiresCookieDate() });
-        // TODO: Store Chat Conf into cookie
-        res.cookie('chatRobot', conf.ChatRobot, { expires: utils.expiresCookieDate() });
-        res.cookie('chatServer', conf.ChatServer, { expires: utils.expiresCookieDate() });
-        res.cookie('gitsiServer', conf.GitsiServer, { expires: utils.expiresCookieDate() });
+        }, { expires: utils.expiresCookieDate() }); 
 
         let newOptRecord = {
             operatorId: user.userId,
@@ -881,12 +878,12 @@ module.exports.logout = async function (req, res) {
             return res.json(utils.response(0, 'User does not exist'));
         }
 
-        // TODO: Update User info
+        // Update User info
         user.online = 0;
         user.jwtToken = null;
         user.save();
 
-        // TODO: Store User into cookie
+        // Store User into cookie
         res.clearCookie('token');
         res.clearCookie('userId');
         res.clearCookie('username');
@@ -896,19 +893,18 @@ module.exports.logout = async function (req, res) {
         res.clearCookie('lastLoginTime');
         res.clearCookie('needChangePassword');
         res.clearCookie('gitsiServer');
-        res.clearCookie('sysConf');
-        res.clearCookie('chatRobot');
-        res.clearCookie('chatServer');
-        res.clearCookie('gitsiServer')
+        res.clearCookie('sysConf'); 
 
         req.session.token = null;
         req.session.userId = null;
 
         // clear cv system user's token
-        let cvUser = await sequelizeObj.query(` SELECT cvUserId FROM user_base WHERE mvUserId = ${ userId } `, { type: QueryTypes.SELECT })
+        let cvUser = await sequelizeObj.query(` SELECT cvUserId FROM user_base WHERE mvUserId = ? `, 
+        { type: QueryTypes.SELECT, replacements: [userId] })
         if (cvUser && cvUser.length) {
             let cvUserId = cvUser[0].cvUserId;
-            await sequelizeSystemObj.query(` UPDATE \`user\` SET token = NULL WHERE id = ${ cvUserId } `, { type: QueryTypes.UPDATE })
+            await sequelizeSystemObj.query(` UPDATE \`user\` SET token = NULL WHERE id = ? `, 
+            { type: QueryTypes.UPDATE, replacements: [cvUserId] })
         }
 
         return res.json(utils.response(1, 'Success'));
@@ -928,7 +924,7 @@ module.exports.getCurrentUser = async function (req, res) {
             LEFT JOIN unit un ON un.id = us.unitId
         `
         if (userId) {
-            userList = await sequelizeObj.query(baseSQL + ` WHERE us.userId = ${ userId } `, { type: QueryTypes.SELECT })
+            userList = await sequelizeObj.query(baseSQL + ` WHERE us.userId = ? `, { type: QueryTypes.SELECT, replacements: [userId] })
         } else {
             userList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
         }
@@ -949,7 +945,7 @@ module.exports.getUserList = async function (req, res) {
             LEFT JOIN unit un ON un.id = us.unitId
         `
         if (user) {
-            userList = await sequelizeObj.query(baseSQL + ` WHERE us.userId = ${ user.userId } `, { type: QueryTypes.SELECT })
+            userList = await sequelizeObj.query(baseSQL + ` WHERE us.userId = ? `, { type: QueryTypes.SELECT, replacements: [user.userId ] })
         } else {
             userList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
         }
@@ -974,19 +970,19 @@ module.exports.createUser = async function (req, res) {
         user.username = user.nric + ((user.fullName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
        
         const checkUser = async function (user) {
-            // TODO: check if username already exist
+            // check if username already exist
             // let userResult = await User.findOne({ where: { username: user.username, userType: { [Op.eq]: user.userType } } });
-            // // TODO: while username already exist, return
+            // // while username already exist, return
             // if (userResult) {
             //     throw `Username ${ user.username } already exist!`
             // }
             // userResult = await User.findOne({ where: { nric: user.nric, userType: { [Op.eq]: user.userType } } });
-            // // TODO: while nric already exist, return
+            // // while nric already exist, return
             // if (userResult) {
             //     throw `Nric ${ user.nric } already exist!`
             // }
 
-            // TODO: while unit role. need check unit
+            // while unit role. need check unit
             if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let unit = await Unit.findByPk(user.unitId);
                 if (!unit) {
@@ -996,7 +992,7 @@ module.exports.createUser = async function (req, res) {
             } else if(user.userType === CONTENT.USER_TYPE.CUSTOMER){
                 user.unitId = user.unitId
             } else {
-                // TODO: clear un-need, in case
+                // clear un-need, in case
                 delete user.unitId;
             }
 
@@ -1006,7 +1002,7 @@ module.exports.createUser = async function (req, res) {
              * She will change password at backend  @2023-07-12 11:07
              */
             userResult = await User.findOne({ where: { username: user.username, fullName: user.fullName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } });
-            // TODO: while username already exist, return
+            // while username already exist, return
             if (userResult) {
                 log.warn(`Can not create same username in HQ/UNIT/LICENSING OFFICER`)
                 throw `Username ${ user.username } already exist, please change your full name !`
@@ -1335,9 +1331,9 @@ module.exports.updateUser = async function (req, res) {
 
         const checkUser = async function (user) {
             if (user.username) {
-                // TODO: check if username already exist
+                // check if username already exist
                 // let userResult = await User.findOne({ where: { username: user.username, userType: { [Op.eq]: user.userType } } });
-                // // TODO: while username already exist, return
+                // // while username already exist, return
                 // // if(user.userId == userResult.userId && user.userType == userResult.userType){
                 //     if (userResult) {
                 //         if(user.userId != userResult.userId){
@@ -1351,16 +1347,16 @@ module.exports.updateUser = async function (req, res) {
 
                 // if (user.nric) {
                 //     userResult = await User.findOne({ where: { nric: user.nric, userType: { [Op.eq]: user.userType } } });
-                //     // TODO: while nric already exist, return
+                //     // while nric already exist, return
                 //     if (userResult && user.userId != userResult.userId) {
                 //         throw `Nric ${ user.nric } already exist!`
                 //     }
                 // }
 
-                // TODO: can not exist same username in HQ and UNIT and LICENSING OFFICER
+                // can not exist same username in HQ and UNIT and LICENSING OFFICER
                 let userResult = await User.findOne({ where: { username: user.username, 
                     userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } , userId: {[Op.ne]: user.userId}} });
-                // TODO: while username already exist, return
+                // while username already exist, return
                 if (userResult) {
                     log.warn(`Can not create same username in HQ/UNIT/LICENSING OFFICER/CUSTOMER`)
                     throw `Username ${ user.username } already exist !`
@@ -1768,7 +1764,8 @@ module.exports.getCVMVUserList = async function (req, res) {
                 where ub.mvUserType is not null
             ) ub where 1=1 
         `;
-
+        
+        let replacements = []
         let limitCondition = [];
         if (loginUser.userType == CONTENT.USER_TYPE.CUSTOMER) {
             limitCondition.push(` ub.mvGroupId='${loginUser.unitId}' `);
@@ -1777,14 +1774,16 @@ module.exports.getCVMVUserList = async function (req, res) {
             let userUnit = await Unit.findByPk(userUnitId);
             if (userUnit) {
                 if (userUnit.unit) {
-                    limitCondition.push(` ub.mvHub='${userUnit.unit}' `)
+                    limitCondition.push(` ub.mvHub=? `)
+                    replacements.push(userUnit.unit)
                 }
                 if (userUnit.subUnit) {
-                    limitCondition.push(` ub.mvNode='${userUnit.subUnit}' `)
+                    limitCondition.push(` ub.mvNode=? `)
+                    replacements.push(userUnit.subUnit)
                 }
             }
         } else if (loginUser.userType == CONTENT.USER_TYPE.HQ) {
-            //TODO: close hq
+            //close hq
             // let userBase = await UserBase.findOne({where: {mvUserId: userId}});
             // let hqUserType = '';
             // if (userBase) {
@@ -1804,20 +1803,28 @@ module.exports.getCVMVUserList = async function (req, res) {
         }
         
         if (cvRoleId) {
-            limitCondition.push(` ub.cvRole = ${cvRoleId} `)
+            limitCondition.push(` ub.cvRole = ? `)
+            replacements.push(cvRoleId)
         }
         if (mvUserType) {
-            limitCondition.push(` ub.mvUserType = '${mvUserType}' `)
+            limitCondition.push(` ub.mvUserType = ? `)
+            replacements.push(mvUserType)
         }
         if (searchCondition) {
             limitCondition.push(` (
-                ub.fullName LIKE '%${searchCondition}%' 
-                OR ub.mvHub like '%${searchCondition}%' 
-                OR ub.mvNode LIKE '%${searchCondition}%' 
-                OR ub.cvGroupName LIKE '%${searchCondition}%' 
-                OR ub.mvGroupName LIKE '%${searchCondition}%'
-                OR ub.mvRoleName LIKE '%${searchCondition}%'
+                ub.fullName LIKE ?
+                OR ub.mvHub like ?
+                OR ub.mvNode LIKE ?
+                OR ub.cvGroupName LIKE ? 
+                OR ub.mvGroupName LIKE ?
+                OR ub.mvRoleName LIKE ?
             ) `)
+            replacements.push('%'+ searchCondition +'%')
+            replacements.push('%'+ searchCondition +'%')
+            replacements.push('%'+ searchCondition +'%')
+            replacements.push('%'+ searchCondition +'%')
+            replacements.push('%'+ searchCondition +'%')
+            replacements.push('%'+ searchCondition +'%')
         }
 
         let pendingApproveNumSql = baseCountSql;
@@ -1834,32 +1841,33 @@ module.exports.getCVMVUserList = async function (req, res) {
         } else if (tabPage == 'Rejected') {
             limitCondition.push(` ub.rejectBy is not null `)
         } else {
-            limitCondition.push(` ub.status='${tabPage}' `)
+            limitCondition.push(` ub.status=? `)
+            replacements.push(tabPage)
         }
         if (limitCondition.length) {
             baseSql += ' AND ' + limitCondition.join(' AND ');
             baseCountSql += ' AND ' +  limitCondition.join(' AND ');
         }
 
-        let totalList = await sequelizeObj.query(baseCountSql, { type: QueryTypes.SELECT, replacements: [] });
+        let totalList = await sequelizeObj.query(baseCountSql, { type: QueryTypes.SELECT, replacements: replacements });
         let pendingApprovalNum = 0;
         if (tabPage == 'Pending Approval') {
             pendingApprovalNum = totalList[0].count;
         } else {
             pendingApproveNumSql += ` and ub.mvUserId is null and ub.rejectBy is null `;
-            let pendingApproveTotalList = await sequelizeObj.query(pendingApproveNumSql, { type: QueryTypes.SELECT, replacements: [] });
+            let pendingApproveTotalList = await sequelizeObj.query(pendingApproveNumSql, { type: QueryTypes.SELECT, replacements: replacements });
             pendingApprovalNum = pendingApproveTotalList[0].count;
         }
         
         if (orderField) {
             if (orderField == 'unit') {
-                baseSql += ` order by ub.mvHub ${orderType}, ub.mvNode ${orderType} `;
+                baseSql += ` order by ub.mvHub ` + orderType + ', ' + 'ub.mvNode' + orderType;
             } else if (orderField == 'createdAt') {
-                baseSql += ` order by ub.createdAt ${orderType} `;
+                baseSql += ` order by ub.createdAt` + orderType;
             } else if (orderField == 'ord') {
-                baseSql += ` order by ub.createdAt ${orderType} `;
+                baseSql += ` order by ub.createdAt ` + orderType;
             } else {
-                baseSql += ` order by ub.fullName ${orderType} `;
+                baseSql += ` order by ub.fullName ` + orderType;
             }
         } else {
             if (tabPage == 'Pending Approval' || tabPage == 'Rejected') {
@@ -1869,8 +1877,9 @@ module.exports.getCVMVUserList = async function (req, res) {
             }
         }
         
-        baseSql += ` limit ${ pageNum }, ${ pageLength }`;
-        let userList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: [] });
+        baseSql += ` limit ?, ?`;
+        replacements.push(...[Number(pageNum), Number(pageLength)])
+        let userList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: replacements });
 
         let sysRoleList = await sequelizeSystemObj.query(`
            select * from role 
@@ -2065,34 +2074,6 @@ module.exports.getUserDetailInfo = getUserDetailInfo;
 
 // *****************************************************************
 
-module.exports.getSystemConf = async function (req, res) {
-    try {
-        let userId = req.cookies.userId;
-        let sysConf = await sequelizeObj.query(`
-            SELECT * FROM system_conf sc
-            LEFT JOIN user_group ug ON ug.groupName = sc.groupName
-            WHERE ug.userId = ${ userId }
-        `, { type: QueryTypes.SELECT })
-        return res.json(utils.response(1, sysConf[0]));
-    } catch (err){
-        log.error('(getSysConf) : ', err);
-        return res.json(utils.response(0, 'Server error!'));
-    }
-};
-
-module.exports.updateSystemConf = async function (req, res) {
-    try {
-        let systemConf = req.body.systemConf;
-        let result = await SystemConf.update(systemConf, { where: { id: systemConf.id } })
-        // res.cookie()
-
-        return res.json(utils.response(1, 'Success!'));
-    } catch (err) {
-        log.error('(updateSystemConf) : ', err);
-        return res.json(utils.response(0, 'Server error!'));
-    }
-}
-
 const getUserPageList = async function (userId, module, page) {
     try {
         const getUserManageLink = async function () {
@@ -2128,7 +2109,7 @@ const getUserPageList = async function (userId, module, page) {
         let pageList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements })
 
         if (!module) {
-            // TODO: UserType => ADMINISTRATOR default has role & user permission
+            // UserType => ADMINISTRATOR default has role & user permission
             if (user.userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
                 let userPageList = await getUserManageLink()
                 let rolePageList = await getRoleManageLink()
@@ -2171,9 +2152,15 @@ module.exports.getAccountUserData = async function (req, res) {
         if(userId) {
             loginUser = await User.findOne({ where: { userId: userId } })
         }
-        let groupList = await sequelizeSystemObj.query(`select id, groupName from \`group\` 
-        ${ loginUser ? loginUser.userType.toUpperCase() == 'CUSTOMER' ? `where id = ${ loginUser.unitId }` : ''  : '' }
-        `, { type: QueryTypes.SELECT, });
+        let sql = ` select id, groupName from \`group\` `
+        let replacementsGroup = []
+        if(loginUser){
+            if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
+                sql += ` where id = ?`
+                replacementsGroup.push(loginUser.unitId)
+            }
+        }
+        let groupList = await sequelizeSystemObj.query(sql, { type: QueryTypes.SELECT, replacements: replacementsGroup });
         let unitList = await Unit.findAll()
         if(loginUser){
             if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
@@ -2190,9 +2177,9 @@ module.exports.getAccountUserData = async function (req, res) {
             } else if(loginUser.hq){
                 let unitTypeList = await sequelizeObj.query(`
                     SELECT * FROM unit WHERE hq is not null
-                    and FIND_IN_SET('${ loginUser.hq }', hq)
+                    and FIND_IN_SET(?, hq)
                     group by id order by unit, subUnit
-                `, { type: QueryTypes.SELECT })
+                `, { type: QueryTypes.SELECT, replacements: [loginUser.hq] })
                 unitList = unitTypeList;
             }
         }
@@ -2234,11 +2221,11 @@ module.exports.GetServiceTypeBySelectedGroup = async function (req, res) {
     try {
         let groupId = req.body.selectedGroupId
         let type = await sequelizeSystemObj.query(` 
-        select serviceType from \`group\` where id = ${ groupId }
-        `, { type: QueryTypes.SELECT, });
+        select serviceType from \`group\` where id = ?
+        `, { type: QueryTypes.SELECT, replacements: [groupId] });
         type = type.map(item => item.serviceType)
         let result = await sequelizeSystemObj.query(` 
-            select * from service_type where id in(${ type } ) `, { type: QueryTypes.SELECT, });
+            select * from service_type where id in(?) `, { type: QueryTypes.SELECT, replacements: [type] });
         return res.json(utils.response(1, result));
     } catch (error) {
         log.error(error)
@@ -2775,8 +2762,8 @@ module.exports.getUserOptHistoryList = async function (req, res) {
                 o.optType, o.optTime, o.operatorId, o.operatorName, us.fullname
             FROM operation_record o
             LEFT JOIN user us on o.operatorId = us.userId
-            WHERE businessType = 'Manage User' AND businessId = ${userBaseId} order by o.optTime desc
-        `, { type: QueryTypes.SELECT })
+            WHERE businessType = 'Manage User' AND businessId = ? order by o.optTime desc
+        `, { type: QueryTypes.SELECT, replacements: [userBaseId] })
 
         return res.json(utils.response(1, userOptList));
     } catch (error) {
@@ -2790,13 +2777,17 @@ module.exports.getHqTypeList = async function(req, res){
         let userId = req.body.userStatus == true ? req.cookies ? req.cookies.userId : null : null;
         let userBaseUsableId = req.body.userUsableId
         let sql = `SELECT hq FROM unit WHERE hq is not null`
+        let replacements = []
         if(userId){
             let user = await User.findOne({ where: { userId: userId } })
             if(!user) throw ` The current user does not exist.`
-            if(user.hq) sql += ` and FIND_IN_SET('${ user.hq }', hq)`
+            if(user.hq) {
+                sql += ` and FIND_IN_SET(?, hq)`
+                replacements.push(user.hq)
+            } 
         } 
         sql += ` group by hq order by hq`
-        let hqTypeList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let hqTypeList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         let newHqTypeList = []
         for(let item of hqTypeList){
             let data = item.hq.split(',')

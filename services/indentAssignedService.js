@@ -129,19 +129,25 @@ let TaskUtils = {
             sql += ` and b.mobiusUnit in (?) `
             replacements.push(unit);
         } 
-    
-        let pageResult = await sequelizeSystemObj.query(
-            sql + ` order by b.id desc limit ${ pageNum }, ${ pageLength }`,
+        
+        let result = await sequelizeSystemObj.query(sql, {
+            replacements: replacements,
+            type: QueryTypes.SELECT,
+        });
+
+        if(pageNum && pageLength){
+            sql += ` order by b.id desc limit ?, ?`
+            replacements.push(Number(pageNum))
+            replacements.push(Number(pageLength))
+        }
+        let pageResult = await sequelizeSystemObj.query(sql,
             {
                 replacements: replacements,
                 type: QueryTypes.SELECT
             }
         );
 
-        let result = await sequelizeSystemObj.query(sql, {
-            replacements: replacements,
-            type: QueryTypes.SELECT,
-        });
+       
         return { data: pageResult, recordsFiltered: result.length, recordsTotal: result.length }
     }
 }

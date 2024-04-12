@@ -17,33 +17,6 @@ const { sequelizeSystemObj } = require('../db/dbConf_system')
 const jsonfile = require('jsonfile')
 
 let TaskUtils = {
-    // getUnitAndUnitIdByUserId: async function (userId) {
-    //     let unitData;
-    //     let dataList = await unitService.UnitUtils.getPermitUnitList(userId);
-    //     let user = await User.findOne({ where: { userId: userId } })
-    //     if(user.unitId){
-
-    //     }
-    //     if(user.unitId && (user.userType).toUpperCase() != 'CUSTOMER') {
-    //         let unit = await Unit.findAll({ where: { id: user.unitId }, order: [['subUnit', 'DESC']]  })
-    //         unitData = unit
-    //     } else {
-    //         if((user.userType).toUpperCase() == 'CUSTOMER'){
-    //             unitData = [{ id: user.unitId ? user.unitId : 0, unit: null, subUnit:null }]
-    //         } else {
-    //             let unitList = await sequelizeObj.query(`
-    //                 SELECT * FROM unit
-    //                 WHERE FIND_IN_SET('${ userId }', userId)
-    //                 GROUP BY id ORDER BY unit, subUnit
-    //             `, { type: QueryTypes.SELECT })
-    //             log.warn(`hq(${ userId }) unitList ==> ${ JSON.stringify(unitList) } `)
-    //             let dataList = await unitService.UnitUtils.getPermitUnitList(userId);
-    //             unitList = [...unitList, ...dataList.groupIdList]
-    //             unitData = unitList
-    //         }
-    //     }
-    //     return unitData;
-    // },
     getUnitAndUnitIdByUserId: async function (userId) {
         let dataList = await unitService.UnitUtils.getPermitUnitList(userId);
         let hubNodeList = []
@@ -76,17 +49,27 @@ let TaskUtils = {
     getMtRacByRiskLevelByCustomer: async function (unitId) {
         let driverByGroup = await TaskUtils.getDriverByGroup(unitId)
         driverByGroup = driverByGroup.map(item => item.driverId)
-        let mtRacByRiskLevel = await sequelizeObj.query(`
-        SELECT r.taskId, r.riskLevel 
-        FROM mt_rac as r
-        LEFT JOIN task t ON r.taskId = t.taskId
-        LEFT JOIN user us ON us.driverId = t.driverId
-        WHERE t.driverStatus not in ('Cancelled', 'completed') 
-        and ((NOW() between t.indentStartTime and t.indentEndTime)
-        OR t.driverStatus = 'started')
-        ${ driverByGroup ? driverByGroup.length > 0 ? ` and t.driverId in(${ driverByGroup.join(",") })` : ' and 1=2' : '' }
-        AND r.riskLevel like 'high'
-        `, { type: QueryTypes.SELECT });
+        if(driverByGroup.length < 1){
+            return []
+        }
+        let sql = `
+            SELECT r.taskId, r.riskLevel 
+            FROM mt_rac as r
+            LEFT JOIN task t ON r.taskId = t.taskId
+            LEFT JOIN user us ON us.driverId = t.driverId
+            WHERE t.driverStatus not in ('Cancelled', 'completed') 
+            and ((NOW() between t.indentStartTime and t.indentEndTime)
+            OR t.driverStatus = 'started')
+        `
+        let replacements = []
+        if(driverByGroup.length > 0){
+            sql += `
+                and t.driverId in(?)
+            `
+            replacements.push(driverByGroup.join(","))
+        }
+        sql += ` AND r.riskLevel = 'high'`
+        let mtRacByRiskLevel = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return mtRacByRiskLevel
     },
     getDriverByState: async function () {
@@ -95,15 +78,19 @@ let TaskUtils = {
             IF(hh.toHub IS NULL, IF(u.id IS NULL, d.unitId, u.id), hh.unitId) AS unitId, 
             IF(hh.toHub IS NULL, IF(u.id IS NULL, u2.unit, u.unit), hh.toHub) AS unit
             FROM driver AS d 
-            LEFT JOIN (SELECT ta.taskId, ta.driverId, ta.hub, ta.node, ta.mobileStartTime, ta.mobileEndTime FROM task ta 
-                        WHERE ta.driverStatus NOT IN ('Cancelled', 'completed')
-                        AND ((NOW() BETWEEN ta.indentStartTime AND ta.indentEndTime)
-                        OR ta.driverStatus = 'started') 
+            LEFT JOIN (
+                SELECT ta.taskId, ta.driverId, ta.hub, ta.node, ta.mobileStartTime, ta.mobileEndTime FROM task ta 
+                WHERE ta.driverStatus NOT IN ('Cancelled', 'completed')
+                AND ((NOW() BETWEEN ta.indentStartTime AND ta.indentEndTime)
+                OR ta.driverStatus = 'started') 
             ) t ON t.driverId = d.driverId AND (d.lastSOSDateTime >= t.mobileStartTime AND (t.mobileEndTime IS NULL OR t.mobileEndTime >= d.lastSOSDateTime )) 
             LEFT JOIN unit u ON u.unit <=> t.hub AND u.subUnit <=> t.node
             LEFT JOIN unit u2 ON u2.id = d.unitId
             LEFT JOIN USER us ON us.driverId = d.driverId
-            LEFT JOIN (SELECT ho.driverId, ho.toHub, ho.toNode, ho.unitId FROM hoto ho WHERE (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved') hh ON hh.driverId = d.driverId
+            LEFT JOIN (
+                SELECT ho.driverId, ho.toHub, ho.toNode, ho.unitId FROM hoto ho 
+                WHERE (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
+            ) hh ON hh.driverId = d.driverId
             WHERE us.role != 'TL'
             AND (d.lastSOSDateTime IS NOT NULL AND CURDATE() = DATE_FORMAT(d.lastSOSDateTime, '%Y-%m-%d'))
             AND (d.operationallyReadyDate > CURDATE() OR d.operationallyReadyDate IS NULL)
@@ -114,18 +101,27 @@ let TaskUtils = {
     getDriverByStateByCustomer: async function (unitId) {
         let driverByGroup = await TaskUtils.getDriverByGroup(unitId)
         driverByGroup = driverByGroup.map(item => item.driverId)
-        let driverByState = await sequelizeObj.query(`
-        select t.taskId, d.driverName, d.state from driver as d 
-        LEFT JOIN (SELECT ta.taskId, ta.driverId, ta.hub, ta.node, ta.mobileStartTime, ta.mobileEndTime FROM task ta 
-                    WHERE ta.driverStatus NOT IN ('Cancelled', 'completed')
-                    AND ((NOW() BETWEEN ta.indentStartTime AND ta.indentEndTime)
-                    OR ta.driverStatus = 'started') 
-        ) t ON t.driverId = d.driverId AND (d.lastSOSDateTime >= t.mobileStartTime AND (t.mobileEndTime IS NULL OR t.mobileEndTime >= d.lastSOSDateTime )) 
-        LEFT JOIN user us ON us.driverId = d.driverId
-        WHERE (d.lastSOSDateTime IS NOT NULL AND CURDATE() = DATE_FORMAT(d.lastSOSDateTime, '%Y-%m-%d'))
-        ${ driverByGroup ? driverByGroup.length > 0 ? ` and d.driverId in (${ driverByGroup.join(",") })` : ' and 1=2' : '' }
-        AND d.state LIKE '%sos%' GROUP BY d.driverId
-        `, { type: QueryTypes.SELECT });
+        if(driverByGroup.length < 1) {
+            return []
+        }
+        let sql = `
+            select t.taskId, d.driverName, d.state from driver as d 
+            LEFT JOIN (
+                SELECT ta.taskId, ta.driverId, ta.hub, ta.node, ta.mobileStartTime, ta.mobileEndTime FROM task ta 
+                WHERE ta.driverStatus NOT IN ('Cancelled', 'completed')
+                AND ((NOW() BETWEEN ta.indentStartTime AND ta.indentEndTime)
+                OR ta.driverStatus = 'started') 
+            ) t ON t.driverId = d.driverId AND (d.lastSOSDateTime >= t.mobileStartTime AND (t.mobileEndTime IS NULL OR t.mobileEndTime >= d.lastSOSDateTime )) 
+            LEFT JOIN user us ON us.driverId = d.driverId
+            WHERE (d.lastSOSDateTime IS NOT NULL AND CURDATE() = DATE_FORMAT(d.lastSOSDateTime, '%Y-%m-%d'))
+        `
+        let replacements = [];
+        if(driverByGroup.length > 0){
+            sql += ` and d.driverId in (?)`
+            replacements.push(driverByGroup.join(","))
+        }
+        sql += ` AND d.state LIKE '%sos%' GROUP BY d.driverId`
+        let driverByState = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return driverByState
     },
     getDriverDeployable: async function (subUnit, unitId, driverData) {
@@ -148,100 +144,166 @@ let TaskUtils = {
         `, { type: QueryTypes.SELECT })
         loanOutDriver = loanOutDriver.map(item => item.driverId)
 
-        let driverDeployable = await sequelizeObj.query(`
+        let sql = `
             select ${ unitId == '-1' ? ` dd.currentUnit,` : ''  } ${ subUnit == '' && unitId == '-1' ? ` dd.currentSubUnit,` : '' } dd.currentStatus, dd.role, count(*) as statusSum from (
                 SELECT d.driverId, d.operationallyReadyDate, us.role,
                     IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit,
                     IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
-                    ${ unitId != '-1' ? ` 
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
+        `
+        let replacements = []
+        if(unitId != '-1'){
+            sql += `
+                IF(d.permitStatus = 'invalid', 'permitInvalid',
+                    IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
+                            IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                    ) 
+                )as currentStatus
+            `
+            replacements.push(taskDriver.join(","))
+        } else {
+            sql += `
+                IF(d.permitStatus = 'invalid', 'permitInvalid',
+                    IF(FIND_IN_SET(d.driverId, ?), 'LOAN OUT', 
                         IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                        ) 
-                    )as currentStatus
-                    ` : 
-                    `
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
-                        IF(FIND_IN_SET(d.driverId, '${ loanOutDriver.join(",") }'), 'LOAN OUT', 
-                            IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                    IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                            )
-                        ) 
-                    )as currentStatus
-                    `}
-                FROM driver d
-                LEFT JOIN user us ON us.driverId = d.driverId
-                LEFT JOIN unit u ON u.id = d.unitId
-                left join (select ho.driverId, ho.toHub, ho.toNode from hoto ho where (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved') hh ON hh.driverId = d.driverId
-                left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)) ll ON ll.driverId = d.driverId
-                where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE()) 
-                ${ driverData ? driverData.length > 0 ? ` and d.driverId in (${ driverData.join(",") })` : ' and 1=2' : ` and us.role != 'TL'` }
+                                IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                        )
+                    ) 
+                )as currentStatus
+            `
+            replacements.push(loanOutDriver.join(","))
+            replacements.push(taskDriver.join(","))
+        }
+        sql += ` 
+            FROM driver d
+            LEFT JOIN user us ON us.driverId = d.driverId
+            LEFT JOIN unit u ON u.id = d.unitId
+            left join (
+                select ho.driverId, ho.toHub, ho.toNode from hoto ho 
+                where (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
+            ) hh ON hh.driverId = d.driverId
+            left join (
+                select dl.driverId, dl.reason from driver_leave_record dl 
+                where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)
+            ) ll ON ll.driverId = d.driverId
+            where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE()) 
+        `
+        if(driverData){
+            if(driverData.length > 0){
+                sql += ` and d.driverId in (?)`
+                replacements.push(driverData.join(","))
+            } else {
+                sql += ` and 1=2`
+            }
+        } else {
+            sql += ` and us.role != 'TL'`
+        }
+        sql += `
                 group by d.driverId
-                ) dd where dd.currentStatus = 'Deployable' 
-                group by ${ unitId  == '-1' ?  `dd.currentUnit,` : '' } ${ subUnit == '' && unitId == '-1' ? ` dd.currentSubUnit,` : '' }dd.currentStatus
-        `, { type: QueryTypes.SELECT });
+            ) dd where dd.currentStatus = 'Deployable' 
+            group by ${ unitId  == '-1' ?  `dd.currentUnit,` : '' } ${ subUnit == '' && unitId == '-1' ? ` dd.currentSubUnit,` : '' }dd.currentStatus
+        `
+        let driverDeployable = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return driverDeployable
     },
     getDriverStatusOrDeployed: async function (subUnit, dateData, deployedStatus, unitId, driverData) {
         let taskDriver = await sequelizeObj.query(`
             SELECT tt.driverId FROM task tt
             WHERE tt.driverStatus not in ('Cancelled', 'completed') 
-            and (('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+            and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
             OR tt.driverStatus = 'started')
             ${ !driverData ? ` AND tt.taskId NOT like 'CU-%'` : ''}
             group by tt.driverId
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [moment(dateData).format('YYYY-MM-DD')] })
         taskDriver = taskDriver.map(item => item.driverId)
 
         let loanOutDriver = await sequelizeObj.query(` 
             SELECT ll.driverId FROM (
                 SELECT IF(l.driverId IS NULL, lr.driverId, l.driverId) AS driverId
                 FROM driver d
-                LEFT JOIN (SELECT lo.driverId FROM loan lo WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')) l ON l.driverId = d.driverId
-                LEFT JOIN (SELECT lr.driverId FROM loan_record lr 
-                    WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
+                LEFT JOIN (
+                    SELECT lo.driverId FROM loan lo 
+                    WHERE ? BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')
+                ) l ON l.driverId = d.driverId
+                LEFT JOIN (
+                    SELECT lr.driverId FROM loan_record lr 
+                    WHERE ? BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
                 ) lr ON lr.driverId = d.driverId
                 where d.permitStatus != 'invalid' 
             )ll WHERE ll.driverId IS NOT NULL
             group by ll.driverId
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [moment(dateData).format('YYYY-MM-DD'), moment(dateData).format('YYYY-MM-DD')] })
         loanOutDriver = loanOutDriver.map(item => item.driverId)
-        let driverStatusOrDeployed = await sequelizeObj.query(`
+
+        let sql = `
             select ${ unitId == '-1' ? `dd.currentUnit,`:''   }${ subUnit == '' && unitId == '-1' ? ` dd.currentSubUnit,` : '' } dd.currentStatus, dd.role, count(*) as statusSum from (
                 SELECT d.driverId, d.operationallyReadyDate, us.role,
                 IF(hh.toHub IS NULL AND  hr.toHub IS NULL, u.unit, IF(hh.toHub IS NULL, hr.toHub, hh.toHub)) AS currentUnit, 
                 IF(hh.toHub IS NULL AND  hr.toHub IS NULL, u.subUnit, IF(hh.toHub IS NULL, hr.toNode, hh.toNode)) AS currentSubUnit,
-                ${ unitId != '-1' ? ` 
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
+        `
+        let replacements = []
+        if(unitId != '-1'){
+            sql += `
+                IF(d.permitStatus = 'invalid', 'permitInvalid',
+                    IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
+                            IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                    ) 
+                )as currentStatus
+            `
+            replacements.push(taskDriver.join(","))
+        } else {
+            sql += ` 
+                IF(d.permitStatus = 'invalid', 'permitInvalid',
+                    IF(FIND_IN_SET(d.driverId, ?), 'LOAN OUT', 
                         IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                        ) 
-                    )as currentStatus
-                    ` : 
-                    `
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
-                        IF(FIND_IN_SET(d.driverId, '${ loanOutDriver.join(",") }'), 'LOAN OUT', 
-                            IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                    IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                            )
-                        ) 
-                    )as currentStatus
-                    `}
+                                IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                        )
+                    ) 
+                )as currentStatus
+            `
+            replacements.push(loanOutDriver.join(","))
+            replacements.push(taskDriver.join(","))
+        }
+        sql += `
             FROM driver d
             LEFT JOIN user us ON us.driverId = d.driverId
             LEFT JOIN unit u ON u.id = d.unitId
-            left join (select ho.driverId, ho.toHub, ho.toNode from hoto ho where ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d')) and ho.status = 'Approved') hh ON hh.driverId = d.driverId
-            LEFT JOIN (select hr.driverId, hr.toHub, hr.toNode FROM hoto_record hr WHERE 
-                ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
+            left join (
+                select ho.driverId, ho.toHub, ho.toNode from hoto ho 
+                where (? BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d')) and ho.status = 'Approved'
+            ) hh ON hh.driverId = d.driverId
+            LEFT JOIN (
+                select hr.driverId, hr.toHub, hr.toNode FROM hoto_record hr WHERE 
+                (? BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
                 and hr.status = 'Approved'
             ) hr ON hr.driverId = d.driverId
-            left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(dl.startTime, '%Y-%m-%d') AND DATE_FORMAT(dl.endTime, '%Y-%m-%d'))) ll ON ll.driverId = d.driverId
-            where (d.operationallyReadyDate is null OR d.operationallyReadyDate > '${ moment(dateData).format('YYYY-MM-DD') }' )
-            ${ driverData ? driverData.length > 0 ? ` and d.driverId in (${ driverData.join(",") })` : ` and 1=2` : ` and us.role != 'TL'` }
-            group by d.driverId
-                ) dd where 1=1 ${ deployedStatus == '' ? ` and dd.currentStatus = 'Deployed'` : '' }
-                group by ${ unitId  == '-1' ? `dd.currentUnit,` : '' } ${ subUnit == '' && unitId  == '-1' ? ` dd.currentSubUnit,` : '' }dd.currentStatus
-        `, { type: QueryTypes.SELECT });
+            left join (
+                select dl.driverId, dl.reason from driver_leave_record dl 
+                where dl.status = 1 and (? BETWEEN DATE_FORMAT(dl.startTime, '%Y-%m-%d') AND DATE_FORMAT(dl.endTime, '%Y-%m-%d'))
+            ) ll ON ll.driverId = d.driverId
+            where (d.operationallyReadyDate is null OR d.operationallyReadyDate > ? )
+        `
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        if(driverData){
+            if(driverData.length > 0){
+                sql += ` 
+                    and d.driverId in (?)
+                `
+                replacements.push(driverData.join(","))
+            } else {
+                sql += ` and 1=2`
+            }
+        } else {
+            sql += ` and us.role != 'TL'`
+        }
+        sql += `
+                group by d.driverId
+            ) dd where 1=1 ${ deployedStatus == '' ? ` and dd.currentStatus = 'Deployed'` : '' }
+            group by ${ unitId  == '-1' ? `dd.currentUnit,` : '' } ${ subUnit == '' && unitId  == '-1' ? ` dd.currentSubUnit,` : '' }dd.currentStatus
+        `
+        let driverStatusOrDeployed = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return driverStatusOrDeployed
     },
     getVehicleDeployable: async function (subUnit, vehicleList, userType) {
@@ -264,33 +326,58 @@ let TaskUtils = {
         `, { type: QueryTypes.SELECT })// AND v.onhold = 0
         loanOutVehicle = loanOutVehicle.map(item => item.vehicleNo)
         
-        let vehicleDeployable = await sequelizeObj.query(`
-        select ${ vehicleList ? '' : ` vv.currentUnit,`} ${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' } vv.currentStatus, count(*) as statusSum from (
-            SELECT veh.vehicleNo,IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
-            IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
-            ${ vehicleList ? ` 
-            IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
-            ) as currentStatus
-            ` : 
-            `IF(FIND_IN_SET(veh.vehicleNo, '${ loanOutVehicle.join(",") }'), 'LOAN OUT', 
+        let sql = `
+            select ${ vehicleList ? '' : ` vv.currentUnit,`} ${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' } vv.currentStatus, count(*) as statusSum from (
+                SELECT veh.vehicleNo,IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
+                IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
+        `
+        let replacements = []
+        if(vehicleList){
+            sql += `
                 IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                    IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
-                )
-            ) as currentStatus
-            `}
+                    IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
+                ) as currentStatus
+            `
+            replacements.push(taskVehicle.join(","))
+        } else {
+            sql += `
+                IF(FIND_IN_SET(veh.vehicleNo, ?), 'LOAN OUT', 
+                    IF(ll.reason != '' and ll.reason is not null, ll.reason, 
+                        IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
+                    )
+                ) as currentStatus
+            `
+            replacements.push(loanOutVehicle.join(","))
+            replacements.push(taskVehicle.join(","))
+        }
+        sql += `
             FROM vehicle veh
             left join unit un on un.id = veh.unitId
-            left join (select ho.vehicleNo, ho.toHub, ho.toNode from hoto ho where 
+            left join (
+                select ho.vehicleNo, ho.toHub, ho.toNode from hoto ho where 
                 (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
             ) hh ON hh.vehicleNo = veh.vehicleNo
-            left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)) ll ON ll.vehicleNo = veh.vehicleNo
+            left join (
+                select vl.vehicleNo, vl.reason from vehicle_leave_record vl 
+                where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)
+            ) ll ON ll.vehicleNo = veh.vehicleNo
             where 1=1
-            ${ vehicleList ?  vehicleList.length > 0 ? ` and veh.vehicleNo in ('${ vehicleList.join("','") }')` : ' and 1=2' : '' }
-            GROUP BY veh.vehicleNo
+        `
+        if(vehicleList){
+            if(vehicleList?.length > 0){
+                sql += ` and veh.vehicleNo in (?)`
+                replacements.push(`'${ vehicleList.join("','") }'`)
+            } else {
+                sql += ` and 1=2`
+            }
+        }
+        
+        sql += ` 
+                GROUP BY veh.vehicleNo
             ) vv where vv.currentStatus = 'Deployable' 
             group by  ${ vehicleList ? '' : ` vv.currentUnit,` } ${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' }vv.currentStatus
-    `, { type: QueryTypes.SELECT });
+        `
+        let vehicleDeployable = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return vehicleDeployable
     },
     getVehicleStatusOrDeployed: async function (subUnit, dateData, deployedStatus, userType, vehicleList) {
@@ -298,59 +385,82 @@ let TaskUtils = {
         SELECT tt.vehicleNumber FROM task tt 
         WHERE tt.vehicleStatus not in ('Cancelled', 'completed')  
         ${ !vehicleList ? ` AND taskId NOT like 'CU-%'` : ''}
-        and (('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+        and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
         OR tt.vehicleStatus = 'started')
         group by tt.vehicleNumber
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [moment(dateData).format('YYYY-MM-DD')] })
         taskVehicle = taskVehicle.map(item => item.vehicleNumber)
 
         let loanOutVehicle = await sequelizeObj.query(`
             SELECT ll.vehicleNo FROM (
                 SELECT IF(l.vehicleNo IS NULL, lr.vehicleNo, l.vehicleNo) AS vehicleNo
                 FROM vehicle v
-                LEFT JOIN (SELECT lo.vehicleNo FROM loan lo WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')) l ON l.vehicleNo = v.vehicleNo
+                LEFT JOIN (SELECT lo.vehicleNo FROM loan lo WHERE ? BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')) l ON l.vehicleNo = v.vehicleNo
                 LEFT JOIN (SELECT lr.vehicleNo FROM loan_record lr 
-                    WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
+                    WHERE ? BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
                 ) lr ON lr.vehicleNo = v.vehicleNo
             )ll WHERE ll.vehicleNo IS NOT NULL
             GROUP BY ll.vehicleNo
-        `, { type: QueryTypes.SELECT })//  WHERE v.onhold = 0   
+        `, { type: QueryTypes.SELECT, replacements: [moment(dateData).format('YYYY-MM-DD'), moment(dateData).format('YYYY-MM-DD')] })//  WHERE v.onhold = 0   
         loanOutVehicle = loanOutVehicle.map(item => item.vehicleNo)
 
-        let vehicleStatusOrDeployed = await sequelizeObj.query(`
-        select ${ vehicleList ? '' : ` vv.currentUnit,` }${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' } vv.currentStatus, count(*) as statusSum from (
-            SELECT veh.vehicleNo,
-            IF(hh.toHub is NULL AND  hr.toHub IS NULL, un.unit, IF(hh.toHub is NULL, hr.toHub, hh.toHub)) AS currentUnit, 
-            IF(hh.toHub is NULL AND  hr.toHub IS NULL, un.subUnit, IF(hh.toHub is NULL, hr.toNode, hh.toNode)) AS currentSubUnit,
-            ${ vehicleList ? ` 
-            IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
-            )as currentStatus
-            ` : 
-            `
-            IF(FIND_IN_SET(veh.vehicleNo, '${ loanOutVehicle.join(",") }'), 'LOAN OUT', 
+        let sql = `
+            select ${ vehicleList ? '' : ` vv.currentUnit,` }${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' } vv.currentStatus, count(*) as statusSum from (
+                SELECT veh.vehicleNo,
+                IF(hh.toHub is NULL AND  hr.toHub IS NULL, un.unit, IF(hh.toHub is NULL, hr.toHub, hh.toHub)) AS currentUnit, 
+                IF(hh.toHub is NULL AND  hr.toHub IS NULL, un.subUnit, IF(hh.toHub is NULL, hr.toNode, hh.toNode)) AS currentSubUnit,
+        `
+        let replacements = []
+        if(vehicleList){
+            sql += `
                 IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                    IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
-                )
-            ) as currentStatus
-            `}
+                    IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
+                )as currentStatus
+            ` 
+            replacements.push(taskVehicle.join(","))
+        } else {
+            sql += `
+                IF(FIND_IN_SET(veh.vehicleNo, ?), 'LOAN OUT', 
+                    IF(ll.reason != '' and ll.reason is not null, ll.reason, 
+                        IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
+                    )
+                ) as currentStatus
+            `
+            replacements.push(loanOutVehicle.join(","))
+            replacements.push(taskVehicle.join(","))
+        }
+        sql += `
             FROM vehicle veh
             left join unit un on un.id = veh.unitId
             left join (select ho.vehicleNo, ho.toHub, ho.toNode from hoto ho where 
-                ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
+                (? BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
                 and ho.status = 'Approved'
                 ) hh ON hh.vehicleNo = veh.vehicleNo
             LEFT JOIN (select hr.vehicleNo, hr.toHub, hr.toNode FROM hoto_record hr WHERE 
-                ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
+                (? BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
                 and hr.status = 'Approved'
             ) hr ON hr.vehicleNo = veh.vehicleNo
-            left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and ('${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(vl.startTime, '%Y-%m-%d') AND DATE_FORMAT(vl.endTime, '%Y-%m-%d'))) ll ON ll.vehicleNo = veh.vehicleNo
+            left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (? BETWEEN DATE_FORMAT(vl.startTime, '%Y-%m-%d') AND DATE_FORMAT(vl.endTime, '%Y-%m-%d'))) ll ON ll.vehicleNo = veh.vehicleNo
             where 1=1
-            ${ vehicleList ? vehicleList.length > 0 ? ` and veh.vehicleNo in ('${ vehicleList.join("','") }')` : ' and 1=2' : '' }
-            GROUP BY veh.vehicleNo
+        `
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        replacements.push(moment(dateData).format('YYYY-MM-DD'))
+        if(vehicleList){
+            if(vehicleList?.length > 0){
+                sql += ` and veh.vehicleNo in (?)`
+                replacements.push(`'${ vehicleList.join("','") }'`)
+            } else {
+                sql += ` and 1=2`
+            }
+        }
+        
+        sql += `
+                GROUP BY veh.vehicleNo
             ) vv ${ deployedStatus == '' ? `where vv.currentStatus = 'Deployed'` : '' }
             group by ${ vehicleList ? '' : `vv.currentUnit,` }${ subUnit == '' && !vehicleList ? ` vv.currentSubUnit,` : '' }vv.currentStatus
-    `, { type: QueryTypes.SELECT });
+        `
+        let vehicleStatusOrDeployed = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements });
         return vehicleStatusOrDeployed
     },
     getTaskDriver: async function (cuTaskShow) {
@@ -394,32 +504,55 @@ let TaskUtils = {
     },
     getLoanOutDriver: async function (unitId, dateData, totalStatus) {
         let sql = ``
+        let replacements = []
         if(dateData){
             sql = `
             SELECT ll.driverId, ll.groupId FROM (
                 SELECT IF(l.driverId IS NULL, lr.driverId, l.driverId) AS driverId,
                 IF(l.groupId IS NULL, lr.groupId, l.groupId) AS groupId
                 FROM driver d
-                LEFT JOIN (SELECT lo.driverId, lo.groupId FROM loan lo WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')) l ON l.driverId = d.driverId
+                LEFT JOIN (SELECT lo.driverId, lo.groupId FROM loan lo WHERE ? BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') and DATE_FORMAT(lo.endDate, '%Y-%m-%d')) l ON l.driverId = d.driverId
                 LEFT JOIN (SELECT lr.driverId, lr.groupId FROM loan_record lr 
-                    WHERE '${ moment(dateData).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
+                    WHERE ? BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
                 ) lr ON lr.driverId = d.driverId
-                where 1=1 ${ !totalStatus ? ` and d.permitStatus != 'invalid'` : '' } and (d.operationallyReadyDate > '${ moment(dateData).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null) 
-            )ll WHERE ll.driverId IS NOT NULL
-            ${ unitId ? unitId.length > 0 ? `  and ll.groupId in(${ unitId.join(",") })` : ` and ll.groupId = ${ unitId }` : '' }
-            GROUP BY ll.driverId
+                where 1=1 ${ !totalStatus ? ` and d.permitStatus != 'invalid'` : '' } and (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null) 
+            )ll WHERE ll.driverId IS NOT NULL            
             `
+            replacements.push(moment(dateData).format('YYYY-MM-DD'))
+            replacements.push(moment(dateData).format('YYYY-MM-DD'))
+            replacements.push(moment(dateData).format('YYYY-MM-DD'))
+            if(unitId){
+                if(unitId.length > 0){
+                    sql += ` and ll.groupId in(?)`
+                    replacements.push(unitId.join(","))
+                } else {
+                    sql += ` and ll.groupId = ?`
+                    replacements.push(unitId)
+                }
+            }
+            sql += ` GROUP BY ll.driverId`
         } else {
             sql = `
             SELECT l.driverId FROM loan l
             LEFT JOIN driver d ON d.driverId = l.driverId
-            WHERE 1=1 ${ !totalStatus ? ` and d.permitStatus != 'invalid'` : '' } and NOW() BETWEEN l.startDate and l.endDate and (d.operationallyReadyDate > CURDATE() OR d.operationallyReadyDate is null) 
-            ${ unitId ? unitId.length > 0 ? `  and l.groupId in(${ unitId.join(",") })` : ` and l.groupId = ${ unitId }` : '' }
-            AND l.driverId IS NOT NULL
-            GROUP BY l.driverId
+            WHERE 1=1 ${ !totalStatus ? ` and d.permitStatus != 'invalid'` : '' } and NOW() BETWEEN l.startDate and l.endDate 
+            and (d.operationallyReadyDate > CURDATE() OR d.operationallyReadyDate is null) 
+            `
+            if(unitId){
+                if(unitId.length > 0){
+                    sql += ` and l.groupId in(${ unitId.join(",") })`
+                    replacements.push(unitId.join(","))
+                } else {
+                    sql += ` and l.groupId = ${ unitId }`
+                    replacements.push(unitId)
+                }
+            }
+            sql += `
+                AND l.driverId IS NOT NULL
+                GROUP BY l.driverId
             `
         }
-        let loanOutDriver = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let loanOutDriver = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         loanOutDriver = loanOutDriver.map(item => item.driverId)
         return loanOutDriver;
     },
@@ -447,8 +580,8 @@ let TaskUtils = {
         SELECT mp.page FROM module_page mp
         LEFT JOIN ROLE ro ON FIND_IN_SET(mp.id, ro.pageList)
         LEFT JOIN USER us ON us.role = ro.roleName
-        WHERE userId = ${ userId } AND mp.module = '${ pageType }'
-        `, { type: QueryTypes.SELECT })
+        WHERE userId = ? AND mp.module = ?
+        `, { type: QueryTypes.SELECT, replacements: [userId, pageType] })
         modulePage = modulePage.map(item => (item.page).toLowerCase())
         let driverShow = true;
         let vehicleShow = true;
@@ -486,9 +619,9 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
                 IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
                 IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
                 IF(d.permitStatus = 'invalid', 'permitInvalid',
-                    IF(FIND_IN_SET(d.driverId, '${ loanOutDriver.join(",") }'), 'LOAN OUT', 
+                    IF(FIND_IN_SET(d.driverId, ?), 'LOAN OUT', 
                         IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
+                                IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
                         )
                     ) 
                 ) as currentStatus
@@ -503,7 +636,7 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
                 group by d.driverId
             ) dd where dd.currentStatus = 'Deployed' 
             group by dd.currentUnit,dd.currentStatus,dd.role
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [loanOutDriver.join(","), taskDriver.join(",")] })
     
          let result = []
          for(let item of unitList){
@@ -515,29 +648,39 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
                 taskDriver = await TaskUtils.getTaskDriver(false);
                 let driverByGroup = await TaskUtils.getDriverByGroup(groupId)
                 driverByGroup = driverByGroup.map(item => item.driverId)
-                let taskDriverTotal2 = await sequelizeObj.query(`
-                select dd.currentUnit,dd.currentStatus,dd.role, count(*) as taskNum from (
-                    SELECT d.driverId, d.operationallyReadyDate, uu.role,
-                    IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
-                    IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
-                    IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                        IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                    )
-                    ) as currentStatus
-                    FROM driver d
-                    LEFT JOIN unit u ON u.id = d.unitId
-                    LEFT JOIN user uu on d.driverId = uu.driverId and uu.userType='MOBILE'
-                    left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where 
-                    (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
-                    ) hh ON hh.driverId = d.driverId
-                    left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)) ll ON ll.driverId = d.driverId
-                    where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE())
-                    ${ driverByGroup ? driverByGroup.length > 0 ? ` and d.driverId in(${ driverByGroup.join(",") })` : '' : '' }
-                    group by d.driverId
-                ) dd where dd.currentStatus = 'Deployed' 
-                group by dd.currentUnit,dd.currentStatus,dd.role
-                `, { type: QueryTypes.SELECT })
+                let taskDriverTotal2Sql = `
+                    select dd.currentUnit,dd.currentStatus,dd.role, count(*) as taskNum from (
+                        SELECT d.driverId, d.operationallyReadyDate, uu.role,
+                        IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
+                        IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
+                        IF(d.permitStatus = 'invalid', 'permitInvalid',
+                        IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
+                            IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                        )
+                        ) as currentStatus
+                        FROM driver d
+                        LEFT JOIN unit u ON u.id = d.unitId
+                        LEFT JOIN user uu on d.driverId = uu.driverId and uu.userType='MOBILE'
+                        left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where 
+                        (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
+                        ) hh ON hh.driverId = d.driverId
+                        left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)) ll ON ll.driverId = d.driverId
+                        where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE())
+                `
+                let replacements = [taskDriver.join(",")]
+                if(driverByGroup){
+                    if(driverByGroup?.length > 0){
+                        taskDriverTotal2Sql += ` and d.driverId in(?)`
+                        replacements.push(driverByGroup.join(","))
+                    }
+                }
+                
+                taskDriverTotal2Sql += ` 
+                        group by d.driverId
+                    ) dd where dd.currentStatus = 'Deployed' 
+                    group by dd.currentUnit,dd.currentStatus,dd.role
+                `
+                let taskDriverTotal2 = await sequelizeObj.query(taskDriverTotal2Sql, { type: QueryTypes.SELECT, replacements: replacements })
                 taskDriverTotalDataArray = taskDriverTotal2.filter(task => task);
             }
             
@@ -603,9 +746,9 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
                 IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
                 IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
                 IF(d.permitStatus = 'invalid', 'permitInvalid',
-                    IF(FIND_IN_SET(d.driverId, '${ loanOutDriver.join(",") }'), 'LOAN OUT', 
+                    IF(FIND_IN_SET(d.driverId, ?), 'LOAN OUT', 
                         IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                                IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
+                                IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
                         )
                     ) 
                 )as currentStatus
@@ -620,7 +763,7 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
                 group by d.driverId
             ) dd where dd.currentStatus = 'Deployed' 
             group by dd.currentUnit, dd.currentSubUnit, dd.currentStatus, dd.role
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [loanOutDriver.join(","), taskDriver.join(",")] })
          let result = []
          for(let item of unitList){
             let hubData = { unit: item.unit ? item.unit : 'Other', subunit: item.subUnit ? item.subUnit : 'Other', driverPurposeData: [] }
@@ -631,29 +774,39 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
                 taskDriver = await TaskUtils.getTaskDriver(false);
                 let driverByGroup = await TaskUtils.getDriverByGroup(groupId)
                 driverByGroup = driverByGroup.map(item => item.driverId)
-                let taskDriverTotal2 = await sequelizeObj.query(`
-                select dd.currentUnit,dd.currentSubUnit,dd.currentStatus,dd.role, count(*) as taskNum from (
-                    SELECT d.driverId, d.operationallyReadyDate, uu.role,
-                    IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
-                    IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
-                    IF(d.permitStatus = 'invalid', 'permitInvalid',
-                        IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
-                            IF(FIND_IN_SET(d.driverId, '${ taskDriver.join(",") }'), 'Deployed', 'Deployable')
-                        ) 
-                    )as currentStatus
-                    FROM driver d
-                    LEFT JOIN unit u ON u.id = d.unitId
-                    LEFT JOIN user uu on d.driverId =uu.driverId and uu.userType='MOBILE'
-                    left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where 
-                        (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
-                        ) hh ON hh.driverId = d.driverId
-                    left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)) ll ON ll.driverId = d.driverId
-                    where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE()) 
-                    ${ driverByGroup ? driverByGroup.length > 0 ? ` and d.driverId in (${ driverByGroup.join(",") })` : '' : '' }
-                    group by d.driverId
-                ) dd where dd.currentStatus = 'Deployed' 
-                group by dd.currentUnit, dd.currentSubUnit, dd.currentStatus, dd.role
-            `, { type: QueryTypes.SELECT })
+                let sql = `
+                    select dd.currentUnit,dd.currentSubUnit,dd.currentStatus,dd.role, count(*) as taskNum from (
+                        SELECT d.driverId, d.operationallyReadyDate, uu.role,
+                        IF(hh.toHub is NULL, u.unit, hh.toHub) as currentUnit, 
+                        IF(hh.toHub is NULL, u.subUnit, hh.toNode) as currentSubUnit,
+                        IF(d.permitStatus = 'invalid', 'permitInvalid',
+                            IF(ll.reason != '' and ll.reason is not null, 'On Leave', 
+                                IF(FIND_IN_SET(d.driverId, ?), 'Deployed', 'Deployable')
+                            ) 
+                        )as currentStatus
+                        FROM driver d
+                        LEFT JOIN unit u ON u.id = d.unitId
+                        LEFT JOIN user uu on d.driverId =uu.driverId and uu.userType='MOBILE'
+                        left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where 
+                            (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
+                            ) hh ON hh.driverId = d.driverId
+                        left join (select dl.driverId, dl.reason from driver_leave_record dl where dl.status = 1 and (NOW() BETWEEN dl.startTime AND dl.endTime)) ll ON ll.driverId = d.driverId
+                        where (d.operationallyReadyDate is null OR d.operationallyReadyDate > CURDATE()) 
+                `
+                let replacements = [taskDriver.join(",")]
+                if(driverByGroup){
+                    if(driverByGroup?.length > 0){
+                        sql += ` and d.driverId in (?)`
+                        replacements.push(driverByGroup.join(","))
+                    }
+                }
+               
+                sql += `
+                        group by d.driverId
+                    ) dd where dd.currentStatus = 'Deployed' 
+                    group by dd.currentUnit, dd.currentSubUnit, dd.currentStatus, dd.role
+                `
+                let taskDriverTotal2 = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
                 startedTaskListStartedDataArray = taskDriverTotal2.filter(task => task);
             }
             let toStartedCount = 0;
@@ -710,9 +863,9 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
                 SELECT veh.vehicleNo, t.purpose,
                 IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
                 IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
-                IF(FIND_IN_SET(veh.vehicleNo, '${ loanOutVehicle.join(",") }'), 'LOAN OUT', 
+                IF(FIND_IN_SET(veh.vehicleNo, ?), 'LOAN OUT', 
                     IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                        IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
+                        IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
                     )
                 ) as currentStatus
                 FROM vehicle veh
@@ -724,7 +877,7 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
                 left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)) ll ON ll.vehicleNo = veh.vehicleNo
                 GROUP BY veh.vehicleNo
             ) vv where vv.currentStatus = 'Deployed' group by vv.currentUnit,vv.currentStatus, vv.purpose
-         `, { type: QueryTypes.SELECT }) 
+         `, { type: QueryTypes.SELECT, replacements: [loanOutVehicle.join(","), taskVehicle.join(",")] }) 
     
          let result = []
          for(let item of unitList){
@@ -736,13 +889,13 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
                 taskVehicle = await TaskUtils.getTaskVehicle(false);
                 let vehicleData = await TaskUtils.getVehicleByGroup(groupId);
                 vehicleData = vehicleData.map(item => item.vehicleNo)
-                taskVehicleTotal = await sequelizeObj.query(`
+                let sql = `
                 select vv.currentStatus, vv.purpose, count(*) as taskNum from (
                     SELECT veh.vehicleNo, t.purpose,
                     IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
                     IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
                     IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                            IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
+                            IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
                     ) as currentStatus                    
                     FROM vehicle veh
                     left join unit un on un.id = veh.unitId
@@ -751,10 +904,21 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
                         (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
                     ) hh ON hh.vehicleNo = veh.vehicleNo
                     left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)) ll ON ll.vehicleNo = veh.vehicleNo
-                    ${ vehicleData ? vehicleData.length > 0 ?  ` where veh.vehicleNo in ('${ vehicleData.join("','") }')` : ' and 1=2' : '' }
+                `
+                let replacements = [taskVehicle.join(",")]
+                if(vehicleData){
+                    if(vehicleData.length > 0){
+                        sql += ` where veh.vehicleNo in (?)`
+                        replacements.push(`'${ vehicleData.join("','") }'`)
+                    } else {
+                        sql += ' and 1=2'
+                    }
+                }
+                sql += ` 
                     GROUP BY veh.vehicleNo
                 ) vv where vv.currentStatus = 'Deployed' group by vv.currentStatus, vv.purpose
-                `, { type: QueryTypes.SELECT }) 
+                `
+                taskVehicleTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements }) 
                 startedTaskListStartedDataArray = taskVehicleTotal;
             }
             let opsStartedCount = 0;
@@ -866,9 +1030,9 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                 SELECT veh.vehicleNo, t.purpose,
                 IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
                 IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
-                IF(FIND_IN_SET(veh.vehicleNo, '${ loanOutVehicle.join(",") }'), 'LOAN OUT', 
+                IF(FIND_IN_SET(veh.vehicleNo, ?), 'LOAN OUT', 
                     IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                        IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
+                        IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
                     )
                 )as currentStatus
                 FROM vehicle veh
@@ -880,7 +1044,7 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                 left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)) ll ON ll.vehicleNo = veh.vehicleNo
                 GROUP BY veh.vehicleNo
             ) vv where vv.currentStatus = 'Deployed' group by vv.currentUnit, vv.currentSubUnit, vv.currentStatus, vv.purpose
-        `, { type: QueryTypes.SELECT })  
+        `, { type: QueryTypes.SELECT, replacements: [loanOutVehicle.join(","), taskVehicle.join(",")] })  
     
          let result = []
          for(let item of unitList){
@@ -892,13 +1056,13 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                     taskVehicle = await TaskUtils.getTaskVehicle(false);
                     let vehicleData = await TaskUtils.getVehicleByGroup(groupId);
                     vehicleData = vehicleData.map(item => item.vehicleNo)
-                    taskVehicleTotal = await sequelizeObj.query(`
+                    let sql = `
                     select vv.currentStatus, vv.purpose, count(*) as taskNum from (
                         SELECT veh.vehicleNo, t.purpose,
                         IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, 
                         IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
                         IF(ll.reason != '' and ll.reason is not null, ll.reason, 
-                            IF(FIND_IN_SET(veh.vehicleNo, '${ taskVehicle.join(",") }'), 'Deployed', 'Deployable')
+                            IF(FIND_IN_SET(veh.vehicleNo, ?), 'Deployed', 'Deployable')
                         )as currentStatus                        
                         FROM vehicle veh
                         left join unit un on un.id = veh.unitId
@@ -907,10 +1071,21 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                             (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
                         ) hh ON hh.vehicleNo = veh.vehicleNo
                         left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and (NOW() BETWEEN vl.startTime AND vl.endTime)) ll ON ll.vehicleNo = veh.vehicleNo
-                        ${ vehicleData ? vehicleData.length > 0 ? ` where veh.vehicleNo in ('${ vehicleData.join("','") }')` : ' and 1=2' : '' }
+                    `
+                    let replacements = [taskVehicle.join(",")]
+                    if(vehicleData){
+                        if(vehicleData.length > 0){
+                            sql += ` where veh.vehicleNo in (?)`
+                            replacements.push(`'${ vehicleData.join("','") }'`)
+                        } else {
+                            sql += ' and 1=2'
+                        }
+                    }
+                    sql += `
                         GROUP BY veh.vehicleNo
                     ) vv where vv.currentStatus = 'Deployed' group by vv.currentStatus, vv.purpose
-                    `, { type: QueryTypes.SELECT }) 
+                    `
+                    taskVehicleTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements }) 
                     startedTaskListStartedDataArray = taskVehicleTotal;
                 }
                 let opsStartedCount = 0;
@@ -1969,35 +2144,48 @@ module.exports.getDriverTotalByRoleByHub = async function (req, res) {
                 LEFT JOIN user us on us.driverId = d.driverId
                 LEFT JOIN unit u on d.unitId = u.id
                 LEFT JOIN (select ho.driverId,ho.toHub, ho.unitId from hoto ho where 
-                    ('${ timeNeeded }' BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
+                    (? BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
                     and ho.status = 'Approved'
                 ) hh ON hh.driverId = d.driverId
                 LEFT JOIN (select hr.driverId, hr.toHub, hr.toNode FROM hoto_record hr 
-                    WHERE ('${ timeNeeded }' BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
+                    WHERE (? BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
                     and hr.status = 'Approved'
                 ) hr ON hr.driverId = d.driverId
-                where (d.operationallyReadyDate > '${ timeNeeded }' OR d.operationallyReadyDate is null) 
+                where (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null) 
                 GROUP BY d.driverId
             ) dd GROUP BY dd.unit, dd.role
-        `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
-        let driverTotalByRoleByGroup = await sequelizeObj.query(`
+        `, { type: QueryTypes.SELECT, replacements: [timeNeeded, timeNeeded, timeNeeded] }) // and d.permitStatus != 'invalid'
+
+        let sql = `
             select count(*) as taskNum, dd.role, dd.groupId from (
                 select d.driverId, us.role, 
                 if(l.groupId is null, if(lr.groupId is null, d.groupId, lr.groupId), l.groupId) groupId
                 from driver as d
                 LEFT JOIN user us on us.driverId = d.driverId
                 LEFT JOIN (SELECT lo.driverId, lo.groupId FROM loan lo WHERE 
-                    '${ moment(timeNeeded).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') AND DATE_FORMAT(lo.endDate, '%Y-%m-%d')
+                    ? BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') AND DATE_FORMAT(lo.endDate, '%Y-%m-%d')
                 ) l ON l.driverId = d.driverId
                 LEFT JOIN (SELECT lr.driverId, lr.groupId FROM loan_record lr WHERE 
-                    '${ moment(timeNeeded).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
+                    ? BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
                 ) lr ON lr.driverId = d.driverId
-                WHERE (d.operationallyReadyDate > '${ moment(timeNeeded).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)		
+                WHERE (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null)		
                 GROUP BY d.driverId
             ) dd where 1=1
-            ${ groupId ? groupId.length > 0 ? ` and dd.groupId in (${ groupId.join(",") })` : ` and dd.groupId = ${ groupId }` : ` and dd.groupId is not null` }
-            GROUP BY dd.role
-        `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
+        `
+        let replacements = [moment(timeNeeded).format('YYYY-MM-DD'), moment(timeNeeded).format('YYYY-MM-DD'), moment(timeNeeded).format('YYYY-MM-DD')]
+        if(groupId){
+            if(groupId.length > 0){
+                sql += ` and dd.groupId in (?)`
+                replacements.push(groupId.join(","))
+            } else {
+                sql += ` and dd.groupId = ?`
+                replacements.push(groupId)
+            }
+        } else {
+            sql += ` and dd.groupId is not null`
+        }
+        sql += ` GROUP BY dd.role`
+        let driverTotalByRoleByGroup = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements }) // and d.permitStatus != 'invalid'
         for(let item of unitList){
             let hubData = { unit: item ? item : 'Other',  driverRoleData: [] }
             let driverTotalByRoleArray
@@ -2097,35 +2285,48 @@ module.exports.getDriverTotalByRoleByNode = async function (req, res) {
                 LEFT JOIN user us on us.driverId = d.driverId
                 LEFT JOIN unit u on d.unitId = u.id
                 LEFT JOIN (select ho.driverId,ho.toHub, ho.toNode, ho.unitId from hoto ho where 
-                    ('${ timeNeeded }' BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
+                    (? BETWEEN DATE_FORMAT(ho.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(ho.endDateTime, '%Y-%m-%d'))
                     and ho.status = 'Approved'
                 ) hh ON hh.driverId = d.driverId
                 LEFT JOIN (select hr.driverId, hr.toHub, hr.toNode FROM hoto_record hr 
-                    WHERE ('${ timeNeeded }' BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
+                    WHERE (? BETWEEN DATE_FORMAT(hr.startDateTime, '%Y-%m-%d') AND DATE_FORMAT(hr.returnDateTime , '%Y-%m-%d'))
                     and hr.status = 'Approved'
                 ) hr ON hr.driverId = d.driverId
-                where (d.operationallyReadyDate > '${ timeNeeded }' OR d.operationallyReadyDate is null) 
+                where (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null) 
                 GROUP BY d.driverId
             ) dd GROUP BY dd.unit, dd.subUnit, dd.role
-        `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
-        let driverTotalByRoleByGroup = await sequelizeObj.query(`
+        `, { type: QueryTypes.SELECT, replacements: [timeNeeded, timeNeeded, timeNeeded] }) // and d.permitStatus != 'invalid'
+
+        let sql = `
             select count(*) as taskNum, dd.role, dd.groupId from (
                 select d.driverId, us.role, 
                 if(l.groupId is null, if(lr.groupId is null, d.groupId, lr.groupId), l.groupId) groupId
                 from driver as d
                 LEFT JOIN user us on us.driverId = d.driverId
                 LEFT JOIN (SELECT lo.driverId, lo.groupId FROM loan lo WHERE 
-                    '${ moment(timeNeeded).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') AND DATE_FORMAT(lo.endDate, '%Y-%m-%d')
+                    ? BETWEEN DATE_FORMAT(lo.startDate, '%Y-%m-%d') AND DATE_FORMAT(lo.endDate, '%Y-%m-%d')
                 ) l ON l.driverId = d.driverId
                 LEFT JOIN (SELECT lr.driverId, lr.groupId FROM loan_record lr WHERE 
-                    '${ moment(timeNeeded).format('YYYY-MM-DD') }' BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
+                    ? BETWEEN DATE_FORMAT(lr.startDate, '%Y-%m-%d') AND DATE_FORMAT(lr.returnDate, '%Y-%m-%d')
                 ) lr ON lr.driverId = d.driverId
-                WHERE (d.operationallyReadyDate > '${ moment(timeNeeded).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)		
+                WHERE (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null)		
                 GROUP BY d.driverId
             ) dd where 1=1
-            ${ groupId ? groupId.length > 0 ? ` and dd.groupId in (${ groupId.join(",") })` : ` and dd.groupId = ${ groupId }` :  ` and dd.groupId is not null` }
-            GROUP BY dd.role
-        `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
+        `
+        let replacements = [moment(timeNeeded).format('YYYY-MM-DD'), moment(timeNeeded).format('YYYY-MM-DD'), moment(timeNeeded).format('YYYY-MM-DD')]
+        if(groupId){
+            if(groupId.length > 0){
+                sql += ` and dd.groupId in (?)`
+                replacements.push(groupId.join(","))
+            } else {
+                sql += ` and dd.groupId = ?`
+                replacements.push(groupId)
+            }
+        } else {
+            sql += ` and dd.groupId is not null`
+        }
+        sql += ` GROUP BY dd.role`
+        let driverTotalByRoleByGroup = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements }) // and d.permitStatus != 'invalid'
         for(let item of unitList){
             let hubData = { unit: item.unit ? item.unit : 'Other', subunit: item.subUnit ? item.subUnit : 'Other', driverRoleData: [] }
             let driverTotalByRoleArray
@@ -2221,11 +2422,11 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
         FROM task tt
         LEFT JOIN user us ON us.driverId = tt.driverId
         WHERE tt.vehicleStatus not in ('Cancelled')  
-        and (('${ timeNeeded }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+        and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
         OR tt.vehicleStatus = 'started')
         and us.role != 'TL'
         GROUP BY tt.hub, tt.purpose
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [timeNeeded] })
         for(let item of unitList){
             let hubData = { unit: item ? item : 'Other', taskPurposeData: [] }
             let taskTotalByPurposeArray
@@ -2234,16 +2435,25 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
             } else {
                 let driverByGroup = await TaskUtils.getDriverByGroup(groupId, timeNeeded)
                 driverByGroup = driverByGroup.map(item => item.driverId)
-                let taskTotalByPurpose2 = await sequelizeObj.query(`
+                let sql = `
                 SELECT count( DISTINCT tt.taskId) as taskNum, us.unitId, tt.purpose
                 FROM task tt
                 LEFT JOIN user us ON us.driverId = tt.driverId
                 WHERE tt.vehicleStatus not in ('Cancelled')  
-                and (('${ timeNeeded }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+                and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
                 OR tt.vehicleStatus = 'started')
-                ${ driverByGroup ? driverByGroup.length > 0 ? ` and tt.driverId in (${ driverByGroup.join(",") })` : ' and 1=2' : '' }
-                GROUP BY tt.purpose
-                `, { type: QueryTypes.SELECT })
+                `
+                let replacements = [timeNeeded]
+                if(driverByGroup){
+                    if(driverByGroup.length > 0){
+                        sql += ` and tt.driverId in (?)`
+                        replacements.push(driverByGroup.join(","))
+                    } else {
+                        sql += ' and 1=2'
+                    }
+                }
+                sql += ` GROUP BY tt.purpose`
+                let taskTotalByPurpose2 = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
                 taskTotalByPurposeArray = taskTotalByPurpose2.filter(task => task);
             }
             let opsStartedCount = 0;
@@ -2357,11 +2567,11 @@ module.exports.getTaskTotalByPurposeByNode = async function (req, res) {
         FROM task tt
         LEFT JOIN user us ON us.driverId = tt.driverId
         WHERE tt.vehicleStatus not in ('Cancelled')  
-        and (('${ timeNeeded }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+        and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
         OR tt.vehicleStatus = 'started')
         and us.role != 'TL'
         GROUP BY tt.hub, tt.node, tt.purpose
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [timeNeeded] })
         for(let item of unitList){
             let hubData = { unit: item.unit ? item.unit : 'Other', subunit: item.subUnit ? item.subUnit : 'Other', taskPurposeData: [] }        
                 let taskTotalByPurposeArray
@@ -2370,16 +2580,25 @@ module.exports.getTaskTotalByPurposeByNode = async function (req, res) {
                 } else {
                     let driverByGroup = await TaskUtils.getDriverByGroup(groupId, timeNeeded)
                     driverByGroup = driverByGroup.map(item => item.driverId)
-                    let taskTotalByPurpose2 = await sequelizeObj.query(`
+                    let sql = `
                     SELECT count(DISTINCT tt.taskId) as taskNum, us.unitId, tt.purpose
                     FROM task tt
                     LEFT JOIN user us ON us.driverId = tt.driverId
                     WHERE tt.vehicleStatus not in ('Cancelled')  
-                    and (('${ timeNeeded }' BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
+                    and ((? BETWEEN DATE_FORMAT(tt.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(tt.indentEndTime, '%Y-%m-%d'))
                     OR tt.vehicleStatus = 'started')
-                    ${ driverByGroup ? driverByGroup.length > 0 ? ` and tt.driverId in (${ driverByGroup.join(",") })` : ' and 1=2' : '' }
-                    GROUP BY tt.purpose
-                    `, { type: QueryTypes.SELECT })
+                    `
+                    let replacements = [timeNeeded]
+                    if(driverByGroup){
+                        if(driverByGroup.length > 0){
+                            sql += ` and tt.driverId in (?)`
+                            replacements.push(driverByGroup.join(","))
+                        } else {
+                            sql += ' and 1=2'
+                        }
+                    }
+                    sql +=  ` GROUP BY tt.purpose`
+                    let taskTotalByPurpose2 = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
                     taskTotalByPurposeArray = taskTotalByPurpose2.filter(task => task);
                 }
             let opsStartedCount = 0;
@@ -2482,81 +2701,26 @@ module.exports.getVehicleTotalByLoanOut = async function (req, res) {
             GROUP BY v.vehicleNo
         ) vv where 1=1
         `//v.onhold = 0
+        let replacements = []
         if(hub) {
-            sql += ` AND vv.unit = '${ hub }'`
+            sql += ` AND vv.unit = ?`
+            replacements.push(hub)
         }
         if(node) {
             if(node.toLowerCase() == 'other') {
                 sql += ` AND vv.subUnit  is null`
             } else {
-                sql += ` AND vv.subUnit  = '${ node }'`
+                sql += ` AND vv.subUnit  = ?`
+                replacements.push(node)
             }
         }
-        let loanOutTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let loanOutTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return res.json(utils.response(1, loanOutTotal));
     } catch (error) {
         log.error(error)
         return res.json(utils.response(0, error));
     }
 }
-
-//2023-07-07 hub onhold vehicle
-// module.exports.getVehicleTotalByOnhold = async function (req, res) {
-//     try {
-//         let pageType = req.body.pageType;
-//         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
-//         if(!modulePage.vehicleShow){
-//             return res.json(utils.response(1, []));
-//         }
-//         let hub = req.body.hub;
-//         let node = req.body.node;
-//         let sql = `
-//             select COUNT(vv.vehicleNo) total, vv.unit, vv.subUnit, vv.loanGroupId, vv.vehicleGroupId, vv.taskId from (
-//                 SELECT v.vehicleNo,
-//                 IF(h.toHub is NULL, u.unit, h.toHub) as unit, 
-//                 IF(h.toHub is NULL, u.subUnit, h.toNode) as subUnit,
-//                 l.groupId as loanGroupId, v.groupId as vehicleGroupId, l.taskId
-//                 FROM vehicle v 
-//                 left join (
-//                     select ho.vehicleNo, ho.toHub, ho.toNode from hoto ho where 
-//                     (NOW() BETWEEN ho.startDateTime AND ho.endDateTime) and ho.status = 'Approved'
-//                     ) h ON h.vehicleNo = v.vehicleNo
-//                 LEFT JOIN (SELECT lo.vehicleNo, lo.groupId, lo.taskId FROM loan lo WHERE NOW() BETWEEN lo.startDate AND lo.endDate) l ON l.vehicleNo = v.vehicleNo
-//                 LEFT JOIN unit u ON u.id = v.unitId
-//                 WHERE v.onhold = 1
-//                 GROUP BY v.vehicleNo
-//             ) vv where 1=1
-//         `
-//         if(hub) {
-//             if(hub.toLowerCase() == 'dv_loa' || (node ? node.toLowerCase() == 'dv_loa' : false)) {
-//                 let groupId = null
-//                 if(req.cookies.userType == 'CUSTOMER') {
-//                     let user = await User.findOne({ where: { userId: req.cookies.userId } })
-//                     groupId = user.unitId
-//                 }
-//                if(groupId) {
-//                 sql += ` and (vv.loanGroupId = ${ groupId } OR vv.vehicleGroupId = ${ groupId })`
-//                } else {
-//                 sql += ` and (vv.loanGroupId IS NOT NULL OR vv.vehicleGroupId IS NOT NULL) `
-//                }
-//             } else {
-//                 sql += ` AND vv.unit = '${ hub }'`
-//                 if(node) {
-//                     if(node.toLowerCase() == 'other') {
-//                         sql += ` AND vv.subUnit is null`
-//                     } else {
-//                         sql += ` AND vv.subUnit = '${ node }'`
-//                     }
-//                 }
-//             }
-//         }
-//         let loanOutTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
-//         return res.json(utils.response(1, loanOutTotal));
-//     } catch (error) {
-//         log.error(error)
-//         return res.json(utils.response(0, error));
-//     }
-// }
 
 //2023-07-14 hub loanOut driver
 module.exports.getDriverTotalByLoanOut = async function (req, res) {
@@ -2585,13 +2749,16 @@ module.exports.getDriverTotalByLoanOut = async function (req, res) {
             GROUP BY d.driverId
         ) dd WHERE 1=1
         `
+        let replacements = []
         if(hub) {
-            sql += ` AND dd.unit = '${ hub }'`
+            sql += ` AND dd.unit = ?`
+            replacements.push(hub)
         }
         if(node) {
-            sql += ` AND dd.subUnit = '${ node }'`
+            sql += ` AND dd.subUnit = ?`
+            replacements.push(node)
         }
-        let loanOutTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let loanOutTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return res.json(utils.response(1, loanOutTotal));
     } catch (error) {
         log.error(error)
@@ -2627,7 +2794,7 @@ module.exports.getDriverTotalByStatusInvalid = async function (req, res) {
             GROUP BY d.driverId
         ) dd WHERE 1=1
         `
-    
+        let replacements = []
         if(hub) {
             if(hub.toLowerCase() == 'dv_loa' || (node ? node.toLowerCase() == 'dv_loa' : false)) {
                 let groupId = null
@@ -2636,22 +2803,26 @@ module.exports.getDriverTotalByStatusInvalid = async function (req, res) {
                     groupId = user.unitId
                 }
                if(groupId) {
-                sql += ` and ((dd.role in('DV', 'LOA') and dd.unitId = ${ groupId }) or dd.groupId = ${ groupId }) `
+                sql += ` and ((dd.role in('DV', 'LOA') and dd.unitId = ?) or dd.groupId = ?) `
+                replacements.push(groupId)
+                replacements.push(groupId)
                } else {
                 sql += ` and ((dd.role in('DV', 'LOA') and dd.unitId is not null) or dd.taskId is not null) `
                }
             } else {
-                sql += ` AND dd.unit = '${ hub }'`
+                sql += ` AND dd.unit = ?`
+                replacements.push(hub)
                 if(node) {
                     if(node.toLowerCase() == 'other') {
                         sql += ` AND dd.subUnit is null`
                     } else {
-                        sql += ` AND dd.subUnit = '${ node }'`
+                        sql += ` AND dd.subUnit = ?`
+                        replacements.push(node)
                     }
                 }
             }
         }
-        let invalidTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+        let invalidTotal = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         return res.json(utils.response(1, invalidTotal));
     } catch (error) {
         log.error(error)

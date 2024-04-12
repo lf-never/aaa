@@ -37,7 +37,7 @@ module.exports.getResourcesStatData = async function (req, res) {
     } catch (error) {
         log.error('(getResourcesStatData) : ', error);
 
-        return res.json(utils.response(0, error && error.message ? error.message : 'Query data fail!'));
+        return res.json(utils.response(0, 'Query data fail!'));
     }
 };
 
@@ -102,26 +102,31 @@ const statVehicleData = async function(unit, subUnit, userType, userUnitId, user
         FROM task tt
         WHERE tt.driverId is not null and  (NOW() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.vehicleStatus = 'started')
     `;
+    let replacements = [];
     if (unit) {
-        baseSql += ` and tt.hub ='${unit}' `;
-    } else {
-        if (userType == CONTENT.USER_TYPE.HQ) {
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                baseSql += ` and tt.hub in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                baseSql += ` and 1=2 `;
-            }
+        baseSql += ` and tt.hub =? `;
+        replacements.push(unit);
+    } else if (userType == CONTENT.USER_TYPE.HQ) {
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            baseSql += ` and tt.hub in('${hqUserUnitNameList.join("','")}') `;
+        } else {
+            baseSql += ` and 1=2 `;
         }
     }
     if (subUnit) {
-        baseSql += ` and ${subUnit == 'null' ? ` tt.node is null` : ` tt.node ='${subUnit}'`}`;
+        if (subUnit == 'null') {
+            baseSql += ` and tt.node is null `;
+        } else {
+            baseSql += ` and  tt.node =? `;
+            replacements.push(subUnit);
+        }
     }
     if (customerVehicleNumsStr) {
         baseSql += ` and FIND_IN_SET(tt.vehicleNumber, '${customerVehicleNumsStr}') `;
     }
     baseSql += ` GROUP BY tt.vehicleStatus`;
     
-    let todayDataStat = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT })
+    let todayDataStat = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements })
     let todayTotal = 0;
     let todayTotalEffective = 0;
     let yetToStart = 0;
@@ -165,11 +170,9 @@ const statVehicleData = async function(unit, subUnit, userType, userUnitId, user
         select l.vehicleNo from loan l where l.vehicleNo IS NOT NULL and now() BETWEEN l.startDate and l.endDate
     `, { type: QueryTypes.SELECT , replacements: []})
     let currentLoanOutVehicleNos = '';
-    let currentLoanOutVehicleNoArray = []
     if (currentLoanOutVehicleList && currentLoanOutVehicleList.length > 0) {
         for (let temp of currentLoanOutVehicleList) {
             currentLoanOutVehicleNos += temp.vehicleNo + ','
-            currentLoanOutVehicleNoArray.push(temp.vehicleNo);
         }
     }
 
@@ -209,28 +212,32 @@ const statVehicleData = async function(unit, subUnit, userType, userUnitId, user
             GROUP BY veh.vehicleNo
         ) vv where 1=1
     `
+    replacements = [];
     if (unit) {
-        baseSql += ` and vv.currentUnit ='${unit}' `;
-    } else {
-        if (userType == CONTENT.USER_TYPE.HQ) {
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                baseSql += ` and vv.currentUnit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                baseSql += ` and 1=2 `;
-            }
+        baseSql += ` and vv.currentUnit =? `;
+        replacements.push(unit)
+    } else if (userType == CONTENT.USER_TYPE.HQ) {
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            baseSql += ` and vv.currentUnit in('${hqUserUnitNameList.join("','")}') `;
+        } else {
+            baseSql += ` and 1=2 `;
         }
     }
     if (subUnit) {
-        baseSql += ` and ${subUnit == 'null' ? ` vv.currentSubUnit is null` : ` vv.currentSubUnit ='${subUnit}'`}`;
+        if (subUnit == 'null') {
+            baseSql += ` and vv.currentSubUnit is null `;
+        } else {
+            baseSql += ` and vv.currentSubUnit =? `;
+            replacements.push(subUnit)
+        }
     }
     baseSql +=` group by vv.currentStatus`;
-    let vehicleQueryResult = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT })
+    let vehicleQueryResult = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements })
     let vehicleTotal = 0;
     let todayVehicleDeployable = 0;
     let todayVehicleDeployed = 0;
     let todayVehicleOutOfService = 0;
     let todayVehicleMaintenance = 0;
-    // let todayVehicleOnhold = 0;
     let todayVehicleLoanout = 0;
     for (let data of vehicleQueryResult) {
         vehicleTotal += data.statusSum
@@ -240,11 +247,7 @@ const statVehicleData = async function(unit, subUnit, userType, userUnitId, user
             todayVehicleOutOfService = data.statusSum
         } else if (data.currentStatus == 'Under Maintenance') {
             todayVehicleMaintenance = data.statusSum
-        } 
-        // else if (data.currentStatus == 'On Hold') {
-        //     todayVehicleOnhold = data.statusSum
-        // } 
-        else if (data.currentStatus == 'Loan Out') {
+        } else if (data.currentStatus == 'Loan Out') {
             todayVehicleLoanout = data.statusSum
         } else {
             todayVehicleDeployable = data.statusSum
@@ -309,28 +312,35 @@ const statDriverData = async function(unit, subUnit, userType, userUnitId, userH
         left join (select l.driverId, l.groupId, l.indentId from loan l where now() BETWEEN l.startDate and l.endDate) lo ON lo.driverId = tt.driverId
         WHERE tt.driverId is not null and tt.driverId != '' and (NOW() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
     `;
+    let replacements = [];
     if (customerUnitId) {
-        baseSql += ` and ((dd.groupId is not null and dd.groupId = ${customerUnitId}) or lo.groupId = ${ customerUnitId })`;
+        baseSql += ` and ((dd.groupId is not null and dd.groupId = ?) or lo.groupId = ?)`;
+        replacements.push(customerUnitId);
+        replacements.push(customerUnitId);
     } else {
         baseSql += ` and us.role='TO' `;
     }
     if (unit) {
-        baseSql += ` and tt.hub ='${unit}'`;
-    } else {
-        if (userType == CONTENT.USER_TYPE.HQ) {
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                baseSql += ` and tt.hub in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                baseSql += ` and 1=2 `;
-            }
+        baseSql += ` and tt.hub =?`;
+        replacements.push(unit);
+    } else if (userType == CONTENT.USER_TYPE.HQ) {
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            baseSql += ` and tt.hub in('${hqUserUnitNameList.join("','")}') `;
+        } else {
+            baseSql += ` and 1=2 `;
         }
     }
     if (subUnit) {
-        baseSql += ` and ${subUnit == 'null' ? ` tt.node is null` : ` tt.node ='${subUnit}'`}`;
+        if (subUnit == 'null') {
+            baseSql += ` and tt.node is null `;
+        } else {
+            baseSql += ` and tt.node =? `;
+            replacements.push(subUnit);
+        }
     }
     baseSql += ` GROUP BY tt.driverStatus`;
 
-    let todayDataStat = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT })
+    let todayDataStat = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements })
     let todayTotal = 0;
     let todayTotalEffective = 0;
     let yetToStart = 0;
@@ -374,11 +384,9 @@ const statDriverData = async function(unit, subUnit, userType, userUnitId, userH
         select l.driverId from loan l where l.driverId IS NOT NULL and now() BETWEEN l.startDate and l.endDate
     `, { type: QueryTypes.SELECT , replacements: []})
     let currentLoanOutDriverIds = '';
-    let currentLoanOutDriverIdArray = []
     if (currentLoanOutDriverList && currentLoanOutDriverList.length > 0) {
         for (let temp of currentLoanOutDriverList) {
             currentLoanOutDriverIds += temp.driverId + ','
-            currentLoanOutDriverIdArray.push(temp.driverId);
         }
     }
 
@@ -418,9 +426,11 @@ const statDriverData = async function(unit, subUnit, userType, userUnitId, userH
             left join (select l.driverId, l.groupId, l.indentId from loan l where NOW() >= l.startDate) lo ON lo.driverId = d.driverId
             where (d.operationallyReadyDate is null OR d.operationallyReadyDate > DATE_FORMAT(NOW(), '%Y-%m-%d'))
     `;
+    replacements = [];
     if (customerUnitId) {
-        // baseSql += ` and (((us.role = 'DV' OR us.role = 'LOA') and us.unitId = ${customerUnitId}) or lo.indentId is not null)`;
-        baseSql += ` and ((d.groupId is not null and d.groupId = ${customerUnitId}) or lo.groupId = ${ customerUnitId })`;
+        baseSql += ` and ((d.groupId is not null and d.groupId = ?) or lo.groupId = ?)`;
+        replacements.push(customerUnitId)
+        replacements.push(customerUnitId)
     } else {
         baseSql += ` and us.role='TO' `;
     }
@@ -429,21 +439,26 @@ const statDriverData = async function(unit, subUnit, userType, userUnitId, userH
         ) dd where 1=1 
     `
     if (unit) {
-        baseSql += ` and dd.currentUnit ='${unit}'`;
-    } else {
-        if (userType == CONTENT.USER_TYPE.HQ) {
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                baseSql += ` and dd.currentUnit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                baseSql += ` and 1=2 `;
-            }
+        baseSql += ` and dd.currentUnit =? `;
+        replacements.push(unit)
+    } else if (userType == CONTENT.USER_TYPE.HQ) {
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            baseSql += ` and dd.currentUnit in('${hqUserUnitNameList.join("','")}') `;
+        } else {
+            baseSql += ` and 1=2 `;
         }
     }
     if (subUnit) {
-        baseSql += ` and ${subUnit == 'null' ? ` dd.currentSubUnit is null` : ` dd.currentSubUnit ='${subUnit}'`} `;
+        if (subUnit == 'null') {
+            baseSql += ` and dd.currentSubUnit is null `;
+        } else {
+            baseSql += ` and dd.currentSubUnit =? `;
+            replacements.push(subUnit)
+        }
+        
     }
     baseSql += ` group by dd.currentStatus `;
-    let driverQueryResult = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT })
+    let driverQueryResult = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements })
     let driverTotal = 0;
     let tsOperatorOwnedAssigned = 0;
     let tsOperatorOwnedUnassigned = 0;

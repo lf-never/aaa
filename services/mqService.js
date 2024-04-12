@@ -75,7 +75,7 @@ module.exports.affectedRouteHandler = async function (activeMQMsg) {
         	// check the incident, if already bind to someone else, remove from its before zone.
 			let incident = await Incident.findByPk(incidentNo);
 			if (incident) {
-				// TODO: update userZoneId
+				// update userZoneId
 				let userZone = await UserZone.findAll({ owner: caUserID });
 				if (userZone) {
 					incident.userZoneId = userZone.id;
@@ -83,7 +83,7 @@ module.exports.affectedRouteHandler = async function (activeMQMsg) {
 					incident.userZoneId = null;
 					log.warn(`${ activeMQMsg }: CA_USER_ID do not has userZone.`)
 				}
-				// TODO: affect route
+				// affect route
 				incident.affectRoute = affectRouteList.join(',')
 				await incident.save();
 

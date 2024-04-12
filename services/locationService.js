@@ -41,17 +41,18 @@ module.exports = {
         `
 
         let limitSql = []
+        let replacements = []
         if (location) {
             if (location.locationId) {
-                // sql += ` WHERE l.id = ${ location.locationId } `
-                limitSql.push(` l.id = ${ location.locationId } `)
+                limitSql.push(` l.id = ? `)
+                replacements.push(location.locationId)
             } else if (location.locationName) {
-                // sql += ` WHERE l.locationName LIKE \"%${ location.locationName }%\" `
-                limitSql.push(` l.locationName LIKE \"%${ location.locationName }%\" `)
+                limitSql.push(` l.locationName LIKE `+ sequelizeSystemObj.escape("%" + location.locationName +"%"))
             }
 
             if (location.belongTo) {
-                limitSql.push(` l.belongTo = '${ location.belongTo }' `)
+                limitSql.push(` l.belongTo = ? `)
+                replacements.push(location.belongTo)
             }
         }
 
@@ -59,7 +60,7 @@ module.exports = {
             sql += ` WHERE ${ limitSql.join(' AND ') } `
         }
 
-        let locationList = await sequelizeSystemObj.query(sql, { type: QueryTypes.SELECT });
+        let locationList = await sequelizeSystemObj.query(sql, { type: QueryTypes.SELECT, replacements });
 
         let sql2 = `
             SELECT reportingLocation, destination FROM mt_admin GROUP BY reportingLocation, destination
@@ -94,7 +95,7 @@ module.exports = {
         }
 
         const checkLocationName = async function (location) {
-            // TODO: check locationName
+            // check locationName
             let checkResult = await _SystemTask.Task.findAll({ where: { 
                 [Op.or]: [
                     { pickupDestination: location.locationName },
@@ -173,7 +174,7 @@ module.exports = {
         }
 
         const checkLocationName = async function (location) {
-            // TODO: check locationName
+            // check locationName
             let checkResult = await _SystemTask.Task.findAll({ where: 
                 { 
                     [Op.or]: [

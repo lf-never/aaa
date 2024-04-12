@@ -24,7 +24,7 @@ const getPastSOS = async function (driverId, id) {
         if (sosResult.length < 2) {
             return null
         } else {
-            // TODO: find record before id by driverId
+            // find record before id by driverId
             let targetIndex = 0;
             sosResult.some(item => {
                 targetIndex++;
@@ -204,7 +204,8 @@ module.exports = {
                 // HQ user has group permission
                 if (user.group?.length) {
                     if (group) {
-                        sql += ` AND ss.groupId = ${ group } `
+                        sql += ` AND ss.groupId = ? `
+                        replacements.push(group);
                     } else if (group == 0) {
                         sql += ` AND ss.groupId IS NOT NULL `
                     } else {
@@ -246,10 +247,13 @@ module.exports = {
             
             if (node && hub) {
                 // Maybe not more than 1000 drivers
-                sql += ` AND ( ss.hub='${ hub }' AND ss.node='${ node }' ) `;
+                sql += ` AND ( ss.hub=? AND ss.node=? ) `;
+                replacements.push(hub);
+                replacements.push(node);
             } else if (hub) {
                 // Maybe not more than 1000 drivers
-                sql += ` AND ss.hub='${ hub }' `;
+                sql += ` AND ss.hub=? `;
+                replacements.push(hub);
             }
 
             if (sortBy == 'createdAt') {
@@ -257,11 +261,13 @@ module.exports = {
             }
 
             console.log(sql)
-            // TODO: get total count
+            // get total count
             let totalSOSList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements })
 
-            // TODO: get page result
-            sql += ` Limit ${ pageNum }, ${ pageLength } `
+            // get page result
+            sql += ` Limit ?, ? `
+            replacements.push(Number(pageNum))
+            replacements.push(Number(pageLength))
             let sosList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements })
             await generateSOSData(sosList);
 

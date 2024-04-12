@@ -5,7 +5,6 @@ const { sequelizeSystemObj } = require('../db/dbConf_system');
 const { Task } = require('../model/task');
 const { Unit } = require('../model/unit');
 const path = require('path');
-// const fs = require('fs');
 const fs = require('graceful-fs');
 const moment = require('moment');
 const xlsx = require('node-xlsx');

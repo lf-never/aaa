@@ -34,7 +34,6 @@ const calculatePointsByStatusAndDate = async function (list, date) {
                 continue;
             }
 
-            // let jobTaskList = await _SystemTask.Task.findAll({ where: { tripId: job.id, startDate } });
             let jobTaskList = await sequelizeSystemObj.query(`
                 SELECT jt.id, jt.tripId, jt.taskStatus, jt.startDate FROM job_task jt
                 WHERE jt.executionDate LIKE ?
@@ -127,7 +126,6 @@ const calculatePointsByStatusAndDate2 = async function (list, date) {
             if (data.status.toLowerCase() == 'approved') {
                 // Check accumulated
                 if (!['completed', 'late trip', 'no show'].includes(data.taskStatus.toLowerCase())) {
-                    // log.info(`Checking accumulated => `, JSON.stringify(data, null, 4))
                     accumulated += Number(data.total)
                     indent.points.accumulated += Number(data.total)
                 }
@@ -158,7 +156,7 @@ module.exports = {
                 type: QueryTypes.SELECT,
             });
 
-            // TODO: Training, Training - 1 => Training ??
+            // Training, Training - 1 => Training ??
             
 
             return res.json(result);
@@ -179,8 +177,6 @@ module.exports = {
                 return res.json(utils.response(0, `UserId ${ userId } does not exist!`));
             }
 
-            // let allowedUnitIdList = await TaskUtils.findOutHubNodeIDByUserId(userId);
-
             let baseSql = `
                 SELECT b.additionalRemarks AS activity, b.purposeType AS purpose, b.id AS requestId, a.executionDate
                 FROM (
@@ -189,7 +185,7 @@ module.exports = {
                     LEFT JOIN service_type s ON s.id = j.serviceTypeId
                     LEFT JOIN job_task jt ON jt.tripId = j.id
                     WHERE s.category = 'mv' 
-                    AND jt.executionDate LIKE \"${ date }%\"
+                    AND jt.executionDate LIKE `+sequelizeSystemObj.escape("%" +date+ "%")+`
                     AND j.driver != 0 
                     GROUP BY j.requestId
                 ) a 
@@ -205,18 +201,20 @@ module.exports = {
             }
 
             if(pageNum && pageLength){
+                let result = await sequelizeSystemObj.query(baseSql, {
+                    replacements: replacements,
+                    type: QueryTypes.SELECT,
+                });
+                
+                replacements.push(Number(pageNum));
+                replacements.push(Number(pageLength));
                 let pageResult = await sequelizeSystemObj.query(
-                    baseSql + ` ORDER BY b.id ASC LIMIT ${ pageNum }, ${ pageLength }`,
+                    baseSql + ` ORDER BY b.id ASC LIMIT ?, ?`,
                     {
                         replacements: replacements,
                         type: QueryTypes.SELECT
                     }
                 );
-
-                let result = await sequelizeSystemObj.query(baseSql, {
-                    replacements: replacements,
-                    type: QueryTypes.SELECT,
-                });
                 
                 let { accumulated, used, pending, list } = await calculatePointsByStatusAndDate2(pageResult, date)
 

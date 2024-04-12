@@ -94,6 +94,7 @@ const getVehicleList = async function (option = {}) {
         let mobileUserList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements })
         return mobileUserList
     } catch (error) {
+        log.error(error)
         throw error
     }
 }
@@ -107,7 +108,9 @@ module.exports.editVehicle = async function (req, res) {
             return res.json(utils.response(0, `User ${ userId } does not exist.`));
         }
         let {vehicleNo, pmType, vehiclePmMaxMileage, vehiclePmMonths, vehicleHub, vehicleNode, vehicleGroup, vehicleMileage, vehicleKeyTagId, vehicleCategory, vehicleType, vehicleDimensions, permitType, vehicleSpeedlimit, aviDate, action} = req.body;
-        vehicleNode != '' ? vehicleNode : vehicleNode = null
+        if (!vehicleNo) {
+            return res.json(utils.response(0, `Params vehicleNo is empty.`));
+        }
         let oldVehicle = await Vehicle.findOne({ where: { vehicleNo: vehicleNo}});
         if (action.toLowerCase() == 'create') {
             if (oldVehicle) {
@@ -144,10 +147,8 @@ module.exports.editVehicle = async function (req, res) {
         }
         if (!vehicleHub && !vehicleGroup) {
             return res.json(utils.response(0, `Hub or Unit is required.`));
-        } else {
-            if (!vehicleHub && vehicleGroup) {
-                newVehicle.groupId = vehicleGroup;
-            }
+        } else if (!vehicleHub && vehicleGroup) {
+            newVehicle.groupId = vehicleGroup;
         }
 
         await sequelizeObj.transaction(async transaction => {
@@ -164,7 +165,7 @@ module.exports.editVehicle = async function (req, res) {
                     unitObj = await Unit.findOne({ where: { unit: vehicleHub, subUnit: vehicleNode}})
                 }
                 if (!unitObj) {
-                    return res.json(utils.response(0, `Hub/Node[${vehicleHub + '/' + (vehicleNode ? vehicleNode : '')}] not exist!`));
+                    return res.json(utils.response(0, `Hub/Node[${vehicleHub + '/' + (vehicleNode || '')}] not exist!`));
                 }
                 newVehicle.unitId = unitObj.id
                 newVehicle.groupId = null;
@@ -225,9 +226,9 @@ module.exports.getVehicleDetail = async function (req, res) {
         let currentTaskList = await sequelizeObj.query(`
             SELECT DISTINCT tt.vehicleNumber as vehicleNumber
             FROM task tt
-            WHERE tt.vehicleNumber = '${vehicleNo}' and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' and tt.driverId is not null 
+            WHERE tt.vehicleNumber = ? and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' and tt.driverId is not null 
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
-        `, { type: QueryTypes.SELECT , replacements: []})
+        `, { type: QueryTypes.SELECT , replacements: [vehicleNo]})
         let currentTaskLength = currentTaskList.length;
 
         let baseSQL = `
@@ -274,11 +275,11 @@ module.exports.getVehicleDetail = async function (req, res) {
             left join hoto h on h.vehicleNo = veh.vehicleNo and h.status = 'Approved' AND NOW() BETWEEN h.startDateTime AND h.endDateTime
             LEFT JOIN loan l ON l.vehicleNo = veh.vehicleNo AND NOW() >= l.startDate
             left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status = 1 and NOW() BETWEEN vl.startTime AND vl.endTime) ll ON ll.vehicleNo = veh.vehicleNo
-            where veh.vehicleNo = '${vehicleNo}' limit 1
+            where veh.vehicleNo = ? limit 1
         `;
  
         let currentVehicle = null;
-        let vehicleList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let vehicleList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
         if (vehicleList && vehicleList.length > 0) {
             currentVehicle = vehicleList[0];
         }
@@ -287,10 +288,10 @@ module.exports.getVehicleDetail = async function (req, res) {
             SELECT
                 taskId
             FROM task tt
-            WHERE tt.vehicleNumber='${vehicleNo}' and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' 
+            WHERE tt.vehicleNumber=? and tt.driverStatus != 'Cancelled' and tt.driverStatus != 'completed' 
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
         `;
-        let currentAssignedTasks = await sequelizeObj.query(currentAssignedVehicleNoBaseSql, { type: QueryTypes.SELECT })
+        let currentAssignedTasks = await sequelizeObj.query(currentAssignedVehicleNoBaseSql, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
         if (currentAssignedTasks && currentAssignedTasks.length > 0) {
             if (currentVehicle && currentVehicle.currentStatus == 'Deployable') {
                 currentVehicle.currentStatus = 'Deployed'
@@ -304,7 +305,7 @@ module.exports.getVehicleDetail = async function (req, res) {
             FROM
                 task tt
             left join user us on tt.driverId = us.driverId
-            WHERE tt.vehicleNumber = '${vehicleNo}' and tt.driverStatus != 'Cancelled' and tt.driverId is not null and tt.indentStartTime >= now()
+            WHERE tt.vehicleNumber = ? and tt.driverStatus != 'Cancelled' and tt.driverId is not null and tt.indentStartTime >= now()
         `;
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
             baseSQL += ` and (us.role = 'DV' OR us.role = 'LOA') and us.unitId = ${user.unitId} `
@@ -312,7 +313,7 @@ module.exports.getVehicleDetail = async function (req, res) {
             baseSQL += ` and tt.taskId not like 'CU-%' `
         }
  
-        let assignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let assignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
         let assignedTaskNum = 0;
         if (assignedTaskList && assignedTaskList.length > 0) {
             assignedTaskNum = assignedTaskList[0].assignedTaskNum;
@@ -324,14 +325,14 @@ module.exports.getVehicleDetail = async function (req, res) {
             FROM odd dd
             LEFT JOIN task tt ON tt.taskId = dd.taskId
             LEFT JOIN \`user\` us on dd.creator = us.userId
-            WHERE tt.vehicleNumber='${vehicleNo}'`;
+            WHERE tt.vehicleNumber=?`;
 
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
             baseSQL += ` and (us.role = 'DV' OR us.role = 'LOA') and us.unitId = ${user.unitId}`
         } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
             baseSQL += ` and tt.taskId not like 'CU-%' `
         }
-        let oddList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let oddList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
         let vehicleOddNum = 0;
         if (oddList && oddList.length > 0) {
             vehicleOddNum = oddList[0].vehicleOddNum;
@@ -392,14 +393,14 @@ module.exports.getVehicleOdd = async function (req, res) {
             LEFT JOIN unit un on vv.unitId = un.id
             LEFT JOIN \`user\` uu on dd.creator = uu.userId
             LEFT JOIN \`user\` uu1 on dd.rectifyBy = uu1.userId
-            WHERE tt.vehicleNumber='${vehicleNo}'
+            WHERE tt.vehicleNumber=?
         `;
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
             baseSQL += ` and (uu.role = 'DV' OR uu.role = 'LOA') and uu.unitId = ${user.unitId}`
         } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
             baseSQL += ` and tt.taskId not like 'CU-%' `
         }
-        let vehicleOddList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let vehicleOddList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
  
         return res.json({respMessage: vehicleOddList});
     } catch (error) {
@@ -484,7 +485,7 @@ module.exports.getVehicleSchedule = async function (req, res) {
             return res.json(utils.response(0, `User ${ userId } does not exist.`));
         }
 
-        if (purpose && purpose.startsWith('MT-')) {
+        if (purpose?.startsWith('MT-')) {
             purpose = purpose.split('-')[1];
         }
         let baseTaskSql = `
@@ -493,12 +494,13 @@ module.exports.getVehicleSchedule = async function (req, res) {
                 t.indentEndTime, t.hub, t.node, t.purpose, t.activity
             FROM task AS t
             LEFT JOIN user us on t.driverId = us.driverId
-            WHERE t.vehicleNumber = '${vehicleNo}' and t.driverId is not null and t.driverStatus IN ('waitcheck', 'ready', 'started', 'completed') ${purpose ? ' AND t.purpose = ? ' : ''}
+            WHERE t.vehicleNumber = ? and t.driverId is not null and t.driverStatus IN ('waitcheck', 'ready', 'started', 'completed')
             AND (
-                DATE_FORMAT(indentStartTime,'%Y-%m-%d') BETWEEN '${startDate}' AND '${endDate}'
-                or DATE_FORMAT(indentEndTime,'%Y-%m-%d') BETWEEN '${startDate}' AND '${endDate}'
-                or (DATE_FORMAT(indentStartTime,'%Y-%m-%d') < '${startDate}' and DATE_FORMAT(indentStartTime,'%Y-%m-%d') > '${endDate}')
+                DATE_FORMAT(indentStartTime,'%Y-%m-%d') BETWEEN ? AND ?
+                or DATE_FORMAT(indentEndTime,'%Y-%m-%d') BETWEEN ? AND ?
+                or (DATE_FORMAT(indentStartTime,'%Y-%m-%d') < ? and DATE_FORMAT(indentStartTime,'%Y-%m-%d') > ?)
             )
+            ${purpose ? ' AND t.purpose = ? ' : ''}
         `;
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
             baseTaskSql += ` and (us.role = 'DV' OR us.role = 'LOA') and us.unitId = ${user.unitId} `
@@ -510,14 +512,14 @@ module.exports.getVehicleSchedule = async function (req, res) {
             SELECT
                 startTime as indentStartTime, date_add(endTime, interval 1 second) as indentEndTime, reason
             FROM vehicle_leave_record dl
-            where vehicleNo='${vehicleNo}' and status=1 and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}' order by dl.startTime asc
+            where vehicleNo=? and status=1 and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ? order by dl.startTime asc
         `
-        let replacements = [];
+        let replacements = [vehicleNo, startDate, endDate, startDate, endDate, startDate, endDate];
         if (purpose) {
             replacements.push(purpose);
         }
         let vehicleTaskList = await sequelizeObj.query(baseTaskSql, { type: QueryTypes.SELECT, replacements: replacements })
-        let tempLeaveList = await sequelizeObj.query(baseLeaveSql, { type: QueryTypes.SELECT, replacements: [] })
+        let tempLeaveList = await sequelizeObj.query(baseLeaveSql, { type: QueryTypes.SELECT, replacements: [vehicleNo, startDate, endDate] })
 
         let resultList = [];
         let vehicleLeaveList = [];
@@ -569,7 +571,7 @@ module.exports.getVehicleList = async function (req, res) {
 			let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
@@ -619,9 +621,10 @@ module.exports.getVehicleAssignedTasks = async function (req, res) {
     let past = Number(req.body.past);
     let warningStatus = Number(req.body.warningStatus);
     let paramList = []
-    paramList.push(` tt.vehicleNumber = '${vehicleNo}' `)
+    paramList.push(` tt.vehicleNumber = ? `)
     if (searchParam) {
-        paramList.push(` (tt.purpose like '%${searchParam}%' or  tt.pickupDestination like '%${searchParam}%' or tt.dropoffDestination like '%${searchParam}%' ) `)
+        let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
+        paramList.push(` (tt.purpose like `+likeCondition+` or  tt.pickupDestination like `+likeCondition+` or tt.dropoffDestination like `+likeCondition+` ) `)
     }
     if (past == 0) {
         paramList.push(` tt.indentStartTime > now() `)
@@ -659,11 +662,11 @@ module.exports.getVehicleAssignedTasks = async function (req, res) {
     if (paramList.length) {
         baseSQL += " and " + paramList.join(' AND ')
     }
-    let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+    let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo] })
     let totalRecord = countResult.length
 
-    baseSQL += ` ORDER BY tt.indentStartTime DESC limit ${pageNum}, ${pageLength} `;
-    let vehicleAssignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+    baseSQL += ` ORDER BY tt.indentStartTime DESC limit ?, ? `;
+    let vehicleAssignedTaskList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [vehicleNo, pageNum, pageLength] })
     
     let pageList = await userService.getUserPageList(userId, 'Vehicle', 'Indent')
     let operationList = pageList.map(item => `${ item.action }`).join(',')
@@ -712,10 +715,7 @@ module.exports.getVehicleTasks = async function (req, res) {
 
         let pageNum = Number(req.body.start);
         let pageLength = Number(req.body.length);
-        let { vehicleStatus, unit, subUnit, selectGroup, groupId, executionDate, searchParam, aviDate, pmDate, wptDate, paradeDate, vehicleDataType} = req.body;
-        if (!paradeDate) {
-            paradeDate = moment().format("YYYY-MM-DD");
-        }
+        let { vehicleStatus, unit, subUnit, selectGroup, groupId, executionDate, searchParam, aviDate, pmDate, wptDate, vehicleDataType} = req.body;
 
         if (vehicleDataType && vehicleDataType.toLowerCase() == 'deactivate') {
             let result = await getDeactivateVehicle(req);
@@ -728,6 +728,7 @@ module.exports.getVehicleTasks = async function (req, res) {
         }
 
         let paramList = []
+        let replacements = [];
         //2023-07-05 CUSTOMER UNIT 
         let customerGroupId = '';
         if(user.userType.toUpperCase() == CONTENT.USER_TYPE.CUSTOMER) {
@@ -757,7 +758,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 unit = null;
                 subUnit = null;
                 if (groupId) {
-                    paramList.push(` vv.groupId = ${ groupId } `);
+                    paramList.push(` vv.groupId = ? `);
+                    replacements.push(groupId)
                 } else {
                     let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
                     let hqUserGroupIds = groupList.map(item => item.id);
@@ -775,7 +777,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 unit = null;
                 subUnit = null;
                 if (groupId) {
-                    paramList.push(` vv.groupId = ${ groupId } `);
+                    paramList.push(` vv.groupId = ? `);
+                    replacements.push(groupId)
                 } else {
                     paramList.push(` vv.groupId is not null `);
                 }
@@ -785,34 +788,38 @@ module.exports.getVehicleTasks = async function (req, res) {
         }
 
         if (unit) {
-            paramList.push(` (vv.currentUnit ='${unit}' or vv.unit = '${unit}') `);
-        } else {
-            if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
-                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-                let hqUserUnitNameList = userUnitList.map(item => item.unit);
-                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                    hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
-                }
-                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                    paramList.push(` vv.currentUnit in('${hqUserUnitNameList.join("','")}') `);
-                } else {
-                    return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
-                }
+            paramList.push(` (vv.currentUnit =? or vv.unit = ?) `);
+            replacements.push(unit)
+            replacements.push(unit)
+        } else if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
+            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+            let hqUserUnitNameList = userUnitList.map(item => item.unit);
+            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+            }
+            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                paramList.push(` vv.currentUnit in('${hqUserUnitNameList.join("','")}') `);
+            } else {
+                return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
             }
         }
         if (subUnit) {
             if (subUnit == 'null') {
                 paramList.push(` (vv.currentSubUnit is null or vv.subUnit is null) `)
             } else {
-                paramList.push(` (vv.currentSubUnit ='${subUnit}' or vv.subUnit ='${subUnit}') `)
+                paramList.push(` (vv.currentSubUnit =? or vv.subUnit =?) `)
+                replacements.push(subUnit)
+                replacements.push(subUnit)
             }
         }
         // paramList.push(` veh.vehicleNo != 'NNNNNNNN' `)
         if (vehicleStatus) {
-            paramList.push(` FIND_IN_SET(vv.currentStatus,'${vehicleStatus}')`)
+            paramList.push(` FIND_IN_SET(vv.currentStatus, ?)`)
+            replacements.push(vehicleStatus)
         }
         if (searchParam) {
-            paramList.push(` (vv.vehicleNo like '%${searchParam}%' or vv.vehicleType like '%${searchParam}%') `)
+            let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
+            paramList.push(` (vv.vehicleNo like `+likeCondition+` or vv.vehicleType like `+likeCondition + `) `)
         }
       
         if (executionDate != "" && executionDate != null) {
@@ -822,7 +829,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 paramList.push(` vv.indentStartTime >= '${dates[0]}' `)
                 paramList.push(` vv.indentStartTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.indentStartTime = '${executionDate}' `)
+                paramList.push(` vv.indentStartTime = ? `)
+                replacements.push(executionDate)
             }
         }
 
@@ -833,7 +841,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 paramList.push(` vv.nextAviTime >= '${dates[0]}' `)
                 paramList.push(` vv.nextAviTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextAviTime = '${aviDate}' `)
+                paramList.push(` vv.nextAviTime = ? `);
+                replacements.push(aviDate)
             }
         }
 
@@ -844,7 +853,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 paramList.push(` vv.nextPmTime >= '${dates[0]}' `)
                 paramList.push(` vv.nextPmTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextPmTime = '${pmDate}' `)
+                paramList.push(` vv.nextPmTime = ? `)
+                replacements.push(pmDate)
             }
         }
 
@@ -855,7 +865,8 @@ module.exports.getVehicleTasks = async function (req, res) {
                 paramList.push(` vv.nextWpt1Time >= '${dates[0]}' `)
                 paramList.push(` vv.nextWpt1Time <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextWpt1Time = '${wptDate}' `)
+                paramList.push(` vv.nextWpt1Time = ? `)
+                replacements.push(wptDate)
             }
         }
 
@@ -945,7 +956,7 @@ module.exports.getVehicleTasks = async function (req, res) {
             baseSQL += ' WHERE ' + paramList.join(' AND ')
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
         let vehicleNoOrder = req.body.vehicleNoOrder;
@@ -963,8 +974,10 @@ module.exports.getVehicleTasks = async function (req, res) {
             baseSQL += ' ORDER BY vv.createdAt desc'
         }
 
-        baseSQL += ` limit ${pageNum}, ${pageLength}`
-        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        baseSQL += ` limit ?, ?`
+        replacements.push(pageNum);
+        replacements.push(pageLength);
+        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
 
         // upcoming event
         let upcomingEventRecords = []
@@ -1040,7 +1053,7 @@ const getDeactivateVehicle = async function(req) {
     try {
         let pageNum = Number(req.body.start);
         let pageLength = Number(req.body.length);
-        let { searchParam, vehicleDataType, unit, subUnit} = req.body;
+        let { searchParam, unit, subUnit} = req.body;
 
         let baseSQL = `
             SELECT
@@ -1054,13 +1067,14 @@ const getDeactivateVehicle = async function(req) {
         `;
 
         if (searchParam) {
-            baseSQL += ` and (veh.vehicleNo like '%${searchParam}%' or veh.vehicleType like '%${searchParam}%') `
+            let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
+            baseSQL += ` and (veh.vehicleNo like `+likeCondition+` or veh.vehicleType like `+likeCondition+`) `
         }
 
         if (unit) {
-            baseSQL += ` and un.unit = '${ unit }' `            
+            baseSQL += ` and un.unit = ` + sequelizeObj.escape(unit)     
             if (subUnit) {
-                baseSQL += ` and un.subUnit = '${ subUnit }' `            
+                baseSQL += ` and un.subUnit = ` + sequelizeObj.escape(subUnit)        
             }
         }
 
@@ -1083,12 +1097,12 @@ const getDeactivateVehicle = async function(req) {
             baseSQL += ' ORDER BY veh.createdAt desc'
         }
 
-        baseSQL += ` limit ${pageNum}, ${pageLength}`
-        console.log(baseSQL)
-        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        baseSQL += ` limit ?, ?`
+        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [pageNum, pageLength] })
 
         return {respMessage: vehicleInfoList, recordsFiltered: totalRecord, recordsTotal: totalRecord};
     } catch(error) {
+        log.error(error);
         throw error;
     }
 }
@@ -1230,7 +1244,7 @@ module.exports.getDriverAndDevicePosition = async function (req, res) {
             let user = await userService.getUserDetailInfo(userId)
 			if (!user) {
 				log.warn(`User ${ userId } does not exist.`);
-				throw `User ${ userId } does not exist.`;
+				throw Error(`User ${ userId } does not exist.`);
 			}
 			return user;
 		}
@@ -1245,14 +1259,10 @@ module.exports.getDriverAndDevicePosition = async function (req, res) {
                 driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
             } else {
                 let driverUnitIdList = await unitService.getUnitPermissionIdList(user);
-                // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
                 let option = []
                 if (driverUnitIdList.length) {
                     option.push(` d.unitId IN (${ driverUnitIdList }) `)
                 }
-                // if (groupUserIdList.length) {
-                //     option.push(` d.creator IN (${ groupUserIdList }) `)
-                // }
                 if (option.length) {
                     baseSQL += ` WHERE ` + option.join(' AND ')
                     deviceList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
@@ -1271,14 +1281,10 @@ module.exports.getDriverAndDevicePosition = async function (req, res) {
                 deviceList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
             } else {
                 let unitIdList = await unitService.getUnitPermissionIdList(user);
-                // let groupUserIdList = await groupService.getGroupUserIdListByUser(user);
                 let option = []
                 if (unitIdList.length) {
                     option.push(` v.unitId IN (${ unitIdList }) `)
                 }
-                // if (groupUserIdList.length) {
-                //     option.push(` v.creator IN (${ groupUserIdList }) `)
-                // }
                 if (option.length) {
                     baseSQL += ` WHERE ` + option.join(' AND ')
                     deviceList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
@@ -1313,36 +1319,13 @@ module.exports.getVehicleMaintenance = async function(req, res) {
         FROM
             task tt
         LEFT JOIN driver dd on tt.driverId=dd.driverId
-        where tt.vehicleNumber='${vehicleNo}' and tt.driverStatus = 'completed' and tt.purpose in('mpt', 'pm', 'avi')
+        where tt.vehicleNumber=? and tt.driverStatus = 'completed' and tt.purpose in('mpt', 'pm', 'avi')
         order by tt.mobileEndTime desc;
-    `, { type: QueryTypes.SELECT });
+    `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
 
     let vehicle = await Vehicle.findByPk(vehicleNo);
     if (!vehicle) {
         return res.json(utils.response(0, 'Vehicle not exist!'));
-    }
-
-    let maintenanceWarningStr = "";
-    let todayDateStr = moment().format('YYYY-MM-DD');
-
-
-    let wpt1EndTime = vehicle.nextWpt1Time;
-    if (wpt1EndTime) {
-        if (todayDateStr > moment(wpt1EndTime).format('YYYY-MM-DD')) {
-            maintenanceWarningStr = "!";
-        }
-    }
-    let wpt2EndTime = vehicle.nextWpt2Time;
-    if (wpt2EndTime) {
-        if (todayDateStr > moment(wpt2EndTime).format('YYYY-MM-DD')) {
-            maintenanceWarningStr = "!";
-        }
-    }
-    let wpt3EndTime = vehicle.nextWpt3Time;
-    if (wpt3EndTime) {
-        if (todayDateStr > moment(wpt3EndTime).format('YYYY-MM-DD')) {
-            maintenanceWarningStr = "!";
-        }
     }
 
     let vehicleMaintenanceList = [];
@@ -1382,11 +1365,6 @@ module.exports.getVehicleMaintenance = async function(req, res) {
         wpt3Info.dueTime = moment(vehicle.wpt3CompleteTime).endOf('isoWeek').format('YYYY-MM-DD');
     }
     
-    if (vehicle.nextMptTime) {
-        if (todayDateStr > moment(vehicle.nextMptTime).format('YYYY-MM-DD')) {
-            maintenanceWarningStr = "!";
-        }
-    }
     let mptInfo = {
         type: 'MPT',
         remarks: 'Vehicle has not been driven for the next 28 days.',
@@ -1419,12 +1397,6 @@ module.exports.getVehicleMaintenance = async function(req, res) {
         pmInfo.exeTime = pmTask.mobileEndTime;
         pmInfo.driverName = pmTask.driverName;
         pmInfo.lastUpdatedAt = pmTask.lastUpdatedAt;
-    }
-
-    if (vehicle.nextAviTime) {
-        if (todayDateStr > moment(vehicle.nextAviTime).format('YYYY-MM-DD')) {
-            maintenanceWarningStr = "!";
-        }
     }
     let aviInfo = {
         type: 'AVI',
@@ -1512,8 +1484,8 @@ module.exports.deleteVehicle = async function (req, res) {
                 FROM urgent_duty ud
                 LEFT JOIN urgent_indent ui ON ud.id = ui.dutyId
                 LEFT JOIN urgent_config uc on ud.configId = uc.id
-                where ud.vehicleNo='${vehicleNo}' and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
-            `, { type: QueryTypes.SELECT });
+                where ud.vehicleNo=? and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
+            `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
 
             vehicleTaskList = vehicleTaskList.concat(vehicleUrgentTaskList);
 
@@ -1541,8 +1513,8 @@ module.exports.deleteVehicle = async function (req, res) {
 
                 //return vehicle hoto
                 let vehicleHotoList = await sequelizeObj.query(`
-                    select ho.id from hoto ho where ho.vehicleNo='${vehicleNo}' and ho.status='Approved'
-                `, { type: QueryTypes.SELECT });
+                    select ho.id from hoto ho where ho.vehicleNo=? and ho.status='Approved'
+                `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
                 await returnVehicleHoto(vehicleNo, vehicleHotoList, userId);
 
                 let oldVehicle = await Vehicle.findByPk(vehicleNo);
@@ -1572,8 +1544,8 @@ module.exports.deleteVehicle = async function (req, res) {
 
             //return vehicle loan
             let vehicleLoanOutList = await sequelizeObj.query(`
-                select l.id from loan l where l.vehicleNo ='${vehicleNo}'
-            `, { type: QueryTypes.SELECT });
+                select l.id from loan l where l.vehicleNo =?
+            `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
             await returnVehicleLoan(vehicleNo, vehicleLoanOutList, userId);
 
             //clear system data
@@ -1615,17 +1587,6 @@ module.exports.updateVehicleStatus = async function (req, res) {
         if (statusDataList && statusDataList.length > 0) {
             let userId = req.cookies.userId
             for (let temp of statusDataList) {
-                // if (temp.overrideStatus == 'Under Maintenance' || temp.overrideStatus == 'Out Of Service') {
-                //     //check vehicle has effective task
-                //     const effectiveTasks = await sequelizeObj.query(
-                //         `SELECT tt.taskId FROM task tt
-                //         WHERE tt.vehicleNumber = '${temp.vehicleNo}' AND tt.driverStatus != 'Cancelled' AND tt.driverStatus != 'completed' AND tt.indentEndTime > NOW()`,
-                //     {type: QueryTypes.SELECT});
-                //     if (effectiveTasks && effectiveTasks.length > 0) {
-                //         return res.json(utils.response(0, 'Cannot modify status, there are uncompleted tasks!'));
-                //     }
-                // }
-                //await Vehicle.bulkCreate(statusDataList, { updateOnDuplicate: ['status'] })
                 let odlVehicle = await Vehicle.findOne({where: {vehicleNo: temp.vehicleNo}});
                 if (odlVehicle) {
                     temp.overrideStatusTime = moment();
@@ -1729,6 +1690,7 @@ module.exports.createVehicleRelation = async function (driverId, vehicleNo) {
         }
 
     } catch (error) {
+        log.error(error);
         throw error
     }
 }
@@ -1742,8 +1704,8 @@ module.exports.getVehicleLeaveDays = async function (req, res) {
             endTime
         FROM
         vehicle_leave_record dl
-        where vehicleNo='${vehicleNo}' and dl.status = 1
-    `, { type: QueryTypes.SELECT, replacements: [] });
+        where vehicleNo=? and dl.status = 1
+    `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
     let leaveDayArray = [];
     if (vehicleLeaveRecords && vehicleLeaveRecords.length > 0) {
         for (let leaveRecord of vehicleLeaveRecords) {
@@ -1793,13 +1755,13 @@ module.exports.markAsUnavailable = async function (req, res) {
             FROM
                 task tt
             WHERE
-                vehicleNumber = '${vehicleNo}'
+                vehicleNumber = ?
             AND tt.driverId is not null and tt.driverStatus != 'completed' and tt.driverStatus != 'Cancelled' and (indentEndTime > now() or tt.driverStatus='started') 
             AND (
                 (indentStartTime >= '${startTimeStr}' AND indentStartTime <= '${endTimeStr}')
                 OR (indentEndTime >= '${startTimeStr}' AND indentEndTime <= '${endTimeStr}')
                 OR (indentStartTime < '${startTimeStr}' AND indentEndTime > '${endTimeStr}')
-            )`, { type: QueryTypes.SELECT, replacements: [] });
+            )`, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
 
         if (assignedTaskList && assignedTaskList.length > 0) {
             return res.json(utils.response(0, 'Please reassign the task executionTime during ' + startTimeStr + ' - ' + endTimeStr));  
@@ -1811,8 +1773,8 @@ module.exports.markAsUnavailable = async function (req, res) {
                     SELECT
                         id
                     FROM vehicle_leave_record dl
-                    WHERE dl.vehicleNo = '${vehicleNo}' AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = '${startDate}'
-                `, { type: QueryTypes.SELECT, replacements: [] })
+                    WHERE dl.vehicleNo = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = ?
+                `, { type: QueryTypes.SELECT, replacements: [vehicleNo, startDate] })
                 let recordId = null;
                 if (exitLeaveReocrds && exitLeaveReocrds.length > 0) {
                     recordId = exitLeaveReocrds[0].id
@@ -1829,8 +1791,8 @@ module.exports.markAsUnavailable = async function (req, res) {
                     SELECT
                         id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
                     FROM vehicle_leave_record dl
-                    WHERE dl.vehicleNo = '${vehicleNo}' AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}'
-                `, { type: QueryTypes.SELECT, replacements: [] });
+                    WHERE dl.vehicleNo = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+                `, { type: QueryTypes.SELECT, replacements: [vehicleNo, startDate, endDate] });
                 while(index <= leaveDays) {
                     momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
                     let currentDateStr = momentStartDate.format('YYYY-MM-DD');
@@ -1897,9 +1859,9 @@ module.exports.cancelMarkAsUnavailable = async function (req, res) {
         //cancel driver leave
         await sequelizeObj.query(`
             UPDATE vehicle_leave_record
-                SET status=0, cancelRemarks='${additionalNotes}'
-            WHERE vehicleNo='${vehicleNo}' and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN '${startDate}' and '${endDate}'
-        `, { type: QueryTypes.UPDATE, replacements: [] })
+                SET status=0, cancelRemarks=?
+            WHERE vehicleNo=? and DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+        `, { type: QueryTypes.UPDATE, replacements: [additionalNotes, vehicleNo, startDate, endDate] })
 
         await resetWptMptOnVehicleEventChange(vehicleNo);
 
@@ -1923,8 +1885,8 @@ const resetWptMptOnVehicleEventChange = async function (vehicleNo) {
                         vehicleNo, startTime, endTime
                     FROM
                     vehicle_leave_record dl
-                    where vehicleNo='${vehicleNo}' and dl.status = 1 order by endTime desc limit 1
-                `, { type: QueryTypes.SELECT, replacements: [] });
+                    where vehicleNo=? and dl.status = 1 order by endTime desc limit 1
+                `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
                 let lastLeaveDate = null;
                 if (vehicleLastLeaveRecords && vehicleLastLeaveRecords.length > 0) {
                     let vehicleLastLeaveRecord = vehicleLastLeaveRecords[0];
@@ -1977,8 +1939,8 @@ module.exports.getLeaveRecordByDate = async function (req, res) {
         let exitLeaveReocrds = await sequelizeObj.query(`
             SELECT reason, remarks, dayType
             FROM vehicle_leave_record dl
-            WHERE dl.vehicleNo = '${vehicleNo}' AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = '${currentDate}' limit 1
-        `, { type: QueryTypes.SELECT, replacements: [] })
+            WHERE dl.vehicleNo = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = ? limit 1
+        `, { type: QueryTypes.SELECT, replacements: [vehicleNo, currentDate] })
 
         let pageList = await userService.getUserPageList(userId, 'Resources', 'Vehicle List')
         let operationList = pageList.map(item => `${ item.action }`).join(',')
@@ -1991,43 +1953,6 @@ module.exports.getLeaveRecordByDate = async function (req, res) {
         return res.json(utils.response(0, error && error.message ? error.message : 'getLeaveRecordByDate exec fail!'));  
     }
 }
-
-// module.exports.releaseVehicle = async function (req, res) {
-//     let userId = req.cookies.userId
-//     let vehicleNo = req.body.vehicleNo;
-//     try {
-//         let user = await userService.getUserDetailInfo(userId)
-//         if (!user) {
-//             log.warn(`User ${ userId } does not exist.`);
-//             return res.json(utils.response(0, `User ${ userId } does not exist.`));
-//         } else if (user.userType != 'HQ') {
-//             return res.json(utils.response(0, `User ${ userId } do not HQ, can't release vehicle!`));
-//         }
-
-//         if (vehicleNo) {
-//             let vehicle = await Vehicle.findByPk(vehicleNo);
-//             if (vehicle && vehicle.onhold == 1) {
-//                 await Vehicle.update({onhold: 0}, {where: {vehicleNo: vehicleNo}});
-
-//                 await OperationRecord.create({
-//                     operatorId: userId,
-//                     businessType: 'vehicle',
-//                     businessId: vehicle.vehicleNo,
-//                     optType: 'releasehold', 
-//                     beforeData: '1',
-//                     afterData: '0',
-//                     optTime: moment(),
-//                     remarks: 'hq release vehicle hold'
-//                 });
-//             }
-//         }
-        
-//         return res.json(utils.response(1, 'Success!'));  
-//     } catch(error) {
-//         log.error(error);
-//         return res.json(utils.response(0, error && error.message ? error.message : 'Release Vehicle fail!'));  
-//     }
-// }
 
 module.exports.getVehicleListByGroup = async function (req, res) {
     const getUpcomingEvent = function(list){
@@ -2069,6 +1994,7 @@ module.exports.getVehicleListByGroup = async function (req, res) {
         });
 
         let paramList = []
+        let replacements = [];
         vehicleNoList = vehicleNoList.map(item => item.vehicleNumber)
         if(vehicleNoList.length > 0){ 
             paramList.push(` vv.vehicleNo in ('${ vehicleNoList.join("','") }')`)
@@ -2076,10 +2002,12 @@ module.exports.getVehicleListByGroup = async function (req, res) {
             return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
         }
         if (vehicleStatus) {
-            paramList.push(` FIND_IN_SET(vv.currentStatus,'${vehicleStatus}')`)
+            paramList.push(` FIND_IN_SET(vv.currentStatus, ?)`)
+            replacements.push(vehicleStatus)
         }
         if (searchParam) {
-            paramList.push(` (vv.vehicleNo like '%${searchParam}%' or vv.vehicleType like '%${searchParam}%') `)
+            let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
+            paramList.push(` (vv.vehicleNo like `+likeCondition+` or vv.vehicleType like `+likeCondition+`) `)
         }
         
       
@@ -2090,7 +2018,8 @@ module.exports.getVehicleListByGroup = async function (req, res) {
                 paramList.push(` vv.indentStartTime >= '${dates[0]}' `)
                 paramList.push(` vv.indentStartTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.indentStartTime = '${executionDate}' `)
+                paramList.push(` vv.indentStartTime = ? `)
+                replacements.push(executionDate)
             }
         }
 
@@ -2101,7 +2030,8 @@ module.exports.getVehicleListByGroup = async function (req, res) {
                 paramList.push(` vv.nextAviTime >= '${dates[0]}' `)
                 paramList.push(` vv.nextAviTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextAviTime = '${aviDate}' `)
+                paramList.push(` vv.nextAviTime = ? `)
+                replacements.push(aviDate)
             }
         }
 
@@ -2112,7 +2042,8 @@ module.exports.getVehicleListByGroup = async function (req, res) {
                 paramList.push(` vv.nextMptTime >= '${dates[0]}' `)
                 paramList.push(` vv.nextMptTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextMptTime = '${mptDate}' `)
+                paramList.push(` vv.nextMptTime = ? `)
+                replacements.push(mptDate)
             }
         }
 
@@ -2123,7 +2054,8 @@ module.exports.getVehicleListByGroup = async function (req, res) {
                 paramList.push(` vv.nextPmTime >= '${dates[0]}' `)
                 paramList.push(` vv.nextPmTime <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextPmTime = '${pmDate}' `)
+                paramList.push(` vv.nextPmTime = ? `)
+                replacements.push(pmDate)
             }
         }
 
@@ -2134,7 +2066,8 @@ module.exports.getVehicleListByGroup = async function (req, res) {
                 paramList.push(` vv.nextWpt1Time >= '${dates[0]}' `)
                 paramList.push(` vv.nextWpt1Time <= '${dates[1]}' `)
             } else {
-                paramList.push(` vv.nextWpt1Time = '${wptDate}' `)
+                paramList.push(` vv.nextWpt1Time = ? `)
+                replacements.push(wptDate)
             }
         }
 
@@ -2171,7 +2104,7 @@ module.exports.getVehicleListByGroup = async function (req, res) {
             baseSQL += ' WHERE ' + paramList.join(' AND ')
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
         let vehicleNoOrder = req.body.vehicleNoOrder;
@@ -2189,8 +2122,10 @@ module.exports.getVehicleListByGroup = async function (req, res) {
             baseSQL += ' ORDER BY vv.createdAt desc'
         }
 
-        baseSQL += ` limit ${pageNum}, ${pageLength}`
-        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        baseSQL += ` limit ?, ?`
+        replacements.push(pageNum)
+        replacements.push(pageLength)
+        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
 
         // upcoming event
         let upcomingEventRecords = []
@@ -2269,13 +2204,6 @@ module.exports.getUserVehicleSummaryList = async function (req, res) {
                     veh.vehicleNo
                 FROM vehicle veh where veh.keyTagId is not null and veh.keyTagId != '' 
             `
-            // let { hubNodeIdList } = await unitService.UnitUtils.getPermitUnitList2(userId);
-
-            // if (hubNodeIdList && hubNodeIdList.length > 0) {
-            //     sql += ` and veh.unitId in (${ hubNodeIdList })`
-            // } else {
-            //     return res.json(utils.response(1, { vehicleList: [] }));
-            // }
         }
 
         let vehicleList = await sequelizeObj.query(sql, {
@@ -2292,7 +2220,6 @@ module.exports.getUserVehicleSummaryList = async function (req, res) {
 
 module.exports.updateVehicleAviDate = async function(req, res) {
     try {
-        let userId = req.cookies.userId
 
         let currentVehicleNo = req.body.currentVehicleNo;
         let newAviDate = req.body.newAviDate;
@@ -2312,7 +2239,6 @@ module.exports.updateVehicleAviDate = async function(req, res) {
 
 module.exports.getVehicleEffectiveData = async function (req, res) {
     try {
-        let userId = req.cookies.userId;
         let vehicleNo = req.body.vehicleNo;
 
         let baseSql = ` 
@@ -2330,8 +2256,8 @@ module.exports.getVehicleEffectiveData = async function (req, res) {
                 ud.indentStartDate as indentStartTime, ud.indentEndDate as indentEndTime, uc.purpose, 'DUTY' as dataFrom
             FROM urgent_duty ud
             LEFT JOIN urgent_config uc on ud.configId = uc.id
-            where ud.vehicleNo='${vehicleNo}' and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
-        `, { type: QueryTypes.SELECT });
+            where ud.vehicleNo=? and ud.status != 'Cancelled' and ud.status != 'completed' and (ud.indentEndDate > NOW() or ud.status = 'started')
+        `, { type: QueryTypes.SELECT, replacements: [vehicleNo] });
 
         effectiveTaskList = effectiveTaskList.concat(vehicleUrgentTaskList);
 
@@ -2340,14 +2266,14 @@ module.exports.getVehicleEffectiveData = async function (req, res) {
                 ho.id, ho.requestId, ho.startDateTime, ho.endDateTime, ht.purpose
             from hoto ho 
             LEFT JOIN hoto_request ht on ho.requestId = ht.id
-            where ho.vehicleNo='${vehicleNo}' and ho.status='Approved'
+            where ho.vehicleNo=? and ho.status='Approved'
          `;
-		let effectiveHotoList = await sequelizeObj.query(baseSql, { replacements: [], type: QueryTypes.SELECT });
+		let effectiveHotoList = await sequelizeObj.query(baseSql, { replacements: [vehicleNo], type: QueryTypes.SELECT });
 
         baseSql = ` 
-            select l.id, l.indentId, l.startDate, l.endDate, l.purpose from loan l where l.vehicleNo ='${vehicleNo}'
+            select l.id, l.indentId, l.startDate, l.endDate, l.purpose from loan l where l.vehicleNo =?
          `;
-		let effectiveLoanList = await sequelizeObj.query(baseSql, { replacements: [], type: QueryTypes.SELECT });
+		let effectiveLoanList = await sequelizeObj.query(baseSql, { replacements: [vehicleNo], type: QueryTypes.SELECT });
         
         return res.json(utils.response(1, {taskList: effectiveTaskList, hotoList: effectiveHotoList, loanList: effectiveLoanList}));
     } catch (error) {
@@ -2390,10 +2316,8 @@ module.exports.getVehicleTypeList = async function (req, res) {
             replacements.push(status);
         }
         if (searchCondition) {
-            limitSQL.push(` ( 
-                vc.vehicleName LIKE '%${ searchCondition }%' 
-                OR vc.category LIKE '%${ searchCondition }%'
-            ) `);
+            let likeCondition = sequelizeObj.escape("%" + searchCondition + "%");
+            limitSQL.push(` (vc.vehicleName LIKE `+likeCondition+`OR vc.category LIKE `+likeCondition+`) `);
         }
 
         if (limitSQL.length) {

@@ -325,46 +325,80 @@ let TaskUtils = {
         startDate = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
         endDate = endDate && endDate != '' ? moment(endDate).format('YYYY-MM-DD HH:mm:ss') : null;
         // leave vehicle
-        let leaveVehicle = await sequelizeObj.query(`
+        let leaveVehicleSql = `
             select ifnull(vl.vehicleNo, -1) as vehicleNo from vehicle_leave_record vl 
             where vl.status = 1 
-            AND (${ endDate == null || endDate == '' ? ` ('${ startDate }' >= vl.startTime AND '${ startDate }' <= vl.endTime) or ('${ startDate }' <= vl.startTime)`
-                : ` ('${ startDate }' >= vl.startTime AND '${ startDate }' <= vl.endTime) 
-                OR ('${ endDate }' >= vl.startTime AND '${ endDate }' <= vl.endTime) 
-                OR ('${ startDate }' < vl.startTime AND '${ endDate }' > vl.endTime)`
-            }) GROUP BY vl.vehicleNo
-        `, { type: QueryTypes.SELECT })
+        `
+        let replacements1 = [];
+        if(endDate == null || endDate == ''){
+            leaveVehicleSql += `
+                and ((? >= vl.startTime AND ? <= vl.endTime) or (? <= vl.startTime))
+            `
+            replacements1.push(startDate, startDate, startDate)
+        } else {
+            leaveVehicleSql += `
+                and ((? >= vl.startTime AND ? <= vl.endTime) 
+                OR (? >= vl.startTime AND ? <= vl.endTime) 
+                OR (? < vl.startTime AND ? > vl.endTime))
+            `
+            replacements1.push(startDate, startDate, endDate, endDate, startDate, endDate)
+        }
+        leaveVehicleSql += ` GROUP BY vl.vehicleNo`
+        let leaveVehicle = await sequelizeObj.query(leaveVehicleSql, { type: QueryTypes.SELECT, replacements: replacements1 })
         leaveVehicle = leaveVehicle.map(item => item.vehicleNo)
         log.warn(`leave vehicleList ${ JSON.stringify(leaveVehicle) }`)
 
-        //2023-07-13 exclude loan out vehicle
-        let loanOutVehicle = await sequelizeObj.query(`
+        let loanOutVehicleSql = `
             SELECT ifnull(vehicleNo, -1) as vehicleNo FROM loan 
-            WHERE (('${ startDate }' >= startDate AND '${ startDate }' <= endDate) 
-            OR ('${ endDate }' >= startDate AND '${ endDate }' <= endDate) 
-            OR ('${ startDate }' < startDate AND '${ endDate }' > endDate))
-            and vehicleNo is not null
-            group by vehicleNo
-        `, { type: QueryTypes.SELECT })
+            WHERE vehicleNo is not null
+        `
+        let replacements2 = [];
+        if(startDate && endDate){
+            loanOutVehicleSql += `
+                and ((? >= startDate AND ? <= endDate) 
+                OR (? >= startDate AND ? <= endDate) 
+                OR (? < startDate AND ? > endDate))
+            `
+            replacements2.push(startDate, startDate, endDate, endDate, startDate, endDate)
+        }
+        loanOutVehicleSql += `  group by vehicleNo`
+        //2023-07-13 exclude loan out vehicle
+        let loanOutVehicle = await sequelizeObj.query(loanOutVehicleSql, { replacements: replacements2, type: QueryTypes.SELECT })
         loanOutVehicle = loanOutVehicle.map(item => item.vehicleNo)
         log.warn(`loan out vehicleList ${ JSON.stringify(loanOutVehicle) }`)
 
         // Not within the specified range hoto vehicle
-        let hotoVehicleListByNotScope = await sequelizeObj.query(
-            `select ifnull(vehicleNo, -1) as vehicleNo, startDateTime, endDateTime
-            from hoto 
-            where (${ endDate == null || endDate == '' 
-            ? ` ('${ startDate }' >= startDateTime AND '${ startDate }' <= endDateTime)  OR ('${ startDate }' <= startDateTime)`
-            : ` ('${ startDate }' >= startDateTime AND '${ startDate }' <= endDateTime) 
-            OR ('${ endDate }' >= startDateTime AND '${ endDate }' <= endDateTime) 
-            OR ('${ startDate }' < startDateTime AND '${ endDate }' > endDateTime)`    
-             })
-             and vehicleNo not in (select vehicleNo from hoto 
-                where '${ startDate }' >= startDateTime AND '${ endDate }' <= endDateTime 
-                and vehicleNo is not null and status = 'Approved'
-            ) and status = 'Approved'
-            and vehicleNo is not null group by vehicleNo`,
+        let hotoVehicleListByNotScopeSql = `
+            select ifnull(vehicleNo, -1) as vehicleNo, startDateTime, endDateTime from hoto
+            where vehicleNo is not null
+        `
+        let replacements3 = []
+        if(endDate == null || endDate == ''){
+            hotoVehicleListByNotScopeSql += `
+                and ((? >= startDateTime AND ? <= endDateTime)  OR (? <= startDateTime))
+            `
+            replacements3.push(startDate, startDate, startDate)
+        } else {
+            hotoVehicleListByNotScopeSql += `
+                and ((? >= startDateTime AND ? <= endDateTime) 
+                OR (? >= startDateTime AND ? <= endDateTime) 
+                OR (? < startDateTime AND ? > endDateTime))
+            `
+            replacements3.push(startDate, startDate, endDate, endDate, startDate, endDate)
+        }
+        if(startDate && endDate) {
+            hotoVehicleListByNotScopeSql += `
+                and vehicleNo not in (select vehicleNo from hoto 
+                    where ? >= startDateTime AND ? <= endDateTime 
+                    and vehicleNo is not null and status = 'Approved'
+                ) and status = 'Approved'
+            `
+            replacements3.push(startDate, endDate)
+        }
+        hotoVehicleListByNotScopeSql += ` group by vehicleNo`
+        let hotoVehicleListByNotScope = await sequelizeObj.query(hotoVehicleListByNotScopeSql,
         {
+            replacements: replacements3,
             type: QueryTypes.SELECT
         })
         hotoVehicleListByNotScope = hotoVehicleListByNotScope.map(item => item.vehicleNo)
@@ -377,14 +411,14 @@ let TaskUtils = {
             taskVehicle = await sequelizeObj.query(`
                 SELECT ifnull(t.vehicleNumber, -1) as vehicleNo FROM task t
                 LEFT JOIN vehicle v ON v.vehicleNo = t.vehicleNumber
-                WHERE v.vehicleType = '${ vehicleType }'
+                WHERE v.vehicleType = ?
                 and t.vehicleStatus not in ('completed', 'cancelled')
-                AND ((('${ startDate }' >= t.indentStartTime AND '${ startDate }' <= t.indentEndTime) 
-                OR ('${ endDate }' >= t.indentStartTime AND '${ endDate }' <= t.indentEndTime) 
-                OR ('${ startDate }' < t.indentStartTime AND '${ endDate }' > t.indentEndTime))
+                AND (((? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? < t.indentStartTime AND ? > t.indentEndTime))
                 OR t.vehicleStatus = 'started'
                 )
-            `, { type: QueryTypes.SELECT })
+            `, { type: QueryTypes.SELECT, replacements: [vehicleType, startDate, startDate, endDate, endDate, startDate, endDate] })
             taskVehicle = taskVehicle.map(item => item.vehicleNo)
             log.warn(`task vehicleList ${ JSON.stringify(taskVehicle) }`)
         }
@@ -406,34 +440,58 @@ let TaskUtils = {
         excludeVehicle = excludeVehicle.map(item => item);
         excludeVehicle = Array.from(new Set(excludeVehicle))
         log.warn(`Need to exclude the vehicle ${ JSON.stringify(excludeVehicle) }`)
-        let vehicleList = await sequelizeObj.query(
-            `select vv.vehicleNo, vv.unitId, vv.hub, vv.node  from (
-                    SELECT a.vehicleNo, IF(h.unitId is NULL, a.unitId, h.unitId) as unitId, a.groupId,
-                    IF(h.toHub is NULL, u.unit, h.toHub) as hub,
-                    IF(h.toHub is NULL, u.subUnit, h.toNode) as node 
-                    FROM vehicle a
-                    left join unit u on u.id = a.unitId
-                    left join (
-                        select ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode from hoto ho where (
-                            ${ endDate == null || endDate == '' ? `('${ startDate }' >= ho.startDateTime AND '${ startDate }' <= ho.endDateTime)`
-                            : ` ('${ startDate }' >= ho.startDateTime AND '${ endDate }' <= ho.endDateTime)` }
-                            ) and ho.status = 'Approved'
-                        ) h ON h.vehicleNo = a.vehicleNo 
-                    where a.vehicleType = '${ vehicleType }' 
-                    and a.groupId is null
-                    ${ purpose ? purposeList.indexOf(purpose.toLowerCase()) == -1 || purpose.toLowerCase() == 'mpt' ? `
-                    AND (a.nextAviTime > '${ moment(endDate).format('YYYY-MM-DD') }' OR a.nextAviTime IS NULL)
-                    ` : '' : '' }
-                ) vv where 1=1
-                ${
-                    unitIdList.length > 0 ? ` and vv.unitId in (${ unitIdList }) ` : ''
-                }
-                ${ excludeVehicle.length > 0 ? ` and vv.vehicleNo not in ('${ excludeVehicle.join("','") }')` : '' }
-                GROUP BY vv.vehicleNo
-                `,
-                {
-                    type: QueryTypes.SELECT
-                }
+        let vehicleListSql = `
+            select vv.vehicleNo, vv.unitId, vv.hub, vv.node  from (
+                SELECT a.vehicleNo, IF(h.unitId is NULL, a.unitId, h.unitId) as unitId, a.groupId,
+                IF(h.toHub is NULL, u.unit, h.toHub) as hub,
+                IF(h.toHub is NULL, u.subUnit, h.toNode) as node 
+                FROM vehicle a
+                left join unit u on u.id = a.unitId
+                left join (
+                    select ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode from hoto ho where ho.status = 'Approved'
+        `
+        let replacementsByvehicleList = []
+        if(endDate == null || endDate == '') {
+            vehicleListSql += `
+                and (? >= ho.startDateTime AND ? <= ho.endDateTime)
+            `
+            replacementsByvehicleList.push(startDate, startDate)
+        } else {
+            vehicleListSql += `
+                and (? >= ho.startDateTime AND ? <= ho.endDateTime)
+            `
+            replacementsByvehicleList.push(startDate, endDate)
+        }
+        vehicleListSql += ` ) h ON h.vehicleNo = a.vehicleNo 
+        where a.groupId is null
+        `
+        if(vehicleType){
+            vehicleListSql += `
+                AND a.vehicleType = ? 
+            `
+            replacementsByvehicleList.push(vehicleType)
+        }
+        if(purposeList.indexOf(purpose?.toLowerCase()) == -1 || purpose?.toLowerCase() == 'mpt'){
+            vehicleListSql += `
+                AND (a.nextAviTime > ? OR a.nextAviTime IS NULL)
+            `
+            replacementsByvehicleList.push(moment(endDate).format('YYYY-MM-DD'))
+        }
+        vehicleListSql += ` ) vv where 1=1`
+        if(unitIdList.length > 0) {
+            vehicleListSql += ` and vv.unitId in (?)`
+            replacementsByvehicleList.push(unitIdList)
+        }
+        if(excludeVehicle.length > 0){
+            vehicleListSql += ` and vv.vehicleNo not in (?)`
+            replacementsByvehicleList.push(`'${ excludeVehicle.join("','") }'`)
+        }
+        vehicleListSql += ` GROUP BY vv.vehicleNo`
+        let vehicleList = await sequelizeObj.query(vehicleListSql,
+        {
+            replacements: replacementsByvehicleList,
+            type: QueryTypes.SELECT
+        }
         );
         return vehicleList;
     },
@@ -444,26 +502,40 @@ let TaskUtils = {
         indentEndTime = endDate && endDate != '' ? moment(endDate).format('YYYY-MM-DD HH:mm:ss') : null;
         
         // leave driver
-        let leaveDriver = await sequelizeObj.query(`
-            SELECT ifnull(dl.driverId, -1) as driverId FROM driver_leave_record dl WHERE dl.status = 1 AND ( 
-            ${ indentEndTime == null || indentEndTime == '' ? `('${ indentStartTime }' >= dl.startTime AND '${ indentStartTime }' <= dl.endTime) or ('${ indentStartTime }' <= dl.startTime)` 
-            : `('${ indentStartTime }' >= dl.startTime AND '${ indentStartTime }' <= dl.endTime) 
-            OR ('${ indentEndTime }' >= dl.startTime AND '${ indentEndTime }' <= dl.endTime) 
-            OR ('${ indentStartTime }' < dl.startTime AND '${ indentEndTime }' > dl.endTime)` }
-            ) GROUP BY dl.driverId
-        `, { type: QueryTypes.SELECT })
+        let leaveDriverSql = `
+            SELECT ifnull(dl.driverId, -1) as driverId FROM driver_leave_record dl 
+            WHERE dl.status = 1
+        `
+        let replacementsByleaveDriver = [];
+        if(indentEndTime == null || indentEndTime == ''){
+            leaveDriverSql += `
+                and ((? >= dl.startTime AND ? <= dl.endTime) or (? <= dl.startTime))
+            `
+            replacementsByleaveDriver.push(indentStartTime, indentStartTime, indentStartTime)
+        } else {
+            leaveDriverSql += `
+                and (
+                    (? >= dl.startTime AND ? <= dl.endTime) 
+                    OR (? >= dl.startTime AND ? <= dl.endTime) 
+                    OR (? < dl.startTime AND ? > dl.endTime)
+                )
+            `
+            replacementsByleaveDriver.push(indentStartTime, indentStartTime, indentEndTime, indentEndTime, indentStartTime, indentEndTime)
+        }
+        leaveDriverSql += ` GROUP BY dl.driverId`
+        let leaveDriver = await sequelizeObj.query(leaveDriverSql, { type: QueryTypes.SELECT, replacements: replacementsByleaveDriver })
         leaveDriver = leaveDriver.map(item => item.driverId)
         log.warn(`leave driverList ${ JSON.stringify(leaveDriver) }`)
 
         // 2023-07-13 loan out driver
         let loanOutDriver = await sequelizeObj.query(`
             SELECT ifnull(driverId, -1) as driverId FROM loan 
-            WHERE (('${ indentStartTime }' >= startDate AND '${ indentStartTime }' <= endDate) 
-            OR ('${ indentEndTime }' >= startDate AND '${ indentEndTime }' <= endDate) 
-            OR ('${ indentStartTime }' < startDate AND '${ indentEndTime }' > endDate))
+            WHERE ((? >= startDate AND ? <= endDate) 
+            OR (? >= startDate AND ? <= endDate) 
+            OR (? < startDate AND ? > endDate))
             and driverId is not null
             group by driverId
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [indentStartTime, indentStartTime, indentEndTime, indentEndTime, indentStartTime, indentEndTime] })
         loanOutDriver = loanOutDriver.map(item => item.driverId)
         log.warn(`loan out driverList ${ JSON.stringify(loanOutDriver) }`)
 
@@ -471,19 +543,17 @@ let TaskUtils = {
         let hotoDriverListByNotScope = await sequelizeObj.query(
             `select ifnull(driverId, -1) as driverId, startDateTime, endDateTime
             from hoto 
-            where (${ indentEndTime == null || indentEndTime == '' ? `('${ indentStartTime }' >= startDateTime AND '${ indentStartTime }' <= endDateTime) OR ('${ indentStartTime }' <= startDateTime)`
-            : `('${ indentStartTime }' >= startDateTime AND '${ indentStartTime }' <= endDateTime)
-            OR ('${ indentEndTime }' >= startDateTime AND '${ indentEndTime }' <= endDateTime) 
-                OR ('${ indentStartTime }' < startDateTime AND '${ indentEndTime }' > endDateTime)`
-            } 
-            )
+            where ((? >= startDateTime AND ? <= endDateTime)
+            OR (? >= startDateTime AND ? <= endDateTime) 
+            OR (? < startDateTime AND ? > endDateTime))
             and driverId not in (select driverId from hoto 
-                where '${ indentStartTime }' >= startDateTime AND '${ indentEndTime }' <= endDateTime 
+                where (? >= startDateTime AND ? <= endDateTime)
                 and driverId is not null and status = 'Approved'
             ) and status = 'Approved'
             and driverId is not null group by driverId`,
         {
             type: QueryTypes.SELECT
+            , replacements: [indentStartTime, indentStartTime, indentEndTime, indentEndTime, indentStartTime, indentEndTime, indentStartTime, indentEndTime]
         })
         hotoDriverListByNotScope = hotoDriverListByNotScope.map(item => item.driverId)
         log.warn(`hoto Not within the specified range driverList ${ JSON.stringify(hotoDriverListByNotScope) }`)
@@ -495,12 +565,12 @@ let TaskUtils = {
             taskDriver = await sequelizeObj.query(`
                 SELECT ifnull(t.driverId, -1) as driverId FROM task t
                 WHERE t.driverStatus not in ('completed', 'cancelled')
-                AND ((('${ indentStartTime }' >= t.indentStartTime AND '${ indentStartTime }' <= t.indentEndTime) 
-                OR ('${ indentEndTime }' >= t.indentStartTime AND '${ indentEndTime }' <= t.indentEndTime) 
-                OR ('${ indentStartTime }' < t.indentStartTime AND '${ indentEndTime }' > t.indentEndTime))
+                AND (((? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? >= t.indentStartTime AND ? <= t.indentEndTime) 
+                OR (? < t.indentStartTime AND ? > t.indentEndTime))
                 OR t.driverStatus = 'started'
                 ) and t.driverId is not null
-            `, { type: QueryTypes.SELECT })
+            `, { type: QueryTypes.SELECT, replacements: [indentStartTime, indentStartTime, indentEndTime, indentEndTime, indentStartTime, indentEndTime] })
             taskDriver = taskDriver.map(item => item.driverId)
             log.warn(`task driverList ${ JSON.stringify(taskDriver) }`)
         }
@@ -524,10 +594,13 @@ let TaskUtils = {
             finishDriverList = await sequelizeObj.query(`
                 SELECT ifnull(driverId, -1) as driverId FROM task 
                 WHERE driverStatus != 'cancelled' and dataFrom != 'MT-ADMIN'
-                and (mobileEndTime >= '${ moment(moment(indentStartTime).subtract(1, 'days')).format('YYYY-MM-DD HH:mm:ss') }'
-                or indentEndTime >= '${ moment(moment(indentStartTime).subtract(1, 'days')).format('YYYY-MM-DD HH:mm:ss') }')
+                and (mobileEndTime >= ? or indentEndTime >= ?)
                 group by driverId
-            `, { type: QueryTypes.SELECT })
+            `, { 
+                type: QueryTypes.SELECT, 
+                replacements: [moment(moment(indentStartTime).subtract(1, 'days')).format('YYYY-MM-DD HH:mm:ss'), 
+                moment(moment(indentStartTime).subtract(1, 'days')).format('YYYY-MM-DD HH:mm:ss')] 
+            })
             finishDriverList = finishDriverList.map(item => item.driverId)
             log.warn(`A driver who is not 24 hours away from the task: ${ JSON.stringify(finishDriverList) }`)
         }
@@ -536,45 +609,55 @@ let TaskUtils = {
         excludeDriver = Array.from(new Set(excludeDriver))
         log.warn(`Need to exclude the driver ${ JSON.stringify(excludeDriver) }`)
         //2023-07-20 driver permitStatus != 'invalid'
-        let driverList = await sequelizeObj.query(
-            `select dd.driverId, dd.driverName, dd.vehicleType, dd.contactNumber, dd.unitId, dd.overrideStatus, dd.hub, dd.node, dd.assessmentType, dd.violationNo from (
-                    select d.driverId, d.driverName, dc.vehicleType, d.contactNumber, 
-                    IF(h.unitId is NULL,d.unitId, h.unitId) as unitId, d.overrideStatus, dr.assessmentType, th.violationNo,
-                    IF(h.toHub is NULL, u.unit, h.toHub) as hub,
-                    IF(h.toHub is NULL, u.subUnit, h.toNode) as node
-                    from driver d
-                    left join unit u on u.id = d.unitId
-                    LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
-                    left join driver_assessment_record dr on dr.driverId = d.driverId and dr.approveStatus = 'Approved'
-                    left join (
-                        select count(deviceId) as violationNo, deviceId from track_history 
-                        where dataFrom = 'mobile' and violationType in ('Speeding', 'Hard Braking', 'Rapid Acc') 
-                        group by deviceId
-                    ) th on d.driverId = th.deviceId
-                    left join (
-                        select ho.driverId, ho.unitId, ho.toHub, ho.toNode from hoto ho where (
-                            ${ indentEndTime == null || indentEndTime == '' ? `('${ indentStartTime }' >= ho.startDateTime AND '${ indentStartTime }' <= ho.endDateTime)`
-                            : `('${ indentStartTime }' >= ho.startDateTime AND '${ indentEndTime }' <= ho.endDateTime)` }
-                            ) and ho.status = 'Approved'
-                        ) h ON h.driverId = d.driverId 
-                    where d.permitStatus != 'invalid' 
-                    ${ vehicleType ? ` and FIND_IN_SET('${ vehicleType }', dc.vehicleType)` : '' } 
-                    and (d.operationallyReadyDate > '${ indentEndTime && indentEndTime != '' ? moment(indentEndTime).format('YYYY-MM-DD') : moment(indentStartTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)
-                    GROUP BY d.driverId
-                ) dd where 1=1
-                ${
-                    unitIdList.length > 0 ? ` and dd.unitId in (${ unitIdList })` : ''
-                }
-                ${ excludeDriver.length > 0 ? ` and dd.driverId not in (${ excludeDriver.join(",") })` : '' }
-                GROUP BY dd.driverId 
-                ${
-                    dataType ? ` ORDER BY isnull(dd.assessmentType), dd.assessmentType, dd.violationNo`: ''
-                }
-                `,
-                {
-                    type: QueryTypes.SELECT
-                }
-        );
+        let driverListSql = `
+            select dd.driverId, dd.driverName, dd.vehicleType, dd.contactNumber, dd.unitId, dd.overrideStatus, dd.hub, dd.node, dd.assessmentType, dd.violationNo from (
+                select d.driverId, d.driverName, dc.vehicleType, d.contactNumber, 
+                IF(h.unitId is NULL,d.unitId, h.unitId) as unitId, d.overrideStatus, dr.assessmentType, th.violationNo,
+                IF(h.toHub is NULL, u.unit, h.toHub) as hub,
+                IF(h.toHub is NULL, u.subUnit, h.toNode) as node
+                from driver d
+                left join unit u on u.id = d.unitId
+                LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
+                left join driver_assessment_record dr on dr.driverId = d.driverId and dr.approveStatus = 'Approved'
+                left join (
+                    select count(deviceId) as violationNo, deviceId from track_history 
+                    where dataFrom = 'mobile' and violationType in ('Speeding', 'Hard Braking', 'Rapid Acc') 
+                    group by deviceId
+                ) th on d.driverId = th.deviceId
+                left join (
+                    select ho.driverId, ho.unitId, ho.toHub, ho.toNode from hoto ho 
+                    where (? >= ho.startDateTime AND ? <= ho.endDateTime)
+                    and ho.status = 'Approved'
+                    ) h ON h.driverId = d.driverId 
+                where d.permitStatus != 'invalid' 
+                and (d.operationallyReadyDate > ? OR d.operationallyReadyDate is null)
+        `
+        let driverListByReplacements = [indentStartTime, indentEndTime, moment(indentEndTime).format('YYYY-MM-DD')]
+        if(vehicleType){
+            driverListSql += ` and FIND_IN_SET(?, dc.vehicleType)`
+            driverListByReplacements.push(vehicleType)
+        }
+        driverListSql += `
+                GROUP BY d.driverId
+            ) dd where 1=1
+        `
+        if(unitIdList.length > 0){
+            driverListSql += ` and dd.unitId in (?)`
+            driverListByReplacements.push(unitIdList)
+        }
+        if(excludeDriver.length > 0){
+            driverListSql += ` and dd.driverId not in (?)`
+            driverListByReplacements.push(excludeDriver.join(","))
+        }
+        driverListSql += ` GROUP BY dd.driverId `
+        if(dataType){
+            driverListSql += ` ORDER BY isnull(dd.assessmentType), dd.assessmentType, dd.violationNo`
+        }
+        let driverList = await sequelizeObj.query(driverListSql,
+        {
+            type: QueryTypes.SELECT
+            , replacements: driverListByReplacements
+        });
         return driverList;
     },
     getSystemTaskByTripId: async function(tripId){
@@ -593,9 +676,9 @@ let TaskUtils = {
                 LEFT JOIN location l ON l.locationName = jt.pickupDestination
                 LEFT JOIN location l2 ON l2.locationName = jt.dropoffDestination
                 LEFT JOIN \`group\` g on g.id = r.groupId
-                WHERE j.id = ${ tripId } and j.approve = 1
+                WHERE j.id = ? and j.approve = 1
             ) jj
-        `, { type: QueryTypes.SELECT })
+        `, { type: QueryTypes.SELECT, replacements: [tripId] })
         return cvTask
     }, 
     assignTaskByTaskId: async function(job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId){
@@ -741,7 +824,6 @@ let TaskUtils = {
                     }
                 }
                 
-                if(vehicleNo) await vehicleMaintenanceInfoCalcUtils.reCalcVehicleMaintenanceInfo(vehicleNo, systemTask.periodStartDate, systemTask.periodEndDate ? systemTask.periodEndDate : '');
                 if(taskObj || loanObj){
                     if(taskObj){
                         if(taskObj.driverId != driverId || taskObj.vehicleNumber != vehicleNo){
@@ -911,8 +993,8 @@ module.exports = {
                 SELECT t.taskId, t.driverId, d.driverName AS name, d.contactNumber, t.vehicleNumber
                 FROM task t 
                 LEFT JOIN driver d ON d.driverId = t.driverId
-                WHERE t.taskId = '${ newTaskId }'
-            `, { type: QueryTypes.SELECT })
+                WHERE t.taskId = ?
+            `, { type: QueryTypes.SELECT, replacements: [newTaskId] })
             // if(dataType.toLowerCase() == 'sys'){
             //     data = await sequelizeSystemObj.query(`
             //         SELECT
@@ -1212,7 +1294,6 @@ module.exports = {
     //                     }
     //                 }
     //             }
-    //             if(vehicleNo) await vehicleMaintenanceInfoCalcUtils.reCalcVehicleMaintenanceInfo(vehicleNo, mt_admin.startDate, mt_admin.endDate);
     //             if(taskObj || loanObjStatus){
     //                 if(taskObj){
     //                     if(taskObj.driverId != driverId || taskObj.vehicleNumber != vehicleNo){
@@ -1252,7 +1333,6 @@ module.exports = {
     //         return res.json(utils.response(0, error));
     //     }
     // },
-
     reassignMvTask: async function(req, res) {
         let { dataType, taskId, driverId, vehicleNo, hub, node } = req.body;
         if(node == '-') node = null
@@ -1392,7 +1472,6 @@ module.exports = {
 
         return res.json(utils.response(1, 'success'));
     },
-
     reassignTaskVehicle: async function(req, res) {
         let userId = req.cookies.userId;
         let user = await User.findOne({ where: { userId: userId } })
@@ -1453,7 +1532,6 @@ module.exports = {
             return res.json(utils.response(0, `Task[${taskId}] does not exist.`));
         }
     },
-
     checkTaskRoute: async function (req, res) {
         try {
           let task = await Task.findOne({ order: [ [ 'createdAt', 'DESC' ] ] })
@@ -1479,21 +1557,28 @@ module.exports = {
             let endDate = req.body.endDate;
             let loanByTaskId = await loan.findOne({ where: { taskId: taskId } })
             if(!loanByTaskId) return res.json(utils.response(1, false));
-            let taskByVehicleOrDriver = await sequelizeObj.query(
-                `
-                    SELECT taskId, driverId, vehicleNumber, vehicleStatus 
-                    FROM task 
-                    WHERE taskId LIKE 'CU-%'
-                    AND vehicleStatus NOT IN ('Cancelled', 'completed') 
-                    ${ loanByTaskId.driverId ? ` and driverId = ${ loanByTaskId.driverId }` : '' }
-                    ${ loanByTaskId.vehicleNo ? ` and vehicleNumber = '${ loanByTaskId.vehicleNo }'` : '' }
-                    AND ((('${ startDate }' >= indentStartTime AND '${ startDate }' <= indentEndTime) 
-                    OR ('${ endDate }' >= indentStartTime AND '${ endDate }' <= indentEndTime) 
-                    OR ('${ startDate }' < indentStartTime AND '${ endDate }' > indentEndTime))
-                    OR vehicleStatus = 'started'
-                    )
-                    group by taskId
-                `, { type: QueryTypes.SELECT }
+            let taskByVehicleOrDriverSql = `
+                SELECT taskId, driverId, vehicleNumber, vehicleStatus 
+                FROM task 
+                WHERE taskId LIKE 'CU-%'
+                AND vehicleStatus NOT IN ('Cancelled', 'completed') 
+                AND (((? >= indentStartTime AND ? <= indentEndTime) 
+                OR (? >= indentStartTime AND ? <= indentEndTime) 
+                OR (? < indentStartTime AND ? > indentEndTime))
+                OR vehicleStatus = 'started')
+            `
+            let taskByVehicleOrDriverByReplacements = [startDate, startDate, endDate, endDate, startDate, endDate]
+            if(loanByTaskId.driverId){
+                taskByVehicleOrDriverSql += ` and driverId = ?`
+                taskByVehicleOrDriverByReplacements.push(loanByTaskId.driverId)
+            }
+            if(loanByTaskId.vehicleNo){
+                taskByVehicleOrDriverSql += ` and vehicleNumber = ?`
+                taskByVehicleOrDriverByReplacements.push(loanByTaskId.vehicleNo)
+            }
+            taskByVehicleOrDriverSql += ` group by taskId`
+            let taskByVehicleOrDriver = await sequelizeObj.query(taskByVehicleOrDriverSql, 
+                { type: QueryTypes.SELECT, replacements: taskByVehicleOrDriverByReplacements }
             );
             // log.warn(`task driver/vehilce ${ JSON.stringify(taskByVehicleOrDriver ? taskByVehicleOrDriver[0] : '') }`)
             if(taskByVehicleOrDriver[0]){
@@ -1617,8 +1702,8 @@ module.exports = {
                     LEFT JOIN unit u ON u.id = m.unitId 
                     LEFT JOIN task t ON t.indentId = m.id
                     LEFT JOIN driver d ON d.driverId = m.driverId
-                    WHERE m.id = ${ mtAdminId } AND m.cancelledDateTime IS NULL
-                `, { type: QueryTypes.SELECT }
+                    WHERE m.id = ? AND m.cancelledDateTime IS NULL
+                `, { type: QueryTypes.SELECT, replacements: [mtAdminId] }
             );
             return res.json(utils.response(1, taskMtAdmin[0]));
         } catch (error) {

@@ -46,15 +46,6 @@ const RoleUtils = {
         let result = []
         let pageList = []
         if (!parentId) {
-            // pageList = await sequelizeObj.query(` 
-            //     SELECT mp.module, GROUP_CONCAT(mp.\`page\`) AS pages, GROUP_CONCAT(mp.\`id\`) AS ids FROM (
-            //         SELECT module, \`page\`, id
-            //         FROM module_page 
-            //         WHERE module != 'Role Management' AND parentId IS NULL
-            //         GROUP BY module, \`page\`
-            //     ) mp
-            //     GROUP BY mp.module
-            // `, { type: QueryTypes.SELECT })
             pageList = await sequelizeObj.query(` 
                 SELECT mp.module, GROUP_CONCAT(mp.\`page\`) AS pages, GROUP_CONCAT(mp.\`id\`) AS ids FROM (
                     SELECT module, \`page\`, id
@@ -65,16 +56,6 @@ const RoleUtils = {
                 GROUP BY mp.module
             `, { type: QueryTypes.SELECT })
         } else {
-            // pageList = await sequelizeObj.query(` 
-            //     SELECT mp.module, GROUP_CONCAT(mp.\`page\`) AS pages, GROUP_CONCAT(mp.\`id\`) AS ids FROM (
-            //         SELECT module, \`page\`, id
-            //         FROM module_page 
-            //         WHERE module != 'Role Management' AND parentId = ?
-            //         GROUP BY module, \`page\`
-            //     ) mp
-            //     GROUP BY mp.module
-            // `, { type: QueryTypes.SELECT, replacements: [ parentId ] })
-
             pageList = await sequelizeObj.query(` 
                 SELECT mp.module, GROUP_CONCAT(mp.\`page\`) AS pages, GROUP_CONCAT(mp.\`id\`) AS ids FROM (
                     SELECT module, \`page\`, id
@@ -363,13 +344,13 @@ module.exports = {
     deleteRole: async function (req, res) {
         try {
             let { roleId, confirm } = req.body
-            // TODO: check role exist
+            // check role exist
             let roleObj = await Role.findByPk(roleId)
             if (!roleObj) {
                 throw `Role ID ${ roleId } does not exist.`
             }
 
-            // TODO: check role if still in use
+            // check role if still in use
             let userList = await User.findAll({ where: { role: roleObj.roleName } })
             if (userList.length) {
                 if (!confirm) {
