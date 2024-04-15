@@ -86,7 +86,7 @@ const onScanSuccess = async function(decodedText, decodedResult) {
             // 		contentHtml += `
             // 			<div class="row key-solt-div">
             // 				<div class="col-2" style="display: flex; justify-content: flex-start; align-items: center;">
-            // 					<img src="../images/key-solt.svg" style="width: 48px; height: 32px;"/>
+            // 					<img alt="" src="../images/key-solt.svg" style="width: 48px; height: 32px;"/>
             // 				</div>
             // 				<div class="col-10">
             // 					<div style="width: 100%;">SlotId: ${temp.slotId}</div>

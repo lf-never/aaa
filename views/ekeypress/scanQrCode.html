@@ -1,7 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+		<title></title>
 
 		<link rel="stylesheet" href="../jquery-confirm/jquery-confirm.min.css">
 		<link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css">
@@ -89,7 +91,7 @@
 					</select>
 				</div>
 				<div style="width: fit-content; display: none; justify-content: flex-start; align-items: center; margin: 10px;">
-					<div class="add-record-btn" onclick="addKeyRecord()"><label>Record Manually</label></div>
+					<div class="add-record-btn" onclick="addKeyRecord()" role="button" tabindex="0"><label>Record Manually</label></div>
 				</div>
 			</div>
 			<div class="scan-div" style="width: 100%; height: width; display: flex; justify-content: center; align-items: flex-start;">
@@ -97,7 +99,7 @@
 			</div>
 			<div class="keyperss-info" style="width: 100%; display: none;">
 				<div style="width: 100%; display: flex; justify-content: flex-start; align-items: center; margin: 10px;">
-					<div class="continue-scan" onclick="backToScan()"><label>Continue Scanning</label></div>
+					<div class="continue-scan" onclick="backToScan()" role="button" tabindex="0"><label>Continue Scanning</label></div>
 				</div>
 				<div class="keypress-box-div">
 				</div>

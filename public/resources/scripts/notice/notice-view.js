@@ -111,7 +111,7 @@ let noticeTable = null;
                             if (!data) {
                                 return '-'
                             } else if (data && data.length > 30) {
-                                return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeTitle(this)" >${ data.slice(0, 30) + '...' }</span>`
+                                return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeTitle(this)" role="button" tabindex="0">${ data.slice(0, 30) + '...' }</span>`
                             } else {
                                 return data;
                             }
@@ -145,7 +145,7 @@ let noticeTable = null;
                             if (!data) {
                                 return '-'
                             } else if (data && data.length > 30) {
-                                return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeDescription(this)" >${ data.slice(0, 30) + '...' }</span>`
+                                return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeDescription(this)" role="button" tabindex="0">${ data.slice(0, 30) + '...' }</span>`
                             } else {
                                 return data;
                             }
@@ -165,7 +165,7 @@ let noticeTable = null;
                                 }
                                 return html
                             } else {
-                                let html = `<div style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showHubNodeDescription(this, 'hubNode')">`
+                                let html = `<div style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showHubNodeDescription(this, 'hubNode')" role="button" tabindex="0">`
                                 for (let item of data.slice(0, 6)) {
                                     html += `<div style="line-height: 15px;">${ item }</div>`
                                 }
@@ -189,7 +189,7 @@ let noticeTable = null;
                                 }
                                 return html
                             } else {
-                                let html = `<div style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showHubNodeDescription(this, 'to')">`
+                                let html = `<div style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showHubNodeDescription(this, 'to')" role="button" tabindex="0">`
                                 for (let item of data.slice(0, 6)) {
                                     html += `<div style="line-height: 15px;">${ item }</div>`
                                 }
@@ -230,11 +230,11 @@ let noticeTable = null;
                             let html = ``
                             let operationList = full.operation.split(',')
                             if (operationList.includes('Edit')) {
-                                html += ` <img style="width: 30px; cursor: pointer;" data-row="${ meta.row }" onclick="editNotice(this)" src="./icons/edit.svg"/> `
+                                html += ` <img alt="" style="width: 30px; cursor: pointer;" data-row="${ meta.row }" onclick="editNotice(this)" role="button" src="./icons/edit.svg"/> `
                             }
 
                             if (operationList.includes('Delete')) { 
-                                html += ` <img style="width: 30px; cursor: pointer;" data-row="${ meta.row }" onclick="deleteNotice(this)" src="./icons/delete.svg"/> `
+                                html += ` <img alt="" style="width: 30px; cursor: pointer;" data-row="${ meta.row }" onclick="deleteNotice(this)" role="button" src="./icons/delete.svg"/> `
                             }
 
                             return html

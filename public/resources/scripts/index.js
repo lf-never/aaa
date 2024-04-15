@@ -189,8 +189,6 @@ const initWebHtml = function () {
                         }
                     }
                 });
-            }  else if (action === 'menu-chat') {
-                ChatUtil.initChatModal();
             } else if (action === 'menu-notice') {
                 showNotice()
             } else if (action == 'menu-system') {
@@ -531,7 +529,7 @@ const draw3rdCameraMonitorMarker = async function () {
         camera.lng = camera.location.longitude
         let marker = drawMarkerCenter(camera, { iconUrl: './icons/icon_camera.svg', iconSize: [25, 25] });
         bindMarkerClickEvent(marker, function () {
-            layer.alert('<img class="alert-camera" data-id="'+ camera.camera_id +'" style="width: '+ camera.image_metadata.width/2 +'px; height: '+ camera.image_metadata.height/2 +'px;" src="'+ camera.image +'">', 
+            layer.alert('<img alt="" class="alert-camera" data-id="'+ camera.camera_id +'" style="width: '+ camera.image_metadata.width/2 +'px; height: '+ camera.image_metadata.height/2 +'px;" src="'+ camera.image +'">', 
                 { icon: -1, title: `Traffic Image(Camera: ${ camera.camera_id } ${ moment(camera.timestamp).format('HH:mm:ss') } )`, btn: ['Ok'], offset: 'auto', area: 'auto', maxWidth: '512px' });
         })
         cameraMarkerList.push(marker)
@@ -643,7 +641,7 @@ const drawDriverMonitorMarker = async function (selectedDate) {
 
     for (let driverPosition of driverPositionList) {
         // console.log(driverPosition.updatedAt)
-        // TODO: if overtime 15 min
+        // if overtime 15 min
         // if (checkTimeIfMissing(driverPosition.updatedAt)) {
         if (driverPosition.missing) {
             if (!$('.view-missing-car').hasClass('active')) {
@@ -702,7 +700,7 @@ const drawDeviceMonitorMarker = async function (selectedDate) {
     clearDeviceMonitorMarker();
     for (let devicePosition of devicePositionList) {
         let marker = null;
-        // TODO: if overtime 15 min
+        // if overtime 15 min
         // if (checkTimeIfMissing(devicePosition.updatedAt)) {
         if (devicePosition.missing) {
             marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#000000"), iconSize: [35, 35] });

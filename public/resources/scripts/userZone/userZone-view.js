@@ -57,7 +57,7 @@ export async function initUserZoneViewPage () {
         stateSave: true, // keep page, searching, filter
     });
 
-    // TODO: show view userzone module
+    // show view userzone module
     $('#view-userZone').modal('show');
 }
 

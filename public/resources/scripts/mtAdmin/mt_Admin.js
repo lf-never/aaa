@@ -119,7 +119,6 @@ const initDetail = function () {
         "ordering": true,
         "searching": false,
         "paging": true,
-        "pageLength": 10,
         "autoWidth": false,
         "fixedHeader": true,
         "scrollX": "auto",
@@ -218,7 +217,7 @@ const initDetail = function () {
                         return data
                     } else {
                         return `
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span>
                         `
@@ -234,7 +233,7 @@ const initDetail = function () {
                     if (data) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showRemarks(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showRemarks(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                         </div>
@@ -310,7 +309,7 @@ const initDetail = function () {
                     if (full.cancelledDateTime) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ? full.amendedByUsername : '' }</label><br>
@@ -857,7 +856,7 @@ const DisabledLayDate = function () {
     layui.each(elem.find('tr'), function (trIndex, trElem) {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
             var tdTemp = $(tdElem);
-            if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+            if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');
             }
@@ -1221,7 +1220,7 @@ window.updateMtAdminById = async function (mtAdminId, taskId) {
         } 
         $('#periodStartDate').val(moment(data.startDate).format('DD/MM/YYYY HH:mm'));
         $('#periodEndDate').val(moment(data.endDate).format('DD/MM/YYYY HH:mm'));
-        data.endDate ?  $('#periodEndDate').trigger('change') : ''
+        if(data.endDate) $('#periodEndDate').trigger('change')
         if (data.endDate && data.startDate) {
             resourceOnFocus(this)
         }

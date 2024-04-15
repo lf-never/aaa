@@ -135,7 +135,7 @@ let TaskUtils = {
             type: QueryTypes.SELECT,
         });
 
-        if(pageNum && pageLength){
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ` order by b.id desc limit ?, ?`
             replacements.push(Number(pageNum))
             replacements.push(Number(pageLength))

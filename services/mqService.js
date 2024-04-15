@@ -37,7 +37,8 @@ module.exports.updateTaskRoute = async function (message) {
 		for (let info of infoList) {
 			if (info.startsWith('d')) {
 				distance = Number.parseInt(info.replace(/d\d=/g, ''));
-				time = distance / (60 / 60 * 1000);
+				// time = distance / (60 / 60 * 1000);
+				time = distance / 1000;
 			} else if (info.startsWith('r')) {
 				line = transStrToLine(info.replace(/r\d=/g, '').split(';'))
 			} else if (info.startsWith('n')) {

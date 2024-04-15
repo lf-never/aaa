@@ -35,7 +35,7 @@ router.use(async (req, res, next) => {
             jwt.verify(token, jwtConf.Secret, { algorithms: jwtConf.Header.algorithm.toUpperCase() }, function (err) {
                 if (err) {
                     if (err.expiredAt) {
-                        // TODO: while token is out of time, update it directly
+                        // while token is out of time, update it directly
                         log.warn('(Token Interceptor): Token is expired at ', err.expiredAt);
 
                         let result = jwt.decode(token, jwtConf.Secret);
@@ -59,7 +59,7 @@ router.use(async (req, res, next) => {
                 } else {
                     log.info('(Token Interceptor): Token is correct !');
 
-                    // TODO: get userId
+                    // get userId
                     let result = jwt.decode(token, jwtConf.Secret);
                     if (result.data.userId) {
                         req.cookies.userId = result.data.userId;

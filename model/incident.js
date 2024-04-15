@@ -18,10 +18,6 @@ module.exports.Incident = dbConf.sequelizeObj.define('incident', {
         type: DataTypes.TEXT,
         defaultValue: null,
     },
-    userZoneId: {
-        type: DataTypes.INTEGER(11),
-        defaultValue: null,
-    },
     occTime: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -63,9 +59,6 @@ module.exports.Incident = dbConf.sequelizeObj.define('incident', {
     },
     userZoneId: {
         type: DataTypes.STRING(55),
-    },
-    affectRoute: {
-        type: DataTypes.TEXT,
     },
     creator: {
         type: DataTypes.INTEGER(11),

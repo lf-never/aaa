@@ -366,7 +366,7 @@ let TaskUtils = {
         }
         
     },
-    getUserByData: async function(userBaseId, nric, contactNumber, loginName, password){
+    getUserByData: async function(userBaseId, nric, contactNumber, loginName, fullName){
         nric = utils.generateAESCode(nric).toUpperCase();
         let userBase = null;
         let dataList = [];
@@ -439,36 +439,36 @@ let TaskUtils = {
             }
         }
 
-        if(loginName) {
+        if(loginName && fullName) {
             if(userBase) {
                 if(userBase.cvUserId){
-                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName } })
+                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName, userName: fullName } })
                     if(dataList.length > 0){
-                        return ` This loginName already exists.`
+                        return ` This loginName / fullName already exists.`
                     }
                 }
                 if(userBase.mvUserId){
-                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName } })
+                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName, fullName: fullName } })
                     if(dataList.length > 0){
-                        return ` This loginName already exists.`
+                        return ` This loginName / fullName already exists.`
                     }
                 }
-                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName } })
+                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
                 if(dataList.length > 0) {
-                    return ` This loginName already exists.`
+                    return ` This loginName / fullName already exists.`
                 }
             } else {
-                dataList = await _SysUser.USER.findAll({ where: { loginName: loginName } })
+                dataList = await _SysUser.USER.findAll({ where: { loginName: loginName, userName: fullName } })
                 if(dataList.length > 0){
-                    return ` This loginName already exists.`
+                    return ` This loginName / fullName already exists.`
                 }
-                dataList = await User.findAll({ where: { username: loginName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
+                dataList = await User.findAll({ where: { username: loginName, fullName: fullName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
                 if(dataList.length > 0){
-                    return ` This loginName already exists.`
+                    return ` This loginName / fullName already exists.`
                 }
-                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName } })
+                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
                 if(dataList.length > 0) {
-                    return ` This loginName already exists.`
+                    return ` This loginName / fullName already exists.`
                 }
             }
         }
@@ -2246,7 +2246,7 @@ module.exports.registerAccountUser = async function (req, res) {
         let password = utils.generateMD5Code((accountUser.nric.substr((accountUser.nric.length)-4, 4)) + accountUser.contactNumber.substr(0, 4)).toUpperCase();
         accountUser.loginName = newNric + ((accountUser.fullName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
         accountUser.password = password
-        let userBaseStatus = await TaskUtils.getUserByData(null, accountUser.nric, accountUser.contactNumber, accountUser.loginName, password, accountUser.cvRole, accountUser.mvUserType)
+        let userBaseStatus = await TaskUtils.getUserByData(null, accountUser.nric, accountUser.contactNumber, accountUser.loginName, accountUser.fullName)
         if(userBaseStatus) throw userBaseStatus
         if(accountUser.dataFrom.toUpperCase() == 'SERVER-USER'){
             accountUser.creator = req.cookies.userId
@@ -2383,7 +2383,7 @@ module.exports.editAccountUser = async function (req, res) {
         let newNric = ((accountUser.nric).toString()).substr(0, 1)+((accountUser.nric).toString()).substr(((accountUser.nric).toString()).length-4, 4);
         let password = utils.generateMD5Code((accountUser.nric.substr((accountUser.nric.length)-4, 4)) + accountUser.contactNumber.substr(0, 4)).toUpperCase();
         accountUser.loginName = newNric + ((accountUser.fullName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
-        let userBaseStatus = await TaskUtils.getUserByData(userBaseId, accountUser.nric, accountUser.contactNumber, accountUser.loginName, password, accountUser.cvRole, accountUser.mvUserType)
+        let userBaseStatus = await TaskUtils.getUserByData(userBaseId, accountUser.nric, accountUser.contactNumber, accountUser.loginName, accountUser.fullName)
         if(userBaseStatus) throw userBaseStatus
         accountUser.creator = oldUserBase.creator ? oldUserBase.creator : req.cookies.userId
         // if(!accountUser.creator) accountUser.creator = oldUserBase.cvUserId ? oldUserBase.cvUserId : oldUserBase.mvUserId
@@ -2722,10 +2722,12 @@ module.exports.changeSelfEmail = async function (req, res) {
         let email = req.body.email;
         let loginUser = await User.findByPk(userId);
         if (!loginUser) {
+            log.error('Login User does not exist.')
             return res.json(utils.response(0, 'Login User does not exist.'));
         }
         let userBase = await UserBase.findOne({ where: { mvUserId: userId} });
         if (!userBase) {
+            log.error('Login User data error.')
             return res.json(utils.response(0, 'Login User data error.'));
         }
 

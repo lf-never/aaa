@@ -615,7 +615,7 @@ const getUrgentConfig = async function (req, res) {
         }
         pageNum = pageNum ?? 0
         pageLength = pageLength ?? 10
-        if(pageNum && pageLength){
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ` limit ?,?`
             replacements.push(...[Number(pageNum), Number(pageLength)])
         }

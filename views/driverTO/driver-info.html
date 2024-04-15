@@ -440,14 +440,14 @@
                                     </div>
                                     <!-- <div class="col-auto px-5">
                                         <div class="view-live-location">
-                                            <img style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
+                                            <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
                                             <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">View Live Location</label>
                                         </div>
                                     </div> -->
                                     <div class="col-auto px-5">
                                         <% if (pageList.find(item => item.page == 'Profile' && item.action == 'Edit')) { %>
                                         <div class="edit-driver">
-                                            <img style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
+                                            <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
                                             <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
                                         </div>
                                         <% } %>
@@ -507,8 +507,8 @@
                                     <div class="col-6">
                                         <label class="info-title">NRIC</label><br>
                                         <label class="info-value driver-nric"></label>
-                                        <img class="img-showNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;" src="../images/show.svg">
-                                        <img class="img-noShowNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;display: none;" src="../images/noShow.svg">
+                                        <img alt="" class="img-showNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;" src="../images/show.svg">
+                                        <img alt="" class="img-noShowNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;display: none;" src="../images/noShow.svg">
                                     </div>
                                     <div class="col-6">
                                         <label class="info-title">Date of Birth</label><br>
@@ -550,11 +550,11 @@
                                         <label style="font-size: 20px; font-weight: bolder;">Military Driving Permit</label>
                                         <% if (pageList.find(item => item.page == 'Driving Permit' && item.action == 'Edit')) { %>
                                             <div id="driverBaseinfoEditImg" style="display: flex; justify-content: center; align-items: center; padding-top: 5px;">
-                                                <img style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/edit.svg">
+                                                <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/edit.svg">
                                                 <label class="user-select-none  driver-baseinfo-edit-label" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
                                             </div>
                                             <div id="driverBaseinfoSaveImg" style="display: flex; justify-content: center; align-items: center; padding-top: 10px; display: none;">
-                                                <img style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/save.svg">
+                                                <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/save.svg">
                                                 <label class="user-select-none driver-baseinfo-save-label" style="color: #3899ED; font-weight: 600;margin-left: 2px; cursor: pointer;">Save</label>
                                             </div>
                                         <% } %>
@@ -584,7 +584,7 @@
                                                 <option value="NA">NA</option>
                                             </select>
                                             <% if (pageList.find(item => item.page == 'Driving Permit' && item.action == 'Edit')) { %>
-                                            <div style="cursor: pointer; color: blue; text-decoration: underline; margin-left: 15px; font-size: 18px;" onclick="showPermitRemarks()">Remarks</div>
+                                            <div style="cursor: pointer; color: blue; text-decoration: underline; margin-left: 15px; font-size: 18px;" onclick="showPermitRemarks()" role="button" tabindex="0">Remarks</div>
                                             <% } %>
                                         </div>
                                     </div>
@@ -617,7 +617,7 @@
                                                     <div style="width: 100%; display: flex;" >
                                                         <div class="px-3 py-2" style="width: 80px;">
                                                             <div style="width: 48px;height: 48px;background-color: #f2f8f6; border: 1px solid #f2f8f6;border-radius: 10px;display: flex;justify-content: center;align-items: center;">
-                                                                <img style="width: 38px;" src="../images/driver/steering-green.svg"></img>
+                                                                <img alt="" style="width: 38px;" src="../images/driver/steering-green.svg"></img>
                                                             </div>
                                                         </div>
                                                         <div class="px-3 py-2" style="width: calc(100% - 80px);">
@@ -643,7 +643,7 @@
                                                     <div style="width: 100%;color: #1b7c5b;display: flex;">
                                                         <div class="px-3 py-2" style="width: 80px;">
                                                             <div style="width: 48px;height: 48px;background-color: #f2f8f6; border: 1px solid #f2f8f6;border-radius: 10px;display: flex;justify-content: center;align-items: center;">
-                                                                <img style="width: 38px;" src="../images/driver/mileage-earned.svg"></img>
+                                                                <img alt="" style="width: 38px;" src="../images/driver/mileage-earned.svg"></img>
                                                             </div>
                                                         </div>
                                                         <div class="px-3 py-2" style="width:calc(100% - 80px);">
@@ -800,7 +800,7 @@
                                                 <div class="col-8">Stopping in yellow box</div>
                                             </div> -->
 
-                                            <table id="categoryContentDiv-table"></table>
+                                            <table aria-hidden="true" id="categoryContentDiv-table"></table>
                                         </div>
                                     </div>
                                 </div>
@@ -862,7 +862,7 @@
                                         </div>
                                         <div class="row m-0" style="padding: 10px; overflow: hidden;">
                                             <div class="table-common table-shadow" style="overflow: auto;">
-                                                <table class="table assigned-indents-table pb-2 w-100" style="white-space: nowrap;border-collapse:collapse !important;">
+                                                <table aria-hidden="true" class="table assigned-indents-table pb-2 w-100" style="white-space: nowrap;border-collapse:collapse !important;">
                                                     
                                                 </table>
                                             </div>
@@ -881,7 +881,7 @@
                                                     <div class="col-7" style="display: flex; align-items: center; justify-content: flex-end; padding-right: 20px;">
                                                         <div class="date-select-div" style="width: fit-content; height: 24px;display: flex; align-items:center; border: 1px solid #f6f6f6; border-radius: 5px;">
                                                             <label class="date-label" style="min-width: 60px; font-size: 16px; font-weight: 900; padding-left: 5px;"></label>
-                                                            <img class="date-select-img" style="width: 32px; padding-left: 5px; padding-right: 5px;" src="../images/achievement/calender.svg">
+                                                            <img alt="" class="date-select-img" style="width: 32px; padding-left: 5px; padding-right: 5px;" src="../images/achievement/calender.svg">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -889,28 +889,28 @@
                                                     <div style="width: 100%; margin-left: 6%; display: flex;">
                                                         <div class="achievement-item my-2" style="margin-left: 0px;">
                                                             <div class="achievement-img-div">
-                                                                <img style="width: 60px; height: 60px;" src="../images/achievement/Most  Platforms  Trained.svg">
+                                                                <img alt="" style="width: 60px; height: 60px;" src="../images/achievement/Most  Platforms  Trained.svg">
                                                             </div>
                                                             <div class="row achievement-num-div platform-trained" style="color: #e3a826;">0</div>
                                                             <div class="row achievement-desc-div">Most <br> Trained</div>
                                                         </div>
                                                         <div class="achievement-item my-2">
                                                             <div class="achievement-img-div">
-                                                                <img style="width: 60px; height: 60px;" src="../images/achievement/Most  Mileage.svg">
+                                                                <img alt="" style="width: 60px; height: 60px;" src="../images/achievement/Most  Mileage.svg">
                                                             </div>
                                                             <div class="row achievement-num-div task-mileage" style="color: #e3a826;">0</div>
                                                             <div class="row achievement-desc-div">Most <br> Mileage</div>
                                                         </div>
                                                         <div class="achievement-item my-2">
                                                             <div class="achievement-img-div">
-                                                                <img style="width: 60px; height: 60px;" src="../images/achievement/Most Task.svg">
+                                                                <img alt="" style="width: 60px; height: 60px;" src="../images/achievement/Most Task.svg">
                                                             </div>
                                                             <div class="row achievement-num-div task-num" style="color: #e3a826;">0</div>
                                                             <div class="row achievement-desc-div">Most <br> Task</div>
                                                         </div>
                                                         <div class="achievement-item my-2">
                                                             <div class="achievement-img-div">
-                                                                <img style="width: 60px; height: 60px;" src="../images/achievement/Most Hrs.svg">
+                                                                <img alt="" style="width: 60px; height: 60px;" src="../images/achievement/Most Hrs.svg">
                                                             </div>
                                                             <div class="row achievement-num-div task-hours" style="color: #e3a826;">0</div>
                                                             <div class="row achievement-desc-div">No. <br> of Hrs</div>

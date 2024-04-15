@@ -19,7 +19,7 @@ export async function initNoGoZoneCreatePage (zone) {
         redrawZone()
     }
 
-    // TODO: show view noGoZone module
+    // show view noGoZone module
     $('.edit-noGoZone .color-picker-item').off('click').on('click', function () { initColorPickerEventHandler(this) })
     $('input[type="color"]').off('change').on('change', function () { 
         lineColor = $(this).val()

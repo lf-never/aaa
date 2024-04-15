@@ -65,7 +65,7 @@ module.exports.createFirebaseNotification = async function (taskIdList, title, c
                 log.info(` ******************************************* `)
                 log.info(`Will Send Firebase Notification part ${ index + 1 }`)
                 if (index == (count - 1)) {
-                    // TODO: last part
+                    // last part
                     sendNotification(notificationList.slice( 100 * index ), title, content);
                 } else {
                     sendNotification(notificationList.slice( 100 * index, 100 * index + 100 ), title, content);
@@ -102,7 +102,7 @@ module.exports.createFirebaseNotification2 = async function (notificationList, t
                 log.info(` ******************************************* `)
                 log.info(`Will Send Firebase Notification part ${ index + 1 }`)
                 if (index == (count - 1)) {
-                    // TODO: last part
+                    // last part
                     sendNotification(notificationList.slice( 100 * index ), title, content);
                 } else {
                     sendNotification(notificationList.slice( 100 * index, 100 * index + 100 ), title, content);

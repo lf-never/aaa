@@ -574,9 +574,10 @@ module.exports.getVehicleList = async function (req, res) {
         pageNum = Number(pageNum)
         pageLength = Number(pageLength)
         sql += ` GROUP BY vv.vehicleNo order by vv.hotoDateTime desc, vv.updatedAt desc `
-        if(pageNum && pageLength){
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ` limit ?,?`
-            replacements.push(...[pageNum, pageLength])
+            replacements.push(pageNum)
+            replacements.push(pageLength)
         }
         let pageResult = await sequelizeObj.query(sql,
             {
@@ -982,7 +983,7 @@ module.exports.getDriverList = async function (req, res) {
         pageLength = pageLength ? pageLength : 10
         pageNum = pageNum ? pageNum : 0
         sql += ` GROUP BY dd.driverId order by dd.hotoDateTime desc, dd.updatedAt desc`
-        if(pageNum && pageLength){
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ` limit ?,?`
             replacements.push(...[Number(pageNum), Number(pageLength)])
         }
@@ -1901,7 +1902,7 @@ module.exports.getHotoRequest = async function (req, res) {
         }
         pageNum = pageNum ?? 0
         pageLength = pageLength ?? 10
-        if(pageNum && pageLength){
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ` limit ?,?`
             replacements.push(...[Number(pageNum), Number(pageLength)])
         }

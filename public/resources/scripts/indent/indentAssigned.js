@@ -139,7 +139,6 @@ const initDetail = async function () {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",

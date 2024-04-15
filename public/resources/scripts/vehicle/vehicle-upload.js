@@ -50,7 +50,7 @@ const initDataTables = async function () {
 }
 
 export async function initVehicleUploadPage () {
-    // TODO: show view route module
+    // show view route module
     $('#view-vehicle-upload').modal('show');
 
     await initDataTables();

@@ -11,7 +11,6 @@
 <%- include('../waypoint/waypoint-upload.html') -%>
 <%- include('../location/location-view.html') -%>
 <%- include('../mileage/mileage-view.html') -%>
-<%- include('../mobile/mobile-setting.html') -%>
 <link rel="stylesheet" href="../css/driver/driver-menu.css">
 <script type="module" src="../scripts/driver/driver-menu.js"></script>
     
@@ -22,7 +21,7 @@
     </div>
     <div class="offcanvas-body">
         <!-- <div>
-            <img src="../images/driver/car.png">
+            <img alt="" src="../images/driver/car.png">
             <label class="user-select-none">User Zone Management</label>
         </div>
         <ul class="list-group">
@@ -32,7 +31,7 @@
         <hr> -->
         <% if (pageList.find(item => item.module == 'Driver Control' && ['View Mileage', 'Upload Driver', 'Upload Vehicle'].includes(item.page))) { %>
         <div>
-            <img src="../images/driver/car.png">
+            <img alt="" src="../images/driver/car.png">
             <label class="user-select-none">Driver Management</label>
         </div>
         <ul class="list-group">
@@ -52,7 +51,7 @@
         <% } %>
         <% if (pageList.find(item => ['Create Route', 'View Route', 'Waypoint', 'Location', 'Incident'].includes(item.page) )) { %>
         <div>
-            <img src="../images/driver/car.png">
+            <img alt="" src="../images/driver/car.png">
             <label class="user-select-none">Route Management</label>
         </div>
         <ul class="list-group">
@@ -77,21 +76,6 @@
             <% } %>
         </ul>
         <% } %>
-        <!-- <hr>
-        <div>
-            <img src="../images/driver/car.png">
-            <label class="user-select-none">Incident Management</label>
-        </div>
-        <ul class="list-group">
-            <li class="list-group-item user-select-none" data-action="incident-view">View Incidents</li>
-        </ul> -->
-        <!-- <hr>
-        <div>
-            <img src="../images/driver/car.png">
-            <label class="user-select-none">Bandwidth Management</label>
-        </div>
-        <ul class="list-group">
-            <li class="list-group-item user-select-none" data-action="set-mobile">Mobile & Chat Setting</li>
-        </ul> -->
+        
     </div>
 </div>

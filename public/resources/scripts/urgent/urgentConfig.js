@@ -161,7 +161,7 @@ window.updateUrgentDutyById = async function (id) {
         $('.node-select').prop('disabled', 'disabled')
         $('#periodStartDate').val(moment(data.indentStartDate).format('DD/MM/YYYY'));
         $('#periodEndDate').val(moment(data.indentEndDate).format('DD/MM/YYYY'));
-        data.endDate ?  $('#periodEndDate').trigger('change') : ''
+        if(data.endDate) $('#periodEndDate').trigger('change')
         initVehicleDriverPage()
         // data.vehicleType == 'Ford Everest OUV' ? $("input[name='resource-type'][value='Ford Everest OUV']").prop('checked', true) : $("input[name='resource-type'][value='5 Ton GS (Auto)']").prop('checked', true)
         $('.resourceType').val(data.vehicleType)
@@ -251,7 +251,6 @@ const initDetail = function () {
         "ordering": true,
         "searching": false,
         "paging": true,
-        "pageLength": 10,
         "autoWidth": false,
         "fixedHeader": true,
         "scrollX": "auto",
@@ -369,7 +368,7 @@ const initDetail = function () {
                     if (full.cancelledDateTime) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.cancelledName ? full.cancelledName : '' }</label><br>
@@ -707,7 +706,7 @@ const DisabledLayDate = function () {
     layui.each(elem.find('tr'), function (trIndex, trElem) {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
             var tdTemp = $(tdElem);
-            if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+            if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');
             }

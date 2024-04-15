@@ -1066,19 +1066,23 @@ const getDeactivateVehicle = async function(req) {
             where 1=1
         `;
 
+        let replacements = [];
         if (searchParam) {
-            let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
-            baseSQL += ` and (veh.vehicleNo like `+likeCondition+` or veh.vehicleType like `+likeCondition+`) `
+            baseSQL += ` and (veh.vehicleNo like ? or veh.vehicleType like ?) `
+            replacements.push("%" + searchParam + "%");
+            replacements.push("%" + searchParam + "%");
         }
 
         if (unit) {
-            baseSQL += ` and un.unit = ` + sequelizeObj.escape(unit)     
+            baseSQL += ` and un.unit = ?`;
+            replacements.push(unit);
             if (subUnit) {
-                baseSQL += ` and un.subUnit = ` + sequelizeObj.escape(subUnit)        
+                baseSQL += ` and un.subUnit = ?`
+                replacements.push(subUnit); 
             }
         }
 
-        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT })
+        let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
         let vehicleNoOrder = req.body.vehicleNoOrder;
@@ -1098,7 +1102,9 @@ const getDeactivateVehicle = async function(req) {
         }
 
         baseSQL += ` limit ?, ?`
-        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: [pageNum, pageLength] })
+        replacements.push(pageNum);
+        replacements.push(pageLength);
+        let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
 
         return {respMessage: vehicleInfoList, recordsFiltered: totalRecord, recordsTotal: totalRecord};
     } catch(error) {

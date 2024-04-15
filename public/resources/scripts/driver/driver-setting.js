@@ -21,7 +21,7 @@ export async function initDriverSettingPage () {
                 }
             });
         });
-        // TODO: set default value
+        // set default value
         $('#view-driver-setting .leave-time').html(moment().format('DD/MM/YYYY HH:mm:ss'));
     }
 
@@ -32,7 +32,7 @@ export async function initDriverSettingPage () {
     initLeaveTime();
     initSpeed()
 
-    // TODO: show view driver setting module
+    // show view driver setting module
     $('#view-driver-setting').modal('show');
 }
 

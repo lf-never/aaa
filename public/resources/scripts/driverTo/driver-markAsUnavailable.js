@@ -222,7 +222,7 @@ const DisabledLayDate = async function () {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
 
             var tdTemp = $(tdElem);
-            if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+            if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');
             } else {

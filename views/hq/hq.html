@@ -306,7 +306,7 @@
                                 <% if (pageList.find(item => item.page == 'ATMS Task Assign' && (item.action).toUpperCase() == 'NEW')) { %>
                                 <div class="col-auto">
                                     <button type="button" class="layui-btn custom-btn-green" id="task-Create">
-                                        <img src="../images/hq/add.svg" />
+                                        <img alt="" src="../images/hq/add.svg" />
                                         Create
                                     </button><input class="layui-upload-file" type="file" accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" name="file">
                                 </div>
@@ -315,7 +315,7 @@
                                 <% if (pageList.find(item => item.page == 'ATMS Task Assign' && (item.action).toUpperCase() == 'DOWNLOAD')) { %>
                                     <div class="col-auto">
                                         <button type="button" class="layui-btn custom-btn-green" id="task-download">
-                                            <i class="layui-icon"><img src="../images/hq/Download.png" draggable="false" class="Download-image"></i> Download
+                                            <i class="layui-icon"><img alt="" src="../images/hq/Download.png" draggable="false" class="Download-image"></i> Download
                                         </button>
                                     </div>
                                 <% } %>
@@ -413,11 +413,11 @@
         <div class="body-bottom mx-3 mt-4 rounded">
             <div class="row mx-1" style="padding: 10px;">
                 <div class="sys-assign-table">
-                    <table class="table pb-2 w-100 sys-data-list" style="white-space: nowrap;width: 100%;">
+                    <table aria-hidden="true" class="table pb-2 w-100 sys-data-list" style="white-space: nowrap;width: 100%;">
                     </table>
                 </div>
                 <div class="mb-assign-table" style="display: none;">
-                    <table class="table pb-2 w-100 mb-data-list" style="white-space: nowrap;width: 100%;">
+                    <table aria-hidden="true" class="table pb-2 w-100 mb-data-list" style="white-space: nowrap;width: 100%;">
                     </table>
                 </div>
             </div>

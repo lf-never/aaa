@@ -300,7 +300,6 @@ const initDetail = async function () {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -425,7 +424,7 @@ const initDetail = async function () {
                             return `
                                 <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 130px; background-color: #1B9063;color: white;font-weight: bold;" 
                                 onclick="submitHoto(this, ${ full.vehicleNo ? `'${ full.vehicleNo }'` : null }, ${ full.driverId ? `'${ full.driverId }'` : null }, '${ full.driverName }', '${ full.unit }', '${ full.subUnit }', true)">                                                         
-                                    <img src="../images/hoto/return.svg"/>
+                                    <img alt="" src="../images/hoto/return.svg"/>
                                     Transfer
                                 </button>
                             `;
@@ -465,7 +464,6 @@ const initDetail = async function () {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -592,7 +590,7 @@ const initDetail = async function () {
                             return `
                                 <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 130px; background-color: #1B9063;color: white;font-weight: bold;" 
                                 onclick="submitHoto(this, ${ full.vehicleNo ? `'${ full.vehicleNo }'` : null }, ${ full.driverId ? `'${ full.driverId }'` : null }, '${ full.driverName }', '${ full.unit }', '${ full.subUnit }', true)">                                                         
-                                    <img src="../images/hoto/return.svg"/>
+                                    <img alt="" src="../images/hoto/return.svg"/>
                                     Transfer
                                 </button>
                             `;
@@ -661,7 +659,7 @@ window.initLayDate = function (vehicleNo) {
         layui.each(elem.find('tr'), function (trIndex, trElem) {
             layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                 var tdTemp = $(tdElem);
-                if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                     tdTemp.addClass('laydate-disabled');
                     tdTemp.css('color', 'orange');
                 }
@@ -774,12 +772,12 @@ function formatVehicleHotoDetails(datas, checkedTable) {
             <td style="width: ${columnWidth[6]}">${moment(item.hotoDateTime).format('YYYY/MM/DD HH:mm')}</td>
             <td style="width: ${columnWidth[7]}">
                 <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #F4702A; width: 130px; background-color: #F4702A;color: white;font-weight: bold;" onclick="submitReturn(${item.hotoId})">
-                    <img src="../images/hoto/Transfor.svg"/>Return Now
+                    <img alt="" src="../images/hoto/Transfor.svg"/>Return Now
                 </button>
             </td>
         </tr>`
     }
-    return `<div class="table-details-div"><table class="table">
+    return `<div class="table-details-div"><table aria-hidden="true" class="table">
         <thead></thead>
         <tbody>${tr}</tbody>
     </table></div>`;
@@ -803,12 +801,12 @@ function formatDriverHotoDetails(datas, checkedTable) {
             <td style="width: ${columnWidth[6]}">${moment(item.hotoDateTime).format('YYYY/MM/DD HH:mm')}</td>
             <td style="width: ${columnWidth[7]}">
                 <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #F4702A; width: 130px; background-color: #F4702A;color: white;font-weight: bold;" onclick="submitReturn(${item.hotoId})">
-                    <img src="../images/hoto/Transfor.svg"/>Return Now
+                    <img alt="" src="../images/hoto/Transfor.svg"/>Return Now
                 </button>
             </td>
         </tr>`
     }
-    return `<div class="table-details-div"><table class="table">
+    return `<div class="table-details-div"><table aria-hidden="true" class="table">
         <thead></thead>
         <tbody>${tr}</tbody>
     </table></div>`;

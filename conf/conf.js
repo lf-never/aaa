@@ -14,7 +14,7 @@ module.exports.dbSystemConf = {
     user: 'root',
     password: 'root',
     port: 3306,
-    database: 'tms4',
+    database: 'tms2',
     timezone: 'GMT%2B8',
     multipleStatements: true,
     connectionLimit: 500
@@ -31,10 +31,6 @@ module.exports.serverPort = 5000;
 module.exports.serverPortHttps = 5080;
 
 module.exports.VehicleMissingFrequency = 30; // seconds
-
-module.exports.ChatServer = 'https://localhost:5280';
-
-module.exports.GitsiServer = 'https://meet.jit.si/';
 
 module.exports.CheckWhiteIP = false;
 

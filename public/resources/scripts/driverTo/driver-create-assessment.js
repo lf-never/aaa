@@ -37,10 +37,10 @@ const initCategoryList = async function() {
           let actionHtml = ``;
           if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
             actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverAssessment(${temp.id}, '${temp.assessmentType}', '${temp.issueDate}', '${temp.status}')">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverAssessment(${temp.id}, '${temp.assessmentType}', '${temp.issueDate}', '${temp.status}')" role="button" tabindex="0">
                 Edit
               </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverAssessment(${temp.id}, '${temp.assessmentType}')" style="margin-left: 15px;">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverAssessment(${temp.id}, '${temp.assessmentType}')" role="button" tabindex="0" style="margin-left: 15px;">
                 Delete
               </div>
             `;
@@ -48,10 +48,10 @@ const initCategoryList = async function() {
 
           if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
             actionHtml += `
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Approved')">
+              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Approved')" role="button" tabindex="0">
                 Approve
               </div>
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Rejected')">
+              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Rejected')" role="button" tabindex="0">
                 Reject
               </div>
             `;

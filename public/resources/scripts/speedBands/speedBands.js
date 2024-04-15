@@ -48,7 +48,7 @@ const initSpeedBandsHandler = async function () {
     }
 
     let speedBandsResult = await getSpeedBandsRequest();
-    // TODO: while request failed or no data, return
+    // while request failed or no data, return
     if (!speedBandsResult.length) return;
 
     clearSpeedBands();
@@ -98,7 +98,7 @@ const initSpeedBandsHandler = async function () {
             </div>
         `
 
-        // TODO: Only show SpeedBand 1,2,3,4
+        // Only show SpeedBand 1,2,3,4
         if ([ 1, 2 ].includes(speedBands.SpeedBand)) {
             route = MapUtil.drawPolyLine(
                 [{ lat: speedBands.StartLat, lng: speedBands.StartLon }, { lat: speedBands.EndLat, lng: speedBands.EndLon }],

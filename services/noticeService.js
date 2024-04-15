@@ -35,20 +35,21 @@ let NoticeUtils = {
                     IF(r.id IS NOT NULL, 1, 0) as \`read\`
                     FROM notification n
                     LEFT JOIN user u ON u.userId = n.creator
-                    LEFT JOIN notification_read r ON r.notificationId = n.id AND r.userId = ${ user.userId }
+                    LEFT JOIN notification_read r ON r.notificationId = n.id AND r.userId = ?
                     WHERE n.deleted = 0 
                     AND DATE(startDateTime) <= DATE(NOW()) 
                     AND DATE(endDateTime) >= DATE(NOW())
                 `
 
-                let limitCondition = [], replacements = []
+                let limitCondition = [], replacements = [ user.userId ]
                 let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(user.userId)
 
                 if ([CONTENT.USER_TYPE.HQ].includes(user.userType)) {
                     let tempSqlList = []
                     if (unitIdList.length) {
                         for (let unitId of unitIdList) {
-                            tempSqlList.push(` FIND_IN_SET('${ unitId }', n.laptopHubNodeList) `)
+                            tempSqlList.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                            replacements.push(unitId)
                         }
                     } 
                     if (groupIdList.length) {
@@ -63,11 +64,13 @@ let NoticeUtils = {
                     }
                 } else if ([CONTENT.USER_TYPE.UNIT].includes(user.userType)) {
                     if (user.node) {
-                        limitCondition.push(` FIND_IN_SET('${ user.unitId }', n.laptopHubNodeList) `)
+                        limitCondition.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                        replacements.push(user.unitId)
                     } else {
                         let tempSql = []
                         for (let unit of unitList) {
-                            tempSql.push(` FIND_IN_SET('${ unit.id }', n.laptopHubNodeList) `)
+                            tempSql.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                            replacements.push(unit.id)
                         }
                         if (tempSql.length) {
                             limitCondition.push(` ( ${ tempSql.join(' OR ') } ) `)
@@ -75,11 +78,13 @@ let NoticeUtils = {
                     }
                 } else if ([CONTENT.USER_TYPE.MOBILE].includes(user.userType)) {
                     if (user.node) {
-                        limitCondition.push(` FIND_IN_SET('${ user.unitId }', n.driverHubNodeList) `)
+                        limitCondition.push(` FIND_IN_SET(?, n.driverHubNodeList) `)
+                        replacements.push(user.unitId)
                     } else {
                         let tempSql = []
                         for (let unit of unitList) {
-                            tempSql.push(` FIND_IN_SET('${ unit.id }', n.driverHubNodeList) `)
+                            tempSql.push(` FIND_IN_SET(?, n.driverHubNodeList) `)
+                            replacements.push(unit.id)
                         }
                         if (tempSql.length) {
                             limitCondition.push(` ( ${ tempSql.join(' OR ') } ) `)
@@ -87,7 +92,8 @@ let NoticeUtils = {
                     }
                 } else if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
                     // Customer user can only see notice that in groupId
-                    limitCondition.push(` n.groupId = ${ user.unitId } `)
+                    limitCondition.push(` n.groupId = ? `)
+                    replacements.push(user.unitId)
                 }
 
                 if (limitCondition.length) {
@@ -148,7 +154,8 @@ let NoticeUtils = {
                     let tempSqlList = []
                     if (unitIdList.length) {
                         for (let unitId of unitIdList) {
-                            tempSqlList.push(` FIND_IN_SET('${ unitId }', n.laptopHubNodeList) `)
+                            tempSqlList.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                            replacements.push(unitId)
                         }
                     } 
                     if (groupIdList.length) {
@@ -163,11 +170,13 @@ let NoticeUtils = {
                     }
                 } else if ([CONTENT.USER_TYPE.UNIT].includes(user.userType)) {
                     if (user.node) {
-                        limitCondition.push(` FIND_IN_SET('${ user.unitId }', n.laptopHubNodeList) `)
+                        limitCondition.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                        replacements.push(user.unitId)
                     } else {
                         let tempSql = []
                         for (let unit of unitList) {
-                            tempSql.push(` FIND_IN_SET('${ unit.id }', n.laptopHubNodeList) `)
+                            tempSql.push(` FIND_IN_SET(?, n.laptopHubNodeList) `)
+                            replacements.push(unit.id)
                         }
                         if (tempSql.length) {
                             limitCondition.push(` ( ${ tempSql.join(' OR ') } ) `)
@@ -176,11 +185,13 @@ let NoticeUtils = {
                 } else if ([CONTENT.USER_TYPE.MOBILE].includes(user.userType)) {
                     // Mobile user can only see notice that in driverHubNodeList
                     if (user.node) {
-                        limitCondition.push(` FIND_IN_SET('${ user.unitId }', n.driverHubNodeList) `)
+                        limitCondition.push(` FIND_IN_SET(?, n.driverHubNodeList) `)
+                        replacements.push(user.unitId)
                     } else {
                         let tempSql = []
                         for (let unit of unitList) {
-                            tempSql.push(` FIND_IN_SET('${ unit.id }', n.driverHubNodeList) `)
+                            tempSql.push(` FIND_IN_SET(?, n.driverHubNodeList) `)
+                            replacements.push(unit.id)
                         }
                         if (tempSql.length) {
                             limitCondition.push(` ( ${ tempSql.join(' OR ') } ) `)
@@ -188,7 +199,8 @@ let NoticeUtils = {
                     }
                 } else if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
                     // Customer user can only see notice that in groupId
-                    limitCondition.push(` n.groupId = ${ user.unitId } `)
+                    limitCondition.push(` n.groupId = ? `)
+                    replacements.push(user.unitId)
                 }
 
                 if (option.createdAt) {
@@ -216,8 +228,8 @@ let NoticeUtils = {
                 let pageResult = []
                 if (option.start && option.length) {
                     let pageSql = sql + ` LIMIT ?, ? `
-                    replacements.push(option.start)
-                    replacements.push(option.length)
+                    replacements.push(Number.parseInt(option.start))
+                    replacements.push(Number.parseInt(option.length))
                     console.log(pageSql)
                     pageResult = await sequelizeObj.query(pageSql, { type: QueryTypes.SELECT, replacements })
                 }

@@ -29,7 +29,7 @@ export async function initIncidentCreatePage (position) {
     $('#create-incident .incidentPosition').val(`${ position.lat ? position.lat : currentIncident.lat },${ position.lng ? position.lng : currentIncident.lng }`).data('position', JSON.stringify(position))
     $('#create-incident .cancel-create-incident').off('click').on('click', clearCreateIncidentPage)
     $('#create-incident .create-incident').off('click').on('click', createIncidentEventHandler)
-    // TODO: show create incident module
+    // show create incident module
     $('#create-incident').modal('show');
     
     clearCreateIncidentPage();

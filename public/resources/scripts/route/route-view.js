@@ -77,7 +77,7 @@ const initDataTables = async function () {
 export async function initRouteViewPage () {
     initDataTables();
 
-    // TODO: show view route module
+    // show view route module
     $('#view-route').modal('show');
     $('.offcanvas').offcanvas('hide')
 }

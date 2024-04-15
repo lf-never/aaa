@@ -22,7 +22,6 @@ const { PurposeMode } = require('../model/purposeMode');
 const { VehicleRelation } = require('../model/vehicleRelation.js');
 const { OperationRecord } = require('../model/operationRecord');
 const vehicleService = require('../services/vehicleService.js');
-const vehicleMaintenanceInfoCalcUtils = require('../services/VehicleMaintenanceInfoCalcUtils.js');
 const { loan } = require('../model/loan');
 
 

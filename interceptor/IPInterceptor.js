@@ -7,19 +7,20 @@ const utils = require('../util/utils');
 const moment = require('moment');
 const { SystemIPWhiteList } = require('../model/ipWhiteList');
 
-var ipWhiteList = [];
-var lastLoadIPWhiteListTime = null;
+let ipWhiteList = [];
+let lastLoadIPWhiteListTime = null;
 //reload cycle 2 minutes.
-var reloadIPWhiteListCycle = 2;
+let reloadIPWhiteListCycle = 2;
 
 router.use(async (req, res, next) => {
     let needCheekIP = conf.CheckWhiteIP;
-    if(needCheekIP == null || needCheekIP == undefined || needCheekIP == '') {
+    if(needCheekIP || needCheekIP == null || needCheekIP == undefined || (typeof needCheekIP == 'string' && needCheekIP == '')) {
         //default check ip white list.
         needCheekIP = true;
     }
     if (needCheekIP == false || needCheekIP == 'false') {
         next();
+        return;
     }
     let result = req.ip ||
         req.headers['x-forwarded-for'] ||
@@ -62,7 +63,7 @@ const checkIp = async function(IPAddress) {
         if (needReload) {
             ipWhiteList = await loadIpWhiteList();
         }
-        if (ipWhiteList != null || ipWhiteList.length != 0) {
+        if(ipWhiteList && ipWhiteList.length > 0){
             ipWhiteList.forEach(ipwhite => {
                 if (ipwhite) {
                     ipwhite = ipwhite.trim();
@@ -73,6 +74,7 @@ const checkIp = async function(IPAddress) {
                 }
             });
         }
+        
     }
 
     return checkResult;

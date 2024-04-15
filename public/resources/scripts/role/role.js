@@ -69,7 +69,7 @@ const initRolePage = async function () {
                         if (content.length < 30) {
                             return content
                         } else {
-                            let html = `<label style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showModule(this)">`
+                            let html = `<label style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showModule(this)" role="button">`
                             html += `${ content.substring(0, 30) }...`
                             html += '</label>'
                             return html

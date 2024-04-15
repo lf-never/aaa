@@ -56,7 +56,6 @@ const FirebaseService = require('../firebase/firebase');
 
 const { DriverLicenseExchangeApply } = require('../model/DriverLicenseExchangeApply.js');
 const { Notification } = require('../model/notification.js');
-const vehicleMaintenanceInfoCalcUtils = require('../services/VehicleMaintenanceInfoCalcUtils.js');
 
 const { DriverMonthAchievement } = require('../model/driverMonthAchievement.js');
 const { HOTO } = require('../model/hoto');

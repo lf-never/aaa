@@ -197,7 +197,6 @@ process.on('unhandledRejection', function (err, promise) {
  * Need init these modules after system start!
  */
 require('./activemq/activemq'); // 2023-2-1 Jasmin  => close mq
-require('./db/dbHelper')
 
 const { NotificationSchedule, UrgentSchedule, UpdateDutyStatus } = require('./firebase/schedule');
 NotificationSchedule();

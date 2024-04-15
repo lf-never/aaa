@@ -41,7 +41,6 @@ const changeLayDate = function (nextDays, elem) {
 
     
     $('.layui-select-btn').removeClass('btn-success-number') 
-    nextDays = nextDays
 
     if(nextDays == '-180'){
         $(elem).val(`${end} - ${start}`)

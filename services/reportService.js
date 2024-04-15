@@ -544,8 +544,10 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         let unitInfoSql = `
             select un.id, un.unit, un.subUnit from unit un where 1=1 
         `;
+        let replacements = [];
         if (selectedHub) {
-            unitInfoSql += ` and un.unit = '${selectedHub}' `;
+            unitInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         } else if (user.userType == CONTENT.USER_TYPE.HQ) {
             let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
             let hqUserUnitNameList = userUnitList.map(item => item.unit);
@@ -562,11 +564,12 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
             if (selectedNode == '-') {
                 unitInfoSql += ` and un.subUnit is null `;
             } else {
-                unitInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                unitInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
         unitInfoSql += ` ORDER BY un.unit, un.subUnit `;
-        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements: [] })
+        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements })
 
         let resultUnitDataList = [];
         for(let unit of unitInfoResult) {
@@ -601,19 +604,22 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
             FROM driver d
             LEFT JOIN USER u ON d.driverId = u.driverId
             LEFT JOIN unit un ON d.unitId = un.id
-            WHERE u.role = 'TO' AND d.unitId IS NOT NULL AND (d.operationallyReadyDate is NULL OR DATE_FORMAT(d.operationallyReadyDate, '${dbForamt}') >= '${dateStr}') 
+            WHERE u.role = 'TO' AND d.unitId IS NOT NULL AND (d.operationallyReadyDate is NULL OR DATE_FORMAT(d.operationallyReadyDate, ?) >= ?) 
         `;
+        replacements = [dbForamt, dateStr];
         if (selectedHub) {
-            unitToInfoSql += ` and un.unit = '${selectedHub}' `;
+            unitToInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         }
         if (selectedNode) {
             if (selectedNode == '-') {
                 unitToInfoSql += ` and un.subUnit is null `;
             } else {
-                unitToInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                unitToInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
-        let unitToInfoResult = await sequelizeObj.query(unitToInfoSql, { type: QueryTypes.SELECT, replacements: [] })
+        let unitToInfoResult = await sequelizeObj.query(unitToInfoSql, { type: QueryTypes.SELECT, replacements })
         if (unitToInfoResult.length > 0) {
             for (let unitInfo of resultUnitDataList) {
                 let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
@@ -631,9 +637,9 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
             FROM driver_month_workdays_stat ds
             LEFT JOIN driver d ON d.driverId = ds.driverId
             LEFT JOIN unit un ON d.unitId = un.id
-            WHERE ds.month LIKE '${dateStr}%'
+            WHERE ds.month LIKE ?
         `;
-        let toMonthWorkdaysData = await sequelizeObj.query(toMonthWorkdaysSql, { type: QueryTypes.SELECT, replacements: [] });
+        let toMonthWorkdaysData = await sequelizeObj.query(toMonthWorkdaysSql, { type: QueryTypes.SELECT, replacements: [dateStr+"%"] });
 
         for (let unitInfo of resultUnitDataList) {
             let unitToIdList = unitInfo.toIdList;
@@ -770,8 +776,10 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         let unitInfoSql = `
             select un.id, un.unit, un.subUnit from unit un where 1=1 
         `;
+        let replacements = [];
         if (selectedHub) {
-            unitInfoSql += ` and un.unit = '${selectedHub}' `;
+            unitInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         } else if (user.userType == CONTENT.USER_TYPE.HQ) {
             let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
             let hqUserUnitNameList = userUnitList.map(item => item.unit);
@@ -788,17 +796,20 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
             if (selectedNode == '-') {
                 unitInfoSql += ` and un.subUnit is null `;
             } else {
-                unitInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                unitInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
         unitInfoSql += ` ORDER BY un.unit, un.subUnit `;
-        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements: [] })
+        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements })
 
         let vehicleTypeSql = `select vehicleName from vehicle_category where 1=1`;
+        replacements = [];
         if (vehicleType) {
-            vehicleTypeSql += ` and vehicleName = '${vehicleType}' `
+            vehicleTypeSql += ` and vehicleName = ? `
+            replacements.push(vehicleType);
         }
-        let vehicleTypeList = await sequelizeObj.query(vehicleTypeSql, { type: QueryTypes.SELECT, replacements: [] })
+        let vehicleTypeList = await sequelizeObj.query(vehicleTypeSql, { type: QueryTypes.SELECT, replacements })
 
         let resultUnitDataList = [];
         for(let unit of unitInfoResult) {
@@ -837,23 +848,27 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
             LEFT JOIN unit un ON vv.unitId = un.id
             WHERE vv.unitId is NOT NULL
         `;
+        replacements = [];
         if (selectedHub) {
-            unitVehicleInfoSql += ` and un.unit = '${selectedHub}' `;
+            unitVehicleInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         }
         if (selectedNode) {
             if (selectedNode == '-') {
                 unitVehicleInfoSql += ` and un.subUnit is null `;
             } else {
-                unitVehicleInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                unitVehicleInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
         if (vehicleType) {
-            unitVehicleInfoSql += ` and vv.vehicleType = '${vehicleType}' `;
+            unitVehicleInfoSql += ` and vv.vehicleType = ? `;
+            replacements.push(vehicleType);
         }
 
         // filter vehicle number > 0 data.
         let newResultUnitDataList = [];
-        let unitVehicleInfoResult = await sequelizeObj.query(unitVehicleInfoSql, { type: QueryTypes.SELECT, replacements: [] })
+        let unitVehicleInfoResult = await sequelizeObj.query(unitVehicleInfoSql, { type: QueryTypes.SELECT, replacements })
         if (unitVehicleInfoResult.length > 0) {
             for (let unitInfo of resultUnitDataList) {
                 let unitVehicleInfoList = unitVehicleInfoResult.filter(item => item.unitId == unitInfo.unitId && item.vehicleType == unitInfo.vehicleType);
@@ -875,9 +890,9 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
             FROM vehicle_month_workdays_stat vs
             LEFT JOIN vehicle v ON vs.vehicleNo = v.vehicleNo
             LEFT JOIN unit un ON v.unitId = un.id
-            WHERE v.unitId IS NOT NULL AND vs.month LIKE '${dateStr}%'
+            WHERE v.unitId IS NOT NULL AND vs.month LIKE ?
         `;
-        let vehicleMonthWorkdaysData = await sequelizeObj.query(vehicleMonthWorkdaysSql, { type: QueryTypes.SELECT, replacements: [] });
+        let vehicleMonthWorkdaysData = await sequelizeObj.query(vehicleMonthWorkdaysSql, { type: QueryTypes.SELECT, replacements: [dateStr+"%"] });
         for (let unitInfo of resultUnitDataList) {
             let unitVehicleNoList = unitInfo.vehicleNoList;
             let unitVehicleDataList = [];
@@ -1021,8 +1036,10 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
         let unitInfoSql = `
             select un.id, un.unit, un.subUnit from unit un where 1=1 
         `;
+        let replacements = [];
         if (selectedHub) {
-            unitInfoSql += ` and un.unit = '${selectedHub}' `;
+            unitInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         } else if (user.userType == CONTENT.USER_TYPE.HQ) {
             let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
             let hqUserUnitNameList = userUnitList.map(item => item.unit);
@@ -1039,16 +1056,19 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
             if (selectedNode == '-') {
                 unitInfoSql += ` and un.subUnit is null `;
             } else {
-                unitInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                unitInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
         let unitInfoTotalSql = unitInfoSql;
-        unitInfoSql += ` ORDER BY un.unit, un.subUnit limit ${ pageNum ? pageNum : 0 }, ${ pageLength ? pageLength : 10 } `;
 
-        let unitInfoTotalResult = await sequelizeObj.query(unitInfoTotalSql, { type: QueryTypes.SELECT, replacements: [] });
+        let unitInfoTotalResult = await sequelizeObj.query(unitInfoTotalSql, { type: QueryTypes.SELECT, replacements });
         let totalCount = unitInfoTotalResult ? unitInfoTotalResult.length : 0;
 
-        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements: [] });
+        replacements.push(pageNum);
+        replacements.push(pageLength);
+        unitInfoSql += ` ORDER BY un.unit, un.subUnit limit ?, ? `;
+        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements });
         let resultUnitDataList = [];
         for(let unit of unitInfoResult) {
             resultUnitDataList.push({
@@ -1098,28 +1118,31 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
             LEFT JOIN user pu ON pu.userId = dl.pendingBy
             LEFT JOIN user fu ON fu.userId = dl.failBy
             where d.unitId is NOT NULL and (
-                DATE_FORMAT(dl.applyDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.submitDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.endorseDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.verifyDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.recommendDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.rejectDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.successDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.failDate, '${dbForamt}') = '${dateStr}'
-                OR DATE_FORMAT(dl.pendingDate, '${dbForamt}') = '${dateStr}'
+                DATE_FORMAT(dl.applyDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.submitDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.endorseDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.verifyDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.recommendDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.rejectDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.successDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.failDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
+                OR DATE_FORMAT(dl.pendingDate, '${dbForamt}') = `+sequelizeObj.escape(dateStr)+`
             )
         `;
+        replacements = [];
         if (selectedHub) {
-            toLicensingInfoSql += ` and un.unit = '${selectedHub}' `;
+            toLicensingInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         }
         if (selectedNode) {
             if (selectedNode == '-') {
                 toLicensingInfoSql += ` and un.subUnit is null `;
             } else {
-                toLicensingInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                toLicensingInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
-        let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` ORDER BY un.unit ASC, un.subUnit asc `, { type: QueryTypes.SELECT, replacements: [] })
+        let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` ORDER BY un.unit ASC, un.subUnit asc `, { type: QueryTypes.SELECT, replacements })
 
         if (toLicensingInfoResult && toLicensingInfoResult.length > 0) {
             for (let unitInfo of resultUnitDataList) {
@@ -1263,16 +1286,20 @@ const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth,
 
         let permitTypeSql = `select * from permittype where 1=1 and permitType like 'CL%' `;
         let permitTypeCountSql = `select count(*) as permitTypeNo from permittype where 1=1 and permitType like 'CL%' `;
+        let replacements = [];
         if (permitType) {
-            permitTypeSql += ` and permitType = '${permitType}' `;
-            permitTypeCountSql += ` and permitType = '${permitType}' `;
+            permitTypeSql += ` and permitType = ? `;
+            permitTypeCountSql += ` and permitType = ? `;
+            replacements.push(permitType);
         }
-        permitTypeSql += ` ORDER BY permitType limit ${ pageNum ? pageNum : 0 }, ${ pageLength ? pageLength : 10 } `;
-        let permitTypeCountData = await sequelizeObj.query(permitTypeCountSql + ' ORDER BY permitType ', { type: QueryTypes.SELECT, replacements: [] });
+        let permitTypeCountData = await sequelizeObj.query(permitTypeCountSql + ' ORDER BY permitType ', { type: QueryTypes.SELECT, replacements });
         let totalCount = permitTypeCountData ? permitTypeCountData[0].permitTypeNo : 0;
 
+        permitTypeSql += ` ORDER BY permitType limit ?, ? `;
+        replacements.push(pageNum);
+        replacements.push(pageLength);
         let resultDataList = [];
-        let permitTypeList = await sequelizeObj.query(permitTypeSql, { type: QueryTypes.SELECT, replacements: [] })
+        let permitTypeList = await sequelizeObj.query(permitTypeSql, { type: QueryTypes.SELECT, replacements })
         for (let permitTypeInfo of permitTypeList) {
             resultDataList.push({
                 year: selectedYear,
@@ -1299,10 +1326,12 @@ const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth,
             LEFT JOIN driver d on dp.driverId = d.driverId
             LEFT JOIN unit un on un.id = d.unitId
             LEFT JOIN user us on d.driverId = us.driverId
-            where us.role in('TO', 'TL', 'DV', 'LOA') AND dp.approveStatus='Approved' and dp.permitType like 'CL%' and DATE_FORMAT(dp.passDate, '${dbForamt}') = '${dateStr}'
+            where us.role in('TO', 'TL', 'DV', 'LOA') AND dp.approveStatus='Approved' and dp.permitType like 'CL%' and DATE_FORMAT(dp.passDate, '${dbForamt}') = ?
         `;
+        replacements = [dateStr];
         if (selectedHub) {
-            toLicensingInfoSql += ` and un.unit = '${selectedHub}' `;
+            toLicensingInfoSql += ` and un.unit = ? `;
+            replacements.push(selectedHub);
         } else if (user.userType == CONTENT.USER_TYPE.HQ) {
             let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
             let hqUserUnitNameList = userUnitList.map(item => item.unit);
@@ -1319,10 +1348,11 @@ const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth,
             if (selectedNode == '-') {
                 toLicensingInfoSql += ` and un.subUnit is null `;
             } else {
-                toLicensingInfoSql += ` and un.subUnit = '${selectedNode}' `;
+                toLicensingInfoSql += ` and un.subUnit = ? `;
+                replacements.push(selectedNode);
             }
         }
-        let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` GROUP BY dp.permitType, us.role ORDER BY dp.permitType ASC `, { type: QueryTypes.SELECT, replacements: [] })
+        let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` GROUP BY dp.permitType, us.role ORDER BY dp.permitType ASC `, { type: QueryTypes.SELECT, replacements })
 
         if (toLicensingInfoResult && toLicensingInfoResult.length > 0) {
             for (let permitTypeInfo of resultDataList) {

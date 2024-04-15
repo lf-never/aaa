@@ -72,7 +72,7 @@ const initDataTables = async function () {
 export async function initDriverTaskViewPage () {
     initDataTables();
 
-    // TODO: show view driver module
+    // show view driver module
     $('#view-driver').modal('show');
 }
 

@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title><%= title %></title>
         <%- include('../common/common-html-base.html') -%>
@@ -214,12 +214,12 @@
             
             <div class="col-2 col-sm-4 text-end">
                 <% if (pageList.find(item => item.page == 'Notice' && item.action == 'New')) { %>
-                <button type="button" class="btn btn-success btn-sm add-notice">Add New Notice<img style="width: 20px; margin-left: 5px; margin-top: -2px;" src="./images/notice/Right-Arrow.svg" /></button>
+                <button type="button" class="btn btn-success btn-sm add-notice">Add New Notice<img alt="" style="width: 20px; margin-left: 5px; margin-top: -2px;" src="./images/notice/Right-Arrow.svg" /></button>
                 <% } %>
             </div>
         </div>
         <div class="row px-0 py-2 mx-4 my-3 justify-content-between" style="overflow: auto; border: solid 1px rgb(201, 201, 201); box-shadow: 0 0 5px rgb(201, 201, 201); border-radius: 5px; background-color: #F3F3F3;">
-            <table id="notice-list" style="text-align: center; border-collapse:collapse !important;">
+            <table aria-hidden="true" id="notice-list" style="text-align: center; border-collapse:collapse !important;">
 
             </table>
         </div>

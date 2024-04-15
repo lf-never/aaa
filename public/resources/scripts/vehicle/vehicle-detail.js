@@ -29,7 +29,7 @@ $(() => {
             } else if (layId === 'page-3') {
                 initMaintenanceHandler();
             } else if (layId === 'page-4') {
-                initOddHandler(currentVehicleNo);
+                initOddHandler();
             } else if (layId === 'page-5') {
                 initVehicleScheduleHandler();
             }

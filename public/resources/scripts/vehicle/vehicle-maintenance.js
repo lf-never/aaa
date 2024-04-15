@@ -70,13 +70,13 @@ const initMaintenance = function() {
                         let currentDateStr = moment().format("YYYY-MM-DD");
                         if (full.type != 'PM') {
                             if (data < currentDateStr && !full.exeTime) {
-                                html += `<img style="width: 20px; cursor: pointer; margin-top: -2px; padding-right: 4px;" src="../images/warn-mileage.svg">`;
+                                html += `<img alt="" style="width: 20px; cursor: pointer; margin-top: -2px; padding-right: 4px;" src="../images/warn-mileage.svg">`;
                             }
                         }
                         html += `<span class="vehicle-avi-time-span" style="color: #6c757d;">${moment(data).format("DD/MM/YYYY")}</span>`;
                     }
                     if (full.type == 'AVI' && full.maintenanceOperationList && full.maintenanceOperationList.includes('Edit AVI Date')) {
-                        html += `<img class="vehicle-avi-time" onclick="configAviTime('${data ? moment(data).format("YYYY-MM-DD") : ''}')" style="width: 20px; cursor: pointer; margin-top: -4px; padding-left: 4px;" src="../images/edit.svg">`;
+                        html += `<img alt="" class="vehicle-avi-time" onclick="configAviTime('${data ? moment(data).format("YYYY-MM-DD") : ''}')" role="button" style="width: 20px; cursor: pointer; margin-top: -4px; padding-left: 4px;" src="../images/edit.svg">`;
                     }
                     return html ? html : '-';
                 }

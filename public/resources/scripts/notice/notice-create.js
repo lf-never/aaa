@@ -68,7 +68,7 @@ let currentNoticeID = null, currentNotice = null;
             }
             
             // $('#edit-notice .coverImage-list').html(`
-            //     <img class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="upload/notification/notification-default.png" />
+            //     <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="upload/notification/notification-default.png" />
             // `);
             // $('#edit-notice .mainImage-list').empty();
         })
@@ -87,11 +87,11 @@ let currentNoticeID = null, currentNotice = null;
 
     const initLayDate = function (notice, type) {
         let html = `
-            <img src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
+            <img alt="" src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
             <input class="form-control form-control-sm" name="startDateTime" style="padding-left: 2rem !important;" readonly></input>
         `
 
-        // TODO: keep pre value
+        // keep pre value
         let defaultStartTimeValue = null
         if ($('input[name="startDateTime"]').val()) {
             if (type) {
@@ -158,11 +158,11 @@ let currentNoticeID = null, currentNotice = null;
         });
 
         let html2 = `
-            <img src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
+            <img alt="" src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
             <input class="form-control form-control-sm" name="endDateTime" style="padding-left: 2rem !important;" readonly></input>
         `
 
-        // TODO: keep pre value
+        // keep pre value
         let defaultEndTimeValue = null
         if ($('input[name="endDateTime"]').val()) {
             if (type) {
@@ -211,7 +211,7 @@ let currentNoticeID = null, currentNotice = null;
         });
 
         let html3 = `
-            <img src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
+            <img alt="" src="../../icons/date.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.35rem;margin-left: 0.4rem;"/>
             <input class="form-control form-control-sm" name="scheduledTime" style="padding-left: 2rem !important;" readonly></input>
         `
         $('input[name="scheduledTime"]').parent().empty().append(html3)
@@ -370,7 +370,7 @@ let currentNoticeID = null, currentNotice = null;
             $('.select-all-to').prop('checked', false)
             $(`#edit-notice select[name=type]`).find('option').eq(0).prop('selected', true).trigger('change')
             $('#edit-notice .coverImage-list').html(`
-                <img class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="upload/notification/notification-default.png" />
+                <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="upload/notification/notification-default.png" />
             `);
             $('#edit-notice .mainImage-list').empty();
 
@@ -405,14 +405,14 @@ let currentNoticeID = null, currentNotice = null;
                     // reload cover image
                     if (notice.coverImage) {
                         $('#edit-notice .coverImage-list').html(`
-                            <img class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="${ notice.coverImage }" />
+                            <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="${ notice.coverImage }" />
                         `);
                     }
 
                     // reload main image
                     if (notice.mainImage) {
                         $('#edit-notice .mainImage-list').html(`
-                            <img class="col-6 px-0" style="border-radius: 5px; width: auto;" src="${ notice.mainImage }" />
+                            <img alt="" class="col-6 px-0" style="border-radius: 5px; width: auto;" src="${ notice.mainImage }" />
                         `);
                     }
                 }
@@ -573,7 +573,7 @@ let currentNoticeID = null, currentNotice = null;
                 done: function (res) {
                     if (res.respCode == 1) {
                         $('#edit-notice .coverImage-list').html(`
-                            <img class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" 
+                            <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" 
                                 src="upload/notification/${ res.respMessage }" />
                         `);
                     } else {
@@ -597,7 +597,7 @@ let currentNoticeID = null, currentNotice = null;
                 done: function (res) {
                     if (res.respCode == 1) {
                         $('#edit-notice .mainImage-list').html(`
-                            <img class="col-6 px-0" style="border-radius: 5px; width: auto;" 
+                            <img alt="" class="col-6 px-0" style="border-radius: 5px; width: auto;" 
                                 src="upload/notification/${ res.respMessage }" />
                         `);
                     } else {

@@ -296,7 +296,7 @@
                         </select>
                     </div>
                     <div class="col-auto pt-2" style="position: relative;">
-                        <img src="../images/driver/calendar.png" style="width: 18px;height: 18px;position: absolute;margin-top: 2px;margin-left: 0.3rem;"/>
+                        <img alt="" src="../images/driver/calendar.png" style="width: 18px;height: 18px;position: absolute;margin-top: 2px;margin-left: 0.3rem;"/>
                         <input placeholder="DD/MM/YYYY" class="form-control selectedDate" style="padding: 0 2rem !important;background-color: white !important; max-width: 200px;" readonly></input>
                     </div>
                     <div class="col-auto pt-2">
@@ -307,49 +307,49 @@
                     </div>
                 </div>
                 <div class="table-common task-table-container active table-shadow mt-3" data-item="task" style="border-radius: 1em;">
-                    <table class="table task-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table task-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <% if (pageList.find(item => item.page == 'Urgent Duty')) { %>
                     <div class="table-common urgent-duty-table-container table-shadow mt-3" data-item="urgent" style="border-radius: 1em; display: none;">
-                        <table class="table urgent-duty-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                        <table aria-hidden="true" class="table urgent-duty-table pb-2 w-100" style=" border-collapse:collapse !important;">
                         </table>
                     </div>
                 <% } %>
                 <% if (pageList.find(item => item.page == 'Urgent Indent')) { %>
                     <div class="table-common urgent-task-table-container table-shadow mt-3" data-item="urgent" style="border-radius: 1em; display: none;">
-                        <table class="table urgent-task-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                        <table aria-hidden="true" class="table urgent-task-table pb-2 w-100" style=" border-collapse:collapse !important;">
                         </table>
                     </div>
                 <% } %>
                 <% if (pageList.find(item => item.page == 'Driver Task')) { %>
                     <div class="table-common driver-task-table-container table-shadow mt-3" data-item="task" style="border-radius: 1em; display: none;">
-                        <table class="table driver-task-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                        <table aria-hidden="true" class="table driver-task-table pb-2 w-100" style=" border-collapse:collapse !important;">
                         </table>
                     </div>
                 <% } %>
                 <div class="table-common mtRac-table-container table-shadow mt-3" data-item="mtRac" style="border-radius: 1em; display: none;">
-                    <table class="table mtRac-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table mtRac-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <div class="table-common incident-table-container table-shadow mt-3" data-item="survey" style="border-radius: 1em; display: none;">
-                    <table class="table incident-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table incident-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <div class="table-common odd-table-container table-shadow mt-3" data-item="odd" style="border-radius: 1em; display: none;">
-                    <table class="table odd-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table odd-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <div class="table-common survey-table-container table-shadow mt-3" data-item="survey" style="border-radius: 1em; display: none;">
-                    <table class="table survey-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table survey-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <div class="table-common cv-table-container table-shadow mt-3" data-item="odd" style="border-radius: 1em; display: none;">
-                    <table class="table cv-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table cv-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
                 <div class="table-common atms-table-container table-shadow mt-3" data-item="odd" style="border-radius: 1em; display: none;">
-                    <table class="table atms-table pb-2 w-100" style=" border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table atms-table pb-2 w-100" style=" border-collapse:collapse !important;">
                     </table>
                 </div>
             </div>

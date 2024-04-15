@@ -268,7 +268,7 @@ const initTaskTable = function () {
                         return data
                     } else {
                         return `
-                            <span class="d-inline-block text-truncate" style="max-width: 250px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 250px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span>
                         `

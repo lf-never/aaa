@@ -446,8 +446,8 @@ module.exports.getPointByPositionName = async function(req, res) {
         let position = req.body.position;
         log.info('(getPointByPositionName) position: ', position);
         let result = await sequelizeSystemObj.query(`
-            SELECT * FROM location WHERE locationName LIKE '%${ position }%' LIMIT 20
-        `, { type: QueryTypes.SELECT })
+            SELECT * FROM location WHERE locationName LIKE ? LIMIT 20
+        `, { type: QueryTypes.SELECT, replacements:["%" + position + "%"] })
         
         if (result.length > 0) {
             return res.json(utils.response(1, { lat: result[0].lat, lng: result[0].lng }));

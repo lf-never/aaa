@@ -249,7 +249,7 @@ const initDetail = async function () {
                 layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                     var tdTemp = $(tdElem);
                     let driverLeaveDays = []
-                    if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                    if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                         tdTemp.addClass('laydate-disabled');
                         tdTemp.css('color', 'orange');
                     }
@@ -384,7 +384,6 @@ const initDetail = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -570,7 +569,6 @@ const initDetail = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -1111,7 +1109,6 @@ const initDetail = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -1207,7 +1204,6 @@ const initDetail = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",

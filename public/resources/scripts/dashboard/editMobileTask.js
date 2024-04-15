@@ -30,11 +30,11 @@ const initDateCalender = function (defaultStartDate, defaultEndDate) {
 
     $("#startTimeCalender").append(`<div class="col-12 startTimeCalender">
         <input class="form-control custom-input-task px-1" id="startDatetime" value="${defaultStartDate}" name="startDatetime" readonly>
-        <img class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
+        <img alt="" class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
     </div>`)
     $("#endTimeCalender").append(`<div class="col-12 endTimeCalender">
         <input class="form-control custom-input-task px-1" id="endDatetime" value="${defaultEndDate}" name="endDatetime" readonly>
-        <img class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
+        <img alt="" class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
     </div>`)
 
     layui.use('laydate', function () {

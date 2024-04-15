@@ -148,8 +148,8 @@ $(function () {
                         <label class="view-user-nric" style="color: #6c757d; font-size: 0.75rem;">${full.nric ? ((full.nric).toString()).substr(0, 1) + '****' + ((full.nric).toString()).substr(((full.nric).toString()).length-4, 4) : '-'}</label>
                         ${
                             operationList.includes('View Full NRIC') ? `
-                            <img class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showUserNric(this, '${ full.nric }', 'show')"/>
-                            <img class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showUserNric(this, '${ full.nric }', 'noShow')"/>
+                            <img alt="" class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showUserNric(this, '${ full.nric }', 'show')" role="button"/>
+                            <img alt="" class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showUserNric(this, '${ full.nric }', 'noShow')" role="button"/>
                             ` : ''
                         }
                         </div>`
@@ -254,19 +254,19 @@ $(function () {
                 "render": function (data, type, full, meta) {
                     let actionHtml = ``;
                     let operationList = full.operation ? (full.operation).toLowerCase().split(',') : '';
-                    let viewHistoryBtnHtml = `<img src='../images/user/View History.svg' style='width: 30px; height: 30px; margin-left: 10px;' onclick="viewUserOptHistory(${full.id}, '${full.fullName}')" title='View History'/>`;
+                    let viewHistoryBtnHtml = `<img alt="" src='../images/user/View History.svg' style='width: 30px; height: 30px; margin-left: 10px;' onclick="viewUserOptHistory(${full.id}, '${full.fullName}')" role="button" title='View History'/>`;
 
                     if(data == 'Lock Out') {
                         if (currentPageTab == 'Approved' && operationList.includes('unlock')) {
                             //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #1B9063; border-color: #1B9063;" onclick="unlockUserByManager(${full.id}, '${full.fullName}')">Unlock</button>`
-                            actionHtml += `<img src='../images/user/Unlock.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="unlockUserByManager(${full.id}, '${full.fullName}')" title='Unlock'/>`;
+                            actionHtml += `<img alt="" src='../images/user/Unlock.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="unlockUserByManager(${full.id}, '${full.fullName}')" role="button" title='Unlock'/>`;
                         }
                         return actionHtml + viewHistoryBtnHtml;
                     }
                     if (data == 'Disabled') {
                         if (currentPageTab == 'Disabled' && operationList.includes('disable')) {
                             //actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'enable')">Activate</button>`
-                            actionHtml += `<img src='../images/user/Active.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'enable')" title='Activate'/>`;
+                            actionHtml += `<img alt="" src='../images/user/Active.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'enable')" role="button" title='Activate'/>`;
                         } else {
                             return '';
                         }
@@ -282,17 +282,17 @@ $(function () {
                     if((currentPageTab == 'Pending Approval' || currentPageTab == 'Approved') 
                         && (data == 'Pending Approval' || data == 'Approved') && operationList.includes('edit')) {
                         //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #337ab7; border-color: #337ab7;" onclick="editUser(${full.id})">Edit</button>`
-                        actionHtml += `<img src='../images/user/Edit.svg' style='width: 22px; height: 22px; margin-left: 10px;' onclick="editUser(${full.id})" title='Edit'/>`;
+                        actionHtml += `<img alt="" src='../images/user/Edit.svg' style='width: 22px; height: 22px; margin-left: 10px;' onclick="editUser(${full.id})" role="button" title='Edit'/>`;
                     }
 
                     if (currentPageTab == 'Approved' ) {
                         if (data != 'Disabled' && operationList.includes('disable')) {
                             //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #FF0000; border-color: #FF0000;"  onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')">Deactivate</button>`
-                            actionHtml += `<img src='../images/user/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')" title='Deactivate'/>`;
+                            actionHtml += `<img alt="" src='../images/user/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')" role="button" title='Deactivate'/>`;
                         }
                         if (operationList.includes('reset password')) {
                             //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #CA4C26; border-color: #CA4C26;" onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')">Reset Password</button>`
-                            actionHtml += `<img src='../images/user/Reset Password.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')" title='Reset Password'/>`;
+                            actionHtml += `<img alt="" src='../images/user/Reset Password.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')" role="button" title='Reset Password'/>`;
                         }
 
                         actionHtml += viewHistoryBtnHtml;
@@ -301,8 +301,8 @@ $(function () {
                     if (currentPageTab == 'Pending Approval' && full.canApprove == 1) {
                         // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')">Approve</button>`
                         // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')">Reject</button>`
-                        actionHtml += `<img src='../images/user/Approve.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')" title='Approve'/>`;
-                        actionHtml += `<img src='../images/user/Reject.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')" title='Reject'/>`;
+                        actionHtml += `<img alt="" src='../images/user/Approve.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')" role="button" title='Approve'/>`;
+                        actionHtml += `<img alt="" src='../images/user/Reject.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')" role="button" title='Reject'/>`;
                     }
 
                     return `<div style="width: 100%; height: 30px; display: flex; justify-content: center; align-items: center;">${actionHtml}</div>`;

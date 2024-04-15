@@ -164,7 +164,7 @@
                     <% if (operationList != null && operationList.find(item => item == 'New')) { %>
                     <div class="col-4">
                         <div class="row" style="float: right; margin-right: 1rem;">
-                            <div class="add-btn" onclick="initCreateVehicleTypePage('create')">
+                            <div class="add-btn" onclick="initCreateVehicleTypePage('create')" role="button" tabindex="0">
 								<div class="add-img"></div>
 								<label class="add-label fs-6">New VehicleType</label>
 							</div>
@@ -175,7 +175,7 @@
             </div>
             <div class="row m-0" style="padding: 10px;">
                 <div class="table-common table-shadow" style="border-radius: 1em;">
-                    <table class="table vehicle-type-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table vehicle-type-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                         
                     </table>
                 </div>

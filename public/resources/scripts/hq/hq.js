@@ -344,11 +344,11 @@ const getDriverListByTaskId = function (userId, vehicleType, hub, node, noOfVehi
         });
 }
 
-window.showPersonDetailEventHandler = async function (el, userType, userId, vehicleType, taskId, noOfDriver, choiceArea, choiceNode, reAssignHub, reAssignNode, dataType, startDate, endDate, purpose, mtAdminId, unitId) {
+window.showPersonDetailEventHandler = async function (el, userType, userId, vehicleType, taskId, choiceArea, choiceNode, reAssignHub, reAssignNode, dataType, startDate, endDate, purpose, mtAdminId, unitId) {
     startDate = moment(startDate).format('YYYY-MM-DD HH:mm')
     endDate = endDate && endDate != '' && endDate != 'null' ? moment(endDate).format('YYYY-MM-DD HH:mm') : null
     let noOfVehicle = $(el).closest('tr').find('#table-request-div').attr('value') == -1 ? true : null;
-    noOfDriver = $(el).closest('tr').find('#table-request-div').attr('value');
+    let noOfDriver = $(el).closest('tr').find('#table-request-div').attr('value');
     let dataTypeByVehicle = null
     // if(tableName == 'mb') {
     //     taskId = `AT-${ taskId }`
@@ -356,7 +356,7 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
 
     const clearFormData = function () {
         $('#myModal').modal('hide');
-        taskId = ''
+        // taskId = ''
         $("#search-driverName").val('');
         $("#search-driverName").attr("data-id", null);
         $("#search-driverName").attr("data-unitId", null);
@@ -834,7 +834,6 @@ window.initDetail = async function () {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -1126,13 +1125,13 @@ window.initDetail = async function () {
                                     }
                                     return '';
                                 } else if (operationList.includes('ASSIGN')) {
-                                    return `<button type="button" class="btn-assigned custom-Reassign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ full.noOfDriver }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Re-Assign</button>` 
+                                    return `<button type="button" class="btn-assigned custom-Reassign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Re-Assign</button>` 
                                 } 
                                 return ``
                             }
                         } else {
                             if (operationList.includes('ASSIGN')) {
-                                return `<button type="button" class="btn-assigned custom-assign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ full.noOfDriver }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Assign</button>`
+                                return `<button type="button" class="btn-assigned custom-assign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Assign</button>`
                             }
                         }
                     }
@@ -1428,7 +1427,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 layui.each(elem.find('tr'), function (trIndex, trElem) {
                     layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                         var tdTemp = $(tdElem);
-                        if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                        if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                             tdTemp.addClass('laydate-disabled');
                             tdTemp.css('color', 'orange');
                         }
@@ -1898,7 +1897,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
         initDriver()
 
         $('#mtAdminCancel').off('click').on('click', function () {
-            mtAdminId = null;
+            // mtAdminId = null;
             clearPageData();
         });
 
@@ -2081,7 +2080,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
 //         //     "ordering": true,
 //         //     "searching": false,
 //         //     "paging": true,
-//         //     "pageLength": 10,
 //         //     "autoWidth": false,
 //         //     "fixedHeader": true,
 //         //     "scrollX": "auto",

@@ -76,14 +76,14 @@ window.initCivilianLicenceList = async function() {
                 let actionHtml = ``;
                 if (operationList.includes('Edit')) {
                 actionHtml += `
-                    <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="EditCivilianLicence(${ temp.id })">
+                    <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="EditCivilianLicence(${ temp.id })" role="button" tabindex="0">
                         Edit
                     </div>
                 `;
                 }
                 if (operationList.includes('Delete')) {
                 actionHtml += `
-                    <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteCivilianLicence(${ temp.id })" style="margin-left: 15px;">
+                    <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteCivilianLicence(${ temp.id })" role="button" tabindex="0" style="margin-left: 15px;">
                         Delete
                     </div>
                 `;

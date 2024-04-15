@@ -85,13 +85,13 @@ const initVehicleClassList = async function() {
           let operationList = temp.operation.split(',')
           let actionHtml = ``;
           if (temp.approveStatus == 'Deleted') {
-            actionHtml = `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showDeleteInfo('${temp.deleteUser ? temp.deleteUser : '-'}', '${temp.deleteAt ? moment(temp.deleteAt).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${temp.deleteReason ? temp.deleteReason : '-'}')">Deleted</div>`
+            actionHtml = `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showDeleteInfo('${temp.deleteUser ? temp.deleteUser : '-'}', '${temp.deleteAt ? moment(temp.deleteAt).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${temp.deleteReason ? temp.deleteReason : '-'}')" role="button" tabindex="0">Deleted</div>`
           } else if (operationList.includes('Edit') || operationList.includes('All')) {
             actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-permitTypeDetail custom-btn-blue" onclick="editDriverPermitTypeDetail(${temp.id}, '${temp.permitType}', '${temp.passDate}', '${temp.baseMileage ? temp.baseMileage : 0}', '${temp.attemptNums}', '${temp.testerCode}', '${temp.score}', '${temp.demeritPoint}')">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-permitTypeDetail custom-btn-blue" onclick="editDriverPermitTypeDetail(${temp.id}, '${temp.permitType}', '${temp.passDate}', '${temp.baseMileage ? temp.baseMileage : 0}', '${temp.attemptNums}', '${temp.testerCode}', '${temp.score}', '${temp.demeritPoint}')" role="button" tabindex="0">
                 Edit
               </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-permitTypeDetail custom-btn-danger" onclick="deletePermitTypeDetail(${temp.id}, '${temp.permitType}')" style="margin-left: 15px;">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-permitTypeDetail custom-btn-danger" onclick="deletePermitTypeDetail(${temp.id}, '${temp.permitType}')" role="button" tabindex="0" style="margin-left: 15px;">
                 Delete
               </div>
             `;

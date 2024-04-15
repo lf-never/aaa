@@ -120,7 +120,7 @@ window.NoticeUtil = {
                 
                 <div class="row m-0 mb-3">
                     <div class="col">
-                        ${ row.mainImage ? `<img class="notice-main-img active" src="${ row.mainImage }">` : '' }
+                        ${ row.mainImage ? `<img alt="" class="notice-main-img active" src="${ row.mainImage }">` : '' }
                     </div>
                 </div>
             `,
@@ -156,7 +156,7 @@ window.openLink = function (link) {
     
 }
 
-export var NoticeUtils = NoticeUtil
+export const NoticeUtils = NoticeUtil
 
 export function showNotice() {
     NoticeUtil.showNotice()

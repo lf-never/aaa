@@ -78,7 +78,7 @@ export async function initIncidentViewPage () {
         stateSave: true, // keep page, searching, filter
     });
 
-    // TODO: show view incident module
+    // show view incident module
     $('#view-incident').modal('show');
     initIncidentEventHandler()
 }

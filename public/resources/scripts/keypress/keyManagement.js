@@ -105,7 +105,6 @@ const initKeyBoxTable = async function() {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -238,7 +237,6 @@ const initKeyBoxDetailTable = async function(selectedSiteId) {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -401,7 +399,6 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -504,7 +501,7 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
                         let html = `
                         <div>
                             ${ htmlName }
-                            <img src="../images/key-remind.png" class="key-remind" data-bs-toggle="tooltip" style="width: 30px;height: 30px" onmouseenter="mouseenterKeyRemind('${ htmlName }', this)">
+                            <img alt="" src="../images/key-remind.png" class="key-remind" data-bs-toggle="tooltip" style="width: 30px;height: 30px" onmouseenter="mouseenterKeyRemind('${ htmlName }', this)">
                         </div>
                         `
                         return html
@@ -548,7 +545,7 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
                         if (data) {
                             return `
                             <div>
-                                <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showReason(this);">
+                                <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showReason(this);" role="button" tabindex="0">
                                     ${ data ? data : '' }
                                 </span><br>
                             </div>
@@ -590,7 +587,6 @@ const initKeyBoxSummaryTable = async function(selectedSiteId) {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",
@@ -684,7 +680,6 @@ const initKeyUnitSummaryTable = async function(selectedSiteId) {
             "ordering": true,
             "searching": false,
             "paging": true,
-            "pageLength": 10,
             "autoWidth": false,
             "fixedHeader": true,
             "scrollX": "auto",

@@ -39,7 +39,7 @@ export async function initHubConf () {
                         </div>
                         <div class="col-2">
                             <input type="text" class="coloris" value="${ hubConf.color }" data-coloris id="color-selector-${ hubConf.hub }" style="width: 0; height: 0; z-index: -1; position: relative;"/>
-                            <img class="color-selector-${ hubConf.hub }" style="width: 32px;" src="../images/color.svg">
+                            <img alt="" class="color-selector-${ hubConf.hub }" style="width: 32px;" src="../images/color.svg">
                         </div>
                         <div class="col-5">
                             <input type="text" style="width: 120px;" class="form-control form-control-sm color-value" value="${ hubConf.color }"/>

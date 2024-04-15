@@ -197,7 +197,8 @@ module.exports = {
             }
 
             if (user.userType.toLowerCase() == 'customer') {
-                sql += ` AND ss.groupId = ${ user.unitId } `;
+                sql += ` AND ss.groupId = ? `;
+                replacements.push(user.unitId)
             } else if (user.userType.toLowerCase() == 'hq') {
                 let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(user.userId)
 
@@ -230,7 +231,8 @@ module.exports = {
                 }
             } else if (user.userType.toLowerCase() == 'administrator') {
                 if (group) {
-                    sql += ` AND ss.groupId = ${ group } `
+                    sql += ` AND ss.groupId = ? `
+                    replacements.push(group);
                 } else if (group == 0) {
                     sql += ` AND ss.groupId IS NOT NULL `
                 } else {
@@ -257,7 +259,11 @@ module.exports = {
             }
 
             if (sortBy == 'createdAt') {
-                sql += ` ORDER BY ss.createdAt ${ sort ? sort : ' DESC ' }`
+                if (sort.toLowerCase() == 'asc') {
+                    sql += ` ORDER BY ss.createdAt ASC `
+                } else {
+                    sql += ` ORDER BY ss.createdAt DESC `
+                }
             }
 
             console.log(sql)

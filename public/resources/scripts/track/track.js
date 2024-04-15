@@ -336,7 +336,7 @@ const searchHandler = async function () {
 
     getUserPositionListHttp(driverList, deviceList, selectedDate, selectedTime);
 
-    // TODO: use for draw route line( device will not has route)
+    // use for draw route line( device will not has route)
     // initDrawRoute(driverList);
 };
 
@@ -362,7 +362,7 @@ const getUserPositionListHttp = function (driverList, deviceList, selectedDate, 
             console.log(resultList)
             layer.closeAll('loading');
             if (resultList.length) {
-                // TODO: clear marker
+                // clear marker
                 for (let marker of tempMarkerList) {
                     if (marker) removeMapObject(marker);
                 }
@@ -372,7 +372,7 @@ const getUserPositionListHttp = function (driverList, deviceList, selectedDate, 
                 $('.track-action').show();
                 $('.realTimeSpeed').show();
                 tempTrackData = resultList;
-                // TODO: show driver and device list
+                // show driver and device list
                 showTracking();
 
                 initSpeedChart();

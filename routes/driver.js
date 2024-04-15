@@ -11,15 +11,11 @@ router.post('/getDriverTaskById', driverService.getDriverTaskById);
 router.post('/deleteDriverTask', driverService.deleteDriverTask);
 router.post('/updateDriverTask', driverService.updateDriverTask);
 
-router.post('/availableDriverList', driverService.getAvailableCreateDriverTaskLis);
 router.post('/getDriverList', driverService.getDriverList);
 
 router.post('/deleteDriver', driverService.deleteDriver);
 // Not used yet
 router.post('/createDriver', driverService.createDriver);
-router.post('/editDriverFromResource', driverService.editDriverFromResource);
-router.post('/createDriverFromResource', driverService.editDriverFromResource);
-router.post('/updateDriver', driverService.updateDriver);
 
 
 router.post('/updateDriverStatus', driverService.updateDriverStatus);
@@ -85,8 +81,6 @@ router.post('/updateDriverBaseinfo', driverService.updateDriverBaseinfo);
 router.post('/updateTaskMileageInfo', driverService.updateTaskMileageInfo);
 router.post('/updateTaskMileageStatus', driverService.updateTaskMileageStatus);
 router.post('/getSystemGroup', driverService.getSystemGroup);
-
-router.post('/getDriverListByGroup', driverService.getDriverListByGroup);
 
 router.post('/approvePermitExchangeApply', driverService.approvePermitExchangeApply);
 router.post('/downloadDriverPermitExchangeApply', driverService.downloadDriverPermitExchangeApply);

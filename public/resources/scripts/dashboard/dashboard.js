@@ -579,7 +579,7 @@ const initTaskTable = function () {
                         return data
                     } else {
                         return `
-                            <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0"> 
                                 ${ data ? data : '' }
                             </span>
                         `
@@ -601,7 +601,7 @@ const initTaskTable = function () {
                     if (full.cancelledDateTime) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                                 ${ data ? data : '-' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
@@ -773,7 +773,7 @@ const initDriverTaskTable = function () {
                     if (full.cancelledDateTime) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                                 ${ data ? data : '-' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.cancelledBy ?? '-' }</label><br>
@@ -1055,7 +1055,7 @@ const initMTRacTable = function () {
                     let dataStr = data;
                     if (dataStr && dataStr.length > 50) {
                         dataStr = dataStr.substring(0, 50) + '...';
-                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showMTRacMitigation(this)">${ dataStr }</span>`
+                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showMTRacMitigation(this)" role="button" tabindex="0">${ dataStr }</span>`
                     } else {
                         return data ? data : '-';
                     }
@@ -1209,7 +1209,7 @@ const initODDTable = function () {
                 let dataStr = data;
                 if (dataStr && dataStr.length > 50) {
                     dataStr = dataStr.substring(0, 50) + '...';
-                    return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showOddDes(this)">${ dataStr }</span>`
+                    return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showOddDes(this)" role="button" tabindex="0">${ dataStr }</span>`
                 } else {
                     return data;
                 }
@@ -1457,7 +1457,7 @@ const initSurveyTable = function () {
                     let dataStr = data;
                     if (dataStr && dataStr.length > 50) {
                         dataStr = dataStr.substring(0, 50) + '...';
-                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showSurveyRemark(this)" >${dataStr}</span>`
+                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showSurveyRemark(this)" role="button" tabindex="0">${dataStr}</span>`
                     } else {
                         return data;
                     }
@@ -1620,7 +1620,7 @@ const initIncidentTable = function () {
                     let dataStr = data;
                     if (dataStr && dataStr.length > 50) {
                         dataStr = dataStr.substring(0, 50) + '...';
-                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showIncidentDes(this)" >${dataStr}</span>`
+                        return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showIncidentDes(this)" role="button" tabindex="0">${dataStr}</span>`
                     } else {
                         return data;
                     }
@@ -1790,7 +1790,7 @@ const initCVTable = function () {
                         return data
                     } else {
                         return `
-                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);">
+                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span>
                         `
@@ -1811,7 +1811,7 @@ const initCVTable = function () {
                     if (full.returnDate) {
                         return `
                             <div>
-                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'returnRemark');">
+                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'returnRemark');" role="button" tabindex="0">
                                     ${ full.returnRemark ?? '-' }
                                 </span><br>
                                 <label class="fw-bold">Updated By:</label> <label>${ full.returnUserName ? full.returnUserName : 'System' }</label><br>
@@ -1821,7 +1821,7 @@ const initCVTable = function () {
                     } else if (full.cancelledDateTime) {
                         return `
                             <div>
-                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'cancelledCause');">
+                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'cancelledCause');" role="button" tabindex="0">
                                     ${ full.cancelledCause ?? '-' }
                                 </span><br>
                                 <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
@@ -2055,7 +2055,7 @@ const initATMSTable = function () {
                         return data
                     } else {
                         return `
-                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);">
+                            <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span>
                         `
@@ -2076,7 +2076,7 @@ const initATMSTable = function () {
                      if (full.cancelledDateTime) {
                         return `
                             <div>
-                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'cancelledCause');">
+                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'cancelledCause');" role="button" tabindex="0">
                                     ${ full.cancelledCause ?? '-' }
                                 </span><br>
                                 <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
@@ -2086,7 +2086,7 @@ const initATMSTable = function () {
                     } else if (full.returnDate) {
                         return `
                             <div>
-                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'returnRemark');">
+                                <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this, 'returnRemark');" role="button" tabindex="0">
                                     ${ full.returnRemark ?? '-' }
                                 </span><br>
                                 <label class="fw-bold">Updated By:</label> <label>${ full.returnUserName ? full.returnUserName : 'System' }</label><br>
@@ -2481,7 +2481,7 @@ const initUrgentTaskTable = function () {
                 if (full.cancelledDateTime) {
                     return `
                     <div>
-                        <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                        <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                             ${ data ? data : '-' }
                         </span><br>
                         <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
@@ -2595,7 +2595,6 @@ const initUrgentDutyTable = function () {
         "ordering": true,
         "searching": false,
         "paging": true,
-        "pageLength": 10,
         "autoWidth": false,
         "fixedHeader": true,
         "scrollX": "auto",
@@ -2719,7 +2718,7 @@ const initUrgentDutyTable = function () {
                     if (full.cancelledDateTime) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.cancelledName ? full.cancelledName : '' }</label><br>
@@ -2850,7 +2849,7 @@ const reAssignIndent = async function (requestId, id, dutyId) {
                     margin-top: 13px;
                 }
             </style>
-            <table class="select-duty px-2 mt-2" style="width: 90%; text-align: center; margin-left: 5%">
+            <table aria-hidden="true" class="select-duty px-2 mt-2" style="width: 90%; text-align: center; margin-left: 5%">
                 <thead>
                     <tr class="fw-bold fs-6" style="background-color: #ebe7e7; border-radius: 10px;">
                         <td></td>

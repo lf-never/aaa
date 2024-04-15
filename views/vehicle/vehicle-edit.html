@@ -107,7 +107,7 @@
                                         </div>
                                         <div class="col-6 mt-2 vehice-avi-date">
                                             <label class="info-title">AVI Date</label><br>
-                                            <img src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
+                                            <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
                                             <input name="aviDate" id="aviDate" placeholder="DD/MM/YYYY" class="form-control avi-date-input" style="padding-left: 30px ;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
                                         </div>
                                         <div class="col-6 mt-2 vehice-pm-type">
@@ -130,15 +130,15 @@
                     </div>
                     <div class="row my-3 px-4" style="display: flex;">
                         <div class="mt-1" style="width: 50%;display: flex;justify-content: flex-end;">
-                            <div class="opt-btn-div opt-btn-div-cancel custom-btn-gray modal-footer-bunton-cancel-lg" onclick="cancleEditVehicle();">
+                            <div class="opt-btn-div opt-btn-div-cancel custom-btn-gray modal-footer-bunton-cancel-lg" onclick="cancleEditVehicle();" role="button" tabindex="0">
                                 <label class="opt-btn-label fs-6">Cancel</label>
                             </div>
                         </div>
                         <div class="mt-1" style="width: 50%;display: flex;justify-content: flex-start;">
-                            <div onclick="confirmCreateOrSave(this);" class="opt-btn-div opt-btn-div-create modal-footer-bunton-confirm-lg" style="background-color: #1B9063;width: 200px; display: none;">
+                            <div onclick="confirmCreateOrSave(this);" role="button" tabindex="0" class="opt-btn-div opt-btn-div-create modal-footer-bunton-confirm-lg" style="background-color: #1B9063;width: 200px; display: none;">
                                 <label style="color: white;" class="opt-btn-label fs-6">Submit And Create</label>
                             </div>
-                            <div onclick="confirmCreateOrSave(this);" class="opt-btn-div opt-btn-div-edit" style="background-color: #1B9063; display: none;">
+                            <div onclick="confirmCreateOrSave(this);" role="button" tabindex="0" class="opt-btn-div opt-btn-div-edit" style="background-color: #1B9063; display: none;">
                                 <label style="color: white;" class="opt-btn-label fs-6">Save</label>
                             </div>
                         </div>
@@ -149,10 +149,10 @@
                     <div style="width: 100%;"><label class="fs-4" style="font-weight: 900; display: flex; justify-content: center;">New vehicle profile submitted for approval</label></div>
                     <div style="width: 100%;"><label style="color:rgb(213, 210, 210);display: flex; justify-content: center;">You will be notified when the vehicle profile has been verified.</label></div>
                     <div class="row my-3" style="display: flex;justify-content: center;">
-                        <div onclick="backToList();" style="width: 240px;border: 1px solid green;border-radius: 5px;text-align: center;">
+                        <div onclick="backToList();" role="button" tabindex="0" style="width: 240px;border: 1px solid green;border-radius: 5px;text-align: center;">
                             <label style="color: green;" class="fs-6">Back To Resource Listing</label>
                         </div>
-                        <div onclick="createContinue();" style="width: 180px;border: 1px solid green;border-radius: 5px;text-align: center;background-color: #1B9063;margin-left: 20px;">
+                        <div onclick="createContinue();" role="button" tabindex="0" style="width: 180px;border: 1px solid green;border-radius: 5px;text-align: center;background-color: #1B9063;margin-left: 20px;">
                             <label style="color: white;" class="opt-btn-label fs-6">Create Another</label>
                         </div>
                     </div>

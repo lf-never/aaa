@@ -65,7 +65,7 @@ $(function () {
             {
                 "data": "vehicleNo", "title": "Vehicle", orderable: true,
                 "render": function (data, type, full, meta) {
-                    return `<span class="vehicleNo-column" style="font-weight: 600;" onclick="goNavPage('${data}', '${full.currentStatus}')">${data}</span><br/>
+                    return `<span class="vehicleNo-column" style="font-weight: 600;" onclick="goNavPage('${data}', '${full.currentStatus}')" role="button" tabindex="0">${data}</span><br/>
                             <span style="color: #6c757d;">${full.vehicleType}</span>
                         `;
                 }
@@ -134,7 +134,7 @@ $(function () {
                 "data": "location", orderable: false,
                 "title": "<label id='locationTh'>Location<label>",
                 "render": function (data, type, full, meta) {
-                    return `<img onclick="viewVehicleMap('${full.vehicleNo}')" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">`;
+                    return `<img alt="" onclick="viewVehicleMap('${full.vehicleNo}')" role="button" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">`;
                 }
             },
             {
@@ -154,7 +154,7 @@ $(function () {
                 "render": function (data, type, full, meta) {
                     if (data) {
                         return `
-                            <div onclick="markAsUnAvailable(${meta.row})">
+                            <div onclick="markAsUnAvailable(${meta.row})" role="button">
                                 <div>${data.startTime ? moment(data.startTime).format("DD/MM/YYYY, HH:mm") : '-'}</div>
                                 <div>${data.endTime ? moment(data.endTime).format("DD/MM/YYYY, HH:mm") : '-'}</div>
                             </div>
@@ -204,31 +204,31 @@ $(function () {
                     if (full.currentStatus == 'Deactivate') {
                         if (operationList.includes('reactivate')) {
                             result = `
-                                <img src='../images/Reset.svg' style='width: 24px; height: 24px; ' onclick="reactivateVehicle('${data}')" title='Reactivate'/>
+                                <img alt="" src='../images/Reset.svg' style='width: 24px; height: 24px; ' onclick="reactivateVehicle('${data}')" role="button" title='Reactivate'/>
                             `
                         }
                         return `<div style="width: 100%; height: 30px; display: flex; justify-content: center; align-items: center;">${result}</div>`;
                     }
                     if (full.currentStatus != 'Loan Out' && (operationList.includes('mark event') || operationList.includes('cancel event') || operationList.includes('update event'))) {
                         result += `
-                            <img src='../images/Mark Leave.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="markAsUnAvailable(${meta.row},true)" title='Mark/Cancel/Update Event'/>
+                            <img alt="" src='../images/Mark Leave.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="markAsUnAvailable(${meta.row},true)" role="button" title='Mark/Cancel/Update Event'/>
                         `    
                     }
                     // if(Cookies.get('userType').toUpperCase() != 'CUSTOMER'){
                         if (operationList.includes('deactivate')) {
                             result += `
-                                <img src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteVehicle('${data}')" title='Deactivate'/>
+                                <img alt="" src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteVehicle('${data}')" role="button" title='Deactivate'/>
                             `
                         }
                     // } else 
                     if (full.currentStatus == 'Deployable' && full.loanTaskId && operationList.includes('return')) {
                         result += `
-                            <img src='../images/returnResources.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="returnResources('${full.vehicleNo}')" title='Return'/>
+                            <img alt="" src='../images/returnResources.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="returnResources('${full.vehicleNo}')" role="button" title='Return'/>
                         `
                     }
                     if (operationList.includes('viewindent') && full.currentStatus != 'Deactivate' && full.vehicleMileageWaringTaskNum > 0) {
                         result += `
-                            <img src='../images/warn-mileage.svg' style='width: 26px; height: 26px; margin-left: 5px;' onclick="viewMileageWarnIndent('${full.vehicleNo}')" title='Mileage Warning'/>
+                            <img alt="" src='../images/warn-mileage.svg' style='width: 26px; height: 26px; margin-left: 5px;' onclick="viewMileageWarnIndent('${full.vehicleNo}')" role="button" title='Mileage Warning'/>
                         `
                     }        
                     return `<div style="width: 60px; height: 30px; display: flex; justify-content: flex-start; align-items: center;">${result}</div>`;

@@ -35,19 +35,19 @@ const upsertSchedule = function (notice, noticeSchedule) {
     try {
         let existNoticeSchedule = ScheduleList.some(item => item.id == notice.id);
         if (existNoticeSchedule) {
-            // TODO: update
+            // update
             ScheduleList.some(item => {
                 if (item.id == notice.id) {
                     log.warn(`generateSchedule(Notice ID: ${ notice.id }) => already exist, update it!`)
-                    // TODO: cancel old schedule
+                    // cancel old schedule
                     item.scheduleObj.cancel();
-                    // TODO: update new schedule
+                    // update new schedule
                     item.scheduleJob = noticeSchedule;
                     return true;
                 }
             });
         } else {
-            // TODO: insert
+            // insert
             log.warn(`generateSchedule(Notice ID: ${ notice.id }) => does not exist, add it!`)
             ScheduleList.push({ id: notice.id, scheduleObj: noticeSchedule })
         }
@@ -73,7 +73,7 @@ const generateNotificationList = async function (notice) {
         log.info(`generateSchedule(Notice ID: ${ notice.id }) => unitIdList: ${ JSON.stringify(unitIdList) }`)
     }
     let notificationList = []
-    // TODO: get latest driver unitId
+    // get latest driver unitId
     let baseSql = `
         SELECT t.taskId, t.driverId, us.userId, us.role AS toType, us.fullName, u.id AS unitId, 
         t.groupId, t.hub, t.node, v.vehicleType AS platform
@@ -142,17 +142,17 @@ const generateSchedule = async function (notice) {
     let scheduleTime = moment(notice.scheduledTime, 'HH:mm:ss')
     log.info(`ScheduleTime format => ${ scheduleTime.format('mm') } ${ scheduleTime.format('HH') } * * * `)
     
-    // TODO: every schedule has different name by notice id
+    // every schedule has different name by notice id
     let noticeSchedule = schedule.scheduleJob(`Notice Schedule ${ notice.id }`, `${ scheduleTime.format('mm') } ${ scheduleTime.format('HH') } * * *`, async () => {
 
         log.info(`111111111111`)
         log.info(JSON.stringify(notice))
         log.info(`111111111111`)
 
-        // TODO: over endDateTime
+        // over endDateTime
         if (moment().format('YYYY-MM-DD') == moment(notice.endDateTime).add(1, 'days').format('YYYY-MM-DD')) {
             log.warn(`Notification ID => ${ notice.id } is over ${ moment(notice.endDateTime).format('YYYY-MM-DD HH:mm:ss') }, and cancel now! `)
-            // TODO: remove schedule
+            // remove schedule
             cancelSchedule(notice.id)
         } else if (moment().isBefore(notice.startDateTime)) {
             log.warn(`Notification ID => ${ notice.id } is in future, will not send firebase! `)
@@ -182,7 +182,7 @@ const generateSchedule = async function (notice) {
             }
         }
     })
-    // TODO: add/update schedule list
+    // add/update schedule list
     upsertSchedule(notice, noticeSchedule)
     log.info(` Current Schedule => ${ JSON.stringify(ScheduleList) } `)
 }
@@ -214,9 +214,9 @@ const initSchedule = async function (noticeId) {
                 notice.scheduledTime = moment(notice.startDateTime).format('HH:mm:ss')
             }
 
-            // TODO: judge hub/node and group, only send mobile
+            // judge hub/node and group, only send mobile
             if (notice.driverHubNodeList || notice.groupId) {
-                // TODO: judge time
+                // judge time
                 let startTime = moment(notice.startDateTime).format('YYYY-MM-DD') + ' ' + notice.scheduledTime
                 let endTime = moment(notice.endDateTime).format('YYYY-MM-DD') + ' ' + notice.scheduledTime
                 if (moment().isSameOrAfter(moment(startTime)) && moment().isSameOrBefore(moment(endTime))) {

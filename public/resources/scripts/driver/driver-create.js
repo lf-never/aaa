@@ -95,7 +95,7 @@ export async function initDriverTaskCreatePage () {
         let subUnitHtml = `<option value="${ unitList[0].subUnit }" data-id="${ unitList[0].id }">${ unitList[0].subUnit }</option>`
         $('#create-driver .select-subUnit').append(subUnitHtml)
 
-        // TODO: Change subUnit while unit changed.
+        // Change subUnit while unit changed.
         $('#create-driver .select-unit').on('change', function () {
             let selectedUnit = $(this).val();
             $('#create-driver .select-subUnit').empty()
@@ -148,7 +148,7 @@ export async function initDriverTaskCreatePage () {
     initSelectRoutePage();
     initBtnClickEventHandler();
 
-    // TODO: show view driver create module
+    // show view driver create module
     $('#create-driver').modal('show');
 };
 

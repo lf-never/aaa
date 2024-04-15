@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
             user = await User.findOne({ where: { username: token.loginName, password: token.password } })
             if (user) {
                 let jwtToken = utils.generateTokenKey({ userId: user.userId });
-                // TODO: Update User info
+                // Update User info
                 user.online = 1;
                 user.lastLoginTime = moment();
                 user.jwtToken = jwtToken;
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 
                 let unit = await Unit.findByPk(user.unitId)
 
-                // TODO: Store User into cookie
+                // Store User into cookie
                 res.cookie('token', jwtToken, { expires: utils.expiresCookieDate() });
                 req.session.token = jwtToken;
                 res.cookie('userId', user.userId, { expires: utils.expiresCookieDate() });
@@ -65,15 +65,11 @@ router.get('/', async (req, res) => {
                 res.cookie('hub', unit ? unit.unit : '', { expires: utils.expiresCookieDate() });
                 res.cookie('node', (unit && unit.subUnit) ? unit.subUnit: '', { expires: utils.expiresCookieDate() });
                 res.cookie('VehicleMissingFrequency', conf.VehicleMissingFrequency, { expires: utils.expiresCookieDate() });
-                // TODO: Store System Conf into cookie
+                // Store System Conf into cookie
                 res.cookie('sysConf', {
                     allow_audio_img_file: 1,
                     allow_audio_radio_call: 1,
                 }, { expires: utils.expiresCookieDate() });
-                // TODO: Store Chat Conf into cookie
-                res.cookie('chatRobot', conf.ChatRobot, { expires: utils.expiresCookieDate() });
-                res.cookie('chatServer', conf.ChatServer, { expires: utils.expiresCookieDate() });
-                res.cookie('gitsiServer', conf.GitsiServer, { expires: utils.expiresCookieDate() });
 
                 let newOptRecord = {
                     operatorId: user.userId,
@@ -120,8 +116,6 @@ router.get('/', async (req, res) => {
     res.render('index', { title: 'Driver', userId: user.userId, userType: user.userType, pageList, availableSwitchCV });
 });
 
-// router.get('/chat', (req, res) => res.render('chat/chat'));
-// router.get('/new-chat', (req, res) => res.render('chat/new-chat'));
 
 router.get('/login', (req, res) => res.render('login/index', { title: 'Welcome Mobius', singpassError: '', loginError: '' }));
 router.get('/guide', (req, res) => res.render('guide', { title: 'Welcome Mobius'}));
@@ -129,9 +123,6 @@ router.post('/login', userService.login);
 router.post('/logout', userService.logout);
 
 router.post('/loginUseSingpass', userService.loginUseSingpass);
-
-router.post('/getSystemConf', userService.getSystemConf);
-router.post('/updateSystemConf', userService.updateSystemConf);
 
 router.post('/getRoleVocation', userService.getRoleVocation);
 
@@ -245,11 +236,6 @@ router.post('/getLocationList', locationService.getLocationList)
 router.post('/updateLocation', locationService.updateLocation)
 router.post('/deleteLocation', locationService.deleteLocation)
 router.post('/createLocation', locationService.createLocation)
-
-const uploadTaskService = require('../services/uploadTaskService');
-router.post('/uploadMBTask', uploadTaskService.uploadMBTask)
-router.get('/downloadMBTask', uploadTaskService.downloadMBTask)
-router.post('/updateMBTask', uploadTaskService.updateMBTask2)
 
 const mobileTaskService = require('../services/mobileTaskService');
 router.post('/approveMobileTaskById', mobileTaskService.approveMobileTaskById)

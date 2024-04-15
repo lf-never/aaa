@@ -128,14 +128,14 @@ const initVehicleTypeTable = function () {
                     let operationList = full.operation.split(',')
                     let actionHtml = '';
                     if (operationList.includes('Edit') && data == 'enable') {
-                        actionHtml += `<img src='../images/user/Edit.svg' style='width: 25px; height: 25px; margin-left: 10px;' 
-                            onclick="initCreateVehicleTypePage('edit', ${full.id}, '${full.vehicleName}', '${full.category}', '${full.vehicleClass}', '${full.description}', '${full.belongTo}', '${full.baseLineQty ? full.baseLineQty : ''}')" title='Edit'/>`;
+                        actionHtml += `<img alt="" src='../images/user/Edit.svg' style='width: 25px; height: 25px; margin-left: 10px;' 
+                            onclick="initCreateVehicleTypePage('edit', ${full.id}, '${full.vehicleName}', '${full.category}', '${full.vehicleClass}', '${full.description}', '${full.belongTo}', '${full.baseLineQty ? full.baseLineQty : ''}')" role="button" title='Edit'/>`;
                     } 
                     if (operationList.includes('Deactivate') && data == 'enable') {
-                        actionHtml += `<img src='../images/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableVehicleType(${full.id}, '${full.vehicleName}', 'disable')" title='Deactivate'/>`;
+                        actionHtml += `<img alt="" src='../images/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableVehicleType(${full.id}, '${full.vehicleName}', 'disable')" role="button" title='Deactivate'/>`;
                     } 
                     if (operationList.includes('Reactivate') && data == 'disable') {
-                        actionHtml += `<img src='../images/Reset.svg' style='width: 28px; height: 28px; margin-left: 10px;' onclick="enableVehicleType(${full.id}, '${full.vehicleName}', 'enable')" title='Reactivate'/>`;
+                        actionHtml += `<img alt="" src='../images/Reset.svg' style='width: 28px; height: 28px; margin-left: 10px;' onclick="enableVehicleType(${full.id}, '${full.vehicleName}', 'enable')" role="button" title='Reactivate'/>`;
                     }
                     if (!actionHtml) {
                         actionHtml = '-';

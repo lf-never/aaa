@@ -28,22 +28,38 @@ $(async function () {
             let obj = {}
             if(unitByHub){
                 driverClass = driverClass.reduce(function(item, next) {
-                    obj[next.subunit] ? '' : obj[next.subunit] = true && item.push(next);
+                    // obj[next.subunit] ? '' : obj[next.subunit] = true && item.push(next);
+                    if(!obj[next.subunit]){
+                        obj[next.subunit] = true;
+                        item.push(next)
+                    }
                     return item;
                  }, []);
                  let obj2 = {}
                  vehicleClass = vehicleClass.reduce(function(item, next) {
-                    obj2[next.subunit] ? '' : obj2[next.subunit] = true && item.push(next);
+                    // obj2[next.subunit] ? '' : obj2[next.subunit] = true && item.push(next);
+                    if(!obj2[next.subunit]){
+                        obj2[next.subunit] = true;
+                        item.push(next)
+                    }
                      return item;
                   }, []);
             } else {
                 driverClass = driverClass.reduce(function(item, next) {
-                    obj[next.unit] ? '' : obj[next.unit] = true && item.push(next);
+                    // obj[next.unit] ? '' : obj[next.unit] = true && item.push(next);
+                    if(!obj[next.unit]) {
+                        obj[next.unit] = true; 
+                        item.push(next)
+                    }
                     return item;
                  }, []);
                  let obj2 = {}
                  vehicleClass = vehicleClass.reduce(function(item, next) {
-                    obj2[next.unit] ? '' : obj2[next.unit] = true && item.push(next);
+                    // obj2[next.unit] ? '' : obj2[next.unit] = true && item.push(next);
+                    if(!obj2[next.unit]){
+                        obj2[next.unit] = true;
+                        item.push(next)
+                    }
                      return item;
                   }, []);
             }
@@ -154,7 +170,7 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
     let driverDetailEventHtml = ``
     let vehicleDetailEventHtml = ``
     if (hubNode == 'hub') {
-        hubNodeEventHtml = ` onclick="clickHub('${ item.unit }')" `
+        hubNodeEventHtml = ` onclick="clickHub('${ item.unit }')" role="button"`
         driverDetailEventHtml = ` 'char-people-hub-${ (item.unit).replaceAll(" ","_") }', null, true, '${ item.unit }' `
         vehicleDetailEventHtml = ` 'char-hub-bus-${ (item.unit).replaceAll(" ","_") }', '${ item.unit }', true, '${ item.unit }' `
     } else if (hubNode == 'node') {
@@ -172,8 +188,8 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
                         <label style="cursor: pointer;" ${ hubNodeEventHtml }>${ hubNode == 'hub' ? ((item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit) : ((item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit)}</label>
                     </div>
                     <div class="col-3 text-end">
-                        <img src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;'}" draggable="false"/>
-                        <img src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" draggable="false"/>
+                        <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;'}" draggable="false"/>
+                        <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" draggable="false"/>
                     </div>
                 </div>
             </div>
@@ -186,7 +202,7 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
                     </div>
                     <div class="col-6 px-0">
                         <div class="driver-card-detail" style="background-color: ${ data.driverColor.rightColor }; height: 95px;">
-                            <img class="node-card-img" src="../images/resourcesDashboard/people4.svg" onclick="clickPeople(${ driverDetailEventHtml })">
+                            <img alt="" class="node-card-img" src="../images/resourcesDashboard/people4.svg" onclick="clickPeople(${ driverDetailEventHtml })" role="button">
                             <!-- <label class="card-count driver-card-count">${ (item.unit.toLowerCase()) == 'dv_loa' ? data.availableTotal : `${ data.availableTotal } / ${ item.driverListNumber }` }</label> -->
                             <label class="card-count driver-card-count">${ data.availableTotal } / ${ item.driverListNumber }</label>
                         </div>
@@ -200,7 +216,7 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
                     </div>
                     <div class="col-6 px-0">
                         <div class="vehicle-card-detail" style="background-color: ${ data.vehicleColor.rightColor }; height: 95px;">
-                            <img class="node-card-img" src="../images/resourcesDashboard/bus4.svg" onclick="clickBus(${ vehicleDetailEventHtml })">
+                            <img alt="" class="node-card-img" src="../images/resourcesDashboard/bus4.svg" onclick="clickBus(${ vehicleDetailEventHtml })" role="button">
                             <!-- <label class="card-count vehicle-card-count">${ (item.unit.toLowerCase()) == 'dv_loa' ? data.availableTotal2 : `${ data.availableTotal2 } / ${ item.vehicleListNumber }` }</label> -->
                             <label class="card-count vehicle-card-count">${ data.availableTotal2 } / ${ item.vehicleListNumber }</label>
                         </div>
@@ -210,7 +226,7 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
         </div>
     `
 }
-const generateVehicleCardHtml = function (data, color, startedTaskCountTotal, startedTaskCountTotal) {
+const generateVehicleCardHtml = function (data, color, startedTaskCountTotal) {
 
     let purpose = data.map(item => { return item.name });
     let indexPurpose = purpose.indexOf("Familiarisation");
@@ -236,7 +252,7 @@ const generateVehicleCardHtml = function (data, color, startedTaskCountTotal, st
                     <label style="font-size: 8px;">MV Assigned: &nbsp; </label> <label>${ startedTaskCountTotal }</label>
                 </div>
                 <div>
-                    <table style="table-layout: fixed;" class="mb-2" >
+                    <table aria-hidden="true" style="table-layout: fixed;" class="mb-2" >
 
                         ${ indexPurpose != -1 ? `
                         <tr>
@@ -338,7 +354,7 @@ const generateDriverCardHtml = function (data) {
             <div class="card-detail-title px-2">
                 <div class="row px-1">
                     <div class="col-3 text-start">
-                        <img src="../images/resourcesDashboard/people3.svg" >
+                        <img alt="" src="../images/resourcesDashboard/people3.svg" >
                     </div>
                     <div class="col-6 text-center">
                         <label>UNIT 1</label>
@@ -534,7 +550,7 @@ const clickPeople = function (optionClass, subunit, record, unit) {
     //     $(`#div-people-hub-driverPercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
     //     $(`#div-people2-hub-driverPercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
     // }
-    initDriverAndVehicleChar('MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal, startedTaskCountTotal)
+    initDriverAndVehicleChar('MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
 } 
 
 const clickBus = function (optionClass, subunit, record, unit) {
@@ -594,7 +610,7 @@ const clickBus = function (optionClass, subunit, record, unit) {
         //     $(`#div-bus-hub2-vehiclePercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ vehiclePercent }%`)
         // }   
         
-        initVehicleChar('Started / MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal, startedTaskCountTotal)
+        initVehicleChar('Started / MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
 } 
 
 const clickSubUnit = function (subunit, record, unit) {
@@ -631,8 +647,8 @@ const clickSubUnit = function (subunit, record, unit) {
    
 }
 
-const initVehicleChar = function (text, item, data, data2, color, startedTaskCountTotal, startedTaskCountTotal) {
-    $(`.${ item }`).empty().append(generateVehicleCardHtml(data2, color, startedTaskCountTotal, startedTaskCountTotal))
+const initVehicleChar = function (text, item, data, data2, color, startedTaskCountTotal) {
+    $(`.${ item }`).empty().append(generateVehicleCardHtml(data2, color, startedTaskCountTotal))
 
     // if($(`.${ item }`) && $(`.${ item }`).length > 0) {
     //     let legendLeft = '44%'
@@ -858,11 +874,11 @@ const initBusAndPersonnelPageByHub = async function (driverClass, vehicleClass) 
             html += `<!--<div class="col-sm-12 col-md-6 col-lg-3 px-3 py-1 div-all-hub-${ (item.unit).replaceAll(" ","_") }" style="width: 410px;">
                         <div class="row" style="background-color: white;">
                             <div class="col-9" style="text-align: center;padding-right:0;">
-                                <div class="" style="text-align: center;font-weight: bold;white-space:nowrap;line-height: 2.75rem;cursor:pointer;" onclick="clickHub('${ item.unit }')">${ item.unit }</div>
+                                <div class="" style="text-align: center;font-weight: bold;white-space:nowrap;line-height: 2.75rem;cursor:pointer;" onclick="clickHub('${ item.unit }')" role="button" tabindex="0">${ item.unit }</div>
                             </div>
                             <div class="col-3" style="padding-left: 0;padding-right: 0.2rem;text-align: right;">
-                                <img src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
-                                <img src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                                <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                                <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
                             </div>
                         </div>
                 
@@ -879,13 +895,13 @@ const initBusAndPersonnelPageByHub = async function (driverClass, vehicleClass) 
                             <div class="col-5 ranking-number-div" style="background-color: white;line-height: 5rem;width: 48.99999997%;">
                                 <div class="row" style="background-color: ${ driverColor.rightColor };">
                                     <div class="col-4" style="text-align: right;">
-                                        <img src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickPeople('char-people-hub-${ (item.unit).replaceAll(" ","_") }', null, true, '${ item.unit }')"/>
+                                        <img alt="" src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickPeople('char-people-hub-${ (item.unit).replaceAll(" ","_") }', null, true, '${ item.unit }')" role="button"/>
                                     </div>
                                     <div class="col-7" style="padding-left: 0;font-weight: bold;font-size: 1.5rem;">${ availableTotal }/${ item.driverListNumber }</div>
                                 </div>
                                 <div class="row" style="background-color: ${ vehicleColor.rightColor };margin-top: 0.1rem;">
                                     <div class="col-4" style=" text-align: right;">
-                                        <img src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickBus('char-hub-bus-${ (item.unit).replaceAll(" ","_") }', '${ item.unit }', true, '${ item.unit }')"/>
+                                        <img alt="" src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickBus('char-hub-bus-${ (item.unit).replaceAll(" ","_") }', '${ item.unit }', true, '${ item.unit }')" role="button"/>
                                     </div>
                                     <div class="col-7" style="padding-left: 0;font-weight: bold;font-size: 1.5rem;">${ availableTotal2 }/${ item.vehicleListNumber }</div>
                                 </div>
@@ -897,9 +913,9 @@ const initBusAndPersonnelPageByHub = async function (driverClass, vehicleClass) 
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
-                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.unit }', 'true', '${ item.unit }')">${ (item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit }</div>
+                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.unit }', 'true', '${ item.unit }')" role="button" tabindex="0">${ (item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-people-node-driverPercent-${ (item.unit).replaceAll(" ","_") } }">
                                    
                                 </div>
@@ -921,9 +937,9 @@ const initBusAndPersonnelPageByHub = async function (driverClass, vehicleClass) 
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
-                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.unit }', 'true', '${ item.unit }')">${ (item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit }</div>
+                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.unit }', 'true', '${ item.unit }')" role="button" tabindex="0">${ (item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-bus-node-vehiclePercent-${ (item.unit).replaceAll(" ","_") }-${ (item.unit).replaceAll(" ","_") }">
 
                                 </div>
@@ -973,8 +989,8 @@ const initBusAndPersonnelPageByNode = async function (driverClass, vehicleClass,
                     <div class="" style="text-align: center;font-weight: bold;white-space:nowrap;line-height: 2.75rem;">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
                 </div>
                 <div class="col-3" style="padding-left: 0;padding-right: 0.2rem;text-align: right;">
-                    <img src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
-                    <img src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                    <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                    <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
                 </div>
             </div>
     
@@ -991,13 +1007,13 @@ const initBusAndPersonnelPageByNode = async function (driverClass, vehicleClass,
                 <div class="col-5 ranking-number-div" style="background-color: white;line-height: 5rem;width: 48.99999997%;">
                     <div class="row" style="background-color: ${ driverColor.rightColor };">
                         <div class="col-4" style="text-align: right;">
-                            <img src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickPeople('char-people-node-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }', '${ item.subunit }', true, '${ item.unit }')"/>
+                            <img alt="" src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickPeople('char-people-node-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }', '${ item.subunit }', true, '${ item.unit }')" role="button"/>
                         </div>
                         <div class="col-7" style="padding-left: 0;font-weight: bold;font-size: 1.5rem;">${ availableTotal }/${ item.driverListNumber }</div>
                     </div>
                     <div class="row" style="background-color: ${ vehicleColor.rightColor };margin-top: 0.1rem;">
                         <div class="col-4" style="text-align: right;">
-                            <img src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickBus('char-node-bus-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }', '${ item.subunit }', true, '${ item.unit }')"/>
+                            <img alt="" src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false" onclick="clickBus('char-node-bus-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }', '${ item.subunit }', true, '${ item.unit }')" role="button"/>
                         </div>
                         <div class="col-7" style="padding-left: 0;font-weight: bold;font-size: 1.5rem;">${ availableTotal2 }/${ item.vehicleListNumber }</div>
                     </div>
@@ -1011,9 +1027,9 @@ const initBusAndPersonnelPageByNode = async function (driverClass, vehicleClass,
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
-                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.subunit }', 'true', '${ item.unit }')">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
+                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.subunit }', 'true', '${ item.unit }')" role="button" tabindex="0">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-people-node-driverPercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">
                                    
                                 </div>
@@ -1035,9 +1051,9 @@ const initBusAndPersonnelPageByNode = async function (driverClass, vehicleClass,
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
-                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.subunit }', 'true', '${ item.unit }')">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
+                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;" onclick="clickSubUnit('${ item.subunit }', 'true', '${ item.unit }')" role="button" tabindex="0">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-bus-node-vehiclePercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">
 
                                 </div>
@@ -1074,7 +1090,7 @@ const initBusOrPersonnelPageHub = async function (driverByNodeData) {
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
                                 <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.unit.toLowerCase()) == 'dv_loa' || (item.unit.toLowerCase()) == 'other' ? 'DV/LOA' : item.unit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-people2-hub-driverPercent-${ (item.unit).replaceAll(" ","_") }">
@@ -1101,7 +1117,7 @@ const initBusOrPersonnelPageHub = async function (driverByNodeData) {
             <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;;">
                 <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                 <div class="col-2" style="padding-left: 0.23rem;">
-                    <img src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                    <img alt="" src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                 </div>
                 <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.unit.toLowerCase()) == 'dv_loa' || (item.unit.toLowerCase()) == 'other' ? 'DV/LOA' : item.unit }</div>
                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-bus-hub2-vehiclePercent-${ (item.unit).replaceAll(" ","_") }">
@@ -1145,7 +1161,7 @@ const initBusOrPersonnelPageNode = async function (driverByNodeData) {
                         <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                             <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                                 <div class="col-2" style="padding-left: 0.23rem;">
-                                    <img src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                                    <img alt="" src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
                                 <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa == true ? 'DV/LOA' : item.subunit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-people2-node-driverPercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">
@@ -1169,7 +1185,7 @@ const initBusOrPersonnelPageNode = async function (driverByNodeData) {
                 <div style="border-radius: 10px;background-color: #181E2A;border: solid 1px rgb(49, 49, 49);color: white;">
                     <div class="row px-2" style="border-radius: 10px 10px 0 0;background-color: black;">
                     <div class="col-2" style="padding-left: 0.23rem;">
-                        <img src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
+                        <img alt="" src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                     </div>
                     <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa == true ? 'DV/LOA' : item.subunit }</div>
                     <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-bus-node2-vehiclePercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">

@@ -46,7 +46,6 @@ const _SystemTask = require('../model/system/task');
 const _SystemRequest = require('../model/system/request');
 const _SystemGroup = require('../model/system/group');
 
-const vehicleMaintenanceInfoCalcUtils = require('../services/VehicleMaintenanceInfoCalcUtils.js');
 const { MtAdmin } = require('../model/mtAdmin');
 const { OperationRecord } = require('../model/operationRecord');
 const { loanRecord } = require('../model/loanRecord');

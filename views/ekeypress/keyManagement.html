@@ -144,11 +144,11 @@
                 <div class="col-4"><div class="top-title pt-3 px-3 m-1 me-0">Keypress Management</div></div>
                 <div class="col-8 py-3 opt-btn-div" style="margin-top: 0.25rem;">
                     <% if (pageList.find(item => item.module == 'Mustering' )) { %>
-                        <div class="px-2 py-0 btn-opt" onclick="scanEkeypressQRCode()">
+                        <div class="px-2 py-0 btn-opt" onclick="scanEkeypressQRCode()" role="button" tabindex="0">
                             <label style="margin-top: 3px;">Mustering</label>
                         </div>
                     <% } %>
-                    <div class="px-2 mx-2 py-0 btn-opt" onclick="toAddKeyOptRecordPage()">
+                    <div class="px-2 mx-2 py-0 btn-opt" onclick="toAddKeyOptRecordPage()" role="button" tabindex="0">
                         <label style="margin-top: 3px;">Record Manually</label>
                     </div>
                 </div>
@@ -179,54 +179,54 @@
             <div class="row" style="height: 100%;">
                 <div class="left-menu-div" style="width: 260px; height: 100%; background-color: #F3F3F3; margin-top: 10px; margin-bottom: 10px;">
                     <div class="menu-item active menu-item-keybox">
-                        <img src="../images/keyLocationList.svg" style="padding-left: 14px;"> 
+                        <img alt="" src="../images/keyLocationList.svg" style="padding-left: 14px;"> 
                         <span>Keypress Location</span>
                     </div>
                     <div class="menu-item menu-item-keyboxdetail">
-                        <img src="../images/key-detail.svg" style="padding-left: 14px;height: 28px;"> 
+                        <img alt="" src="../images/key-detail.svg" style="padding-left: 14px;height: 28px;"> 
                         <span style="padding-left: 2px;">Keys</span>
                     </div>
                     <div class="menu-item menu-item-keyTrans">
-                        <img src="../images/key-transactions.svg" style="padding-left: 14px; width: 40px;"> 
+                        <img alt="" src="../images/key-transactions.svg" style="padding-left: 14px; width: 40px;"> 
                         <span>Keypress Transactions</span>
                     </div>
                     <div class="menu-item menu-item-keyBoxSummary">
-                        <img src="../images/keyboxList.svg" style="padding-left: 14px; width: 40px;"> 
+                        <img alt="" src="../images/keyboxList.svg" style="padding-left: 14px; width: 40px;"> 
                         <span>Box Summary</span>
                     </div>
                     <div class="menu-item menu-item-keyUnitSummary">
-                        <img src="../images/keyUnit.svg" style="padding-left: 14px; width: 40px;"> 
+                        <img alt="" src="../images/keyUnit.svg" style="padding-left: 14px; width: 40px;"> 
                         <span>Unit Summary</span>
                     </div>
                 </div>
                 <div class="key-datatable keybox-datatable" style="width: calc(100% - 260px); height: 100%; margin-top: 10px;">
                     <div class="table-common table-shadow" style="height: 100%;">
-                        <table class="table data-list-keybox pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
+                        <table aria-hidden="true" class="table data-list-keybox pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
                         </table>
                     </div>
                 </div>
                 <div class="key-datatable keyboxdetail-datatable" style="width: calc(100% - 260px); height: 100%; margin-top: 10px; display: none;">
                     <div class="table-common table-shadow" style="height: 100%;">
-                        <table class="table data-list-keyboxdetail pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
+                        <table aria-hidden="true" class="table data-list-keyboxdetail pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
                         </table>
                     </div>
                 </div>
 
                 <div class="key-datatable keyTransactions-datatable" style="width: calc(100% - 260px); height: 100%; margin-top: 10px; display: none;">
                     <div class="table-common table-shadow" style="height: 100%;">
-                        <table class="table data-list-keyTransactions pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
+                        <table aria-hidden="true" class="table data-list-keyTransactions pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
                         </table>
                     </div>
                 </div>
                 <div class="key-datatable keyBoxSummary-datatable" style="width: calc(100% - 260px); height: 100%; margin-top: 10px; display: none;">
                     <div class="table-common table-shadow" style="height: 100%;">
-                        <table class="table data-list-keyBoxSummary pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
+                        <table aria-hidden="true" class="table data-list-keyBoxSummary pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
                         </table>
                     </div>
                 </div>
                 <div class="key-datatable keyUnitSummary-datatable" style="width: calc(100% - 260px); height: 100%; margin-top: 10px; display: none;">
                     <div class="table-common table-shadow" style="height: 100%;">
-                        <table class="table data-list-keyUnitSummary pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
+                        <table aria-hidden="true" class="table data-list-keyUnitSummary pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important; width: 99% !important;">
                         </table>
                     </div>
                 </div>

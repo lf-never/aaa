@@ -271,7 +271,7 @@ let TaskUtils = {
         pageLength = pageLength ?? 10;
         pageNum = Number(pageNum)
         pageLength = Number(pageLength)
-        if(pageNum && pageLength) {
+        if((pageNum || pageNum == 0) && pageLength){
             sql += ' limit ?, ?' 
             replacements.push(...[pageNum, pageLength])
         } 

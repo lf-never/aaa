@@ -164,7 +164,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 					</div>
 					<div class="d-flex flex-row justify-content-start">
 						<div class="bd-highlight px-1">
-							<img class="date-img" src="../scripts/driverTo/icons/file.svg">
+							<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
 							<label class="date-label">${ driver.taskList.filter(item => item.taskId).length }</label>
 						</div>
 					</div>
@@ -200,21 +200,21 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 
 					let calculateStartDate = null, calculateEndDate = null;
 					if (getDateLength(startDate, task.indentStartTime) >= 0) {
-						// TODO: if indentStartTime is before current week
+						// if indentStartTime is before current week
 						calculateStartDate = startDate
 					} else {
-						// TODO: if indentStartTime is in current week
+						// if indentStartTime is in current week
 						calculateStartDate = task.indentStartTime
 					}
 					if (getDateLength(task.indentEndTime, moment(startDate).endOf('isoWeek')) >= 0) {
-						// TODO: if indentEndTime is after current week
+						// if indentEndTime is after current week
 						calculateEndDate = moment(startDate).endOf('isoWeek')
 					} else {
-						// TODO: if indentEndTime is in current week
+						// if indentEndTime is in current week
 						calculateEndDate = task.indentEndTime
 					}
 					dayLength = getDateLength(calculateEndDate, calculateStartDate) + 1;
-					// TODO: max size is 7 ever week
+					// max size is 7 ever week
 					if (dayLength > 7) dayLength = 7;
 
 					// if (moment(moment(startDate).add(6, 'day').format('YYYY-MM-DD')).isBefore(moment(task.indentEndTime).format('YYYY-MM-DD'))) {
@@ -248,7 +248,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
 						let color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color
 
-						// TODO: check if exist other task through today
+						// check if exist other task through today
 						// let hasPreTaskOgThough = 0;
 						// let targetTaskList = driver.taskList.filter(item => {
 						// 	return item.driverId == task.driverId && item.taskId != task.taskId
@@ -268,7 +268,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						// 		hasPreTaskOgThough ++;
 						// 	}
 						// }
-						// TODO: check if exist on-leave task before( on-leave only happen in one day )
+						// check if exist on-leave task before( on-leave only happen in one day )
 						// if (task.taskId) {
 						// 	let onLeaveTaskList = driver.taskList.filter(item => {
 						// 		if (item.driverId == task.driverId && !item.taskId) {
@@ -319,7 +319,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 								</div>
 							`;
 						} else {
-							// TODO: for show while task need more than one day
+							// for show while task need more than one day
 							let label = ''
 							let taskTypeLabel = task.taskId.indexOf('CU-') != -1 ? 'CU-' : task.dataFrom == 'MT-ADMIN' ? 'MT-' : task.dataFrom == 'SYSTEM' ? 'SYS-' : '';
 							if (realDateLength > 1) {
@@ -331,7 +331,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 							taskHtml += `
 								<div class="driver-task-container active " title="${label}" style="margin-top: 8px; background-color: ${ bgColor }; color: ${ color }; 
 									width: ${ dayLength * tdWidth + (dayLength - 1) * 20 }px; position: absolute; margin-top: ${ marginTop }px;" 
-									onclick="editDriverTask('${task.taskId}', '${task.indentStartTime}')">
+									onclick="editDriverTask('${task.taskId}', '${task.indentStartTime}')" role="button" tabindex="0">
 									${ label }
 								</div>
 							`;

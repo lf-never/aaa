@@ -62,7 +62,7 @@ const initDateCalender = function () {
 
     $("#optTimeCalender").append(`<div class="col-12 optTimeCalender">
         <input class="form-control custom-input px-1" id="optDatetime" name="optDatetime" readonly>
-        <img class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
+        <img alt="" class="custom-input-img" style="width: 1.6em;" src="../images/calender.svg">
     </div>`)
 
     layui.use('laydate', function () {
@@ -311,7 +311,7 @@ const submitKeyOptionRecord = async function () {
     tempKeyOptionRecord.reason = reason;
 
     keyOptionRecord = tempKeyOptionRecord;
-    showConfirmQRCode(keyOptionRecord);
+    showConfirmQRCode();
 }
 
 const showConfirmQRCode = async function () {

@@ -64,10 +64,10 @@ const initPlatformConfList = async function() {
           let actionHtml = ``;
           if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
             actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverPlatformConf(${temp.id}, '${temp.permitType}', '${temp.vehicleType}', '${temp.assessmentDate}', '${temp.lastDrivenDate ? temp.lastDrivenDate : ''}', ${temp.baseMileage})">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverPlatformConf(${temp.id}, '${temp.permitType}', '${temp.vehicleType}', '${temp.assessmentDate}', '${temp.lastDrivenDate ? temp.lastDrivenDate : ''}', ${temp.baseMileage})" role="button" tabindex="0">
                   Edit
               </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverPlatformConf(${temp.id}, '${temp.vehicleType}')" style="margin-left: 15px;">
+              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverPlatformConf(${temp.id}, '${temp.vehicleType}')" role="button" tabindex="0" style="margin-left: 15px;">
                   Delete
               </div>
             `;
@@ -75,10 +75,10 @@ const initPlatformConfList = async function() {
 
           if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
             actionHtml += `
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Approved')">
+              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Approved')" role="button" tabindex="0">
                 Approve
               </div>
-              <div style="border: solid 1px #C4A548; background-color: #C4A548;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Rejected')">
+              <div style="border: solid 1px #C4A548; background-color: #C4A548;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Rejected')" role="button" tabindex="0">
                 Reject
               </div>
             `;

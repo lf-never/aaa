@@ -135,7 +135,7 @@ const initHubListHtml = async function () {
                                 <div class="col-6">
                                     <div class="div-table">
                                         <div class="div-table-cell">
-                                            <img src="../images/resourcesDashboard/driver-orange.svg"/>
+                                            <img alt="" src="../images/resourcesDashboard/driver-orange.svg"/>
                                         </div>
                                     </div>
                                 </div>
@@ -152,7 +152,7 @@ const initHubListHtml = async function () {
                                 <div class="col-6">
                                     <div class="div-table">
                                         <div class="div-table-cell">
-                                            <img src="../images/resourcesDashboard/vehicle-blue.svg"/>
+                                            <img alt="" src="../images/resourcesDashboard/vehicle-blue.svg"/>
                                         </div>
                                     </div>
                                 </div>
@@ -253,7 +253,7 @@ const initNodeListHtml = async function (hub) {
                         <div class="col-2">
                             <div class="div-table">
                                 <div class="div-table-cell">
-                                    <img src="../images/resourcesDashboard/driver-orange.svg"/>
+                                    <img alt="" src="../images/resourcesDashboard/driver-orange.svg"/>
                                 </div>
                             </div>
                         </div>
@@ -268,7 +268,7 @@ const initNodeListHtml = async function (hub) {
                         <div class="col-2">
                             <div class="div-table">
                                 <div class="div-table-cell">
-                                    <img src="../images/resourcesDashboard/vehicle-blue.svg"/>
+                                    <img alt="" src="../images/resourcesDashboard/vehicle-blue.svg"/>
                                 </div>
                             </div>
                         </div>

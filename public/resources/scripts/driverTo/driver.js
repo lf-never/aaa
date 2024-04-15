@@ -94,16 +94,16 @@ const initDriverTable = function () {
                     let operationList = full.operation.split(',')
                     if (operationList.includes('View Full NRIC')) {
                         return `
-                            <div class="view-driver-info" style="cursor: pointer;" onclick="redirectToDriverInfo(${ full.driverId }, '${full.currentStatus}')">${ full.driverName }</div>
+                            <div class="view-driver-info" style="cursor: pointer;" onclick="redirectToDriverInfo(${ full.driverId }, '${full.currentStatus}')" role="button" tabindex="0">${ full.driverName }</div>
                             <div><span style="color: #6c757d;">
                             <label class="view-driver-nric">${ full.nric ?  ((full.nric).toString()).substr(0, 1) + '****' + ((full.nric).toString()).substr(((full.nric).toString()).length-4, 4) : '-' }</label>
-                            <img class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showDriverNric(this, '${ full.nric }', 'show')"/>
-                            <img class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showDriverNric(this, '${ full.nric }', 'noShow')"/>
+                            <img alt="" class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showDriverNric(this, '${ full.nric }', 'show')" role="button"/>
+                            <img alt="" class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showDriverNric(this, '${ full.nric }', 'noShow')" role="button"/>
                             </span></div>
                         `
                     } else {
                         return `
-                            <div class="view-driver-info" style="cursor: pointer;" onclick="redirectToDriverInfo(${ full.driverId }, '${full.currentStatus}')">${ full.driverName }</div>
+                            <div class="view-driver-info" style="cursor: pointer;" onclick="redirectToDriverInfo(${ full.driverId }, '${full.currentStatus}')" role="button" tabindex="0">${ full.driverName }</div>
                             <div><span style="color: #6c757d;">
                             <label class="view-driver-nric">${ full.nric ?  ((full.nric).toString()).substr(0, 1) + '****' + ((full.nric).toString()).substr(((full.nric).toString()).length-4, 4) : '-' }</label>
                             </span></div>
@@ -182,7 +182,7 @@ const initDriverTable = function () {
                 "orderable": false,
                 "render": function (data, type, full, meta) {
                     return `
-                        <img onclick="showLiveLocationHandler(${ full.driverId })" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
+                        <img alt="" onclick="showLiveLocationHandler(${ full.driverId })" role="button" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
                     `;
                 }
             },
@@ -207,7 +207,7 @@ const initDriverTable = function () {
                 "render": function (data, type, full, meta) {
                     if (data) {
                         return `
-                            <div onclick="markAsUnAvailable(${meta.row})">
+                            <div onclick="markAsUnAvailable(${meta.row})" role="button" tabindex="0">
                                 <div>${data.startTime ? moment(data.startTime).format("DD/MM/YYYY, HH:mm") : '-'}</div>
                                 <div>${data.endTime ? moment(data.endTime).format("DD/MM/YYYY, HH:mm") : '-'}</div>
                             </div>
@@ -274,7 +274,7 @@ const initDriverTable = function () {
 
                     if (full.currentStatus == 'Deactivate' && operationList.includes('Reactivate')) {
                         result = `
-                            <img src='../images/Reset.svg' style='width: 24px; height: 24px; ' onclick="reactivateDriver('${data}', '${ full.driverName }')" title='Reactivate'/>
+                            <img alt="" src='../images/Reset.svg' style='width: 24px; height: 24px; ' onclick="reactivateDriver('${data}', '${ full.driverName }')" role="button" title='Reactivate'/>
                         `
                         return `<div style="width: 100%; height: 30px; display: flex; justify-content: center; align-items: center;">${result}</div>`;
                     }
@@ -282,23 +282,23 @@ const initDriverTable = function () {
                     if (!full.operationallyReadyDate || moment(full.operationallyReadyDate).format("YYYY-MM-DD") > moment().format("YYYY-MM-DD")) {
                         if (full.currentStatus != 'Loan Out' && (operationList.includes('Mark Leave') || operationList.includes('Cancel Leave') || operationList.includes('Update Leave'))) {
                             result += `
-                                <img src='../images/Mark Leave.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="markAsUnAvailable(${meta.row},true)" title='Mark/Cancel/Update Leave'/>
+                                <img alt="" src='../images/Mark Leave.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="markAsUnAvailable(${meta.row},true)" role="button" title='Mark/Cancel/Update Leave'/>
                             `;
                         }
                     }
 
                     if(operationList.includes('Deactivate')) {
                         result += `
-                            <img src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteDriver('${data}', '${ full.driverName }')" title='Deactivate'/>
+                            <img alt="" src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteDriver('${data}', '${ full.driverName }')" role="button" title='Deactivate'/>
                         `
                     } else if (full.currentStatus == 'Deployable' && full.loanTaskId && operationList.includes('Return')) {
                         result += `
-                            <img src='../images/returnResources.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="returnResources('${full.driverId}', '${full.driverName}')" title='Return'/>
+                            <img alt="" src='../images/returnResources.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="returnResources('${full.driverId}', '${full.driverName}')" role="button" title='Return'/>
                         `
                     }
                     if (operationList.includes('ViewIndent') && full.currentStatus != 'Deactivate' && full.driverMileageWaringTaskNum > 0) {
                         result += `
-                            <img src='../images/warn-mileage.svg' style='width: 26px; height: 26px; margin-left: 5px;' onclick="viewMileageWarnIndent('${full.driverId}')" title='Mileage Warning'/>
+                            <img alt="" src='../images/warn-mileage.svg' style='width: 26px; height: 26px; margin-left: 5px;' onclick="viewMileageWarnIndent('${full.driverId}')" role="button" title='Mileage Warning'/>
                         `
                     }
                     return `<div style="width: 60px; height: 30px; display: flex; justify-content: flex-start; align-items: center;">${result}</div>`;

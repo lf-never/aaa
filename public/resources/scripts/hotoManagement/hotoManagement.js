@@ -245,7 +245,7 @@ const initPage = async function () {
             layui.each(elem.find('tr'), function (trIndex, trElem) {
                 layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                     var tdTemp = $(tdElem);
-                    if (driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                    if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                         tdTemp.addClass('laydate-disabled');
                         tdTemp.css('color', 'orange');
                     }
@@ -624,7 +624,6 @@ const initTable = async function() {
         "ordering": true,
         "searching": false,
         "paging": true,
-        "pageLength": 10,
         "autoWidth": false,
         "fixedHeader": true,
         "scrollX": "auto",
@@ -698,7 +697,7 @@ const initTable = async function() {
                     if (data) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivityName(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivityName(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                         </div>
@@ -790,7 +789,7 @@ const initTable = async function() {
                     if (data) {
                         return `
                         <div>
-                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showExplanation(this);">
+                            <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showExplanation(this);" role="button" tabindex="0">
                                 ${ data ? data : '' }
                             </span><br>
                         </div>

@@ -114,7 +114,7 @@ export async function initNoGoZoneViewPage () {
         stateSave: true, // keep page, searching, filter
     });
 
-    // TODO: show view noGoZone module
+    // show view noGoZone module
     $('#view-noGoZone').modal('show');
 }
 

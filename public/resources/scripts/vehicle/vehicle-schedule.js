@@ -47,7 +47,7 @@ const initVehicleSchedule = function () {
 const initMonthSelectHandler = function () {
     // Init label before click laydate event 
     $('.selectedMonth2').html(moment().format('MMMM YYYY'))
-    initMonthHandler(moment().year(), moment().month());
+    initMonthHandler();
     
     // If already init laydate, return;
     if (vehicleCalender) return;
@@ -67,7 +67,7 @@ const initMonthSelectHandler = function () {
                 currentMonth = selectedDate.month();
                 $('.selectedMonth2').html(selectedDate.format('MMMM YYYY'));
 
-                initMonthHandler(currentYear, currentMonth);
+                initMonthHandler();
             }
         });
     });
@@ -82,7 +82,7 @@ const initMonthSelectHandler = function () {
         currentMonth = newDate.month();
         $('#selectedMonth2').html(newDate.format('MMMM YYYY'))
         vehicleCalender.config.value = moment({ year: currentYear, month: currentMonth }).format('MMMM YYYY')
-        initMonthHandler(newDate.year(), newDate.month())
+        initMonthHandler()
     })
     $('.next-month').off('click').on('click', function () {
         let newDate = moment({ year: currentYear, month: currentMonth }).add(1, 'months');
@@ -90,7 +90,7 @@ const initMonthSelectHandler = function () {
         currentMonth = newDate.month();
         $('#selectedMonth2').html(newDate.format('MMMM YYYY'))
         vehicleCalender.config.value = moment({ year: currentYear, month: currentMonth }).format('MMMM YYYY')
-        initMonthHandler(newDate.year(), newDate.month())
+        initMonthHandler()
     })
 }
 

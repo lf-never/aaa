@@ -17,7 +17,7 @@ process.on('message', async deviceProcess => {
         const hubNodeIdList = deviceProcess.hubNodeIdList
         const groupIdList = deviceProcess.groupIdList
 
-        // TODO: Driver
+        // Driver
         let driverSql = `
             SELECT dph.*, dph.updatedAt as createdAt,
             d.driverName, v.limitSpeed, tt.vehicleNumber, tt.hub, tt.node, tt.groupId, tt.mobileStartTime, tt.mobileEndTime 
@@ -88,7 +88,7 @@ process.on('message', async deviceProcess => {
             driverOffenceList = driverOffenceList.concat(alertResult)
         }
 
-        // TODO: Vehicle
+        // Vehicle
         // let vehicleNoList = driverOffenceList.map(item => item.vehicleNo);
         // vehicleNoList = Array.from(new Set(vehicleNoList))
         let deviceSql = `

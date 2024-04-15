@@ -120,7 +120,6 @@ const initDriverTable = function () {
         "ordering": false,
         "searching": false,
         "paging": true,
-        "pageLength": 10,
         "autoWidth": false,
         "fixedHeader": true,
         "scrollCollapse": true,
@@ -160,18 +159,18 @@ const initDriverTable = function () {
                     let operationList = full.operation.split(',')
                     if(operationList.includes('View Full NRIC')) {
                         return `
-                            <div class="view-driver-info" onclick="redirectToDriverInfo(${ full.driverId })">${ full.driverName }</div>
+                            <div class="view-driver-info" onclick="redirectToDriverInfo(${ full.driverId })" role="button" tabindex="0">${ full.driverName }</div>
                             <div>
                                 <span style="color: #6c757d;">
                                     <label class="view-driver-nric">${ full.nric ?  ((full.nric).toString()).substr(0, 1) + '****' + ((full.nric).toString()).substr(((full.nric).toString()).length-4, 4) : '-' }</label>
-                                    <img class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showDriverNric(this, '${ full.nric }', 'show')"/>
-                                    <img class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showDriverNric(this, '${ full.nric }', 'noShow')"/>
+                                    <img alt="" class="img-showNRIC" style="width: 20px; cursor: pointer;" src="../images/show.svg" onclick="showDriverNric(this, '${ full.nric }', 'show')" role="button"/>
+                                    <img alt="" class="img-noShowNRIC" style="width: 20px; cursor: pointer;display: none;" src="../images/noShow.svg" onclick="showDriverNric(this, '${ full.nric }', 'noShow')" role="button"/>
                                 </span>
                             </div>
                         `
                     } else {
                         return `
-                            <div class="view-driver-info" onclick="redirectToDriverInfo(${ full.driverId })">${ full.driverName }</div>
+                            <div class="view-driver-info" onclick="redirectToDriverInfo(${ full.driverId })" role="button" tabindex="0">${ full.driverName }</div>
                             <div>
                                 <span style="color: #6c757d;">
                                     <label class="view-driver-nric">${ full.nric ?  ((full.nric).toString()).substr(0, 1) + '****' + ((full.nric).toString()).substr(((full.nric).toString()).length-4, 4) : '-' }</label>
@@ -274,11 +273,11 @@ const initDriverTable = function () {
                 "render": function (data, type, full, meta) {
                     if (data) {
                         if (data == 'Rejected') {
-                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showRejectInfo('${full.rejectUser}', '${moment(full.rejectDate).format("YYYY-MM-DD HH:mm:ss")}', '${full.rejectReason}')">${data}</div>`
+                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showRejectInfo('${full.rejectUser}', '${moment(full.rejectDate).format("YYYY-MM-DD HH:mm:ss")}', '${full.rejectReason}')" role="button" tabindex="0">${data}</div>`
                         } else if (data == 'Failed') {
-                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showFailInfo('${full.failUser ? full.failUser : '-'}', '${full.failDate ? moment(full.failDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.failReason ? full.failReason : '-'}')">Not Approved</div>`
+                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showFailInfo('${full.failUser ? full.failUser : '-'}', '${full.failDate ? moment(full.failDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.failReason ? full.failReason : '-'}')" role="button" tabindex="0">Not Approved</div>`
                         } else if (data == 'Pending') {
-                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showPendingInfo('${full.pendingUser ? full.pendingUser : '-'}', '${full.pendingDate ? moment(full.pendingDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.pendingReason ? full.pendingReason : '-'}')">${data}</div>`
+                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showPendingInfo('${full.pendingUser ? full.pendingUser : '-'}', '${full.pendingDate ? moment(full.pendingDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.pendingReason ? full.pendingReason : '-'}')" role="button" tabindex="0">${data}</div>`
                         } else if (data == 'Pending Approval') {
                             return 'Pending Submit'
                         } else if (data == 'Success') {

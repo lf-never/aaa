@@ -79,7 +79,7 @@ const initRadioBtnEventHandler = function () {
 		}
 	})
 
-	// TODO: need init tab btn
+	// need init tab btn
 	if (Cookies.get('current_tab') == 0) {
 		$('#btnradio1').attr('checked', 'checked')
 	} else {
@@ -147,13 +147,13 @@ const initTrafficDashboardPage = async function () {
 
 			let noGoZoneAlert = ``
 			if (item.noGoAlert.count) {
-				noGoZoneAlert = `<img src="./images/transport/event/alert-red.svg" style="width: 23px; margin-left: 10px; " /><label style="color: red; font-weight: bolder; margin-left: 3px;">${ item.noGoAlert.count }</label>`
+				noGoZoneAlert = `<img alt="" src="./images/transport/event/alert-red.svg" style="width: 23px; margin-left: 10px; " /><label style="color: red; font-weight: bolder; margin-left: 3px;">${ item.noGoAlert.count }</label>`
 			}
 
 			// console.log(item)
 			var html = `<div class="col-12 driver-box" style="border-color: #BF9F27; ${ selectedOffenceType == 'noGoAlert' ? 'height: 70px;' : '' };">
 					<div class="row align-items-center">
-						<img class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
+						<img alt="" class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
 						<div class="col col-3 driver-box-tag-zIndex">
 							<label class="driver-box-tag-label">${ item.vehicleNo }</label>
 						</div>
@@ -173,7 +173,7 @@ const initTrafficDashboardPage = async function () {
 							data-groupname="${ item.groupName }"
 							>
 							<div class="float-start px-2" style="padding-top: 0.2rem;"><label class="fs-driver">${ noGoZoneAlert }</label></div>
-							<img src="../images/track/trackLabel/orange_arrow.svg">
+							<img alt="" src="../images/track/trackLabel/orange_arrow.svg">
 						</div>
 					</div>
 					<div class="row offence-row align-items-center text-center pt-1">
@@ -677,7 +677,7 @@ const showEventHistory = async function (option) {
 		$.alert(`Do not get history record!`);
 		// return;
 	};
-	// TODO: add pre param data
+	// add pre param data
 	for (let event of eventList) {
 		event.vehicleNo = option.vehicleNo
 		event.driver = option.driver
@@ -711,7 +711,7 @@ const showEventHistory = async function (option) {
 	}
 
 	setTimeout(() => {
-		// TODO: init echarts width
+		// init echarts width
 		let width = $(".event-table").innerWidth() + 35
 		$("#speed-echart").css('width', width + 'px');
 		$('.event-table tbody tr').eq(0).click();

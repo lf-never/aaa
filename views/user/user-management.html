@@ -224,7 +224,7 @@
 					</div>
 					<div class="col-auto user-opt-btn float-start">
 						<% if (pageList.find(item => item.action == 'New')) { %>
-							<div class="add-btn" onclick="initCreateUserPage('create')">
+							<div class="add-btn" onclick="initCreateUserPage('create')" role="button" tabindex="0">
 								<div class="add-img"></div>
 								<label class="add-label fs-6">New User</label>
 							</div>
@@ -235,7 +235,7 @@
 		</div>
 		<div class="row m-0" style="padding: 10px; overflow: auto; ">
 			<div class="table-common table-shadow" style="border-radius: 1em;">
-				<table class="table user-table pb-2 w-100" style="white-space: nowrap;border-collapse:collapse !important; margin-top: 10px;">
+				<table aria-hidden="true" class="table user-table pb-2 w-100" style="white-space: nowrap;border-collapse:collapse !important; margin-top: 10px;">
 				</table>
 			</div>
 		</div>

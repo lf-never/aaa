@@ -6,7 +6,6 @@ const uploadService = require('../services/uploadService');
 
 router.get('', (req, res) => { res.render('upload/upload') });
 
-router.post('/uploadDriver', uploadService.uploadDriver)
 router.post('/uploadVehicle', uploadService.uploadVehicle)
 router.post('/uploadWaypoint', uploadService.uploadWaypoint)
 

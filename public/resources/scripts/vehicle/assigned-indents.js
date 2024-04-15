@@ -91,7 +91,7 @@ const initVehicleAssignedIndent = function(showMileageWarning) {
                         return "-";
                     }
                     return `<div style="display: flex;justify-content: center;align-items: center;"><div class="color-pickup-destination">${full.pickupDestination}</div>
-                        <div style="text-align: center;"><img src="/images/right.svg"></div>
+                        <div style="text-align: center;"><img alt="" src="/images/right.svg"></div>
                         <div class="color-dropoff-destination">${full.dropoffDestination}</div>`
                 }
             },
@@ -157,7 +157,7 @@ const initVehicleAssignedIndent = function(showMileageWarning) {
                     if (!data) {
                         return "-";
                     } else if (data > 100) {
-                        return `${data} km <img style="width: 20px; cursor: pointer; margin-top: -4px; padding-left: 4px;" src="../images/warn-mileage.svg">`;
+                        return `${data} km <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px; padding-left: 4px;" src="../images/warn-mileage.svg">`;
                     }
                     return data + ' km'
                 }

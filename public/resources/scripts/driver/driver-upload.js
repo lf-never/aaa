@@ -49,7 +49,7 @@ const initDataTables = async function () {
 }
 
 export async function initDriverUploadPage () {
-    // TODO: show view route module
+    // show view route module
     $('#view-driver-upload').modal('show');
     driverUploadEventHandler();
 

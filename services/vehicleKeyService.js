@@ -311,7 +311,8 @@ module.exports = {
     parseKeyBoxQRCode: async function (req, res) {
         try {
             let { decodedText, decodedResult, userId, siteId } = req.body;
-            let optTime = moment().format('YYYY-MM-DD HH:mm:ss');
+            let currentTime = moment();
+            let optTime = currentTime.format('YYYY-MM-DD HH:mm:ss');
             let newKeyOptRecord = {
                 taskId: '-',
                 vehicleNo: '-',

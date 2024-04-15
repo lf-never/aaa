@@ -75,7 +75,6 @@ const reloadResourceReport = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -206,7 +205,7 @@ const reloadResourceReport = async function () {
                         sortable: false,
                         render: function (data, type, full, meta){
                             if (full.hub != 'ALL') {
-                                return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showNodeToDetails('${full.hub}', '${full.node}')">View Details</div>`
+                                return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showNodeToDetails('${full.hub}', '${full.node}')" role="button" tabindex="0">View Details</div>`
                             } 
                             return '';
                         } 
@@ -223,7 +222,6 @@ const reloadResourceReport = async function () {
                 "ordering": true,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",

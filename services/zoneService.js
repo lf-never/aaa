@@ -74,8 +74,8 @@ module.exports.getUserZoneUserList = async function (req, res) {
         let userList = await sequelizeObj.query(`
             SELECT u.userId, u.username FROM \`user\` u
             WHERE u.userId NOT IN ( SELECT \`owner\` FROM user_zone )
-            AND u.userType = '${ CONTENT.USER_TYPE.UNIT }'
-        `, { type: QueryTypes.SELECT })
+            AND u.userType = ?
+        `, { type: QueryTypes.SELECT, replacements: [ CONTENT.USER_TYPE.UNIT ] })
         return res.json(utils.response(1, userList));    
     } catch (err) {
         log.error('(getUserZoneList) : ', err);
@@ -208,22 +208,30 @@ module.exports.getNogoZoneList = async function (req, res) {
                 LEFT JOIN unit un on un.id = u.unitId
                 WHERE nz.deleted = 0  
             `
+            let replacements = []
 
             let { unitIdList, groupIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId)
             if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
-                sql += ` AND (u.unitId = ${ user.unitId } AND u.userType = '${ CONTENT.USER_TYPE.CUSTOMER }') `
+                sql += ` AND (u.unitId = ? AND u.userType = ?) `
+                replacements.push(user.unitId)
+                replacements.push(CONTENT.USER_TYPE.CUSTOMER)
             } else if ([ CONTENT.USER_TYPE.ADMINISTRATOR ].includes(user.userType)) {
 
-            } else if ([ CONTENT.USER_TYPE.HQ ].includes(user.userType)) {                
+            } else if ([ CONTENT.USER_TYPE.HQ ].includes(user.userType)) {
                 let tempSqlList = []
                 if (unitIdList.length) {
-                    tempSqlList.push(` (u.unitId in ( ${ unitIdList.join(',') } ) AND u.userType != '${ CONTENT.USER_TYPE.CUSTOMER }') `)
+                    tempSqlList.push(` (u.unitId in ( ? ) AND u.userType != ?) `)
+                    replacements.push(unitIdList)
+                    replacements.push(CONTENT.USER_TYPE.CUSTOMER)
                 }
                 if (groupIdList.length) {
-                    tempSqlList.push(` (u.unitId in ( ${ groupIdList.join(',') } ) AND u.userType = '${ CONTENT.USER_TYPE.CUSTOMER }') `)
+                    tempSqlList.push(` (u.unitId in ( ? ) AND u.userType = ? ) `)
+                    replacements.push(groupIdList)
+                    replacements.push(CONTENT.USER_TYPE.CUSTOMER)
                 }
                 // hq create no go zone
-                tempSqlList.push(` u.hq = '${ user.hq }' `)
+                tempSqlList.push(` u.hq = ? `)
+                replacements.push(user.hq)
                 
                 if (tempSqlList.length) {
                     sql += ` and (${ tempSqlList.join(' OR ') }) `
@@ -232,14 +240,16 @@ module.exports.getNogoZoneList = async function (req, res) {
                 }
             } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
                 let permitUnitIdList = await unitService.UnitUtils.getUnitIdByUnitAndSubUnit(user.unit, user.subUnit);
-                sql += ` AND (u.unitId IN (${ permitUnitIdList }) AND u.userType != '${ CONTENT.USER_TYPE.CUSTOMER }') `
+                sql += ` AND (u.unitId IN (?) AND u.userType != ? ) `
+                replacements.push(permitUnitIdList)
+                replacements.push(CONTENT.USER_TYPE.CUSTOMER)
             } else {
                 sql += ` AND 1=2 `
             }
 
             sql += ` GROUP BY nz.id `
 
-            nogoZoneList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT })
+            nogoZoneList = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements })
         }
 
         let groupList = await sequelizeSystemObj.query(

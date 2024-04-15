@@ -114,14 +114,14 @@ $(function () {
     setTimeout(() => {
         $('.map').append(`
           <div class="offence-menu active" style="z-index: 999;position: relative; float: right; top: 15px; right: 18px; cursor: pointer; background-color: #ebebeb; border-radius: 10px;">
-            <img style="border-radius: 6px;border: solid 2px #ada8a8;" src="../images/mvAndMtTotal/expand.svg"></div>
+            <img alt="" style="border-radius: 6px;border: solid 2px #ada8a8;" src="../images/mvAndMtTotal/expand.svg"></div>
           </div>
         `)
 
         if (['hq', 'administrator'].includes(Cookies.get('userType').toLowerCase())) {
             $('.map').append(`
                 <div class="hubConf" style="z-index: 999;position: relative; float: right; top: 15px; right: 30px; cursor: pointer; background-color: #ebebeb; border-radius: 10px;">
-                    <img style="width: 36px;border-radius: 6px;border: solid 2px #ada8a8;" src="../images/color.svg"></div>
+                    <img alt="" style="width: 36px;border-radius: 6px;border: solid 2px #ada8a8;" src="../images/color.svg"></div>
                 </div>
             `)
         }
@@ -274,7 +274,7 @@ const initMarker = function (data) {
             // });
             let myIcon = L.divIcon({
                 html: `<div style="background-color: white; width: 30px; height: 30px; text-align: center; border-radius: 15px; border: solid 2px #55A564;">
-                        <img style="width: 20px; margin-top: 3px;" src="../images/mvAndMtTotal/work-image - selected.svg">
+                        <img alt="" style="width: 20px; margin-top: 3px;" src="../images/mvAndMtTotal/work-image - selected.svg">
                     </div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]
@@ -834,7 +834,7 @@ const initHub = async function (timeSelected) {
             // startedTaskCountTotal += item.startedTaskCount;
         }
         let html = `<div class="px-1 py-1 div-hub" style="width: 380px;">
-        <div class="status-div div-${ data.hub.replaceAll(" ","-") }" onclick="clickHub(\`${ data.hub }\`)" style="height: 263px;">
+        <div class="status-div div-${ data.hub.replaceAll(" ","-") }" onclick="clickHub(\`${ data.hub }\`)" role="button" tabindex="0" style="height: 263px;">
          <div class="row mx-4" style="padding-top: 0.6rem;">
             <div class="col-4" style="font-weight: bold;padding-right: 0;color: ${data.circleColor };">${ (data.hub.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : data.hub }</div>
             <div class="col-8" style="text-align: right;padding-right: 1.2rem;">
@@ -851,7 +851,7 @@ const initHub = async function (timeSelected) {
       </div>`;
 
       let html2 = `<div class="px-1 py-1 div-hub" style="width: 430px;">
-        <div class="status-div div-${ data.hub.replaceAll(" ","-") }" onclick="clickHub(\`${ data.hub }\`)" style="height: 263px;">
+        <div class="status-div div-${ data.hub.replaceAll(" ","-") }" onclick="clickHub(\`${ data.hub }\`)" role="button" tabindex="0" style="height: 263px;">
         <div class="row">
             <div class="col-5">
             <div style="font-weight: bold;margin-top: 10px;margin-left: 20px;color: ${data.circleColor };">${ (data.hub.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : data.hub }</div>
@@ -1044,7 +1044,7 @@ const viewVehicleEventHandler = async function () {
             
             let missingResult = checkTimeIfMissing(vehicle.updatedAt);
 
-            // TODO: check missing 
+            // check missing 
             if (missingResult && !$('.view-missing-car').hasClass('active')) {
                 // console.log(`Find missing vehicle record!`)
                 continue;
@@ -1065,7 +1065,7 @@ const viewVehicleEventHandler = async function () {
 
             // console.log(state)
 
-            // TODO: check missing type again
+            // check missing type again
             if (state.indexOf('Missing') > -1 && !$('.view-missing-car').hasClass('active')) {
                 // console.log(`Find missing vehicle record!`)
                 continue;
@@ -1073,7 +1073,7 @@ const viewVehicleEventHandler = async function () {
 
             let html = `
                 <div class="px-3 py-2">
-                    <table>
+                    <table aria-hidden="true">
                         <tr>
                             <td style="text-align: right;"><b>Driver :</b></td>
                             <td style="padding-left: 10px;">${ vehicle.driverName ? vehicle.driverName : '-' }</td>
@@ -1139,7 +1139,7 @@ const viewVehicleEventHandler = async function () {
                 marker = MapUtil.drawMarkerTop(vehicle, { iconUrl: "../images/mvAndMtTotal/SOS.svg", iconSize: [35, 45] })
                 MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -20] })
             } else if (vehicle.state?.toLowerCase().indexOf('pause') > -1 || vehicle.driverStatus?.toLowerCase().includes('completed')) {
-                // TODO: Pause Or Completed only show at "Last known location" (missing car)
+                // Pause Or Completed only show at "Last known location" (missing car)
                 // From: Joseph at 2023-04-19 14:29:00
                 if ($('.view-missing-car').hasClass('active')) {
                     // marker = MapUtil.drawMarkerCenter(vehicle, { iconUrl: "../images/mvAndMtTotal/vehicle-paused.svg", iconSize: [30, 30] })
@@ -1186,12 +1186,12 @@ const viewVehicleEventHandler = async function () {
             }
 
             // let myIcon = `<div style="background-color: red; width: 30px; height: 30px; text-align: center; border-radius: 18px; border: solid 2px red;">
-            //     <img style="width: 20px; margin-top: 3px;" src="../images/mvAndMtTotal/vehicle.svg">
+            //     <img alt="" style="width: 20px; margin-top: 3px;" src="../images/mvAndMtTotal/vehicle.svg">
             // </div>`
             let marker = MapUtil.drawMarker2(device, { iconUrl: drawSpeedMarker(device.speed, circleColor, fontColor, device.alert), iconSize: [35, 35] })
             let html = `
                 <div class="px-3 py-2">
-                    <table>
+                    <table aria-hidden="true">
                         <tr>
                             <td style="text-align: right;"><b>Device :</b></td>
                             <td style="padding-left: 10px;">${ device.deviceId }</td>
@@ -1248,7 +1248,7 @@ const drawSpeedMarker = function (speed, color, fontColor, alert) {
         <div class="speed-marker-number" style="color: ${ fontColor } !important;">${ speed }</div>
     </div>`
     let alertHtml = `<div class="speed-marker-div">
-        <img style="width: 30px;" src="../images/mvAndMtTotal/warn3.gif">
+        <img alt="" style="width: 30px;" src="../images/mvAndMtTotal/warn3.gif">
         <div class="speed-marker-number" style="color: ${ fontColor } !important;">${ '' }</div>
     </div>`
     if (!alert) {
@@ -1466,13 +1466,13 @@ const initOffenceMenuHandler = function () {
 //             <div class="row status-div div-${ item.unit }" style="background-color: white;">
 //                 <div class="row" style="background-color: ${ item.circleColor };">
 //                     <div class="col-5" style="text-align: right;padding-right: 1rem;line-height: 3rem;">
-//                         <img src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false">
+//                         <img alt="" src="../images/resourcesDashboard/people4.svg" style="width: 26px !important;height: 26px;cursor:pointer;" alt="" draggable="false">
 //                     </div>
 //                     <div class="col-7" style="font-weight: bold;font-size: 1.5rem;">${ item.driverDeployed }/${ item.driverTotal }</div>
 //                 </div>
 //                 <div class="row" style="background-color:  ${ item.circleColor };margin-top: 0.1rem;">
 //                     <div class="col-5" style="text-align: right;padding-right: 1rem;line-height: 3rem;">
-//                         <img src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false">
+//                         <img alt="" src="../images/resourcesDashboard/bus4.svg" style="width: 28px !important;height: 26px;cursor:pointer;" alt="" draggable="false">
 //                     </div>
 //                     <div class="col-7" style="font-weight: bold;font-size: 1.5rem;">${ item.vehicleDeployed }/${ item.vehicleTotal }</div>
 //                 </div>
@@ -1496,7 +1496,7 @@ const generateTooltipHtml = function (sos) {
     //         <div class="row">
     //             <div class="col-11 fw-bold fs-6">SOS - (${ sos.type })</div>
     //             <div class="col-1">
-    //                 <img src="../images/x-close.svg" style="width: 20px; cursor: pointer;" class="sos-tooltip-close">
+    //                 <img alt="" src="../images/x-close.svg" style="width: 20px; cursor: pointer;" class="sos-tooltip-close">
     //             </div>
     //         </div>
     //         <div class="row">
@@ -1538,10 +1538,10 @@ const generateTooltipHtml = function (sos) {
             <div class="row">
                 <div class="col-10 fw-bold fs-6">SOS - (${ sos.type })</div>
                 <div class="col-1">
-                    <img src="../images/copy.png" style="width: 17px; cursor: pointer;" class="sos-tooltip-copy">
+                    <img alt="" src="../images/copy.png" style="width: 17px; cursor: pointer;" class="sos-tooltip-copy">
                 </div>
                 <div class="col-1">
-                    <img src="../images/x-close.svg" style="width: 20px; cursor: pointer;" class="sos-tooltip-close">
+                    <img alt="" src="../images/x-close.svg" style="width: 20px; cursor: pointer;" class="sos-tooltip-close">
                 </div>
             </div>
             <div class='sos-content'>
@@ -1617,7 +1617,7 @@ const initSOSTooltips = function (sosList) {
         initLocationBtnHandler();
         initAudio()
 
-        // TODO: only show first time, and store it
+        // only show first time, and store it
         alreadyInitSOSToolTips = true;
         alreadyInitSOSToolTipList = sosList.map(item => {
             return {

@@ -94,7 +94,7 @@ html, body{
 .sector-btn.btn-assigned:hover  {
     border-color: #55CE7B !important;
     background-color: #55CE7B !important;
-    background: rgba(85, 205, 123, 0.5) !important;
+    background-color: rgba(85, 205, 123, 0.5) !important;
 }
 .sector-btn.btn-ongoing {
     border-color: #8D7FCF !important;

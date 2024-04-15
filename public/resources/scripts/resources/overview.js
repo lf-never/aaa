@@ -27,7 +27,7 @@ $(() => {
         
     // 	$(".userType-common").remove();
     // 	$('.action-button').show();
-    // 	$('.action-button').html(`<img src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
+    // 	$('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
     // 	$('iframe').attr('src', './driver/driverTask');
     // 	$('.tab-label').removeClass('active');
     // 	$(".TO-div").addClass('active');
@@ -73,7 +73,7 @@ $(() => {
         } else if(tab == 3) {
             // showHubNode();
             $('.action-button').show();
-            $('.action-button').html(`<img src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
+            $('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
             if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
                 $('.customer-button').show();
 
@@ -106,11 +106,11 @@ $(() => {
         if ($(this).data('action') === 'calender') {
             $('iframe').attr('src', './driver/driverTask');
             $(this).data('action', 'task')
-            $(this).html(`<img src="../scripts/driverTo/icons/calender.svg">Calender View</div>`)
+            $(this).html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`)
         } else {
             $('iframe').attr('src', './driver/calender');
             $(this).data('action', 'calender');
-            $(this).html(`<img src="../scripts/driverTo/icons/list.svg">List View</div>`)
+            $(this).html(`<img alt="" src="../scripts/driverTo/icons/list.svg">List View</div>`)
         }
     })
 

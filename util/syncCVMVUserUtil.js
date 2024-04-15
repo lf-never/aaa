@@ -56,7 +56,7 @@ const syncCVMVUser = async function () {
         `, { type: QueryTypes.SELECT })
         if (cvUserList && cvUserList.length > 0) {
             for (let temp of cvUserList) {
-                temp.cvUserKey = (temp.loginName ?? '' + temp.fullName ?? '').toUpperCase();
+                temp.cvUserKey = ((temp.loginName ?? '') + (temp.fullName ?? '')).toUpperCase();
             }
         }
 
@@ -84,7 +84,7 @@ const syncCVMVUser = async function () {
         `, { type: QueryTypes.SELECT })
         if (mvUserList && mvUserList.length > 0) {
             for (let temp of mvUserList) {
-                temp.mvUserKey = (temp.loginName ?? '' + temp.fullName ?? '').toUpperCase();
+                temp.mvUserKey = ((temp.loginName ?? '') + (temp.fullName ?? '')).toUpperCase();
             }
         }
 

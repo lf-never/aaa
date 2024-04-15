@@ -58,7 +58,7 @@ const initRadioBtnEventHandler = function () {
 		}
 	})
 
-	// TODO: need init tab btn
+	// need init tab btn
 	if (Cookies.get('current_tab') == 0) {
 		$('#btnradio1').attr('checked', 'checked')
 	} else {
@@ -91,7 +91,7 @@ const initTrafficDashboardPage = async function () {
 			// console.log(item)
 			var html = `<div class="col-12 driver-box" style="border-color: #BF9F27;">
 					<div class="row align-items-center mt-2 mb-2">
-						<img class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
+						<img alt="" class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
 						<div class="col col-3 driver-box-tag-zIndex">
 							<label class="driver-box-tag-label">${ 
 								item.dataFrom === 'mobile' 
@@ -120,7 +120,7 @@ const initTrafficDashboardPage = async function () {
 							data-driver="${ item.driver }"
 							data-occTime="${ item.occTime }"
 							>
-							<img src="../images/track/trackLabel/orange_arrow.svg">
+							<img alt="" src="../images/track/trackLabel/orange_arrow.svg">
 						</div>
 					</div>
 					<div class="row align-items-center text-center pt-1">
@@ -509,7 +509,7 @@ const showEventHistory = async function (option) {
 		$.alert(`Do not get history record!`);
 		// return;
 	};
-	// TODO: add pre param data
+	// add pre param data
 	for (let event of eventList) {
 		event.vehicleNo = option.vehicleNo
 		event.driver = option.driver
@@ -522,7 +522,7 @@ const showEventHistory = async function (option) {
 	$('#modal-speed-chart').modal('show')
 
 	setTimeout(() => {
-		// TODO: init echarts width
+		// init echarts width
 		let width = $(".event-table").innerWidth() + 35
 		$("#speed-echart").css('width', width + 'px');
 		$('.event-table tbody tr').eq(0).click();

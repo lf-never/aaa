@@ -113,7 +113,7 @@ const initAchievementContent = async function () {
                             <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
                     `;
                     if (index < 3) {
-                        myNodeHtml += `<img style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
+                        myNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
                     } else {
                         myNodeHtml += `<div style="width: 16px;"></div>`;
                     }
@@ -154,7 +154,7 @@ const initAchievementContent = async function () {
                             <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
                     `;
                     if (index < 3) {
-                        allNodeHtml += `<img style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
+                        allNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
                     } else {
                         allNodeHtml += `<div style="width: 16px;"></div>`;
                     }

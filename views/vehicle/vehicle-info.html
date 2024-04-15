@@ -381,12 +381,12 @@
                             <div class="row">
                                 <div class="col-12" style="display: flex;">
                                     <div class="view-live-location" style="display: none;">
-                                        <img style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
+                                        <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
                                         <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">View Live Location</label>
                                     </div>
                                     <% if (pageList.find(item => item.page == 'Profile' && item.action == 'Edit')) { %>
                                     <div class="edit-content-btn-div px-4">
-                                        <img style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
+                                        <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
                                         <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
                                     </div>
                                     <% } %>
@@ -495,7 +495,7 @@
                                     </div>
                                     <div class="row m-0" style="padding: 10px;">
                                         <div class="table-common table-shadow">
-                                            <table class="table assigned-indents-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
+                                            <table aria-hidden="true" class="table assigned-indents-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                                                 
                                             </table>
                                         </div>
@@ -513,7 +513,7 @@
                                             <label class="fs-6">Release</label>
                                         </div> -->
                                         <div class="table-common table-shadow">
-                                            <table class="table vehicle-maintenance-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
+                                            <table aria-hidden="true" class="table vehicle-maintenance-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                                                 
                                             </table>
                                         </div>
@@ -528,7 +528,7 @@
                                 <div class="">
                                     <div class="row m-0" style="padding: 10px;">
                                         <div class="table-common table-shadow">
-                                            <table class="table vehicle-odd-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
+                                            <table aria-hidden="true" class="table vehicle-odd-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                                                 
                                             </table>
                                         </div>
@@ -644,7 +644,7 @@
                 <div class="row">
                     <div class="col-md-12 col-sm-12 col-lg-12 mt-2 avi-date-input1-div">
                         <label class="info-title">AVI Date</label><br>
-                        <img src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
+                        <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
                         <input name="aviDateInput1" id="aviDateInput1" placeholder="DD/MM/YYYY" class="form-control" style="padding-left: 30px ;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
                     </div>
                 </div>

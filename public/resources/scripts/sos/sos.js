@@ -141,7 +141,7 @@ const initPage = async function () {
     $('.btn-dashboard').off('click').on('click', function () {
         $('.btn-dashboard').removeClass('active');
         $(this).addClass('active');
-        initDataTable($(this).data('item'));
+        initDataTable();
     })
 
     $('#clearAll').on('click', function () {

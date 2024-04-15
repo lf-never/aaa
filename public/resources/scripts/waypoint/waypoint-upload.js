@@ -56,7 +56,7 @@ const initDataTables = async function () {
 }
 
 export async function initWaypointUploadPage () {
-    // TODO: show view route module
+    // show view route module
     $('#view-waypoint-upload').modal('show');
     
     await initDataTables();

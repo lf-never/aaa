@@ -65,7 +65,8 @@ export async function initRouteCreatePage (route, type = 1) {
         
                         // leave \t @2020/11/23 15:26
                         let distance = Number.parseInt(routeInfo.replace(/d\d=/g, ''));
-                        let baseTimeNeed = distance / (60 / 60 * 1000);
+                        // let baseTimeNeed = distance / (60 / 60 * 1000);
+                        let baseTimeNeed = distance / 1000;
                         if (necessaryWaypoint) {
                             timeList.push(Math.ceil(baseTimeNeed) + 30); // default add 30min
                         } else {
@@ -138,10 +139,10 @@ export async function initRouteCreatePage (route, type = 1) {
                         }
                     });
         }
-        // TODO: start/end marker, line, waypointList
-        // TODO: currentRoute
-        // TODO: routeLineList
-        // TODO: _currentWaypointNum
+        // start/end marker, line, waypointList
+        // currentRoute
+        // routeLineList
+        // _currentWaypointNum
 
         currentRoute = await getRouteRequest(route);
         if (!currentRoute) {
@@ -227,7 +228,7 @@ export async function initRouteCreatePage (route, type = 1) {
         _currentWaypointNum++;
         generateWaypointItemHtml(waypointId);
         waypointDragEventHandler();
-        // TODO: init remove waypoint event handler
+        // init remove waypoint event handler
         $('.edit-route .minus-point').off('click').on('click', function () { 
             $(this).closest('li').remove();
             askForRouteLine(); 
@@ -242,7 +243,7 @@ export async function initRouteCreatePage (route, type = 1) {
         askForRouteLine()
     }
     const searchPositionChangeEvent = async function () {
-        // TODO: check input if `1.333,103.333`
+        // check input if `1.333,103.333`
         const checkInputPoint = function (position) {
             if (position.indexOf(',') > 1) {
                 let positionArray = position.split(',')
@@ -297,7 +298,7 @@ export async function initRouteCreatePage (route, type = 1) {
                     // console.log('selected position is : %s', selectedPosition);
                     $(positionEL).val(selectedPosition);
                     $('.position-names').html('').hide();
-                    // TODO: init position gps
+                    // init position gps
                     let positionObj = await askForPositionByShortPositionName(selectedPosition);
                     let position = { lat: positionObj.lat, lng: positionObj.lng }
                     if (position.lat.indexOf(',') > -1) {
@@ -330,7 +331,7 @@ export async function initRouteCreatePage (route, type = 1) {
     }
 
     
-    // TODO: clear html
+    // clear html
     $('#createRouteLabel').html('Create Route')    
     $('.edit-route .start-point').val(null).data('position', '')
     $('.edit-route .end-point').val(null).data('position', '')
@@ -466,14 +467,14 @@ const drawRouteLineList = function (selectedIndex = 0) {
         routeLineList.push({ line, index: option.index })
         bindLinePopupEvent(line, option.distance, option.time)
 
-        // TODO: fit bounds
+        // fit bounds
         fitBounds(line);
     }
     
     const bindLineClickEvent = function () {
         for (let line of routeLineList) {
             line.line.on('click', () => {
-                // TODO: clear all line,re draw
+                // clear all line,re draw
                 drawRouteLineList(line.index)
                 currentRoute.index = line.index;
                 currentRoute.line = currentRoute.lineList[line.index];
@@ -585,7 +586,7 @@ const createRouteHandler = async function () {
         result = await createRouteRequest(route);
     }
     if (result) {
-        // TODO: close socket client;
+        // close socket client;
         cancelSocketClientEvent(FLAG_Operation_Topic);
         clearRouteEditPage()
     } else {
@@ -595,7 +596,7 @@ const createRouteHandler = async function () {
 }
 
 const clearRouteEditPage = function () {
-    // TODO: clear marker and line
+    // clear marker and line
     if(startMarker) removeMapObject(startMarker);
     if(endMarker) removeMapObject(endMarker);
     for (let routeLine of routeLineList) {
@@ -607,7 +608,7 @@ const clearRouteEditPage = function () {
     _currentWaypointNum = 0;
     FLAG_Operation_Topic = null;
 
-    // TODO: clear html
+    // clear html
     $('.edit-route .start-point').val(null).data('position', '')
     $('.edit-route .end-point').val(null).data('position', '')
     $('.edit-route .routeName').val(null)

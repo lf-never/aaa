@@ -150,7 +150,6 @@ const reloadResourceReport = async function () {
                 "ordering": false,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -296,7 +295,7 @@ const reloadResourceReport = async function () {
                         sortable: false,
                         render: function (data, type, full, meta) {
                             if (data) {
-                                return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showReasonDetail(${full.unitId})">Details</div>`
+                                return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showReasonDetail(${full.unitId})" role="button" tabindex="0">Details</div>`
                             } 
                             return '';
                         } 
@@ -312,7 +311,6 @@ const reloadResourceReport = async function () {
                 "ordering": false,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",
@@ -412,7 +410,6 @@ const reloadResourceReport = async function () {
                 "ordering": false,
                 "searching": false,
                 "paging": true,
-                "pageLength": 10,
                 "autoWidth": false,
                 "fixedHeader": true,
                 "scrollX": "auto",

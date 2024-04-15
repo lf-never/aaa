@@ -255,7 +255,7 @@
             
             <div class="col-2 col-sm-4 text-end">
                 <% if (userType == 'ADMINISTRATOR' || pageList.find(item => item.module == 'Role Management' && item.page == 'Role Management' && item.action == 'New')) { %>
-                    <button type="button" class="btn btn-success btn-sm add-role">Add New Role<img style="width: 20px; margin-left: 5px; margin-top: -2px;" src="./images/notice/Right-Arrow.svg" /></button>
+                    <button type="button" class="btn btn-success btn-sm add-role">Add New Role<img alt="" style="width: 20px; margin-left: 5px; margin-top: -2px;" src="./images/notice/Right-Arrow.svg" /></button>
                 <% } %>
             </div>
         </div>
@@ -263,7 +263,7 @@
             
             <div class="row m-0" style="padding: 10px;">
                 <div class="table-common task-table-container active table-shadow" data-item="incident" style="border-radius: 1em;box-shadow: 0 0 5px rgb(201, 201, 201);border: solid 1px rgb(201, 201, 201); border-radius: 5px;">
-                    <table class="table role-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
+                    <table aria-hidden="true" class="table role-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                     </table>
                 </div>
             </div>
