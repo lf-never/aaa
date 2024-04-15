@@ -1,4 +1,4 @@
-var userType = Cookies.get('userType').toUpperCase()
+let userType = Cookies.get('userType').toUpperCase()
 $(function () {
     initPage()
     $('#task-report-create').on('click', async function () {

@@ -1,12 +1,12 @@
 const driverColor = '#FDA729', vehicleColor = "#30CDFC";
 const vehicleColor1=['#0088ff','#47afdc','#92c7dd']
 const driverColor1=['#F3A617','#F7C362','#F7D9A2']
-var CONTENT_NODE_COLOR = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3', '#3BA272', '#FC8452', '#9A60B4', '#DF4A6E', '#00ACE7', '#CA7056', '#CC9E3E', '#D2B99B', '#F0F0F0'];
-var scrollLeft = 0;
-var hubActive
-var nodeActive
-var driverTotal = []
-var vehicleTotal = []
+let CONTENT_NODE_COLOR = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3', '#3BA272', '#FC8452', '#9A60B4', '#DF4A6E', '#00ACE7', '#CA7056', '#CC9E3E', '#D2B99B', '#F0F0F0'];
+let scrollLeft = 0;
+let hubActive
+let nodeActive
+let driverTotal = []
+let vehicleTotal = []
 $(() => {
     initDate()
     initHubListHtml();
@@ -368,7 +368,7 @@ const initDriverTotalChart = async function (timeNeeded, hub, node) {
         let nodeDriverMyChart = null;
         if(nodeDriverMyChart) nodeDriverMyChart.dispose()
         nodeDriverMyChart = echarts.init(document.querySelector(`.driverAssignedChart`));
-        var option = {
+        let option = {
             title: {
                 show: false
             },

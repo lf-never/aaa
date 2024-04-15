@@ -89,7 +89,7 @@ const initTrafficDashboardPage = async function () {
 		$('.driver-datas').html('');
 		for (let item of data.list) {
 			// console.log(item)
-			var html = `<div class="col-12 driver-box" style="border-color: #BF9F27;">
+			let html = `<div class="col-12 driver-box" style="border-color: #BF9F27;">
 					<div class="row align-items-center mt-2 mb-2">
 						<img alt="" class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
 						<div class="col col-3 driver-box-tag-zIndex">

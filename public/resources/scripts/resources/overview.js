@@ -1,7 +1,5 @@
 $(() => {
     let userType = Cookies.get('userType');
-    let userHub = Cookies.get('hub');
-    let userNode = Cookies.get('node');
 
     setTimeout(() => {
         $('.resource-menu>div:first .user-select-none').trigger('click')
@@ -9,36 +7,13 @@ $(() => {
 
     Cookies.set('selectedCustomer', 0)
 
-    var iframe = document.getElementById('resource-iframe');
+    let iframe = document.getElementById('resource-iframe');
     iframe.onload = function() {
         console.log(` Iframe will jump to => ` + iframe.contentWindow.location.pathname)
         if (iframe.contentWindow.location.pathname == '/login') {
             window.location = '/login'
         }
     }
-
-    //node user don't has license
-    // if (userType == 'HQ' || userType == 'CUSTOMER' || (userType == 'UNIT' && userHub && !userNode)) {
-    // 	$(".resources-licensing").show();
-    // }
-    
-    // if (userType.toLowerCase() == 'licensing officer') {
-    // 	$(".title-label").text("License");
-        
-    // 	$(".userType-common").remove();
-    // 	$('.action-button').show();
-    // 	$('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
-    // 	$('iframe').attr('src', './driver/driverTask');
-    // 	$('.tab-label').removeClass('active');
-    // 	$(".TO-div").addClass('active');
-
-    // 	$(".license-logout").show();
-    // 	$(".license-logout").on('click', function () {
-    // 		axios.post('/logout').then(function (res) {
-    // 			window.location = '/login';
-    // 		});
-    // 	});
-    // }
 
     $('.tab-label').off('click').on('click', function () {
         $('.tab-label').removeClass('active');
@@ -205,15 +180,6 @@ const initHubAndNode = async function () {
             } else {
                 $('#select-hub').append(`<option value="">Hub: All</option>`);
             }
-            // if (hub) {
-            // 	setTimeout(() => {
-            // 		$('#select-hub').trigger('change');
-            // 		// $('#select-node').append(`<option value="">Node: All</option>`);
-            // 	}, 200)
-            // } else {
-            // 	$('#select-hub').trigger('change');
-            // 	// $('#select-hub').append(`<option value="">Hub: All</option>`);
-            // }
             for (let item of unitData) {
                 let addAttr = hub ? (hub === item.unit ? 'selected' : 'disabled') : ''
                 optionHtml += `<option value="${ item.unit }" ${ addAttr } >Hub: ${ item.unit }</option>`

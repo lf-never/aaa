@@ -218,11 +218,11 @@ const getSingaporePublicHolidays = async function(){
 }
 
 const DisabledLayDate = async function () {
-    var elem = $(".layui-laydate-content");
+    let elem = $(".layui-laydate-content");
     layui.each(elem.find('tr'), function (trIndex, trElem) {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
 
-            var tdTemp = $(tdElem);
+            let tdTemp = $(tdElem);
             if (vehicleLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');

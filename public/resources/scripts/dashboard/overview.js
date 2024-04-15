@@ -1,11 +1,11 @@
-var hubTitle = '';
-var typeTitle = '';
-var ins1
-var nextDays = 0
-var newStartDate
-var newEndDate
-var userId = Cookies.get('userId')
-var verifyNum = 0
+let hubTitle = '';
+let typeTitle = '';
+let ins1
+let nextDays = 0
+let newStartDate
+let newEndDate
+let userId = Cookies.get('userId')
+let verifyNum = 0
 
 $(async function () {
     await initPage2();
@@ -13,7 +13,7 @@ $(async function () {
     initClickPage()
     
     $(document).on("click", function (e) {
-        var target = e.target;
+        let target = e.target;
         if (target.id != "search-vehicle" && target.id != "select-vehicle-input") {
             $('.vehicle-search-select').css("display", "none");
         }
@@ -347,7 +347,7 @@ const initPage2 = async function () {
        
         $('#executionDate div.datepicker').css('display', 'none');
 
-        var state = false;
+        let state = false;
 		$('.executionDate-input').on('click', function(){
             let date = $('.executionDate-input').val().split('- ')
             $('#executionDate').DatePickerSetDate([date[0], date[1]])
@@ -370,13 +370,13 @@ const initPage2 = async function () {
 
         $('.datepickerDone').bind('click', function () {
             $('.layui-select-btn').removeClass('btn-success-number') 
-            var d = $('#executionDate').DatePickerGetDate()
-            var startDate = moment(d[0]).format('DD/MM/YYYY')
-            var endDate = moment(d[1]).format('DD/MM/YYYY')
+            let d = $('#executionDate').DatePickerGetDate()
+            let startDate = moment(d[0]).format('DD/MM/YYYY')
+            let endDate = moment(d[1]).format('DD/MM/YYYY')
             newStartDate = startDate
             newEndDate = endDate     
-            var oDate1 = new Date(newStartDate);
-            var oDate2 = new Date(newEndDate);
+            let oDate1 = new Date(newStartDate);
+            let oDate2 = new Date(newEndDate);
             if(oDate1.getTime() > oDate2.getTime()){
                 $('.executionDate-input').val(endDate + " - " + startDate)
                 $('#executionDate').DatePickerSetDate([newEndDate, newStartDate])
@@ -485,7 +485,7 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
     const initMain = function (series, data) {
         if(mainChart) mainChart.dispose()
         mainChart = echarts.init(document.getElementById("main"),"white",{ renderer:"canvas" });
-        var option = {
+        let option = {
             color: ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3', '#3BA272', '#FC8452', '#9A60B4', '#DF4A6E', '#00ACE7', '#CA7056', '#CC9E3E', '#D2B99B', '#F0F0F0'],
             legend: {
                 type: 'scroll',
@@ -560,7 +560,7 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
     const initVehicleAvailability = function (series, data) {
         if(vehicleChart) vehicleChart.dispose()
         vehicleChart = echarts.init(document.getElementById("vehicle-main"),"white",{ renderer:"canvas" });
-        var option = {
+        let option = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
@@ -637,7 +637,7 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
     const initToAvailability = function (series, data) {
         if(toChart) toChart.dispose()
         toChart = echarts.init(document.getElementById("to-main"),"white",{ renderer:"canvas" });
-        var option = {
+        let option = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
@@ -871,7 +871,7 @@ const initClickPage = function () {
 
 
 const initLayuiDate = function () {
-    var offset = $('.executionDate-input').offset();
+    let offset = $('.executionDate-input').offset();
     $('.datepickerContainer').css('top', `${ offset.top+40 }px`)
     let width = window.innerWidth;
     if(width == 2048) {
@@ -894,7 +894,7 @@ const initNumFormat = function (number) {
         dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
         s = '',
         toFixedFix = function (n, pre) {
-            var k = Math.pow(10, pre);
+            let k = Math.pow(10, pre);
             return '' + Math.ceil(n * k) / k;
         };
 

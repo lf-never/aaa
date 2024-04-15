@@ -14,23 +14,23 @@
     factory(jQuery);
   }
 }(function ($) {
-  var IS_TOUCH_DEVICE = ('ontouchstart' in document.documentElement);
+  let IS_TOUCH_DEVICE = ('ontouchstart' in document.documentElement);
   /**
    * mouse move threshold (in px) until drag action starts
    * @type {Number}
    */
-  var DRAG_THRESHOLD = 5;
+  let DRAG_THRESHOLD = 5;
   /**
    * to generate event namespace
    * @type {Number}
    */
-  var counter = 0;
+  let counter = 0;
 
   /**
    * Javascript events for touch device/desktop
    * @return {Object}
    */
-  var dragEvents = (function () {
+  let dragEvents = (function () {
     if (IS_TOUCH_DEVICE) {
       return {
         START: 'touchstart',
@@ -48,14 +48,14 @@
   }());
 
   $.fn.arrangeable = function(options) {
-    var dragging = false;
-    var $clone;
-    var dragElement;
-    var originalClientX, originalClientY; // client(X|Y) position before drag starts
-    var $elements;                        // list of elements to shift between
-    var touchDown = false;
-    var leftOffset, topOffset;
-    var eventNamespace;
+    let dragging = false;
+    let $clone;
+    let dragElement;
+    let originalClientX, originalClientY; // client(X|Y) position before drag starts
+    let $elements;                        // list of elements to shift between
+    let touchDown = false;
+    let leftOffset, topOffset;
+    let eventNamespace;
 
     if (typeof options === "string") {
       // check if want to destroy drag-arrange
@@ -72,16 +72,16 @@
       "dragEndEvent": "drag.end.arrangeable"
     }, options);
 
-    var dragEndEvent = options["dragEndEvent"];
+    let dragEndEvent = options["dragEndEvent"];
 
     $elements = this;
     eventNamespace = getEventNamespace();
 
     this.each(function() {
       // bindings to trigger drag on element
-      var dragSelector = options.dragSelector;
-      var self = this;
-      var $this = $(this);
+      let dragSelector = options.dragSelector;
+      let self = this;
+      let $this = $(this);
 
       if (dragSelector) {
         $this.on(dragEvents.START + eventNamespace, dragSelector, dragStartHandler);
@@ -108,9 +108,9 @@
     function dragMoveHandler(e) {
       if (!touchDown) { return; }
 
-      var $dragElement = $(dragElement);
-      var dragDistanceX = (e.clientX  || e.originalEvent.touches[0].clientX) - originalClientX;
-      var dragDistanceY = (e.clientY || e.originalEvent.touches[0].clientY) - originalClientY;
+      let $dragElement = $(dragElement);
+      let dragDistanceX = (e.clientX  || e.originalEvent.touches[0].clientX) - originalClientX;
+      let dragDistanceY = (e.clientY || e.originalEvent.touches[0].clientY) - originalClientY;
 
       // need to re-calculate position while scrollBar exist!!!
       let baseHeight = parseInt($('.div-way-point-list').height());
@@ -184,8 +184,8 @@
     function destroy() {
       $elements.each(function() {
         // bindings to trigger drag on element
-        var dragSelector = options.dragSelector;
-        var $this = $(this);
+        let dragSelector = options.dragSelector;
+        let $this = $(this);
 
         if (dragSelector) {
           $this.off(dragEvents.START + eventNamespace, dragSelector);
@@ -210,7 +210,7 @@
   };
 
   function clone($element) {
-    var $clone = $element.clone();
+    let $clone = $element.clone();
 
     $clone.css({
       position: 'absolute',
@@ -227,18 +227,18 @@
    * @return {DOM Object} hovered element
    */
   function getHoveredElement($clone, $dragElement, $movableElements) {
-    var cloneOffset = $clone.offset();
-    var cloneWidth = $clone.width();
-    var cloneHeight = $clone.height();
-    var cloneLeftPosition = cloneOffset.left;
-    var cloneRightPosition = cloneOffset.left + cloneWidth;
-    var cloneTopPosition = cloneOffset.top;
-    var cloneBottomPosition = cloneOffset.top + cloneHeight;
-    var $currentElement;
-    var horizontalMidPosition, verticalMidPosition;
-    var offset, overlappingX, overlappingY, inRange;
+    let cloneOffset = $clone.offset();
+    let cloneWidth = $clone.width();
+    let cloneHeight = $clone.height();
+    let cloneLeftPosition = cloneOffset.left;
+    let cloneRightPosition = cloneOffset.left + cloneWidth;
+    let cloneTopPosition = cloneOffset.top;
+    let cloneBottomPosition = cloneOffset.top + cloneHeight;
+    let $currentElement;
+    let horizontalMidPosition, verticalMidPosition;
+    let offset, overlappingX, overlappingY, inRange;
 
-    for (var i = 0; i < $movableElements.length; i++) {
+    for (let i = 0; i < $movableElements.length; i++) {
       $currentElement = $movableElements.eq(i);
 
       if ($currentElement[0] === $dragElement[0]) { continue; }
@@ -265,12 +265,12 @@
   }
 
   function shiftHoveredElement($clone, $dragElement, $movableElements) {
-    var hoveredElement = getHoveredElement($clone, $dragElement, $movableElements);
+    let hoveredElement = getHoveredElement($clone, $dragElement, $movableElements);
 
     if (hoveredElement !== $dragElement[0]) {
       // shift all other elements to make space for the dragged element
-      var hoveredElementIndex = $movableElements.index(hoveredElement);
-      var dragElementIndex = $movableElements.index($dragElement);
+      let hoveredElementIndex = $movableElements.index(hoveredElement);
+      let dragElementIndex = $movableElements.index($dragElement);
       if (hoveredElementIndex < dragElementIndex) {
         $(hoveredElement).before($dragElement);
       } else {
@@ -283,7 +283,7 @@
   }
 
   function shiftElementPosition(arr, fromIndex, toIndex) {
-    var temp = arr.splice(fromIndex, 1)[0];
+    let temp = arr.splice(fromIndex, 1)[0];
     return arr.splice(toIndex, 0, temp);
   }
 

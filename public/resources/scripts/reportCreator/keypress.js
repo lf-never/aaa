@@ -1,4 +1,4 @@
-var taskStatusFilterSelect = null
+let taskStatusFilterSelect = null
 $(function () {
     InitReportDateRange('#reportDateRange')
 

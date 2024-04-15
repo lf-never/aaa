@@ -1,5 +1,5 @@
-var dataTable = null;
-var tableType = 'current';
+let dataTable = null;
+let tableType = 'current';
 $(function () {
     $('.addRequest').off('click').on('click', function() {
         $('.modal-title').text('Create Request')
@@ -231,7 +231,7 @@ const initPage = async function () {
 
     const initDateTime = function(){
         const noSecond = function () {
-            var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+            let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
             $(timeDom).on('click', function () {
                 $(".laydate-time-list>li:last").css("display", "none");
                 $(".laydate-time-list>li").css("width", "50%")
@@ -240,11 +240,11 @@ const initPage = async function () {
         }
         
         const DisabledLayDate = function () {
-            var elem = $(".layui-laydate-content");
+            let elem = $(".layui-laydate-content");
             let driverLeaveDays = []
             layui.each(elem.find('tr'), function (trIndex, trElem) {
                 layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                    var tdTemp = $(tdElem);
+                    let tdTemp = $(tdElem);
                     if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                         tdTemp.addClass('laydate-disabled');
                         tdTemp.css('color', 'orange');
@@ -452,7 +452,7 @@ const initPage = async function () {
                 explanation: 'Explanation',
                 vehicleType: 'Type'
             }
-            for (var key in data) {
+            for (let key in data) {
                 // if(key == 'hub' || key == 'node') continue
                 if(key == 'node') continue
                 if(!data[key]) {

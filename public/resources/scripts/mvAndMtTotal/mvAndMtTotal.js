@@ -9,8 +9,7 @@ let hubs = ''
 let alertCount = 0
 let markerObj = [];
 let popupObj = [];
-var userId = Cookies.get('userId');
-var userType = Cookies.get('userType');
+let userId = Cookies.get('userId');
 
 let alreadyInitSOSToolTips = false;
 let alreadyInitSOSToolTipList = []
@@ -590,9 +589,9 @@ const initTopHub = function (obj) {
         seriesLeft = '-30%'
         graphicLeft = '34%'
     }
-    var myChart = echarts.init(document.querySelector(`.chart-${ obj.hub.replaceAll(" ","-") }`));
+    let myChart = echarts.init(document.querySelector(`.chart-${ obj.hub.replaceAll(" ","-") }`));
     let index = 0;
-    var option = {
+    let option = {
         tooltip: {
             trigger: 'item'
           },
@@ -672,7 +671,6 @@ const initTopHub = function (obj) {
 let nodeChart = null
 const initNodeChart = function (obj) {
     let num = 100
-    let startedTaskCountTotal = 0;
     let nodeTotal = 0;
     for(let purpose of obj.purposeData) {
         num = num -5;
@@ -716,7 +714,7 @@ const initNodeChart = function (obj) {
     if (nodeChart) nodeChart.dispose()
     nodeChart = echarts.init(document.querySelector(`.chart-${ obj.hub.replaceAll(" ","-") }-${ (obj.node).replaceAll(" ","-") }`));
 
-    var option = {
+    let option = {
         tooltip: {
             trigger: 'item',
         },

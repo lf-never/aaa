@@ -1,7 +1,7 @@
 
-var bsOffcanvas = new bootstrap.Offcanvas('#offcanvasRight-notice')
-var noticeList = []
-var $noticeDetail = $("#notice-detail")
+let bsOffcanvas = new bootstrap.Offcanvas('#offcanvasRight-notice')
+let noticeList = []
+let $noticeDetail = $("#notice-detail")
 $(function () {
     const myOffcanvas = document.getElementById('offcanvasRight-notice')
     myOffcanvas.addEventListener('shown.bs.offcanvas', async event => {

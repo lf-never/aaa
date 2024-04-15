@@ -66,7 +66,7 @@ export async function initWaypointUploadPage () {
 let waypointUploadIns = null;
 const waypointUploadEventHandler = function () {
     layui.use('upload', function() {
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (waypointUploadIns) return;
         waypointUploadIns = upload.render({
             elem: '#waypoint-upload',

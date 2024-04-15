@@ -7,7 +7,7 @@ jconfirm.defaults = {
     animationSpeed: 400,
     typeAnimated: true,
 }
-var sosId = null
+let sosId = null
 
 $(function () {
     initDataTable();

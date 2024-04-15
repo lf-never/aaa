@@ -1,4 +1,4 @@
-var newSosId = null;
+let newSosId = null;
 let currentPermitType = null
 var userType = Cookies.get('userType')
 
@@ -195,7 +195,7 @@ export async function initIncidentPage(sosId, permitType) {
     initWeekValue(await getWeeklyDateByDate())
 
     const noSecond = function () {
-        var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+        let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
     
         $(timeDom).on('click', function () {
             $(".laydate-main-list-0 .laydate-time-list>li:last").css("display", "none");
@@ -348,7 +348,7 @@ const addOrEditIncidet = async function(el) {
             lssueDemeritPoints: 'lssue Demerit Points',
             suspensionPeriod: 'Suspension Period'
         }
-        for (var key in data) {
+        for (let key in data) {
             if(key == 'negligence' || key == 'local') continue
             if(key == 'lssueDemeritPoints' || key == 'suspensionPeriod') continue
             if(userType.toUpperCase() != 'UNIT' && userType.toUpperCase() != 'HQ') {

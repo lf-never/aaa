@@ -59,7 +59,7 @@ export async function initDriverUploadPage () {
 let driverUploadIns = null;
 const driverUploadEventHandler = function () {
     layui.use('upload', function(){
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (driverUploadIns) return;
         driverUploadIns = upload.render({
             elem: '#driver-upload',

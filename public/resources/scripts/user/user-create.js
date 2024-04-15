@@ -1,7 +1,7 @@
 import { initUserViewPage } from '../user/user-view.js'
 import { customPopupInfo } from '../common-script.js'
 import { getRoleList } from '../role/role.js'
-var groupList
+let groupList
 $(function () {
     $('#edit-user').on('hide.bs.modal', function () {
         $('#edit-user .unit,#edit-user .subUnit').hide();  
@@ -28,7 +28,7 @@ $(function () {
     initGroup()
 
     $(document).on("click", function (e) {
-        var target = e.target;
+        let target = e.target;
         if (target.id != "search1" && target.id != "search2" && target.id != "unitGroup-input") {
             $('.search-select').css("display", "");
         }

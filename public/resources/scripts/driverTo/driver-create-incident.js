@@ -253,7 +253,7 @@ const createIncident = async function () {
             endTime: 'End Time'
         }
 
-        for (var key in data) {
+        for (let key in data) {
             if(key == 'driverId'){
                 continue 
             }

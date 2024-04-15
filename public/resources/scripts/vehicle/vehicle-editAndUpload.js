@@ -26,7 +26,7 @@ $(function () {
     })
 
     if('draggable' in document.createElement('span')){
-        var holder = document.getElementById('upload-file-div');
+        let holder = document.getElementById('upload-file-div');
         if (holder) {
             holder.ondragover = function () { 
                 return false; 
@@ -396,7 +396,7 @@ const checkField = function(data) {
         vehicleType: 'Vehicle Name', vehicleDimensions: 'Description', permitType: 'Permit Type'
     }
 
-    for (var key in data) {
+    for (let key in data) {
         if(key == 'vehicleNode' || key == 'vehicleKeyTagId' || key == 'pmType' || key == 'vehiclePmMaxMileage' || key == 'vehiclePmMonths' || key == 'permitTypeInput' || key == 'permitTypeSelect') continue
         if (key == 'vehicleHub' || key == 'vehicleGroup') {
             let hub = data['vehicleHub']

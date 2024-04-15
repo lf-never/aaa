@@ -21,7 +21,7 @@ const initPage = function () {
     initDateCalender();
 
     layui.use('upload', function(){
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (uploadKeyOptionRecordIns) return;
         uploadKeyOptionRecordIns = upload.render({
             elem: '.upload-btn',
@@ -88,7 +88,7 @@ const initDateCalender = function () {
 }
 
 $(document).on("click", function (e) {
-    var target = e.target;
+    let target = e.target;
     if (target.id != "siteId" && target.id != "search-site"
         && target.id != "driverId" && target.id != "search-driver"
         && target.id != "vehicleNo" && target.id != "search-vehicle") {

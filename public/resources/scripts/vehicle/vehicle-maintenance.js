@@ -1,4 +1,4 @@
-var maintenancetable
+let maintenancetable
 
 $(function () {
     $(".search-input-odd").on("keyup", function() {

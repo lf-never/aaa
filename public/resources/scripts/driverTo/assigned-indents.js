@@ -1,7 +1,7 @@
 
 let userType = Cookies.get('userType')
-var driverAssignedTaskTable
-var tableColumnField = ['', 'vehicleNo', 'username'];
+let driverAssignedTaskTable
+let tableColumnField = ['', 'vehicleNo', 'username'];
 let past = 0;
 let layer = null;
 const resourceType = 'TO'

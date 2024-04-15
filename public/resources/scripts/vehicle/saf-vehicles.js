@@ -1,7 +1,7 @@
 
 let userType = Cookies.get('userType')
-var table
-var tableColumnField = ['vehicleNo', 'unit'];
+let table
+let tableColumnField = ['vehicleNo', 'unit'];
 let vehicleStatusSelect = null;
 
 window.reloadHtml = function () {
@@ -496,8 +496,8 @@ const FilterOnChange = async function () {
 }
 
 const AddNewFilter = function () {
-    var active = $(this).hasClass('active')
-    var item = $(this).attr("data-item")
+    let active = $(this).hasClass('active')
+    let item = $(this).attr("data-item")
 
     active ? $(this).removeClass('active') : $(this).addClass('active')
 

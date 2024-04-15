@@ -1,7 +1,7 @@
 
 let userType = Cookies.get('userType')
-var table
-var tableColumnField = ['', 'vehicleNo', 'username'];
+let table
+let tableColumnField = ['', 'vehicleNo', 'username'];
 let past = 0;
 const resourceType = 'Vehicle'
 

@@ -1,4 +1,4 @@
-var userId = Cookies.get('userId');
+let userId = Cookies.get('userId');
 $(function () {
     $('.opt-btn-div-driver-cancel').on('click', function () {
         $('#view-driver-edit').modal('hide');
@@ -275,7 +275,7 @@ const initClickEditDriver = function () {
     const confirmCreateOrSave = function() {
         $('.opt-btn-div-edit').off('click').on('click', function () {
                 let classList = [];
-                for (var i = 0; i < $('.driver-class-input').length; i++) {
+                for (let i = 0; i < $('.driver-class-input').length; i++) {
                     if($('.driver-class-input')[i].checked) {
                         if($('.driver-class-input')[i].value && ($('.driver-class-input')[i].value).toUpperCase() != 'NULL') classList.push($('.driver-class-input')[i].value)
                     }
@@ -336,22 +336,10 @@ const initClickEditDriver = function () {
             action: 'action', driverId: 'driverId', role: 'Role', vocation: 'Vocation',
             unit: 'Unit', hub: 'Hub',
             node: 'Node', enlistmentDate: 'Enlistment Date', operationallyReadyDate: 'Operationally Ready Date (ORD)', nric: 'NRIC', driverName: 'Driver Name', 
-            birthday: 'Date of Birth', contactNumber: 'Contact No.', 
-            // civilianLicence: 'Civilian Licence', cardSerialNumber: 'Card Serial No.',
-            // dateOfIssue: 'Date Of Issue'
+            birthday: 'Date of Birth', contactNumber: 'Contact No.',
         }
 
-        for (var key in data) {
-            // if(key == 'cardSerialNumber'){
-            //     let regular = /^[0-9]$/;     
-            //     let regular2 = /^[a-zA-Z]$/;     
-            //     if ((regular).test($('.cardSerialNo-input').val()) == false || (regular2).test($('.cardSerialNo-input').val()) == false) {
-            //         $.alert('Card Serial No. Must contain letters and numbers.')
-            //         return false
-            //     } else {
-            //         continue
-            //     }
-            // }
+        for (let key in data) {
             if(key == 'contactNumber') {
                 let firstNumber = ($('.contact-no-input').val()).substring(0, 1)
                 if (!(($('.contact-no-input').val()).length == 8 && (firstNumber == "8" || firstNumber == "9"))) {

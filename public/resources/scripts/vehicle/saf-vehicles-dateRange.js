@@ -34,9 +34,9 @@ const InitExecutionDatePicker = function (elem) {
         return false;
     });
     $(`#${elem} .datepickerDone`).bind('click', function () {
-        var d = $(`#${elem}`).DatePickerGetDate()
-        var startDate = moment(d[0]).format("YYYY-MM-DD")
-        var endDate = moment(d[1]).format("YYYY-MM-DD")
+        let d = $(`#${elem}`).DatePickerGetDate()
+        let startDate = moment(d[0]).format("YYYY-MM-DD")
+        let endDate = moment(d[1]).format("YYYY-MM-DD")
         $(`.${elem}-div>input`).val(`${startDate} ~ ${endDate}`)
         $(`#${elem} div.datepicker`).css('display', 'none');
         FilterOnChange()

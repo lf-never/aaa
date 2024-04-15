@@ -242,7 +242,7 @@ String.prototype.extension = function() {
 };
 
 Array.prototype.contain = function(obj){
-    for(var i=0; i<this.length; i++) {
+    for(let i=0; i<this.length; i++) {
         if (this[i] === obj)
             return true;
     }

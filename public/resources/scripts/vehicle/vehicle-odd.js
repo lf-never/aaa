@@ -1,4 +1,4 @@
-var vehicleOddTable
+let vehicleOddTable
 
 $(function () {
     $("#oddRectifyConfirm").on('click', function() {

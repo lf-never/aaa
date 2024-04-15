@@ -17,8 +17,8 @@ $(function () {
 
 window.initMain = async function () {
     const initChart = function (data, accumulatedList, usedList, pendingList) {
-        var myChart = echarts.init(document.getElementById('main', 'walden'));
-        var option = {
+        let myChart = echarts.init(document.getElementById('main', 'walden'));
+        let option = {
             tooltip: {
                 trigger: 'axis'
             },
@@ -140,7 +140,7 @@ window.initMain = async function () {
     let usedListTotal = 0;
     let pendingListTotal = 0;
 
-    for(var key in dataList){
+    for(let key in dataList){
         accumulatedListTotal += Number(dataList[key].accumulated)
         usedListTotal += Number(dataList[key].used)
         pendingListTotal += Number(dataList[key].pending)
@@ -391,9 +391,9 @@ const dateFormat = function (value) {
 }
 
 const initLayuiDate = function () {
-    var offset = $('#select-dataRange2').offset();
-    var pt = offset.top+35;
-    var pl = offset.left-7;
+    let offset = $('#select-dataRange2').offset();
+    let pt = offset.top+35;
+    let pl = offset.left-7;
     let div = document.getElementById('layui-laydate1');
     div.style.top = pt+'px';
     div.style.left = pl+'px';
@@ -410,7 +410,7 @@ const initNumFormat = function (number) {
         dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
         s = '',
         toFixedFix = function (n, pre) {
-            var k = Math.pow(10, pre);
+            let k = Math.pow(10, pre);
             return '' + Math.ceil(n * k) / k;
         };
 

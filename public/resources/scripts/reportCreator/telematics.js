@@ -1,7 +1,6 @@
-//var hubNodeFilterSelect = null
-var taskStatusFilterSelect = null
-var hubNodeList = []
-var userType = Cookies.get('userType').toUpperCase()
+let taskStatusFilterSelect = null
+let hubNodeList = []
+let userType = Cookies.get('userType').toUpperCase()
 $(function () {
     if (userType != 'ADMINISTRATOR' && userType != 'HQ') {
         // $('#hub-checkbox').parent().remove()

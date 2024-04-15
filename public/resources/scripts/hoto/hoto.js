@@ -1,9 +1,9 @@
 let userType = Cookies.get('userType');
 let userId = Cookies.get('userId');
-var vehicleTable;
-var driverTable;
-var vehicleTableColumnField = ['vehicleNo', 'username'];
-var driverTableColumnField = ['driverName', 'hub'];
+let vehicleTable;
+let driverTable;
+let vehicleTableColumnField = ['vehicleNo', 'username'];
+let driverTableColumnField = ['driverName', 'hub'];
 let dataType = 'vehicle';
 let errorMessage = []
 let driverLeaveDays = [];
@@ -152,7 +152,7 @@ window.submitHoto = function (el, vehicleNo, driverId, driverName, unit, subUnit
         }
         if(data.vehicleNo) errorLabel.vehicleNo = 'vehicleNo'
         if(data.driverId) errorLabel.driverId = 'driverId'
-        for (var key in data) {
+        for (let key in data) {
             if(key == 'fromHub' || key == 'fromNode' || key == 'hotoDateTime' || key == 'toNode'){
                 continue 
             }
@@ -329,8 +329,8 @@ const initDetail = async function () {
                 },
             },
             "rowCallback": function (tr, data) {
-                var row = vehicleTable.row(tr);
-                var details = formatVehicleHotoDetails(data.hotoList)
+                let row = vehicleTable.row(tr);
+                let details = formatVehicleHotoDetails(data.hotoList)
                 row.child(details).show();
                 $(tr).addClass('shown');
             },
@@ -493,8 +493,8 @@ const initDetail = async function () {
                 },
             },
             "rowCallback": function (tr, data) {
-                var row = driverTable.row(tr);
-                var details = formatDriverHotoDetails(data.hotoList)
+                let row = driverTable.row(tr);
+                let details = formatDriverHotoDetails(data.hotoList)
                 row.child(details).show();
                 $(tr).addClass('shown');
             },
@@ -644,7 +644,7 @@ window.reloadHtml = function () {
 
 window.initLayDate = function (vehicleNo) {
     const noSecond = function () {
-        var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+        let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
     
         $(timeDom).on('click', function () {
             $(".laydate-time-list>li:last").css("display", "none");
@@ -654,11 +654,11 @@ window.initLayDate = function (vehicleNo) {
     }
     
     const DisabledLayDate = function () {
-        var elem = $(".layui-laydate-content");
+        let elem = $(".layui-laydate-content");
         //let publidHolidays = parent.publidHolidays
         layui.each(elem.find('tr'), function (trIndex, trElem) {
             layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                var tdTemp = $(tdElem);
+                let tdTemp = $(tdElem);
                 if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                     tdTemp.addClass('laydate-disabled');
                     tdTemp.css('color', 'orange');
@@ -753,15 +753,13 @@ window.getHubNode = async function(userType, userId) {
 }
 
 function formatVehicleHotoDetails(datas, checkedTable) {
-    var columnWidth = ["2%", "1%", "6%", "8%", "13%", "10%", "10%", "8%"]
+    let columnWidth = ["2%", "1%", "6%", "8%", "13%", "10%", "10%", "8%"]
     let tr = ""
     if (datas.length == 0) {
         tr = `<tr class="text-center"><td>No Hoto Datas</td></tr>`
     }
     
-    for (var item of datas) {
-        let taskStatus = item.status
-
+    for (let item of datas) {
         tr += `<tr>
             <td style="width: ${columnWidth[0]}"><input class="checkVehicle checkVehicleDetail" type="checkbox"  value="${ item.hotoId }" ${ checkedTable ? `checked="checked"` : '' }></td>
             <td style="width: ${columnWidth[1]}">${item.vehicleNo}</td>
@@ -784,13 +782,13 @@ function formatVehicleHotoDetails(datas, checkedTable) {
 }
 
 function formatDriverHotoDetails(datas, checkedTable) {
-    var columnWidth = ["2%", "1%", "6%", "8%", "13%", "10%", "10%", "8%"]
+    let columnWidth = ["2%", "1%", "6%", "8%", "13%", "10%", "10%", "8%"]
     let tr = ""
     if (datas.length == 0) {
         tr = `<tr class="text-center"><td>No Hoto Datas</td></tr>`
     }
     
-    for (var item of datas) {
+    for (let item of datas) {
         tr += `<tr>
             <td style="width: ${columnWidth[0]}"><input class="checkVehicle checkVehicleDetail" type="checkbox"  value="${ item.hotoId }" ${ checkedTable ? `checked="checked"` : '' }></td>
             <td style="width: ${columnWidth[1]}">${item.driverName}</td>
@@ -815,20 +813,20 @@ function formatDriverHotoDetails(datas, checkedTable) {
 const AddCollapseExpandClickEvent = function () {
     $('.table tbody').on('click', 'td.details-control', function () {
         let checkedTable = $(this).prev().find('input').prop("checked")
-        var tr = $(this).closest('tr');
+        let tr = $(this).closest('tr');
         let currentTable = vehicleTable
         if (dataType == 'driver') {
             currentTable = driverTable
         }
-        var row = currentTable.row(tr);
-        var expandDatas = row.data().hotoList
+        let row = currentTable.row(tr);
+        let expandDatas = row.data().hotoList
         if (row.child.isShown()) {
             // This row is already open - close it
             row.child.hide();
             tr.removeClass('shown');
         }
         else {
-            var details = null
+            let details = null
             // Open this row
             if (dataType == 'driver') {
                 details = formatDriverHotoDetails(expandDatas, checkedTable)

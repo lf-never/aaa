@@ -1,14 +1,14 @@
-var timerQ = null
-var driverByHubData
-var vehicleByHubData
-var driverByNodeData
-var vehicleByNodeData
-var CONTENT_NODE_COLOR = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3', '#3BA272', '#FC8452', '#9A60B4', '#DF4A6E', '#00ACE7', '#CA7056', '#CC9E3E', '#D2B99B', '#F0F0F0'];
-var driverClass = [];
-var vehicleClass = [];
-var userId = Cookies.get('userId');
-var unitByHub = null;
-var dvLoa = null;
+let timerQ = null
+let driverByHubData
+let vehicleByHubData
+let driverByNodeData
+let vehicleByNodeData
+let CONTENT_NODE_COLOR = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3', '#3BA272', '#FC8452', '#9A60B4', '#DF4A6E', '#00ACE7', '#CA7056', '#CC9E3E', '#D2B99B', '#F0F0F0'];
+let driverClass = [];
+let vehicleClass = [];
+let userId = Cookies.get('userId');
+let unitByHub = null;
+let dvLoa = null;
 
 $(async function () {
     driverByNodeData = await getDriverByRoleByNode(userId, unitByHub);
@@ -748,7 +748,7 @@ const initDriverAndVehicleChar = function (text, item, data, data2, color, total
         let driverMyChart = null;
         if(driverMyChart) driverMyChart.dispose()
         driverMyChart = echarts.init(document.querySelector(`.${ item }`));
-        var option = {
+        let option = {
             title: {
                 text: text,
                 left: '18%',

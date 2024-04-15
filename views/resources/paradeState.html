@@ -244,13 +244,11 @@
             reloadTable();
         }
 
-        var vehicleTable;
-        var driverTable;
-        var vehicleTableColumnField = ['vehicleNo', 'unit'];
-        var driverTableColumnField = ['driverName', 'hub'];
+        let vehicleTable;
+        let driverTable;
+        let vehicleTableColumnField = ['vehicleNo', 'unit'];
+        let driverTableColumnField = ['driverName', 'hub'];
         let paradeStateStatusSelect = null;
-        //var lastSubmittedDriverDate = moment().format('YYYY-MM-DD HH:mm:ss');
-        //var lastSubmittedVehicleDate = moment().format('YYYY-MM-DD HH:mm:ss');
         $(async function() {
 
             $('#clearAll').on('click', function () {
@@ -375,17 +373,8 @@
                     },
                 },
                 "initComplete": function (settings, json) {
-                    // $(".saf-vehicle-table thead tr th:first").append(`<input type="checkbox" class="checkAll" onchange="checkAllOrNot()" />`);
-                    // $(".saf-vehicle-table thead tr th:first").removeClass('sorting_asc');
                 },  
                 "columns": [
-                    // { 
-                    //     data: 'vehicleNo',  orderable: false, width: '5%', 
-                    //     render: function (data, type, full, meta) {
-                    //         $(".checkAll").prop("checked", false);
-                    //         return `<input class="checkVehicle" type="checkbox" vehicleLocation="${full.position ? full.position : ''}" value="${data}">`;
-                    //     }
-                    // },
                     {
                         "data": "vehicleNo", "title": "Vehicle", orderable: true, width: '15%', 
                         "render": function (data, type, full, meta) {
@@ -530,21 +519,9 @@
                     },
                 },
                 "initComplete" : function (settings, json) {
-                    // row margin-top: fill by div height;
-                    // $('.saf-driver-table tbody tr').before('<div style="width: 100%;height: 10px;"/>');
                     $(".saf-driver-table thead tr th:first").removeClass('sorting_asc');
                 },
                 "columns": [
-                    // {
-                    //     "data": null, 
-                    //     "title": "S/N", 
-                    //     "orderable": false,
-                    //     "render": function (data, type, full, meta) {
-                    //         return `
-                    //             <input class="show-live-location" type="checkbox" data-driverid="${ full.driverId }">
-                    //         `
-                    //     }
-                    // },
                     {
                         "data": "driverName",
                         "title": "Name",
@@ -653,15 +630,6 @@
             $('.saf-driver-table').parent().hide();
         });
 
-        // const cancel = function() {
-        //     let currentDataType = $(".status-filter-item.active").attr('dataType');
-        //     if (currentDataType == 'vehicle') {
-        //         vehicleTable.ajax.reload(null, false)
-        //     } else {
-        //         driverTable.ajax.reload(null, false)
-        //     }
-        // }
-
         const confirmChangeStatus = async function(ele, dataType) {
             let selectedOpt = $(ele).find('option:selected');
             let value = selectedOpt.val();
@@ -722,8 +690,6 @@
                 if (driverStatusArray.length > 0) {
                     await axios.post("/driver/updateDriverStatus", {newStatus: driverStatusArray }).then(async res => {
                         if (res.respCode == 1) {
-                            //lastSubmittedDriverDate = moment().format('YYYY-MM-DD HH:mm:ss');
-                            //$('.lastSubmittedDateLabel').text(lastSubmittedDriverDate);
 
                             driverTable.ajax.reload(null, false)
                         } else {

@@ -1,5 +1,5 @@
 
-var currentVehicleNo = '';
+let currentVehicleNo = '';
 let vehicleWptStartTime = null, vehicleWptEndTime = null, vehicleMptStartTime = null, vehicleMptEndTime = null, vehiclePmTime = null, vehicleAviTime = null;
 
 let vehicleStatusColor = [{status: 'Deployed', color: '#FAD028'}, {status: 'Loan Out', color: 'blue'}, {status: 'Deployable', color: '#6EB825'}, 
@@ -167,38 +167,9 @@ const initVehicleScheduleHandler = async function () {
     initVehicleSchedule();
 }
 
-// const releaseVehicle = async function() {
-//     axios.post("/vehicle/releaseVehicle", {vehicleNo: currentVehicleNo }).then(async res => {
-//         let respCode = res.data.respCode
-//         let respMessage = res.data.respMessage
-//         if (res.data.respCode == -100) {
-//             window.location = '../login'
-//         } else if (res.data.respCode == 0) {
-//             $.confirm({
-//                 title: 'WARN',
-//                 content: respMessage,
-//                 buttons: {
-//                     ok: function () {
-//                     },
-//                 }
-//             });
-//         } else {
-//             $.confirm({
-//                 title: 'INFO',
-//                 content: 'Release success!',
-//                 buttons: {
-//                     ok: function () {
-//                     },
-//                 }
-//             });
-//             initBasicProfileHandler();
-//         }
-//     });
-// }
-
 const getParams = function(key) {
-    var reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
-    var r = window.location.search.substr(1).match(reg);
+    let reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
+    let r = window.location.search.substr(1).match(reg);
     if (r != null) {
         return unescape(r[2]);
     }

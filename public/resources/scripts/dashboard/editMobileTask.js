@@ -1,6 +1,6 @@
 
-var locationList;
-var vehicleList;
+let locationList;
+let vehicleList;
 
 const initEditMobileTaskPage = function (tripId, purpose, startTime, endTime, vehicleNo, reportingLocation, destination) {
     $("#editMobileTaskModal").modal('show');

@@ -14,7 +14,7 @@ const config = require('../lib/config')
  * @param {*} res
  */
 function index(_req, res) {
-  var temp = ""
+  let temp = ""
   for (const [env, baseurl] of Object.entries(config.baseUrls)) {
 
     temp = `${baseurl}/v1/oauth/authorize?response_type=code&client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectURL}/callback&nonce=randomnonce&state=${env}`

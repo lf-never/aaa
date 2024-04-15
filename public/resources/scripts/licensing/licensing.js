@@ -1,6 +1,6 @@
 let userType = Cookies.get('userType')
-var table
-var tableColumnField = ['driverName', 'hub'];
+let table
+let tableColumnField = ['driverName', 'hub'];
 
 $(function () {
     //$('.search-input').on('keyup', _.debounce( FilterOnChange, 500 ))

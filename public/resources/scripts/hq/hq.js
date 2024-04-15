@@ -1,15 +1,15 @@
-var currentInterval = null;
-var Interval_CheckRouteCreate = null;
-var currentArea = null;
-var currentNode = null;
-var layer = null;
-var userType = Cookies.get('userType');
-var userId = Cookies.get('userId');
-var tableHub;
-var tableNode;
-var tableBySys     
-var tableByMb
-var tableName = 'sys'
+let currentInterval = null;
+let Interval_CheckRouteCreate = null;
+let currentArea = null;
+let currentNode = null;
+let layer = null;
+let userType = Cookies.get('userType');
+let userId = Cookies.get('userId');
+let tableHub;
+let tableNode;
+let tableBySys     
+let tableByMb
+let tableName = 'sys'
 
 layui.use('layer', function(){
     layer = layui.layer;
@@ -93,7 +93,7 @@ let taskCreateIns = null;
 let taskUploadIns = null;
 const taskUploadEventHandler = function () {
     layui.use('upload', function(){
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (taskCreateIns) return;
         taskCreateIns = upload.render({
             elem: '#task-Create',
@@ -127,7 +127,7 @@ const taskUploadEventHandler = function () {
         });
     });
     layui.use('upload', function(){
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (taskUploadIns) return;
         taskUploadIns = upload.render({
             elem: '#task-upload',
@@ -633,7 +633,7 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                         vehicleNumber: 'Vehicle Number', 
                         searchDriverId: 'Driver Name(Mobile Number)'
                     }
-                    for (var key in data) {
+                    for (let key in data) {
                         if(key == 'searchDriverId'){
                             if(driverNO){
                                 continue
@@ -1385,7 +1385,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     if(onlyStatus == 0 || onlyStatus > 0) {
                         // let newVehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, $('#periodStartDate').val(), $('#periodEndDate').val(), taskId, driverNum, unitId);
                         let newVehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, newStartTime, newEndTime, taskId, driverNum, unitId);
-                        var result = newVehicleList.some(item=> item.vehicleNo == $('#vehicleNo').val())
+                        let result = newVehicleList.some(item=> item.vehicleNo == $('#vehicleNo').val())
                         if(!result) {
                             $('#vehicleNo').val('');
                             $('#vehicleNo').attr('data-unitId', null)
@@ -1396,7 +1396,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     if(onlyStatus == -1 || onlyStatus > 0) {
                         // let newDriverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, $('#periodStartDate').val(), $('#periodEndDate').val(), unitId);
                         let newDriverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, newStartTime, newEndTime, unitId);
-                        var driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
+                        let driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
                         if(!driverResult) {
                             $('#driver').val('');
                             $('#driver').attr('data-unitId', null)
@@ -1414,7 +1414,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
         }
         const initDateTime = async function(){
             const noSecond = function () {
-                var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+                let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
                 $(timeDom).on('click', function () {
                     $(".laydate-time-list>li:last").css("display", "none");
                     $(".laydate-time-list>li").css("width", "50%")
@@ -1422,11 +1422,11 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 });
             }
             const DisabledLayDate = function () {
-                var elem = $(".layui-laydate-content");
+                let elem = $(".layui-laydate-content");
                 let driverLeaveDays = []
                 layui.each(elem.find('tr'), function (trIndex, trElem) {
                     layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                        var tdTemp = $(tdElem);
+                        let tdTemp = $(tdElem);
                         if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                             tdTemp.addClass('laydate-disabled');
                             tdTemp.css('color', 'orange');
@@ -1709,7 +1709,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
         }
         initLocation()
         $(document).off('click').on("click", function (e) {
-            var target = e.target;
+            let target = e.target;
             if (target.id != "search1" && target.id != "search2" && target.id != "pickupDestination" && target.id != "dropoffDestination"
              && target.id != "search3" && target.id != "search4" && target.id != "vehicleNo" && target.id != "driver" && target.id != "search5" && target.id != "typeOfVehicle") {
                 $('.search-select').css("display", "");
@@ -1990,7 +1990,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     startDate: 'Start Date',
                     endDate: 'End Date',
                 }
-                for (var key in data) {
+                for (let key in data) {
                     if(!data[key]) {
                         if(onlyStatus == -1) if(key == 'vehicleNumber') continue
                         if(onlyStatus == 0) if(key == 'driverName') continue

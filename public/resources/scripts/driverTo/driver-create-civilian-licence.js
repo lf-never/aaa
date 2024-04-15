@@ -151,7 +151,7 @@ const addOrEditCivilianLicence = async function(){
         let errorLabel = {
             civilianLicence: 'Civilian Licence', dateOfIssue: 'Date of Issue', cardSerialNumber: 'Card Serial No'
         }
-        for (var key in data) {
+        for (let key in data) {
             if(cardSerialNo) {
                 if(key == 'cardSerialNumber') continue
             }

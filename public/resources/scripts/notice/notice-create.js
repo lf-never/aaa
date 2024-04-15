@@ -75,9 +75,9 @@ let currentNoticeID = null, currentNotice = null;
     })
 
     const getFromCharCode = function (array) {
-        var res = '';
-        var chunk = 8 * 1024;
-        var i;
+        let res = '';
+        let chunk = 8 * 1024;
+        let i;
         for (i = 0; i < array.length / chunk; i++) {
         res += String.fromCharCode.apply(null, array.slice(i * chunk, (i + 1) * chunk));
         }

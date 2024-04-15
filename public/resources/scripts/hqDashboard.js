@@ -1,5 +1,5 @@
 $(() => {
-	var iframe = document.getElementById('resource-iframe');
+	let iframe = document.getElementById('resource-iframe');
 	iframe.onload = function() {
 		console.log(` Iframe will jump to => ` + iframe.contentWindow.location.pathname)
 		if (iframe.contentWindow.location.pathname == '/login') {

@@ -1,4 +1,4 @@
-var clickType = null;
+let clickType = null;
 $(() => {
     for(let item of $('.report-menu')){
         let data = $(item).attr('data-link')

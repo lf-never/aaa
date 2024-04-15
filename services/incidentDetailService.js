@@ -100,15 +100,15 @@ module.exports.getLocationType  = async function (req, res) {
 
 module.exports.getWeeklyDateByDate = async function (req, res) {
     try {
-        var weekList = [];
-        var date = new Date(moment().format('yyyy-MM-DD'));
+        let weekList = [];
+        let date = new Date(moment().format('yyyy-MM-DD'));
         if(date.getDay()=="0"){
             date.setDate(date.getDate() -6);
         }else {
             date.setDate(date.getDate() - date.getDay() + 1);
         }
-        var myDate=date.getDate();
-        var myMonth=date.getMonth() + 1;
+        let myDate=date.getDate();
+        let myMonth=date.getMonth() + 1;
         if(date.getDate()<10){
             myDate= '0'+ myDate;
         }
@@ -116,7 +116,7 @@ module.exports.getWeeklyDateByDate = async function (req, res) {
             myMonth='0'+myMonth;
         }
         weekList.push(date.getFullYear() + "-" + myMonth+ "-" + myDate);
-        for(var i=0;i<6;i++) {
+        for(let i=0;i<6;i++) {
             date.setDate(date.getDate() + 1);
             myDate=date.getDate();
             myMonth=date.getMonth() + 1;

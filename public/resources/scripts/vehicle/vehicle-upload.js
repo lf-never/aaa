@@ -60,7 +60,7 @@ export async function initVehicleUploadPage () {
 let vehicleUploadIns = null;
 const vehicleUploadEventHandler = function () {
     layui.use('upload', function(){
-        var upload = layui.upload;
+        let upload = layui.upload;
         if (vehicleUploadIns) return;
         vehicleUploadIns = upload.render({
             elem: '#vehicle-upload',

@@ -274,8 +274,8 @@ module.exports.getPointDistance = function (point1, point2) {
 // const points = [ { lat: 1.3837995, lng: 103.7950087 }, { lat: 1.3789943, lng: 103.7923479 } ]
 // console.log(calculateAngle(points));
 module.exports.getDirection = function (points) {
-    var lastPrePoi = points[0];
-    var lastPoi = points[1];
+    let lastPrePoi = points[0];
+    let lastPoi = points[1];
     if (lastPoi.lng == lastPrePoi.lng) {
         if (lastPoi.lat == lastPrePoi.lat) { 
             return 0;

@@ -1,6 +1,6 @@
-var app = require('../app');
-var debug = require('debug')('myapp:server');
-var http = require('http');
+const app = require('../app');
+const debug = require('debug')('myapp:server');
+const http = require('http');
 
 const log = require('../log/winston').logger('APP Service');
 const conf = require('../conf/conf');
@@ -8,17 +8,17 @@ const conf = require('../conf/conf');
 /**
  * Get port from environment and store in Express.
  */
-var port = normalizePort(process.env.PORT || conf.serverPort);
+let port = normalizePort(process.env.PORT || conf.serverPort);
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-var server = http.createServer(app);
+let server = http.createServer(app);
 
-var socketServer = require('../socket/socket')
-var io = require('socket.io')(server, { path: '/driver.socket.io' }).listen(5090)
-io.on('connection', function (client) {
+let socketServer = require('../socket/socket')
+let httpio = require('socket.io')(server, { path: '/driver.socket.io' }).listen(5090)
+httpio.on('connection', function (client) {
     socketServer.initSocket(client);
 });
 
@@ -29,15 +29,15 @@ server.on('listening', onListening);
 /**
  * Create HTTPs server.
  */
-var https = require('https');
-var fs = require('fs');
-var privateKey  = fs.readFileSync('./https/key.pem', 'utf8');
-var certificate = fs.readFileSync('./https/cert.pem', 'utf8');
-var credentials = { key: privateKey, cert: certificate };
-var httpsServer = https.createServer(credentials, app);
+let https = require('https');
+let fs = require('fs');
+let privateKey  = fs.readFileSync('./https/key.pem', 'utf8');
+let certificate = fs.readFileSync('./https/cert.pem', 'utf8');
+let credentials = { key: privateKey, cert: certificate };
+let httpsServer = https.createServer(credentials, app);
 
-var io = require('socket.io')(httpsServer, { path: '/driver.socket.io' }).listen(5091)
-io.on('connection', function (client) {
+let httpsio = require('socket.io')(httpsServer, { path: '/driver.socket.io' }).listen(5091)
+httpsio.on('connection', function (client) {
     socketServer.initSocket(client)
 });
   
@@ -53,7 +53,7 @@ log.info('Server started!');
  */
 
  function normalizePort(val) {
-  var port = parseInt(val, 10);
+  let port = parseInt(val, 10);
 
   if (isNaN(port)) {
     // named pipe
@@ -73,7 +73,7 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
+  let bind = typeof port === 'string'
     ? 'Pipe ' + port
     : 'Port ' + port;
 
@@ -97,8 +97,8 @@ function onError(error) {
 }
 
 function onListening () {
-    var addr = server.address();
-    var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+    let addr = server.address();
+    let bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
     debug('Listening on ' + bind);
 }
 

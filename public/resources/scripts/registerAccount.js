@@ -4,8 +4,8 @@ let dataFrom = null;
 let userBaseId = null;
 let systemUrl = null;
 let hubTypeSelect = null;
-var registerUserId = null;
-var registerUserBaseId = null;
+let registerUserId = null;
+let registerUserBaseId = null;
 
 $(async function () {
     if(window.location.pathname == '/login') return
@@ -543,7 +543,7 @@ const initUser = async function () {
             email: 'E-Mail',
             ord: 'Operationally Ready Date (ORD)'
         }
-        for (var key in data) {
+        for (let key in data) {
             if(key == 'contactNumber') {
                 let firstNumber = ($('.mobileNumber').val()).substring(0, 1)
                 if (!(($('.mobileNumber').val()).length == 8 && (firstNumber == "8" || firstNumber == "9"))) {

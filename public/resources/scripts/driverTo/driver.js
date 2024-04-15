@@ -1,6 +1,6 @@
 let userType = Cookies.get('userType')
-var table
-var tableColumnField = ['driverName', 'hub'];
+let table
+let tableColumnField = ['driverName', 'hub'];
 let driverStatusSelect, permitTypeSelect;
 
 let driverStatusColor = [{status: 'Deployed', color: '#FAD028'}, {status: 'Loan Out', color: 'blue'}, {status: 'Deployable', color: '#6EB825'}, 

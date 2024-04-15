@@ -1,6 +1,6 @@
 let currentInterval = null;
 let layer = null;
-var dataTable
+let dataTable
 
 layui.use('layer', function(){
     layer = layui.layer;

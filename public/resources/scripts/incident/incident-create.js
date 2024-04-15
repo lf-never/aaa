@@ -57,7 +57,7 @@ const clearCreateIncidentPage = async function () {
     }
     const initIncidentOccTime = function () {
         layui.use('laydate', function(){
-            var laydate = layui.laydate;
+            let laydate = layui.laydate;
             laydate.render({
                 elem: '.incidentTime',
                 type: 'datetime',
@@ -127,11 +127,11 @@ const createIncidentEventHandler = async function () {
             lng: 'lng',
         }
 
-        for (var key in data) {
+        for (let key in data) {
             if(key == 'lat' || key == 'lng'){
                 continue
             }
-            var regexp = new RegExp("^[ ]+$");
+            let regexp = new RegExp("^[ ]+$");
             if (data[key] == null || data[key] == "" || (regexp.test(data[key]))) {
                 $.alert({
                     title: 'Warn',

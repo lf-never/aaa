@@ -1,18 +1,18 @@
-var requestId = Cookies.get('requestId')
-var requestType = Cookies.get('requestType')
-var vehicleType = null;
-var requestOperateType = null;
-var dataTable = null;
-var dataTableByHistory = null;
-var requestHub = null;
-var requestNode = null;
-var requestStartTime = null;
-var requestEndTime = null;
-var requestQty = 0;
-var permitTypeSelect;
-var viewHub = null;
-var viewNode = null;
-var tableName = null;
+let requestId = Cookies.get('requestId')
+let requestType = Cookies.get('requestType')
+let vehicleType = null;
+let requestOperateType = null;
+let dataTable = null;
+let dataTableByHistory = null;
+let requestHub = null;
+let requestNode = null;
+let requestStartTime = null;
+let requestEndTime = null;
+let requestQty = 0;
+let permitTypeSelect;
+let viewHub = null;
+let viewNode = null;
+let tableName = null;
 $(async function () {
    await initDetailPage(requestId)
    setTimeout(async function(){
@@ -233,7 +233,7 @@ const initDetail = async function () {
     }
     window.initLayDate = function (vehicleNo, nRow, startTime, endTime) {
         const noSecond = function () {
-            var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+            let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
         
             $(timeDom).on('click', function () {
                 $(".laydate-time-list>li:last").css("display", "none");
@@ -243,11 +243,11 @@ const initDetail = async function () {
         }
         
         const DisabledLayDate = function () {
-            var elem = $(".layui-laydate-content");
+            let elem = $(".layui-laydate-content");
             //let publidHolidays = parent.publidHolidays
             layui.each(elem.find('tr'), function (trIndex, trElem) {
                 layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                    var tdTemp = $(tdElem);
+                    let tdTemp = $(tdElem);
                     let driverLeaveDays = []
                     if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                         tdTemp.addClass('laydate-disabled');
@@ -886,7 +886,7 @@ const initDetail = async function () {
                 requestId: 'requestId'
     
             }
-            for (var key in data) {
+            for (let key in data) {
                 if(key == 'fromHub' || key == 'fromNode' || key == 'hotoDateTime' || key == 'toNode' || key == 'driverName'){
                     continue 
                 }

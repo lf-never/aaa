@@ -1693,7 +1693,7 @@ module.exports.DownloadExcel = async function (req, res) {
     // })
     // fs.createReadStream(filepath).pipe(res)
 
-    var rs = fs.createReadStream(downloadFolder + filename);
+    let rs = fs.createReadStream(downloadFolder + filename);
     res.writeHead(200, {
         'Content-Type': 'application/force-download',
         'Content-Disposition': 'attachment; filename=' + filename

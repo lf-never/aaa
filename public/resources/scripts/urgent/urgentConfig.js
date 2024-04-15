@@ -22,7 +22,7 @@ $(async function () {
     });
 
     $(document).off('click').on("click", function (e) {
-        var target = e.target;
+        let target = e.target;
         if (target.id != "search1" && target.id != "search2" 
          && target.id != "search3" && target.id != "search4" && target.id != "vehicleNo" && target.id != "driver" && target.id != "search5" && target.id != "typeOfVehicle") {
             $('.search-select').css("display", "");
@@ -692,7 +692,7 @@ const initPage = async function () {
 }
 
 const noSecond = function () {
-    var timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
+    let timeDom = $('.layui-laydate-footer').find("span[lay-type='datetime']")[0];
     $(timeDom).on('click', function () {
         $(".laydate-time-list>li:last").css("display", "none");
         $(".laydate-time-list>li").css("width", "50%")
@@ -701,11 +701,11 @@ const noSecond = function () {
 }
 
 const DisabledLayDate = function () {
-    var elem = $(".layui-laydate-content");
+    let elem = $(".layui-laydate-content");
     let driverLeaveDays = []
     layui.each(elem.find('tr'), function (trIndex, trElem) {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-            var tdTemp = $(tdElem);
+            let tdTemp = $(tdElem);
             if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');
@@ -776,7 +776,7 @@ const initDateTime = async function(){
             }
         });
 
-        var trElems = $(".layui-laydate-content").find('tr');
+        let trElems = $(".layui-laydate-content").find('tr');
         trElems.each(function () {
             $(this).find('td').each(function (tdIndex, tdElem) {
                 if (tdIndex === 0 || tdIndex === 6) {
@@ -1043,7 +1043,7 @@ const confirmUrgentDuty = function (id) {
             vehicleNo: 'Vehicle No',
             driverId: 'Driver'
         }
-        for (var key in data) {
+        for (let key in data) {
             if(id || userType.toUpperCase() == 'CUSTOMER') {
                 if(key == 'hub') {
                     continue
