@@ -71,7 +71,6 @@ module.exports.uploadVehicle = async function (req, res) {
 						if (!vehicleNo) {
 							log.info('Vehicle No is empty, jump this row!')
 							warnMsgHtml += `Row ${rowIndex + 1}: Vehicle No is empty, jump this row!<br/>`
-							continue;
 						} else if (!unit) {
 							warnMsgHtml += `Row ${rowIndex + 1}: Vehicle unit is empty, jump this row!<br/>`
 							continue;
@@ -97,7 +96,7 @@ module.exports.uploadVehicle = async function (req, res) {
 									vehicleNo: vehicleNo, 
 									unit: unit, 
 									subUnit: subUnit, 
-									deviceId: hardWareID ? hardWareID : null, 
+									deviceId: hardWareID || null, 
 									vehicleType: data[indexOfVehicleType].trim(), 
 									limitSpeed: limitSpeed.trim(), // While xlsx is null here
 									permitType: data[indexOfPermitType].trim(), 
@@ -108,7 +107,7 @@ module.exports.uploadVehicle = async function (req, res) {
 								})
 								uploadVehicleRelationList.push({ 
 									vehicleNo: vehicleNo, 
-									deviceId: hardWareID ? hardWareID : null, 
+									deviceId: hardWareID || null, 
 									limitSpeed: limitSpeed.trim(),  // While xlsx is null here
 									unit: unit, 
 									subUnit: subUnit
@@ -262,7 +261,7 @@ module.exports.uploadVehicle = async function (req, res) {
 					remarks: null
 				})
 
-				return res.json(utils.response(1, warnMsgHtml ? warnMsgHtml : 'Success'));
+				return res.json(utils.response(1, warnMsgHtml || 'Success'));
 			}).catch(error => {
 				log.error('(uploadVehicle) : ', error);
 				return res.json(utils.response(0, error));
@@ -309,7 +308,6 @@ module.exports.uploadWaypoint = async function (req, res) {
 
 						if (!data[indexOfWaypointName]) {
 							log.info('Waypoint is empty, jump this row!')
-							continue;
 						} else {
 							uploadWaypointList.push({ 
 								waypointName: data[indexOfWaypointName].trim(),
@@ -356,6 +354,7 @@ const checkFilePath = function (path) {
     try {
         if (!fs.existsSync(path)) fs.mkdirSync(path);
     } catch (error) {
+		log.error(error);
         throw error
     }
 }
@@ -363,6 +362,7 @@ const checkFileExist = function (filePath) {
     try {
         return fs.existsSync(filePath);
     } catch (error) {
+		log.error(error);
         throw error
     }
 }

@@ -25,11 +25,7 @@
 <link rel="stylesheet" href="../transfer/transfer.css">
 <script type="text/javascript" src="../transfer/transfer.js"></script>
 
-<!-- <link rel="stylesheet" href="../leaflet/dist/leaflet.css">
-<link rel="stylesheet" href="../leaflet-contextmenu/dist/leaflet.contextmenu.min.css">
-<script type="text/javascript" src="../leaflet/dist/leaflet.js"></script>
-<script type="text/javascript" src="../leaflet-contextmenu/dist/leaflet.contextmenu.min.js"></script>
-<script type="text/javascript" src="../MovingMarker.js"></script> -->
+
 
 <link rel="stylesheet" href="../css/common-style.css">
 <link rel="stylesheet" href="../css/common-bootstrap.css">
@@ -42,7 +38,7 @@
 
 <script src="../scripts/resources/resources.js"></script>
 
-<!-- <script src="../scripts/indent/overview.js"></script> -->
+
 <style>
 	body {
 		overflow: hidden;
@@ -83,7 +79,7 @@
 <div class="container-fluid" style="min-height: 80px;">
 	<div class="row" style="display: flex; align-items: center;">
 		<div class="col-4">
-			<label class="mx-3 title-label" style="font-size: 30px; font-weight: bolder; line-height: 40px;">Resources</label>
+			<span class="mx-3 title-label" style="font-size: 30px; font-weight: bolder; line-height: 40px;">Resources</span>
 		</div>
 		<div class="col-8" style="display: flex; justify-content: flex-end;">
 			<div class="col-auto div-hub-node" style="padding-top: 5px;">
@@ -97,7 +93,7 @@
 							<option value="">Node: All</option>
 						</select>
 					</div>
-					<div class="customer-button col-auto select-group" style="display: none; line-height: 35px;;">
+					<div class="customer-button col-auto select-group" style="display: none; line-height: 35px;">
 						<input class="form-check-input" style="margin-top: 12px; margin-right: 5px; cursor: pointer;" type="checkbox" value="" id="select-customer">
 						<label class="form-check-label" style="font-weight: bold;" for="select-customer">
 							Customer
@@ -160,32 +156,17 @@
 		</div>
 		
 		<% } %>
-		<!-- <div class="col-auto px-0">
-			<div class="tab-label px-4 user-select-none" data-tab="4">
-				Indent Assigned
-			</div>
-		</div> -->
+
 		<div class="col-auto ms-auto ">
 			<% if (pageList.find(item => item.page == 'View Calender')) { %>
 			<div class="action-button view-calender user-select-none py-2 px-4" data-action="task" style="display: none;"><img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>
 			<% } %>
 		</div>
-		<!-- <div class="col-auto select-hub">
-			<select class="form-select" id="select-hub">
-				<option value="">Hub: All</option>
-			</select>
-		</div>
-
-		<div class="col-auto select-node">
-			<select class="form-select" id="select-node">
-				<option value="">Node: All</option>
-			</select>
-		</div> -->
+		
 	</div>
 	
 </div>
-<!-- <div class="row m-0" style="height: 5px; background-color: white;"></div> -->
-<!-- <div style="height: calc(100% - 125px); background-color: red;"></div> -->
+
 <iframe id="resource-iframe" style="height: calc(100% - 150px); overflow: auto;" src="./indent/overview" title=""></iframe>
 
 <div class="modal fade" id="loadingModal" style="z-index: 5000;" tabindex="-1" data-bs-backdrop="static" data-keyboard="false">

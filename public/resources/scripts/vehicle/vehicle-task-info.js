@@ -44,7 +44,7 @@ const initVehicleTaskList = async function(vehicleNo, effectiveDataList) {
         <div class="col-4" style="text-align: center;">Purpose</div>
         </div>
     `);
-    if (taskList && taskList.length > 0) {
+    if (taskList?.length > 0) {
         for(let temp of taskList) {
         $('.vehicleTaskContentDiv').append(`
             <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
@@ -55,7 +55,7 @@ const initVehicleTaskList = async function(vehicleNo, effectiveDataList) {
         `);
         }
     }
-    if (hotoList && hotoList.length > 0) {
+    if (hotoList?.length > 0) {
         $(".vehicleHotoList").show();
         $('.vehicleHotoContentDiv').empty();
         $('.vehicleHotoContentDiv').append(`
@@ -76,7 +76,7 @@ const initVehicleTaskList = async function(vehicleNo, effectiveDataList) {
         }
     }
 
-    if (loanList && loanList.length > 0) {
+    if (loanList?.length > 0) {
         $(".vehicleLoanList").show();
         $('.vehicleLoanContentDiv').empty();
         $('.vehicleLoanContentDiv').append(`

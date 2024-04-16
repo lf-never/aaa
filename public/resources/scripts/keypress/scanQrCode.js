@@ -1,4 +1,3 @@
-//let html5QrcodeScanner = null;
 let html5QrCode = null;
 $(async function(){
     initBoxSelect();
@@ -7,8 +6,6 @@ $(async function(){
         qrbox: qrboxFunction,
         aspectRatio: 1
     };
-    // html5QrcodeScanner = new Html5QrcodeScanner("scan-tool-div", config, false);
-    // html5QrcodeScanner.render(onScanSuccess);
 
     html5QrCode = new Html5Qrcode("scan-tool-div", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
 
@@ -23,7 +20,7 @@ const initBoxSelect = async function () {
 
             $("#box-site-select").empty();
             let optHtml = ``;
-            if (siteList && siteList.length > 0) {
+            if (siteList?.length > 0) {
                 for (let temp of siteList) {
                     optHtml += `<option value="${temp.siteId}">${temp.boxName}</option>`;
                 }
@@ -75,37 +72,11 @@ const onScanSuccess = async function(decodedText, decodedResult) {
                     }
                 }
             });
-            // $(".scan-div").hide();
-            // $(".keyperss-info").show();
-            // let resInfo = res.data.respMessage;
-            // let siteKeyDetail = resInfo.siteKeyDetail;
-            // if (siteKeyDetail && siteKeyDetail.length > 0) {
-            // 	$(".keypress-box-div").empty();
-            // 	let contentHtml = ``;
-            // 	for (let temp of siteKeyDetail) {
-            // 		contentHtml += `
-            // 			<div class="row key-solt-div">
-            // 				<div class="col-2" style="display: flex; justify-content: flex-start; align-items: center;">
-            // 					<img alt="" src="../images/key-solt.svg" style="width: 48px; height: 32px;"/>
-            // 				</div>
-            // 				<div class="col-10">
-            // 					<div style="width: 100%;">SlotId: ${temp.slotId}</div>
-            // 					<div style="width: 100%;">KeyTagId: ${temp.keyTagId}</div>
-            // 				</div>
-            // 			</div>
-            // 		`;
-            // 	}
-            // 	$(".keypress-box-div").append(contentHtml);
-            // }
         }
     })
 }
 
 const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
-    //alert(viewfinderWidth + ":" + viewfinderHeight);
-    // let minEdgePercentage = 0.7; // 70%
-    // let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-    // let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
     return {
         width: viewfinderWidth * 0.95,
         height: viewfinderHeight * 0.95

@@ -73,10 +73,6 @@
 		border-top-right-radius: 25px;
 	}
 
-	table.dataTable tbody tr {
-		background-color: white;
-	}
-
 	.table-shadow {
 		box-shadow: none;
 	}
@@ -137,7 +133,7 @@
 <div class="container-fluid" style="min-height: 80px;">
 	<div class="row" style="display: flex; align-items: center;">
 		<div class="col-auto">
-			<label class="mx-3 title-label" style="font-size: 30px; font-weight: bolder; line-height: 40px;">Users</label>
+			<span class="mx-3 title-label" style="font-size: 30px; font-weight: bolder; line-height: 40px;">Users</span>
 		</div>
 	</div>
 	<div class="row m-0 resource-menu" style="text-align: center;">
@@ -162,35 +158,10 @@
 				Deactivated
 			</div>
 		</div>
-		<!-- <div class="col-auto div-hub-node">
-			<div class="row">
-				<div class="col-auto hubNode-btn">
-					<select class="form-select " id="select-hub">
-					</select>
-				</div>
-				<div class="col-auto hubNode-btn">
-					<select class="form-select " id="select-node">
-						<option value="">Node: All</option>
-					</select>
-				</div>
-				<div class="customer-button col-auto select-group" style="display: none; line-height: 35px;;">
-					<input class="form-check-input" style="margin-top: 12px; margin-right: 5px; cursor: pointer;" type="checkbox" value="" id="select-customer">
-					<label class="form-check-label" style="font-weight: bold;" for="select-customer">
-						Customer
-					</label>
-
-				</div>
-				<div class="col-auto mx-0 px-0" style="line-height: 35px;">
-					<select class="form-select " style="display: none;" id="select-group">
-						<option value="">Group: All</option>
-					</select>
-				</div>
-			</div>
-		</div> -->
+		
 	</div>
 </div>
-<!-- <div class="row m-0" style="height: 5px; background-color: white;"></div> -->
-<!-- <div style="height: calc(100% - 125px); background-color: red;"></div> -->
+
 <div class="container-fluid h-100 p-3 m-0" style="background-color: #ebe7e7; height: calc(100% - 100px) !important; overflow: auto;">
 	<div class="body-bottom">
 		<div class="col-12" id="user-filter">
@@ -226,7 +197,7 @@
 						<% if (pageList.find(item => item.action == 'New')) { %>
 							<div class="add-btn" onclick="initCreateUserPage('create')" role="button" tabindex="0">
 								<div class="add-img"></div>
-								<label class="add-label fs-6">New User</label>
+								<span class="add-label fs-6">New User</span>
 							</div>
 						<% } %>
 					</div>
@@ -262,17 +233,17 @@
 			<div class="modal-body" style="padding-bottom: 2rem;">
 				<div class="row apply-reject-info-div" style="display: none;">
 					<div class="col-md-6 col-sm-6 col-lg-6">
-						<label class="info-title">Reject By:</label><br><label class="apply-reject-by-label"></label>
+						<span class="info-title">Reject By:</span><br><span class="apply-reject-by-label"></span>
 					</div>
 					<div class="col-md-6 col-sm-6 col-lg-6">
-						<label class="info-title">Reject Time:</label><br><label class="apply-reject-time-label"></label>
+						<span class="info-title">Reject Time:</span><br><span class="apply-reject-time-label"></span>
 					</div>
 				</div>
 				<div class="row">
 					<input id="currentApproveId" value="" style="display: none;"/>
 					<div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-						<label class="info-title">Reason:</label><br>
-						<textarea rows="3" class="form-control apply-reject-remarks-input"></textarea>
+						<label class="info-title" for="apply-reject-remarks-input">Reason:</label><br>
+						<textarea rows="3" class="form-control apply-reject-remarks-input" name="apply-reject-remarks-input"></textarea>
 					</div>
 				</div>
 			</div>
@@ -295,18 +266,18 @@
 				<form class="row">
 					<input id="currentChangePasswordUserBaseId" value="" style="display: none;"/>
 					<div class="mb-3 col-md-12 col-sm-12">
-						<label class="col-form-label text-end" for="nric">New Password</label>
+						<label class="col-form-label text-end" for="newUserPassword">New Password</label>
 						<input type="password"  class="form-control  newUserPassword" name="newUserPassword">
 					</div>
 					<div class="mb-3 col-md-12 col-sm-12">
-						<label class="col-form-label text-end" for="nric">Confirm Password</label>
+						<label class="col-form-label text-end" for="confirmUserPassword">Confirm Password</label>
 						<input type="password"  class="form-control  confirmUserPassword" name="confirmUserPassword">
 					</div>
 				</form>
 				<div class="row my-3" style="display: flex; justify-content: flex-end;">
 					<div class="mt-1" style="width: 33%;display: flex;justify-content: flex-end;">
 						<div class="opt-btn-div change-user-pwd-opt-btn custom-btn-green px-2">
-							<label style="color: white;" class="opt-btn-label fs-6">Confirm</label>
+							<span style="color: white;" class="opt-btn-label fs-6">Confirm</span>
 						</div>
 					</div>
 				</div>

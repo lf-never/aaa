@@ -164,7 +164,6 @@ const initSelect = async function () {
     const initPurposeType = function (purposeTypeList) {
         let html = `<option>All</option>`
         for(let purposeType of purposeTypeList){
-            // html += `<option>${ purposeType.name }</option>`;
             html += `<option>${ purposeType }</option>`;
         }
         $('#select-purposeType').append(html);
@@ -191,18 +190,7 @@ const initSelect = async function () {
         });
     }
 
-    const getPurposeTypeList = async function () {
-        return axios.get('/credit/getPurposeTypeList')
-            .then(function (res) {
-                if (res.status === 200) {
-                    return res.data;
-                } else {
-                    console.error(res.data);
-                    return null;
-                }
-        });
-    }
-    // let purposeTypeList = await getPurposeTypeList();
+    
     let purposeTypeList = ['Ops', 'Exercise', 'Admin', 'Training']
     initPurposeType(purposeTypeList)
     initDateRange()
@@ -325,7 +313,6 @@ const changSelect = function () {
 
     $('#select-dataRange2').on('click', function () {
         let valueMonth = moment($('#select-dataRange').val()).format('MMMM')
-        // let newMonth = valueMonthKey(valueMonth);
         $('#select-dataRange2').val(`${ valueMonth } ${ moment($('#select-dataRange').val()).format('YYYY') }`);
         $('#select-dataRange').trigger('click');
         initLayuiDate();
@@ -334,7 +321,6 @@ const changSelect = function () {
 
 const changeMonth = function (value) {
     let valueMonth = moment(value).format('MMMM')
-    // let newMonth = valueMonthKey(valueMonth);
     $('#div-top-title-month').html(`Total ${ valueMonth } Points`)
 
     $('#select-dataRange2').val(`${ valueMonth } ${ moment(value).format('YYYY') }`);
@@ -386,7 +372,6 @@ const changeMonth = function (value) {
 
 const dateFormat = function (value) {
     let valueMonth = moment(value).format('MMMM')
-    // let newMonth = valueMonthKey(valueMonth);
     return `${ valueMonth } ${ moment(value).format('YYYY') }`
 }
 
@@ -403,7 +388,7 @@ const initNumFormat = function (number) {
     let thousands_sep = ',';
     let decimals = 1;
     let dec_point = '.';
-    number = (number + '').replace(/[^0-9+-Ee.]/g, '');
+    number = (number + '').replace(/[^\d+-.eE]/g, '');
     let n = !isFinite(+number) ? 0 : +number,
         pre = !isFinite(+decimals) ? 0 : Math.abs(decimals),
         sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,

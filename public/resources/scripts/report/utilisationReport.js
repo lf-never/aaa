@@ -505,7 +505,7 @@ const initVehicleType = async function() {
             vehicleTypeArray = res;
         }
         let optionHtml = '';
-        if (vehicleTypeArray && vehicleTypeArray.length > 0) {
+        if (vehicleTypeArray?.length > 0) {
             for(let vehicleType of vehicleTypeArray) {
                 optionHtml += `<option value="${vehicleType.vehicleName}">${vehicleType.vehicleName}</option>`
             }

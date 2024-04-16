@@ -22,8 +22,6 @@
         position: absolute;
         top: -200px;
         background-color: white;
-    }
-    .form-search-select {
         width: 100%;
         -moz-padding-start: calc(0.75rem - 3px);
         font-size: 1rem;
@@ -37,7 +35,6 @@
         border-radius: 0rem;
         transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         cursor: pointer;
-        max-height: 200px;
         overflow-y: auto;
     }
 
@@ -79,36 +76,30 @@
                         </div>
                     </div>
                     <div class="mb-3 row">
-                        <label class="col-sm-4 col-form-label text-end">Type :</label>
-                        <!-- <div class="col-sm-8" id="userType">
-                            
-                        </div> -->
+                        <label class="col-sm-4 col-form-label text-end" for="userType">Type :</label>
                         <div class="col-sm-8">
-                            <select class="form-select" id="userType"></select>
+                            <select class="form-select" id="userType" name="userType"></select>
                         </div>
                     </div>
                     <div class="mb-3 row unit">
-                        <label class="col-sm-4 col-form-label text-end">Hub :</label>
+                        <label class="col-sm-4 col-form-label text-end" for="unitType">Hub :</label>
                         <div class="col-sm-8">
-                            <select class="form-select" id="unitType">
+                            <select class="form-select" id="unitType" name="unitType">
                                
                             </select>
                         </div>
                     </div>
                     <div class="mb-3 row subUnit">
-                        <label class="col-sm-4 col-form-label text-end">Node :</label>
+                        <label class="col-sm-4 col-form-label text-end" for="subUnitType">Node :</label>
                         <div class="col-sm-8">
-                            <select class="form-select" id="subUnitType">
+                            <select class="form-select" id="subUnitType" name="subUnitType">
 
                             </select>
                         </div>
                     </div>
                     <div class="mb-3 row unitGroup-row">
-                        <label class="col-sm-4 col-form-label text-end">Unit :</label>
+                        <label class="col-sm-4 col-form-label text-end" for="unitGroup">Unit :</label>
                         <div class="col-sm-8">
-                            <!-- <select class="form-select unitGroup-select">
-                               
-                            </select> -->
                             <div class="position-relative">
                                 <div class="input-group">
                                     <input type="text" class="form-select" id="unitGroup-input" name="unitGroup" autocomplete="off" readonly>
@@ -124,33 +115,14 @@
                         </div>
                     </div>
                     <div class="mb-3 row role-row">
-                        <label class="col-sm-4 col-form-label text-end">Role :</label>
+                        <label class="col-sm-4 col-form-label text-end" for="userRole">Role :</label>
                         <div class="col-sm-8">
-                            <select class="form-select" id="userRole">
+                            <select class="form-select" id="userRole" name="userRole">
 
                             </select>
                         </div>
                     </div>
-                    <!-- <div class="mb-3 row">
-                        <label class="col-sm-4 col-form-label text-end">Password :</label>
-                        <div class="col-sm-8">
-                            <input type="password" class="form-control form-control-sm password" name="password" required  autocomplete="off"
-                              id="user-password">
-                            <div class="invalid-feedback" id="password-feedback">
-                                * The password cannot be empty.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label class="col-sm-4 col-form-label text-end" style="white-space:nowrap;">Confirm Password :</label>
-                        <div class="col-sm-8">
-                            <input type="password" class="form-control form-control-sm checkPassword" name="confirmPassword" required  autocomplete="off"
-                             id="user-checkPassword">
-                            <div class="invalid-feedback" id="confirmPassword-feedback">
-                                * The password cannot be empty.
-                            </div>
-                        </div>
-                    </div> -->
+                    
                     <div class="row" style="padding-bottom: 1rem;">
                         <div style="text-align: right;">
                             <button type="button" class="btn btn-secondary btn-sm custom-btn-gray cancel-create-user" data-bs-dismiss="modal" aria-label="Close">Cancel</button>

@@ -245,7 +245,7 @@ const initPage = async function () {
             layui.each(elem.find('tr'), function (trIndex, trElem) {
                 layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                     let tdTemp = $(tdElem);
-                    if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                    if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                         tdTemp.addClass('laydate-disabled');
                         tdTemp.css('color', 'orange');
                     }

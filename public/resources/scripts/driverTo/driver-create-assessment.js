@@ -30,7 +30,7 @@ const initCategoryList = async function() {
         </div>
       `);
       let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
-      if (dataList && dataList.length > 0) {
+      if (dataList?.length > 0) {
         for(let temp of dataList) {
           let operationList = temp.operation.split(',')
 
@@ -56,9 +56,7 @@ const initCategoryList = async function() {
               </div>
             `;
           }
-          // if (!actionHtml) {
-          //   actionHtml = temp.approveStatus;
-          // }
+
 
           $('.driverAssessmentContentDiv').append(`
             <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">

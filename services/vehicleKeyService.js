@@ -105,14 +105,12 @@ module.exports = {
         if (hub) {
             baseSQL += ` and un.unit =? `;
             params.push(hub);
-        } else {
-            if (user.userType == CONTENT.USER_TYPE.HQ) {
-                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                if (hqUnitIds && hqUnitIds.length > 0) {
-                    baseSQL += ` and un.id in(${hqUnitIds}) `;
-                } else {
-                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
-                }
+        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+            let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+            if (hqUnitIds && hqUnitIds.length > 0) {
+                baseSQL += ` and un.id in(${hqUnitIds}) `;
+            } else {
+                return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
             }
         }
         if (node) {
@@ -186,14 +184,12 @@ module.exports = {
         if (hub) {
             baseSQL += ` and un.unit =? `;
             params.push(hub);
-        } else {
-            if (user.userType == CONTENT.USER_TYPE.HQ) {
-                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                if (hqUnitIds && hqUnitIds.length > 0) {
-                    baseSQL += ` and un.id in(${hqUnitIds}) `;
-                } else {
-                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
-                }
+        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+            let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+            if (hqUnitIds && hqUnitIds.length > 0) {
+                baseSQL += ` and un.id in(${hqUnitIds}) `;
+            } else {
+                return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
             }
         }
         if (node) {
@@ -273,14 +269,12 @@ module.exports = {
         if (hub) {
             baseSQL += ` and un.unit =? `;
             params.push(hub)
-        } else {
-            if (user.userType == CONTENT.USER_TYPE.HQ) {
-                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                if (hqUnitIds && hqUnitIds.length > 0) {
-                    baseSQL += ` and un.id in(${hqUnitIds}) `;
-                } else {
-                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
-                }
+        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+            let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+            if (hqUnitIds && hqUnitIds.length > 0) {
+                baseSQL += ` and un.id in(${hqUnitIds}) `;
+            } else {
+                return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
             }
         }
         if (node) {
@@ -310,7 +304,7 @@ module.exports = {
 
     parseKeyBoxQRCode: async function (req, res) {
         try {
-            let { decodedText, decodedResult, userId, siteId } = req.body;
+            let { decodedText, userId, siteId } = req.body;
             let currentTime = moment();
             let optTime = currentTime.format('YYYY-MM-DD HH:mm:ss');
             let newKeyOptRecord = {
@@ -488,8 +482,6 @@ module.exports = {
                     log.error(error)
                     return res.json(utils.response(0, 'Upload failed!'));
                 }
-                // log.info('fields: ', JSON.stringify(fields))
-                // log.info('files: ', JSON.stringify(files))
                 // change to array object(allow multi files upload)
                 if (files.constructor !== Array) files.file = [files.file];
 
@@ -497,7 +489,6 @@ module.exports = {
                 for (let file of files.file) {
                     if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                         let list = xlsx.parse(file.path, { cellDates: true });
-                        // log.info(JSON.stringify(list));
                         list = list[0].data; 
                         let sheetData = await parseKeyOptRecordData(list);
                         fileDataList = fileDataList.concat(sheetData);
@@ -580,14 +571,12 @@ module.exports = {
         if (hub) {
             baseSQL += ` and un.unit =? `;
             params.push(hub);
-        } else {
-            if (user.userType == CONTENT.USER_TYPE.HQ) {
-                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                if (hqUnitIds && hqUnitIds.length > 0) {
-                    baseSQL += ` and un.id in(${hqUnitIds}) `;
-                } else {
-                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
-                }
+        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+            let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+            if (hqUnitIds && hqUnitIds.length > 0) {
+                baseSQL += ` and un.id in(${hqUnitIds}) `;
+            } else {
+                return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
             }
         }
         if (node) {
@@ -666,14 +655,12 @@ module.exports = {
             if (selectedHub) {
                 baseSQL += ` and un.unit =? `;
                 params.push(selectedHub);
-            } else {
-                if (user.userType == CONTENT.USER_TYPE.HQ) {
-                    let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                    if (hqUnitIds && hqUnitIds.length > 0) {
-                        baseSQL += ` and un.id in(${hqUnitIds}) `;
-                    } else {
-                        return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
-                    }
+            } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+                if (hqUnitIds && hqUnitIds.length > 0) {
+                    baseSQL += ` and un.id in(${hqUnitIds}) `;
+                } else {
+                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
                 }
             }
             if (selectedNode) {
@@ -864,7 +851,7 @@ const saveKeyOptRecord = async function (keyOptRecord, type) {
 
         let vehicle = await Vehicle.findByPk(vehicleNo);
         let keyTagId = '';
-        if (vehicle && vehicle.keyTagId) {
+        if (vehicle?.keyTagId) {
             keyTagId = vehicle.keyTagId;
             newKeyOptRecord.keyTagId = vehicle.keyTagId;
         } else {

@@ -26,7 +26,7 @@ let TaskUtils = {
             WHERE us.userId = ? LIMIT 1
         `, { type: QueryTypes.SELECT, replacements: [ userId ] });
         if (!user.length) {
-            throw `UserID ${ userId } does not exist!`;
+            throw new Error(`UserID ${ userId } does not exist!`);
         } else {
             return user[0];
         }
@@ -43,14 +43,11 @@ let TaskUtils = {
         let unitList = [];
         if (!hub) {
             unitList = await Unit.findAll({ where: { unit: { [Op.not]: null, } }, group: ['unit', 'subUnit'] })
+        } else if (node) {
+            unitList = await Unit.findAll({ where: { unit: hub, subUnit: node }, group: ['unit', 'subUnit'] })
         } else {
-            if (node) {
-                unitList = await Unit.findAll({ where: { unit: hub, subUnit: node }, group: ['unit', 'subUnit'] })
-            } else {
-                unitList = await Unit.findAll({ where: { unit: hub }, group: ['unit', 'subUnit'] })
-            }
+            unitList = await Unit.findAll({ where: { unit: hub }, group: ['unit', 'subUnit'] })
         }
-        // 
         return unitList;
     },
     findOutHubNodeIDByUserId: async function (userId) {
@@ -79,13 +76,11 @@ let TaskUtils = {
             } else {
                 option.subUnit = node;
             }
+        } else if (!node) {
+            option.unit = hub;
         } else {
-            if (!node) {
-                option.unit = hub;
-            } else {
-                option.unit = hub;
-                option.subUnit = node;
-            }
+            option.unit = hub;
+            option.subUnit = node;
         }
         return option;
     },
@@ -105,9 +100,9 @@ let TaskUtils = {
         return groupList;
     },
     findOutTaskList: async function (userId, option) {
-        let { taskType, execution_date, created_date, status, driverStatus, tripNo, vehicleType, group, hub, node, unitId, taskIdList, vehicleNo, driverName, taskStatus, endDateOrder } = option
+        let { taskType, execution_date, created_date, tripNo, vehicleType, unitId, vehicleNo, driverName, taskStatus, endDateOrder } = option
 
-        let pageType = taskType ? taskType.toLowerCase() == 'atms' ? 'ATMS Task Assign' : 'Sys Task Assign' : 'Sys Task Assign';
+        let pageType = taskType?.toLowerCase() == 'atms' ? 'ATMS Task Assign' : 'Sys Task Assign';
         let pageList = await userService.getUserPageList(userId, 'Task Assign', pageType)
         let operationList = pageList.map(item => `${ item.action }`).join(',')
 

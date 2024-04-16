@@ -191,8 +191,8 @@ module.exports.createIncidentDetail = async function (req, res) {
                 businessType: 'SOS',
                 businessId: icidentDetail.id,
                 optType: 'Incident Detail New',
-                beforeData: `${ JSON.stringify(['', oldSos ? oldSos : '']) }`,
-                afterData: `${ JSON.stringify([incidentObj, newSos ? newSos : '']) }`, 
+                beforeData: `${ JSON.stringify(['', oldSos || '']) }`,
+                afterData: `${ JSON.stringify([incidentObj, newSos || '']) }`, 
                 optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                 remarks: 'new incident detail.'
             })
@@ -238,8 +238,8 @@ module.exports.updateIncidentDetailById = async function (req, res) {
                 businessType: 'SOS',
                 businessId: incidentId,
                 optType: 'Incident Detail Edit',
-                beforeData: `${ JSON.stringify([oldIncidentObj, oldSos ? oldSos : '']) }`,
-                afterData: `${ JSON.stringify([incidentObj, newSos ? newSos : '']) }`,
+                beforeData: `${ JSON.stringify([oldIncidentObj, oldSos || '']) }`,
+                afterData: `${ JSON.stringify([incidentObj, newSos || '']) }`,
                 optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                 remarks: 'edit incident detail.'
             })

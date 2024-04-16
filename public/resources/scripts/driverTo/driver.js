@@ -502,7 +502,7 @@ const deleteDriver = async function (driverId, driverName) {
             let taskList = effectiveDataList ? effectiveDataList.taskList : [];
             let hotoList = effectiveDataList ? effectiveDataList.hotoList : [];
             let loanList = effectiveDataList ? effectiveDataList.loanList : [];
-            if ((taskList && taskList.length > 0) || (hotoList && hotoList.length > 0) || (loanList && loanList.length > 0)) {
+            if ((taskList?.length > 0) || (hotoList?.length > 0) || (loanList?.length > 0)) {
                 let startedTask = taskList ? taskList.find(item => item.driverStatus.toLowerCase() == 'started') : null;
                 if (startedTask) {
                     $.confirm({

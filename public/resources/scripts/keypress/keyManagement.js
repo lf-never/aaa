@@ -215,7 +215,7 @@ const initKeyBoxDetailTable = async function(selectedSiteId) {
     await axios.post('/vehicle/getSupportSiteList', {}).then(function (res) {
         if (res.respCode === 1) {
             let siteList = res.respMessage ? res.respMessage.siteList : [];
-            if (siteList && siteList.length > 0) {
+            if (siteList?.length > 0) {
                 let siteOptionsHtml = `<option value="">All</option>`;
                 for (let temp of siteList) {
                     if (selectedSiteId && selectedSiteId == temp.siteId) {
@@ -350,7 +350,7 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
     await axios.post('/vehicle/getSupportSiteList', {}).then(function (res) {
         if (res.respCode === 1) {
             let siteList = res.respMessage ? res.respMessage.siteList : [];
-            if (siteList && siteList.length > 0) {
+            if (siteList?.length > 0) {
                 let siteOptionsHtml = `<option value="">All</option>`;
                 for (let temp of siteList) {
                     if (selectedSiteId && selectedSiteId == temp.siteId) {
@@ -565,7 +565,7 @@ const initKeyBoxSummaryTable = async function(selectedSiteId) {
     await axios.post('/vehicle/getSupportSiteList', {}).then(function (res) {
         if (res.respCode === 1) {
             let siteList = res.respMessage ? res.respMessage.siteList : [];
-            if (siteList && siteList.length > 0) {
+            if (siteList?.length > 0) {
                 let siteOptionsHtml = `<option value="">All</option>`;
                 for (let temp of siteList) {
                     if (selectedSiteId && selectedSiteId == temp.siteId) {
@@ -658,7 +658,7 @@ const initKeyUnitSummaryTable = async function(selectedSiteId) {
     await axios.post('/vehicle/getSupportSiteList', {}).then(function (res) {
         if (res.respCode === 1) {
             let siteList = res.respMessage ? res.respMessage.siteList : [];
-            if (siteList && siteList.length > 0) {
+            if (siteList?.length > 0) {
                 let siteOptionsHtml = `<option value="">All</option>`;
                 for (let temp of siteList) {
                     if (selectedSiteId && selectedSiteId == temp.siteId) {

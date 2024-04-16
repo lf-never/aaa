@@ -45,9 +45,6 @@
             border-top-right-radius: 25px;
         }
 
-        table.dataTable tbody tr {
-            background-color: white;
-        }
 
         .table-shadow {
             box-shadow: none;
@@ -193,12 +190,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- <div class="col-4" style="display: flex; justify-content: flex-end; align-items: center;">
-                            <label style="font-size: large;">Last Submitted:</label><label style="font-size: large; margin-left: 5px;" class="lastSubmittedDateLabel"></label>
 
-                            <button class="btn btn-sm" style="margin-left: 20px; border-radius: 10px; border: solid 1px #4EB981; width: 80px; height: 42px;background-color: #4EB981;color: white;font-weight: bold;" onclick="submitStatus()">Submit</button>
-                            <button class="btn btn-sm" style="margin-left: 20px; border-radius: 10px; border: solid 1px #4EB981; width: 80px; height: 42px;background-color: #4EB981;color: white;font-weight: bold;" onclick="cancel()">Cancel</button>
-                        </div> -->
                     </div>
                     <div class="row" style="margin-left: 1rem; margin-right: 1rem;padding-top:10px;">
                         <div class="table-common table-shadow" style="border-radius: 1em;">
@@ -303,24 +295,14 @@
                     $('.saf-vehicle-table').parent().show();
                     $('.saf-driver-table').parent().hide();
 
-                    //$('.lastSubmittedDateLabel').text(lastSubmittedVehicleDate);
                     vehicleTable.ajax.reload(null, true)
                 } else {
                     $('.saf-driver-table').parent().show();
                     $('.saf-vehicle-table').parent().hide();
 
-                    //$('.lastSubmittedDateLabel').text(lastSubmittedDriverDate);
                     driverTable.ajax.reload(null, true)
                 }
-                past = $(this).attr("past");
             });
-            
-            // await axios.post("/vehicle/getParadeStateSubmitTime", {}).then(async res => {
-            //     lastSubmittedVehicleDate = moment(res.data.respMessage.vehicleStateSubmitTime).format('YYYY-MM-DD HH:mm:ss');
-            //     lastSubmittedDriverDate = moment(res.data.respMessage.driverStateSubmitTime).format('YYYY-MM-DD HH:mm:ss');
-            // });
-            
-            //$('.lastSubmittedDateLabel').text(lastSubmittedVehicleDate);
 
             vehicleTable = $('.saf-vehicle-table').on('order.dt', function () {
             }).on('page.dt', function () {
@@ -635,7 +617,6 @@
             let value = selectedOpt.val();
             let businessId = dataType == 'vehicle' ? selectedOpt.attr('vehicleNo') : selectedOpt.attr('driverId');
 
-            let oldStatus = $(ele).attr("currentStatus");
             if (value =='empty') {
                 vehicleTable.ajax.reload(null, false)
                 return;
@@ -665,8 +646,7 @@
                 if (vehicleStatusArray.length > 0) {
                     await axios.post("/vehicle/updateVehicleStatus", {newStatus: vehicleStatusArray }).then(async res => {
                         if (res.respCode == 1) {
-                            //lastSubmittedVehicleDate = moment().format('YYYY-MM-DD HH:mm:ss');
-                            //$('.lastSubmittedDateLabel').text(lastSubmittedVehicleDate);
+
 
                             vehicleTable.ajax.reload(null, false)
                         } else {

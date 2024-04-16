@@ -1,6 +1,6 @@
 let newSosId = null;
 let currentPermitType = null
-var userType = Cookies.get('userType')
+let userType = Cookies.get('userType')
 
 $(function () {
     $('.btn-update-incident').off('click').on('click', function(){
@@ -21,10 +21,6 @@ $(function () {
 })
 
 export async function initIncidentPage(sosId, permitType) {
-    // if(userType.toUpperCase() != 'UNIT' && userType.toUpperCase() != 'HQ' && userType.toUpperCase() != 'ADMINISTRATOR') {
-    //     $('.textarea-description').attr('disabled', 'disabled')
-    //     $('.textarea-action').attr('disabled', 'disabled')
-    // }
     newSosId = sosId
     currentPermitType = permitType
     const getWeather = async function(){
@@ -240,15 +236,37 @@ export async function initIncidentPage(sosId, permitType) {
     }
     const initIncidentData = function(data) {
         if(!data) return
-        // $('#view-incident-new .modal-title').text('Edit Incident Detail')
         $('#view-incident-new .modal-title').attr('data-id', data.id)
         $('.textarea-description').val(data.description);
         $('.textarea-action').val(data.followUpActions);
-        data.negligence == 1 ? ($('#Negligence').attr('checked', 'checked'), $('#Negligence').prop('checked', true), $('#Non-Negligence').attr('checked') ? $('#Non-Negligence').removeAttr('checked') : '') : ($('#Negligence').attr('checked') ? $('#Negligence').removeAttr('checked') : '', $('#Non-Negligence').attr('checked', 'checked'), $('#Non-Negligence').prop('checked', true));
+        if(data.negligence == 1){
+            $('#Negligence').attr('checked', 'checked')
+            $('#Negligence').prop('checked', true)
+            if($('#Non-Negligence').attr('checked')){
+                $('#Non-Negligence').removeAttr('checked')
+            }
+        } else if($('#Negligence').attr('checked')){
+            $('#Negligence').removeAttr('checked')
+        } else {
+            $('#Non-Negligence').attr('checked', 'checked')
+            $('#Non-Negligence').prop('checked', true)
+        } 
         $('.textarea-closed-on').val(data.closedOn);
         $('.textarea-location-incident').val(data.locationOfIncident);
         $('.select-location-type').val(data.locationType);
-        data.local == 1 ? ($('#Local').attr('checked', 'checked'), $('#Local').prop('checked', true), $('#Overseas').attr('checked') ? $('#Overseas').removeAttr('checked') : '') : ($('#Local').attr('checked') ? $('#Local').removeAttr('checked') : '', $('#Overseas').attr('checked', 'checked'), $('#Overseas').prop('checked', true));
+        if(data.local == 1){
+            $('#Local').attr('checked', 'checked') 
+            $('#Local').prop('checked', true)
+            if($('#Overseas').attr('checked')){
+                $('#Overseas').removeAttr('checked')
+            }
+        } else if($('#Local').attr('checked')) {
+            $('#Local').removeAttr('checked')
+        } else {
+            $('#Overseas').attr('checked', 'checked')
+            $('#Overseas').prop('checked', true)
+        }
+
         let weekRange_data = data.weekRange;
         if (weekRange_data) {
             if (weekRange_data.indexOf('-') != -1) {
@@ -364,20 +382,6 @@ const addOrEditIncidet = async function(el) {
         }
         return true
     }
-    const checkPoint = function (data) {
-        let point = data.lssueDemeritPoints
-        if (currentPermitType && currentPermitType.startsWith('CL')) {
-            if (point < 0 || point > 10) {
-                $.alert({
-                    title: 'Info',
-                    content: `Demerit point should be in 0-10.`
-                })
-                return false
-            }
-        }
-
-        return true
-    }
     let suspensionPeriod_input = $('.suspension-period-input').val();
     if (suspensionPeriod_input) {
         if (suspensionPeriod_input.indexOf('-') != -1) {
@@ -430,7 +434,7 @@ const addOrEditIncidet = async function(el) {
         lssueDemeritPoints: $('.lssue-demerit-points-input').val(),
         suspensionPeriod: suspensionPeriod_input ?? null
     }
-    // if(!checkPoint(incidentObj)) return;
+
     let state = validAssignTask(incidentObj)
     if(!state) return
     $(el).addClass('btn-disabled')
@@ -444,19 +448,18 @@ const addOrEditIncidet = async function(el) {
 }
 
 const clearPageData = function(){
-    // $('#view-incident-new .modal-title').text('New Incident Detail')
     $('#view-incident-new .modal-title').attr('data-id', null)
     $('.textarea-description').val('');
     $('.textarea-action').val('');
-    $('#Negligence').attr('checked') ? '' : $('#Negligence').attr('checked', 'checked'); 
+    if(!$('#Negligence').attr('checked')) $('#Negligence').attr('checked', 'checked')
     $('#Negligence').prop('checked', true)
-    $('#Negligence').attr('checked') && $('#Non-Negligence').attr('checked') ? $('#Non-Negligence').removeAttr('checked') : '';
+    if($('#Negligence').attr('checked') && $('#Non-Negligence').attr('checked')) $('#Non-Negligence').removeAttr('checked')
     $('.textarea-closed-on').val('');
     $('.textarea-location-incident').val('');
     $('.select-location-type').val('');
-    $('#Local').attr('checked') ? '' : $('#Local').attr('checked', 'checked'); 
+    if(!$('#Local').attr('checked')) $('#Local').attr('checked', 'checked')
     $('#Local').prop('checked', true)
-    $('#Local').attr('checked') && $('#Overseas').attr('checked') ? $('#Overseas').removeAttr('checked') : '';
+    if($('#Local').attr('checked') && $('#Overseas').attr('checked')) $('#Overseas').removeAttr('checked')
     $('.enlistment-date-input').val('');
     $('.enlistment-time-input').val('');
     $('.week-number-input').val('');

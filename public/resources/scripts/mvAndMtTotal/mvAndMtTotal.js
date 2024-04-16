@@ -883,7 +883,6 @@ const initHub = async function (timeSelected) {
         // clear all chart
         for (let chart of chartList) {
             chart.dispose()
-            chart = null
         }
         chartList = []
 

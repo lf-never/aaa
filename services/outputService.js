@@ -27,11 +27,7 @@ const checkFileExist = function (filePath) {
 const checkDataExist = async function (deviceId, vehicleNo, date, timezone) {
     try {
         let result = await readFile(deviceId, vehicleNo, date, timezone);
-        if (result.length) {
-            return true;
-        } else {
-            return false;
-        }
+        return result.length > 0;
     } catch (error) {
         log.error(error);
         return false;

@@ -29,17 +29,17 @@
         <div class="col-12 report-form">
             <div class="row">
                 <div class="mb-2 row">
-                    <label class="col-sm-2 col-form-label">Report Date Range</label>
+                    <label class="col-sm-2 col-form-label" for="reportDateRange">Report Date Range</label>
                     <div class="col-sm-3">
-                        <input type="text" readonly class="form-control" value="" id="reportDateRange">
+                        <input type="text" readonly class="form-control" value="" id="reportDateRange" name="reportDateRange">
                     </div>
                 </div>
                 <div class="col-6 mt-3">
-                    <div><label class="label-1">Report Data Group Selection</label></div>
-                    <div><label class="label-2">Choose the data to be included in the report</label></div>
+                    <div><span class="label-1">Report Data Group Selection</span></div>
+                    <div><span class="label-2">Choose the data to be included in the report</span></div>
                 </div>
                 <div class="col-6 mt-3">
-                    <div><label class="label-1">Selected Data Group</label></div>
+                    <div><span class="label-1">Selected Data Group</span></div>
                 </div>
                 <div class="col-6">
                     <div class="row">
@@ -116,30 +116,30 @@
             </div>
             <div class="row">
                 <div class="col-12 mt-3">
-                    <div><label class="label-1">Report Data Filter</label></div>
+                    <div><span class="label-1">Report Data Filter</span></div>
                 </div>
                 <div class="row mt-3 div-report-data-filter">
                     <div class="mb-2 col-4" data-filter="keypressLocation">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Keypress Location</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="locationFilter">Keypress Location</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="locationFilter">
+                                <input type="text" class="form-control" value="" id="locationFilter" name="locationFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="boxName">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Keypress Box Name</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="boxNameFilter">Keypress Box Name</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="boxNameFilter">
+                                <input type="text" class="form-control" value="" id="boxNameFilter" name="boxNameFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="transactionType">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Transaction Type</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="transactionTypeFilter">Transaction Type</label>
                             <div class="col-8">
-                                <select class="form-select" id="transactionTypeFilter">
+                                <select class="form-select" id="transactionTypeFilter" name="transactionTypeFilter">
                                     <option value="">All</option>
                                     <option value="mobileReturn">Driver Return</option>
                                     <option value="mobileWithdraw">Driver Withdraw</option>

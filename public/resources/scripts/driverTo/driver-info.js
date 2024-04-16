@@ -7,10 +7,6 @@ let driverStatusColor = [{status: 'Deployed', color: '#FAD028'}, {status: 'Loan 
 
 $(() => {
     currentEditDriverId = getParams("driverId");
-    let userType = Cookies.get('userType');
-    // if (userType.toLowerCase() == 'licensing officer') {
-    //     $(".driver-lay-indent").hide();
-    // }
 
     setTimeout(() => {
         $('.layui-driver-tab>ul>li:first').trigger('click')
@@ -18,7 +14,7 @@ $(() => {
     
     initBasicProfileHandler();
     layui.use('element', function(){
-        chatTabElement = layui.element;
+        let chatTabElement = layui.element;
         chatTabElement.on('tab(docDemoTabBrief1)', function() {
             console.log(this.getAttribute('lay-id'));
             let layId = this.getAttribute('lay-id');
@@ -125,7 +121,7 @@ $(() => {
         }
     });
 
-    //fixme: layui tab default load tab1;
+
     setTimeout(function () {
         let defaultTab = getParams("defaultTab");
         if (defaultTab && defaultTab == 'indents') {
@@ -155,7 +151,7 @@ const initBasicProfileHandler = async function () {
 
         $('.driver-vocation').html(driver.vocation ? driver.vocation : '-');
         $('.driver-role').html(driver.role ? driver.role : '-');
-        // $('.driver-unit').html(driver.unit ? driver.unit : '-');
+    
         $('.driver-unit').html(driver.group ? driver.group : '-');
         $('.driver-nodeHub').html((driver.node ? driver.node : '-') + ', ' + (driver.hub ? driver.hub : '-'));
         $('.driver-enlistmentDate').html(driver.enlistmentDate ? moment(driver.enlistmentDate).format('DD/MM/YYYY') : '-');
@@ -163,12 +159,7 @@ const initBasicProfileHandler = async function () {
         $('.driver-nric').html(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
         $('.driver-birthday').html(driver.birthday ? moment(driver.birthday).format('DD/MM/YYYY') : '-');
         $('.driver-contactNo').html(driver.contactNumber ? driver.contactNumber : '-');
-        // $('.driver-bloodType').html(driver.bloodType ? driver.bloodType : '-');
-        // $('.driver-emergency-username').html(driver.emergencyList ? (driver.emergencyList.username ? driver.emergencyList.username : '-') : '-' );
-        // $('.driver-emergency-nric').html(driver.emergencyList ? (driver.emergencyList.nric ? driver.emergencyList.nric : '-') : '-' );
-        // $('.driver-emergency-relationship').html(driver.emergencyList ? (driver.emergencyList.relationship ? driver.emergencyList.relationship : '-') : '-' );
-        // $('.driver-emergency-contactNo').html(driver.emergencyList ? (driver.emergencyList.contactNumber ? driver.emergencyList.contactNumber : '-') : '-');
-
+   
         $('.driver-permitType').html(driver.permitType ? driver.permitType : '-');
         $('.driver-permitNo').html(driver.permitNo ? driver.permitNo : '-');
         $('.driver-permitDateOfIssue').html(driver.permitIssueDate ? moment(driver.permitIssueDate).format("DD/MM/YYYY") : '-');
@@ -207,31 +198,18 @@ const initBasicProfileHandler = async function () {
         if (Cookies.get('userType') == 'HQ') {
             $('.edit-driver').show();
             $('.hoto-info').hide()
+        } else if (driver.hotoId) {
+            $('.driver-info-container .edit-driver').hide();
+            $('.hoto-info').show()
+            $('.loan-info').hide()
+        } else if (driver.loanId) {
+            $('.driver-info-container .edit-driver').hide();
+            $('.hoto-info').hide()
+            $('.loan-info').show()
         } else {
-            if (driver.hotoId) {
-                $('.driver-info-container .edit-driver').hide();
-                $('.hoto-info').show()
-                $('.loan-info').hide()
-            } else if (driver.loanId) {
-                $('.driver-info-container .edit-driver').hide();
-                $('.hoto-info').hide()
-                $('.loan-info').show()
-            } else {
-                $('.driver-info-container .edit-driver').show();
-                $('.loan-info').hide()
-                $('.hoto-info').hide()
-            }
-            // if(Cookies.get('userType').toLowerCase() == 'customer') { 
-            //     $('.driver-info-container .edit-driver').hide()
-            //     $('#driverBaseinfoEditImg').hide()
-            //     $('.btn-create-assessment').hide()
-            //     $('.btn-create-platformconf').hide()
-            //     $('.edit-driver-assessment').hide()
-            //     $('.delete-driver-assessment').hide()
-            //     $('.btn-create-vehicleClass').hide()
-            //     $('.edit-driver-permitTypeDetail').hide()
-            //     $('.delete-driver-permitTypeDetail').hide()
-            // }
+            $('.driver-info-container .edit-driver').show();
+            $('.loan-info').hide()
+            $('.hoto-info').hide()
         }
 
         if(driver.nricShow) {
@@ -299,9 +277,7 @@ const initMileageStatInfo = function(driverId) {
     axios.post('/driver/getDriverMileageStatInfo', {
         driverId: driverId
     }).then(res=>{
-        let driverMileageStatInfo=[];
         let driverMileageStat = res.data.respMessage;
-        let currentTaskMileage = driverMileageStat.currentTaskMileage;
         let totalMileage = driverMileageStat.driverTotalMileage
 
         let permitTypeStat = driverMileageStat.statResult;
@@ -309,7 +285,6 @@ const initMileageStatInfo = function(driverId) {
         $(".driverTotalMileageLabel").text(formatNumber(totalMileage));
         $("#cardTotalMileageLabel").text(formatNumber(totalMileage));
 
-        //let newPermitTypeStat = permitTypeStat.filter(item => (item.totalMileage != 0 && item.totalMileage != null));
         buildSimplePermitTypeMileageHtml(totalMileage, permitTypeStat);
         buildDetailPermitTypeMileageHtml(totalMileage, permitTypeStat);
     })
@@ -323,7 +298,6 @@ const buildSimplePermitTypeMileageHtml = function(totalMileage, permitTypeStat) 
     let maxIndex = permitTypeStat.length - 1;
     let allPerHtml = ``;
     let perItemHtml = ``;
-    let perItemRowNum = Math.ceil(permitTypeStat.length / 4);
     let rowItem = 1;
     for (let permitType of permitTypeStat) {
         let percent = permitType.totalMileage * 100 / totalMileage;

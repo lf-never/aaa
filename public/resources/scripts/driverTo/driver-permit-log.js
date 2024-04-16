@@ -65,7 +65,7 @@ const loadPermitRemarksList = function() {
   axios.post("/driver/getDriverPermitLogs", { driverId: currentEditDriverId }).then(async res => {
     if (res.data.respCode == 1) {
       let logs = res.data.respMessage;
-      if (logs && logs.length > 0) {
+      if (logs?.length > 0) {
         let lastLog = logs[0];
         $(".remark-by-label").text(lastLog.createName);
         $(".remark-time-label").text(lastLog.optTime ? moment(lastLog.optTime).format("DD/MM/YYYY HH:mm:ss") : '');

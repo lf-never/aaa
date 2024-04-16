@@ -38,7 +38,7 @@ const initOdd = function() {
             "data": "content", "title": "Description",
             "render": function (data, type, full, meta) {
                 let dataStr = data;
-                if (dataStr && dataStr.length > 20) {
+                if (dataStr?.length > 20) {
                     dataStr = dataStr.substring(0, 20) + '...';
                     return `<a style="color: #0d6efd;text-decoration: underline;" onclick="alertDescription('Description', '${data}')" title="Rectify">${dataStr}</a>`
                 } else {
@@ -75,7 +75,7 @@ const initOdd = function() {
             "render": function (data, type, full, meta) {
                 if (full.rectifyBy) {
                     let dataStr = data;
-                    if (dataStr && dataStr.length > 20) {
+                    if (dataStr?.length > 20) {
                         dataStr = dataStr.substring(0, 20) + '...';
                         return `<a style="color: #0d6efd;text-decoration: underline;" onclick="alertDescription('Remarks', '${data}')" title="Rectify">${dataStr}</a>`
                     } else {

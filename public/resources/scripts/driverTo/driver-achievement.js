@@ -77,7 +77,7 @@ const initAchievementContent = async function () {
         })
 
     if (resultData) {
-        if (resultData.data && resultData.data.respCode == 1) {
+        if (resultData.data?.respCode == 1) {
             let baseInfo = resultData.data.respMessage.driverAchievementInfo;
             if (baseInfo) {
                 $(".platform-trained").text(baseInfo.platformsTrained);
@@ -94,7 +94,7 @@ const initAchievementContent = async function () {
             $('.mynode-leader-board').empty();
             $('.allnode-leader-board').empty();
             let myNodeTop20 = resultData.data.respMessage.driverNodeTaskHoursLeaderBoardTop20;
-            if (myNodeTop20 && myNodeTop20.length > 0) {
+            if (myNodeTop20?.length > 0) {
                 let myNodeHtml = ``;
                 for (let index = 0; index < myNodeTop20.length; index++) {
                     let infoColor = leaderBoardColor[index];
@@ -135,7 +135,7 @@ const initAchievementContent = async function () {
             }
 
             let allNodeTop10 = resultData.data.respMessage.allNodeTaskHoursLeaderBoardTop10;
-            if (allNodeTop10 && allNodeTop10.length > 0) {
+            if (allNodeTop10?.length > 0) {
                 let allNodeHtml = ``;
                 for (let index = 0; index < allNodeTop10.length; index++) {
                     let infoColor = leaderBoardColor[index];
@@ -174,8 +174,6 @@ const initAchievementContent = async function () {
 
                 $('.allnode-leader-board').append(allNodeHtml);
             } 
-        } else {
-
-        }
+        } 
     }
 };

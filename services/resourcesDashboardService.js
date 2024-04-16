@@ -503,7 +503,7 @@ let TaskUtils = {
         return loanOutVehicle;
     },
     getLoanOutDriver: async function (unitId, dateData, totalStatus) {
-        let sql = ``
+        let sql;
         let replacements = []
         if(dateData){
             sql = `
@@ -588,14 +588,10 @@ let TaskUtils = {
         if(modulePage.indexOf('vehicle') != -1 && modulePage.indexOf('to') != -1){
             driverShow = true;
             vehicleShow = true;
-        } else {
-            if(modulePage[0] == 'vehicle'){
-                vehicleShow = true;
-                driverShow = false;
-            } else if(modulePage[0] == 'to'){
-                driverShow = true;
-                vehicleShow = false;
-            }
+        } else if(modulePage[0] == 'vehicle'){
+            driverShow = false;
+        } else if(modulePage[0] == 'to'){
+            vehicleShow = false;
         }
         return { driverShow, vehicleShow };
     }
@@ -610,7 +606,7 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
         let userUnit = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
         let unitList = userUnit.unitList
 
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         let taskDriver = await TaskUtils.getTaskDriver(true);
         let loanOutDriver = await TaskUtils.getLoanOutDriver(groupId);
         let taskDriverTotal = await sequelizeObj.query(`
@@ -640,7 +636,7 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
     
          let result = []
          for(let item of unitList){
-            let hubData = { unit: item ? item : 'Other', subunit: item ? item : 'Other', driverPurposeData: [] }
+            let hubData = { unit: item || 'Other', subunit: item || 'Other', driverPurposeData: [] }
             let taskDriverTotalDataArray
             if(item){
                 taskDriverTotalDataArray = taskDriverTotal.filter(task => task.currentUnit == item);
@@ -691,15 +687,17 @@ module.exports.getDriverByRoleByHub = async function (req, res) {
             if(modulePage.driverShow){
                 if(taskDriverTotalDataArray && taskDriverTotalDataArray.length > 0) {
                     for (let temp of taskDriverTotalDataArray) {
-                        if (temp.role && temp.role.toLowerCase().startsWith('to')) {
-                            toStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('tl')) {
-                            tlStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('dv')) {
-                            dvStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('loa')) {
-                            loaStartedCount += temp.taskNum
-                        } 
+                        if (temp.role) {
+                            if (temp.role.toLowerCase().startsWith('to')) {
+                                toStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('tl')) {
+                                tlStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('dv')) {
+                                dvStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('loa')) {
+                                loaStartedCount += temp.taskNum
+                            } 
+                        }
                     }
                 }
             }
@@ -729,7 +727,6 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
                 unitList = []
                 unitList.push({ id: 0, unit: null, subUnit: null })
             } else {
-                unitList = []
                 let unit = await Unit.findAll({where: { unit: unitHub }, order: [['subUnit', 'DESC']]})
                 unitList = unit.map(item => item)
             }
@@ -737,7 +734,7 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
             
             unitList = userUnit.subUnitList
         }
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         let taskDriver = await TaskUtils.getTaskDriver(true);
         let loanOutDriver = await TaskUtils.getLoanOutDriver(groupId);
         let taskDriverTotal = await sequelizeObj.query(`
@@ -816,15 +813,17 @@ module.exports.getDriverByRoleByNode = async function (req, res) {
             if(modulePage.driverShow){
                 if(startedTaskListStartedDataArray && startedTaskListStartedDataArray.length > 0) {
                     for (let temp of startedTaskListStartedDataArray) {
-                        if (temp.role && temp.role.toLowerCase().startsWith('to')) {
-                            toStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('tl')) {
-                            tlStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('dv')) {
-                            dvStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('loa')) {
-                            loaStartedCount += temp.taskNum
-                        } 
+                        if (temp.role) {
+                            if (temp.role.toLowerCase().startsWith('to')) {
+                                toStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('tl')) {
+                                tlStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('dv')) {
+                                dvStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('loa')) {
+                                loaStartedCount += temp.taskNum
+                            } 
+                        }
                     }
                 }
             }
@@ -848,14 +847,9 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
     try {
         let pageType = req.body.pageType;
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
-        // let unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
-        // unitList = unitList.map(item => item.unit);
-        // unitList = Array.from(new Set(unitList))
         let userUnit = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
         let unitList = userUnit.unitList;
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         let taskVehicle = await TaskUtils.getTaskVehicle(true);
         let loanOutVehicle = await TaskUtils.getLoanOutVehicle()
         let taskVehicleTotal = await sequelizeObj.query(`
@@ -881,7 +875,7 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
     
          let result = []
          for(let item of unitList){
-            let hubData = { unit: item ? item : 'Other', subunit: item ? item : 'Other', vehiclePurposeData: [] }            
+            let hubData = { unit: item || 'Other', subunit: item || 'Other', vehiclePurposeData: [] }            
             let startedTaskListStartedDataArray
             if(item){
                 startedTaskListStartedDataArray = taskVehicleTotal.filter(task => task.currentUnit == item);
@@ -937,33 +931,35 @@ module.exports.getVehicleByPurposeByHub = async function (req, res) {
             if(modulePage.vehicleShow){
                 if(startedTaskListStartedDataArray && startedTaskListStartedDataArray.length > 0) {
                     for (let temp of startedTaskListStartedDataArray) {
-                        if (temp.purpose && temp.purpose.toLowerCase().startsWith('ops')) {
-                            opsStartedCount += temp.taskNum
-                        } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('training')) {
-                            trainingStartedCount += temp.taskNum
-                        } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('admin')) {
-                            adminStartedCount += temp.taskNum
-                        } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('exercise')) {
-                            exerciseStartedCount += temp.taskNum
-                        }   else if (temp.purpose && temp.purpose.toLowerCase().startsWith('duty')) {
-                            dutyStartedCount += temp.taskNum
-                         } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('driving training')) {
-                            drivingTrainingStartedCount += temp.taskNum
-                         } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('maintenance')) {
-                            maintenanceStartedCount += temp.taskNum
-                         } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('others')) {
-                            othersStartedCount += temp.taskNum
-                         }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('familiarisation')) {
-                            familiarisationStartedCount += temp.taskNum
-                         }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('wpt')) {
-                            WPTStartedCount += temp.taskNum
-                         }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('mpt')) {
-                            MPTStartedCount += temp.taskNum
-                         }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('avi')) {
-                            aviStartedCount += temp.taskNum
-                         }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('pm')) {
-                            pmStartedCount += temp.taskNum
-                         } 
+                        if (temp.purpose) {
+                            if (temp.purpose.toLowerCase().startsWith('ops')) {
+                                opsStartedCount += temp.taskNum
+                            } else if (temp.purpose.toLowerCase().startsWith('training')) {
+                                trainingStartedCount += temp.taskNum
+                            } else if (temp.purpose.toLowerCase().startsWith('admin')) {
+                                adminStartedCount += temp.taskNum
+                            } else if (temp.purpose.toLowerCase().startsWith('exercise')) {
+                                exerciseStartedCount += temp.taskNum
+                            }   else if (temp.purpose.toLowerCase().startsWith('duty')) {
+                                dutyStartedCount += temp.taskNum
+                             } else if (temp.purpose.toLowerCase().startsWith('driving training')) {
+                                drivingTrainingStartedCount += temp.taskNum
+                             } else if (temp.purpose.toLowerCase().startsWith('maintenance')) {
+                                maintenanceStartedCount += temp.taskNum
+                             } else if (temp.purpose.toLowerCase().startsWith('others')) {
+                                othersStartedCount += temp.taskNum
+                             }  else if (temp.purpose.toLowerCase().startsWith('familiarisation')) {
+                                familiarisationStartedCount += temp.taskNum
+                             }  else if (temp.purpose.toLowerCase().startsWith('wpt')) {
+                                WPTStartedCount += temp.taskNum
+                             }  else if (temp.purpose.toLowerCase().startsWith('mpt')) {
+                                MPTStartedCount += temp.taskNum
+                             }  else if (temp.purpose.toLowerCase().startsWith('avi')) {
+                                aviStartedCount += temp.taskNum
+                             }  else if (temp.purpose.toLowerCase().startsWith('pm')) {
+                                pmStartedCount += temp.taskNum
+                             } 
+                        }
                     }
                 }
             }
@@ -1011,17 +1007,13 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                 unitList = []
                 unitList.push({ id: 0, unit: null, subUnit: null })
             } else {
-                unitList = []
                 let unit = await Unit.findAll({where: { unit: unitHub }, order: [['subUnit', 'DESC']]})
                 unitList = unit.map(item => item)
             }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let taskVehicle = await TaskUtils.getTaskVehicle(true);
         let loanOutVehicle = await TaskUtils.getLoanOutVehicle();
@@ -1104,32 +1096,34 @@ module.exports.getVehicleByPurposeByNode = async function (req, res) {
                 if(modulePage.vehicleShow){
                     if(startedTaskListStartedDataArray && startedTaskListStartedDataArray.length > 0) {
                         for (let temp of startedTaskListStartedDataArray) {
-                            if (temp.purpose && temp.purpose.toLowerCase().startsWith('ops')) {
-                                opsStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('training')) {
-                                trainingStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('admin')) {
-                                adminStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('exercise')) {
-                                exerciseStartedCount += temp.taskNum
-                            }   else if (temp.purpose && temp.purpose.toLowerCase().startsWith('duty')) {
-                            dutyStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('driving training')) {
-                            drivingTrainingStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('maintenance')) {
-                            maintenanceStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('others')) {
-                            othersStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('familiarisation')) {
-                            familiarisationStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('wpt')) {
-                            WPTStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('mpt')) {
-                            MPTStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('avi')) {
-                                aviStartedCount += temp.taskNum
-                            } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('pm')) {
-                                pmStartedCount += temp.taskNum
+                            if (temp.purpose) {
+                                if (temp.purpose.toLowerCase().startsWith('ops')) {
+                                    opsStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('training')) {
+                                    trainingStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('admin')) {
+                                    adminStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('exercise')) {
+                                    exerciseStartedCount += temp.taskNum
+                                }   else if (temp.purpose.toLowerCase().startsWith('duty')) {
+                                    dutyStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('driving training')) {
+                                    drivingTrainingStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('maintenance')) {
+                                    maintenanceStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('others')) {
+                                    othersStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('familiarisation')) {
+                                    familiarisationStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('wpt')) {
+                                    WPTStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('mpt')) {
+                                    MPTStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('avi')) {
+                                    aviStartedCount += temp.taskNum
+                                } else if (temp.purpose.toLowerCase().startsWith('pm')) {
+                                    pmStartedCount += temp.taskNum
+                                }
                             }
                         }
                     }
@@ -1168,18 +1162,10 @@ module.exports.getDriverAndVehicleDeployableTotalByHub = async function (req, re
     try {
         let pageType = req.body.pageType;
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
-        // let unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
-        // unitList = unitList.map(item => item.unit);
-        // unitList = Array.from(new Set(unitList))
         let userUnit = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
         let unitList = userUnit.unitList
 
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
-
-        let pageList = await userService.getUserPageList(req.cookies.userId, 'Resources Dashboard', 'View Unit')
-        let operation = pageList.map(item => item.action).join(',')
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
        
         let driverTotalByUnit = await sequelizeObj.query(`
             select COUNT(dd.driverId) as total, dd.unit from (
@@ -1258,12 +1244,12 @@ module.exports.getDriverAndVehicleDeployableTotalByHub = async function (req, re
                 }
                 obj = {
                     unit: item,
-                    driverListNumber: driverTotal ? driverTotal : 0,
-                    vehicleListNumber: vehicleTotal ? vehicleTotal : 0,
+                    driverListNumber: driverTotal || 0,
+                    vehicleListNumber: vehicleTotal || 0,
                     assignedDriverNumber: assignedDriverNumber,
                     assignedVehicleNumber: assignedVehicleNumber,
-                    driverByState: driverByStateArray.length > 0 ? true : false,
-                    mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0 ? true : false
+                    driverByState: driverByStateArray.length > 0,
+                    mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0
                 }
             } else {
                 let driverData = await TaskUtils.getDriverByGroup(groupId);
@@ -1303,13 +1289,13 @@ module.exports.getDriverAndVehicleDeployableTotalByHub = async function (req, re
                     mtRacByRiskLevelArray = [];
                 }
                 obj = {
-                    unit: item ? item : 'DV_LOA',
+                    unit: item || 'DV_LOA',
                     driverListNumber: driverTotal,
                     vehicleListNumber:  vehicleTotal,
                     assignedDriverNumber: assignedDriverNumber,
                     assignedVehicleNumber: assignedVehicleNumber,
-                    driverByState: driverByStateArray.length > 0 ? true : false,
-                    mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0 ? true : false
+                    driverByState: driverByStateArray.length > 0,
+                    mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0
                 }
             }
             let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
@@ -1342,17 +1328,13 @@ module.exports.getDriverAndVehicleDeployableTotalByNode = async function (req, r
                 unitList = []
                 unitList.push({ id: 0, unit: null, subUnit: null }) 
              } else {
-                unitList = []
                 let unit = await Unit.findAll({where: { unit: unitHub }, order: [['subUnit', 'DESC']] })
                 unitList = unit.map(item => item)
              }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         
         let driverTotalByUnit = await sequelizeObj.query(`
             select COUNT(dd.driverId) as total, dd.unit, dd.subUnit from (
@@ -1432,12 +1414,12 @@ module.exports.getDriverAndVehicleDeployableTotalByNode = async function (req, r
                     obj = {
                         unit: item.unit,
                         subunit: item.subUnit ? item.subUnit : 'Other',
-                        driverListNumber: driverTotal ? driverTotal : 0,
-                        vehicleListNumber: vehicleTotal ? vehicleTotal : 0,
+                        driverListNumber: driverTotal || 0,
+                        vehicleListNumber: vehicleTotal || 0,
                         assignedDriverNumber: assignedDriverNumber,
                         assignedVehicleNumber: assignedVehicleNumber,
-                        driverByState: driverByStateArray.length > 0 ? true : false,
-                        mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0 ? true : false
+                        driverByState: driverByStateArray.length > 0,
+                        mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0
                     }
                 } else {
                     let driverData = await TaskUtils.getDriverByGroup(groupId);
@@ -1484,8 +1466,8 @@ module.exports.getDriverAndVehicleDeployableTotalByNode = async function (req, r
                         vehicleListNumber: vehicleTotal,
                         assignedDriverNumber: assignedDriverNumber,
                         assignedVehicleNumber: assignedVehicleNumber,
-                        driverByState: driverByStateArray.length > 0 ? true : false,
-                        mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0 ? true : false
+                        driverByState: driverByStateArray.length > 0,
+                        mtRacByRiskLevel: mtRacByRiskLevelArray.length > 0
                     }
                 }
                 data.push(obj)
@@ -1503,7 +1485,6 @@ module.exports.getDriverAndVehicleDeployedTotalByNode = async function (req, res
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
         let unitHub = req.body.unit;
         let unitNode = req.body.subUnit;
-        // let weekDate = await TaskUtils.getWeeklyDateByDate();
         let currentDate = req.body.currentDate;
         currentDate = currentDate.split(' ~ ')
         let dateStart = moment(currentDate[0], 'DD/MM/YYYY').format("YYYY-MM-DD")
@@ -1526,12 +1507,9 @@ module.exports.getDriverAndVehicleDeployedTotalByNode = async function (req, res
              }
            
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let data = []
         let driverByDeployable = null
@@ -1618,7 +1596,6 @@ module.exports.getDriverAndVehicleDeployedTotalByHub = async function (req, res)
         let pageType = req.body.pageType;
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
         let unitHub = req.body.unit;
-        // let weekDate = await TaskUtils.getWeeklyDateByDate();
         let currentDate = req.body.currentDate;
         currentDate = currentDate.split(' ~ ')
         let dateStart = moment(currentDate[0], 'DD/MM/YYYY').format("YYYY-MM-DD")
@@ -1636,12 +1613,9 @@ module.exports.getDriverAndVehicleDeployedTotalByHub = async function (req, res)
              }
             
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let data = []
         let driverByDeployable = null
@@ -1728,7 +1702,6 @@ module.exports.getDriverAndVehicleAvailabilityByNode = async function (req, res)
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
         let unitHub = req.body.unit;
         let unitNode = req.body.subUnit;
-        // let weekDate = await TaskUtils.getWeeklyDateByDate();
         let currentDate = req.body.currentDate;
         currentDate = currentDate.split(' ~ ')
         let dateStart = moment(currentDate[0], 'DD/MM/YYYY').format("YYYY-MM-DD")
@@ -1751,12 +1724,9 @@ module.exports.getDriverAndVehicleAvailabilityByNode = async function (req, res)
              }
            
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         
         let driverTotalByUnit = await sequelizeObj.query(`
         select COUNT(dd.driverId) as total, dd.unit, dd.subUnit from (
@@ -1941,7 +1911,6 @@ module.exports.getDriverAndVehicleAvailabilityByHub = async function (req, res) 
         let pageType = req.body.pageType;
         let unitHub = req.body.unit;
         let modulePage = await TaskUtils.getModulePageByUserId(req.cookies.userId, pageType);
-        // let weekDate = await TaskUtils.getWeeklyDateByDate();
         let currentDate = req.body.currentDate;
         currentDate = currentDate.split(' ~ ')
         let dateStart = moment(currentDate[0], 'DD/MM/YYYY').format("YYYY-MM-DD")
@@ -1958,12 +1927,9 @@ module.exports.getDriverAndVehicleAvailabilityByHub = async function (req, res) 
              }
             
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let data = []
         let driverByDeployable = null
@@ -2124,16 +2090,11 @@ module.exports.getDriverTotalByRoleByHub = async function (req, res) {
                 unitList = [unitHub]
              }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
-            // unitList = unitList.map(item => item.unit);
-            // unitList = Array.from(new Set(unitList))
             unitList = userUnit.unitList
         }
         
         let result = []
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let driverTotalByRole = await sequelizeObj.query(`
             select count(*) as taskNum, dd.role, dd.unit  from (
@@ -2185,29 +2146,13 @@ module.exports.getDriverTotalByRoleByHub = async function (req, res) {
             sql += ` and dd.groupId is not null`
         }
         sql += ` GROUP BY dd.role`
-        let driverTotalByRoleByGroup = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements }) // and d.permitStatus != 'invalid'
+        let driverTotalByRoleByGroup = await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: replacements })
         for(let item of unitList){
-            let hubData = { unit: item ? item : 'Other',  driverRoleData: [] }
+            let hubData = { unit: item || 'Other',  driverRoleData: [] }
             let driverTotalByRoleArray
-            let loanOutByDriverTotal = 0
             if(item){
-                loanOutByDriverTotal = 0
                 driverTotalByRoleArray = driverTotalByRole.filter(task => task.unit == item);
             } else {
-                //   let driverListByGroup = await TaskUtils.getDriverByGroup(groupId, timeNeeded, '1');
-                //     driverListByGroup = driverListByGroup.map(item => item.driverId)
-                //     let driverTotalByRole2 = await sequelizeObj.query(`
-                //     select count(*) as taskNum, dd.role, dd.unitId  from (
-                //         select d.driverId,
-                //         us.role, us.unitId
-                //         from driver as d
-                //         LEFT JOIN user us on us.driverId = d.driverId
-                //         where 1=1
-                //         ${ driverListByGroup.length > 0 ? ` and d.driverId in (${ driverListByGroup.join(",") })` : '' }
-                //         GROUP BY d.driverId
-                //     ) dd GROUP BY dd.unitId, dd.role
-                // `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
-                //  driverTotalByRoleArray = driverTotalByRole2.filter(task => groupId ? task.unitId == groupId : task);
                 log.info(`GROUP ${ groupId } driverRoleList ==> ${ JSON.stringify(driverTotalByRoleByGroup) }`)
                 driverTotalByRoleArray = driverTotalByRoleByGroup.filter(task => task);
             }
@@ -2219,15 +2164,17 @@ module.exports.getDriverTotalByRoleByHub = async function (req, res) {
             if(modulePage.driverShow){
                 if(driverTotalByRoleArray && driverTotalByRoleArray.length > 0) {
                     for (let temp of driverTotalByRoleArray) {
-                        if (temp.role && temp.role.toLowerCase().startsWith('to')) {
-                            toStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('tl')) {
-                            tlStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('dv')) {
-                            dvStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('loa')) {
-                            loaStartedCount += temp.taskNum
-                        } 
+                        if (temp.role) {
+                            if (temp.role.toLowerCase().startsWith('to')) {
+                                toStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('tl')) {
+                                tlStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('dv')) {
+                                dvStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('loa')) {
+                                loaStartedCount += temp.taskNum
+                            } 
+                        }
                     }
                 }
             }
@@ -2267,12 +2214,9 @@ module.exports.getDriverTotalByRoleByNode = async function (req, res) {
                 unitList.push(unit)
              }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let result = []
         let driverTotalByRole = await sequelizeObj.query(`
@@ -2330,29 +2274,9 @@ module.exports.getDriverTotalByRoleByNode = async function (req, res) {
         for(let item of unitList){
             let hubData = { unit: item.unit ? item.unit : 'Other', subunit: item.subUnit ? item.subUnit : 'Other', driverRoleData: [] }
             let driverTotalByRoleArray
-            let loanOutByDriverTotal = 0
             if(item.unit){
-                loanOutByDriverTotal = 0
                 driverTotalByRoleArray = driverTotalByRole.filter(task => task.unit == item.unit && task.subUnit == item.subUnit);
             } else {
-                // let driverListByGroup = await TaskUtils.getDriverByGroup(groupId, timeNeeded, '1');
-                // driverListByGroup = driverListByGroup.map(item => item.driverId)
-                // let driverTotalByRole2 = await sequelizeObj.query(`
-                //     select count(*) as taskNum, dd.role, dd.unitId from (
-                //         select d.driverId,
-                //         us.role, us.unitId
-                //         from driver as d
-                //         LEFT JOIN user us on us.driverId = d.driverId
-                //         where 1=1
-                //         ${ driverListByGroup.length > 0 ? ` and d.driverId in (${ driverListByGroup.join(",") })` : '' }
-                //         GROUP BY d.driverId
-                //     ) dd GROUP BY dd.unitId, dd.role
-                // `, { type: QueryTypes.SELECT }) // and d.permitStatus != 'invalid'
-                  // if(user) {
-                //     driverTotalByRoleArray = driverTotalByRole2.filter(task => task.unitId == user.unitId);
-                // } else {
-                    // driverTotalByRoleArray = driverTotalByRole2.filter(task => task);
-                // }
                 log.info(`GROUP ${ groupId } driverRoleList ==> ${ JSON.stringify(driverTotalByRoleByGroup) }`)
                 driverTotalByRoleArray = driverTotalByRoleByGroup.filter(task => task);
             } 
@@ -2365,15 +2289,17 @@ module.exports.getDriverTotalByRoleByNode = async function (req, res) {
             if(modulePage.driverShow){
                 if(driverTotalByRoleArray && driverTotalByRoleArray.length > 0) {
                     for (let temp of driverTotalByRoleArray) {
-                        if (temp.role && temp.role.toLowerCase().startsWith('to')) {
-                            toStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('tl')) {
-                            tlStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('dv')) {
-                            dvStartedCount += temp.taskNum
-                        } else if (temp.role && temp.role.toLowerCase().startsWith('loa')) {
-                            loaStartedCount += temp.taskNum
-                        } 
+                        if (temp.role) {
+                            if (temp.role.toLowerCase().startsWith('to')) {
+                                toStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('tl')) {
+                                tlStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('dv')) {
+                                dvStartedCount += temp.taskNum
+                            } else if (temp.role.toLowerCase().startsWith('loa')) {
+                                loaStartedCount += temp.taskNum
+                            } 
+                        }
                     }
                 }
             }
@@ -2395,7 +2321,6 @@ module.exports.getDriverTotalByRoleByNode = async function (req, res) {
 //2023-06-15 Customer user,Add two purpose(WPT and MPT)
 module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
     try {
-        let pageType = req.body.pageType;
         let timeNeeded = req.body.timeNeeded ? req.body.timeNeeded : moment().format('YYYY-MM-DD')
         let unitList
         let unitHub = req.body.hub
@@ -2408,14 +2333,9 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
                  unitList = [unitHub]
             }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
-            // unitList = unitList.map(item => item.unit);
-            // unitList = Array.from(new Set(unitList))
             unitList = userUnit.unitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
         let result = []
         let taskTotalByPurpose = await sequelizeObj.query(`
         SELECT count( DISTINCT tt.taskId) as taskNum, tt.hub, tt.purpose
@@ -2428,7 +2348,7 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
         GROUP BY tt.hub, tt.purpose
         `, { type: QueryTypes.SELECT, replacements: [timeNeeded] })
         for(let item of unitList){
-            let hubData = { unit: item ? item : 'Other', taskPurposeData: [] }
+            let hubData = { unit: item || 'Other', taskPurposeData: [] }
             let taskTotalByPurposeArray
             if(item) {
                 taskTotalByPurposeArray = taskTotalByPurpose.filter(task => task.hub == item);
@@ -2471,33 +2391,35 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
             let pmStartedCount = 0;
             if(taskTotalByPurposeArray && taskTotalByPurposeArray.length > 0) {
                 for (let temp of taskTotalByPurposeArray) {
-                    if (temp.purpose && temp.purpose.toLowerCase().startsWith('ops')) {
-                        opsStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('training')) {
-                        trainingStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('admin')) {
-                        adminStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('exercise')) {
-                        exerciseStartedCount += temp.taskNum
-                    }   else if (temp.purpose && temp.purpose.toLowerCase().startsWith('duty')) {
-                        dutyStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('driving training')) {
-                        drivingTrainingStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('maintenance')) {
-                        maintenanceStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('others')) {
-                        othersStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('familiarisation')) {
-                        familiarisationStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('wpt')) {
-                        WPTStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('mpt')) {
-                        MPTStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('avi')) {
-                        aviStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('pm')) {
-                        pmStartedCount += temp.taskNum
-                     } 
+                    if (temp.purpose) {
+                        if (temp.purpose.toLowerCase().startsWith('ops')) {
+                            opsStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('training')) {
+                            trainingStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('admin')) {
+                            adminStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('exercise')) {
+                            exerciseStartedCount += temp.taskNum
+                        }   else if (temp.purpose.toLowerCase().startsWith('duty')) {
+                            dutyStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('driving training')) {
+                            drivingTrainingStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('maintenance')) {
+                            maintenanceStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('others')) {
+                            othersStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('familiarisation')) {
+                            familiarisationStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('wpt')) {
+                            WPTStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('mpt')) {
+                            MPTStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('avi')) {
+                            aviStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('pm')) {
+                            pmStartedCount += temp.taskNum
+                         } 
+                    }
                 }
             }
 
@@ -2535,7 +2457,6 @@ module.exports.getTaskTotalByPurposeByHub = async function (req, res) {
 //2023-06-15 Customer user,Add two purpose(WPT and MPT)
 module.exports.getTaskTotalByPurposeByNode = async function (req, res) {
     try {
-        let pageType = req.body.pageType;
         let timeNeeded = req.body.timeNeeded ? req.body.timeNeeded : moment().format('YYYY-MM-DD')
         let unitHub = req.body.hub;
         let unitNode = req.body.node;
@@ -2554,12 +2475,9 @@ module.exports.getTaskTotalByPurposeByNode = async function (req, res) {
                 unitList.push(unit)
              }
         } else {
-            // unitList = await TaskUtils.getUnitAndUnitIdByUserId(req.body.userId);
             unitList = userUnit.subUnitList
         }
-        // let user = null;
-        // if((req.cookies.userType).toUpperCase() == 'CUSTOMER') user = await User.findOne({ where: { userId: req.body.userId } });
-        let groupId = userUnit.groupIdList ? userUnit.groupIdList.length > 0 ? userUnit.groupIdList : null : null;
+        let groupId = userUnit.groupIdList?.length > 0 ? userUnit.groupIdList : null;
 
         let result = []
         let taskTotalByPurpose = await sequelizeObj.query(`
@@ -2616,33 +2534,35 @@ module.exports.getTaskTotalByPurposeByNode = async function (req, res) {
             let pmStartedCount = 0;
             if(taskTotalByPurposeArray && taskTotalByPurposeArray.length > 0) {
                 for (let temp of taskTotalByPurposeArray) {
-                    if (temp.purpose && temp.purpose.toLowerCase().startsWith('ops')) {
-                        opsStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('training')) {
-                        trainingStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('admin')) {
-                        adminStartedCount += temp.taskNum
-                    } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('exercise')) {
-                        exerciseStartedCount += temp.taskNum
-                    }   else if (temp.purpose && temp.purpose.toLowerCase().startsWith('duty')) {
-                        dutyStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('driving training')) {
-                        drivingTrainingStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('maintenance')) {
-                        maintenanceStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('others')) {
-                        othersStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('familiarisation')) {
-                        familiarisationStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('wpt')) {
-                        WPTStartedCount += temp.taskNum
-                     }  else if (temp.purpose && temp.purpose.toLowerCase().startsWith('mpt')) {
-                        MPTStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('avi')) {
-                        aviStartedCount += temp.taskNum
-                     } else if (temp.purpose && temp.purpose.toLowerCase().startsWith('pm')) {
-                        pmStartedCount += temp.taskNum
-                     } 
+                    if (temp.purpose) {
+                        if (temp.purpose.toLowerCase().startsWith('ops')) {
+                            opsStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('training')) {
+                            trainingStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('admin')) {
+                            adminStartedCount += temp.taskNum
+                        } else if (temp.purpose.toLowerCase().startsWith('exercise')) {
+                            exerciseStartedCount += temp.taskNum
+                        }   else if (temp.purpose.toLowerCase().startsWith('duty')) {
+                            dutyStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('driving training')) {
+                            drivingTrainingStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('maintenance')) {
+                            maintenanceStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('others')) {
+                            othersStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('familiarisation')) {
+                            familiarisationStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('wpt')) {
+                            WPTStartedCount += temp.taskNum
+                         }  else if (temp.purpose.toLowerCase().startsWith('mpt')) {
+                            MPTStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('avi')) {
+                            aviStartedCount += temp.taskNum
+                         } else if (temp.purpose.toLowerCase().startsWith('pm')) {
+                            pmStartedCount += temp.taskNum
+                         } 
+                    }
                 }
             }
             if((hubData.unit).toUpperCase() == 'OTHER'){

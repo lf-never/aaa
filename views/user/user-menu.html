@@ -17,11 +17,11 @@
         <% if (pageList && pageList.find(item => item.module == 'User Management' && ['Create User', 'View User'].includes(item.page))) { %>
             <div>
                 <span class="layui-icon layui-icon-note" style="margin-right: 10px;"></span>
-                <label class="user-select-none">User Management</label>
+                <span class="user-select-none">User Management</span>
             </div>
             <ul class="list-group">
                 <% if (pageList && pageList.find(item => item.page == 'Create User')) { %>
-                    <!-- <li class="list-group-item user-select-none" data-action="user-create">Create User</li> -->
+
                 <% } %>
                 <% if (pageList && pageList.find(item => item.page == 'View User')) { %>
                     <li class="list-group-item user-select-none" data-action="user-view">View User</li>
@@ -32,7 +32,7 @@
         <% if (pageList && pageList.find(item => item.module == 'Unit' && ['Create Unit', 'View Unit'].includes(item.page))) { %>
             <div>
                 <span class="layui-icon layui-icon-note" style="margin-right: 10px;"></span>
-                <label class="user-select-none">Unit Management</label>
+                <span class="user-select-none">Unit Management</span>
             </div>
             <ul class="list-group">
                 <% if (pageList && pageList.find(item => item.page == 'Create Unit')) { %>
@@ -47,23 +47,13 @@
         <% if (pageList.find(item => item.module == 'User Management' && ['View Mobile User'].includes(item.page))) { %>
             <div>
                 <span class="layui-icon layui-icon-user" style="margin-right: 10px;"></span>
-                <label class="user-select-none">Mobile User Management</label>
+                <span class="user-select-none">Mobile User Management</span>
             </div>
             <ul class="list-group">
                 <li class="list-group-item user-select-none" data-action="mobileUser-view">View Mobile User</li>
             </ul>
         <% } %>    
-        <!-- <% if (userType == 'HQ' || userType == 'ADMINISTRATOR') { %>
-            <hr>
-            <div>
-                <span class="layui-icon layui-icon-note" style="margin-right: 10px;"></span>
-                <label class="user-select-none">Group Management</label>
-            </div>
-            <ul class="list-group">
-                <li class="list-group-item user-select-none" data-action="group-view">View Group</li>
-                <li class="list-group-item user-select-none" data-action="group-create">Create Group</li>
-            </ul>
-        <% } %> -->
+       
         
     </div>
 </div>

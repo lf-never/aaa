@@ -574,9 +574,9 @@ const initPermitType = async function() {
             permitTypeList = res.respMessage;
         }
         let optionHtml = '';
-        if (permitTypeList && permitTypeList.length > 0) {
+        if (permitTypeList?.length > 0) {
             for(let item of permitTypeList) {
-                if (item.permitType && item.permitType.toUpperCase().startsWith('CL')) {
+                if (item.permitType?.toUpperCase().startsWith('CL')) {
                     optionHtml += `<option value="${item.permitType}">${item.permitType}</option>`
                 }
             }
@@ -613,7 +613,7 @@ const showReasonDetail = async function(unitId, reasonType) {
         <div class="col-3" style="text-align: center;">Reason</div>
       </div>
     `);
-    if (reasonList && reasonList.length > 0) {
+    if (reasonList?.length > 0) {
       for(let temp of reasonList) {
         $('.reason-detail-content-div').append(`
           <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">

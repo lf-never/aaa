@@ -113,6 +113,7 @@
         .layui-laydate {
             line-height: 1rem !important;
             margin-left: 10px !important;
+            z-index: 99999999 !important;
         }
         .active>.page-link, .page-link.active {
             background-color: #1B9063 !important;
@@ -155,7 +156,7 @@
         .alert-danger{
             border:solid 1px #E53A40;
             background-color: #FAE1E2;
-            /* color: black; */
+
             font-weight: bold;
             color: rgb(212, 2, 2);
         }
@@ -173,9 +174,6 @@
             border: 0;
         }
 
-        .layui-laydate {
-            z-index: 99999999 !important;
-        }
 
         .status-btn {
             padding: 1px 6px !important;
@@ -190,7 +188,7 @@
             bottom: 37px;
             right: 4%;
             z-index: 10
-            /* z-index: -1; */
+
         }
         
         .rightimg{
@@ -201,7 +199,7 @@
             bottom: 42px;
             right: -2%;
             z-index: 10
-            /* z-index: -1; */
+
         }
 
         .select-search{
@@ -217,7 +215,7 @@
             width: 100%;
             padding: 0.375rem 2.25rem 0.375rem 0.75rem;
             -moz-padding-start: calc(0.75rem - 3px);
-            /* font-size: 1rem; */
+
             font-weight: 400;
             line-height: 1.5;
             color: black;
@@ -231,8 +229,7 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            /* overflow-y: auto; */
-
+   
             border-radius: 0rem;
             overflow-y: auto;
             cursor: pointer;
@@ -306,10 +303,10 @@
           <div class="modal-content">
             <div class="modal-header">
               <h4 class="modal-title">Assigned&nbsp;Resource</h4>
-              <!-- <button type="button" class="btn-close" data-bs-dismiss="modal"></button> -->
+    
             </div>
             <div class="modal-body">
-                <label class="current-assign-taskid" style="display: none;"></label>
+                <span class="current-assign-taskid" style="display: none;"></span>
               <div class="mb-3 mt-3" style="height: 60px;">
                 Vehicle&nbsp;Number:
                 <input type="text" style="padding-left: 30px;" class="form-control select-search search-vehicleNumber" autocomplete="off" id="search-vehicleNumber" placeholder="Vehicle Number" data-unitId="">

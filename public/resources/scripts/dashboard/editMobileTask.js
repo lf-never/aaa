@@ -111,7 +111,6 @@ const initLocationSearch = async function (reportingLocation, destination) {
 
     $("#destination-select .form-search-select, #reportingLocation-select .form-search-select").on("mousedown", "li", async function () {
         let val = $(this).text()
-        let name = $(this).data("name")
         $(this).parent().parent().prev().val(val)
         $(this).parent().parent().css("display", "none")
     })
@@ -294,7 +293,6 @@ const submitTrip = async function () {
             table.ajax.reload(null, true);
         } else {
             simpleAlert(res.respMessage);
-            return;
         }
     });
 }

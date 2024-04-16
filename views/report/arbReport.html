@@ -10,8 +10,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-    table {
-        -webkit-print-color-adjust:exact;
+    @media print {  
+        table {  
+            print-color-adjust: exact;  
+        }  
     }
     
     #indent-echart {
@@ -89,16 +91,16 @@
     <div class="" style="height: 100%; width: 100%;">
         <div class="report-content" style="height: 100%;">
             <div class="report-title">
-                <label>ARB Report</label>
+                <span>ARB Report</span>
             </div>
             <div class="py-2 px-2" style="background: #f3f3f3;width: 100%; height: calc(100% - 60px);">
                 <div class="content-head px-3">
                     <div style="display: flex; padding: 0px;" class="col-4 report-type">
                         <div class="report-type-tab tab-hubNode active">
-                            <label>HUB/NODE</label>
+                            <span>HUB/NODE</span>
                         </div>
                         <div class="report-type-tab tab-to">
-                            <label>Transport Operators</label>
+                            <span>Transport Operators</span>
                         </div>
                     </div>
                     <div style="display: flex;" class="col-8 limit-condition justify-content-end">

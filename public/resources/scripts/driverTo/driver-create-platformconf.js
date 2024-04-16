@@ -47,7 +47,7 @@ const initPlatformConfList = async function() {
     if (code == 1)  {
         $('.platformConfDiv').empty();
         let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
-        if (dataList && dataList.length > 0) {
+        if (dataList?.length > 0) {
         for(let temp of dataList) {
           let diffNow = "-"
           if (temp.lastDrivenDate) {
@@ -83,9 +83,7 @@ const initPlatformConfList = async function() {
               </div>
             `;
           }
-          // if (!actionHtml) {
-          //   actionHtml = temp.approveStatus;
-          // }
+
 
           $('.platformConfDiv').append(`
             <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
@@ -151,7 +149,7 @@ const initPlatformConfPage = async function () {
 const initVehicleTypeSelect = async function() {
   await axios.post("/driver/getVehicleTypeByDriverId", {driverId: currentEditDriverId}).then(async res => {
       let vehicleTypeArray = res.data.respMessage;
-      if (vehicleTypeArray && vehicleTypeArray.length > 0) {
+      if (vehicleTypeArray?.length > 0) {
         $("#driver-vehicleType-select").empty();
           let optionHtml = `<option value=""></option>`;
           for(let vehicleType of vehicleTypeArray) {

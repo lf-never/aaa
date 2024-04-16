@@ -30,17 +30,17 @@
         <div class="col-12 report-form">
             <div class="row">
                 <div class="mb-3 row">
-                    <label class="col-sm-3 col-form-label">Date Range (Indent Start Date)</label>
+                    <label class="col-sm-3 col-form-label" for="reportDateRange">Date Range (Indent Start Date)</label>
                     <div class="col-sm-3">
                         <input type="text" readonly class="form-control" value="" id="reportDateRange">
                     </div>
                 </div>
                 <div class="col-6 mt-3">
-                    <div><label class="label-1">Report Data Group Selection</label></div>
-                    <div><label class="label-2">Choose the data to be included in the report</label></div>
+                    <div><span class="label-1">Report Data Group Selection</span></div>
+                    <div><span class="label-2">Choose the data to be included in the report</span></div>
                 </div>
                 <div class="col-6 mt-3">
-                    <div><label class="label-1">Selected Data Group</label></div>
+                    <div><span class="label-1">Selected Data Group</span></div>
                 </div>
                 <div class="col-6">
                     <div class="row">
@@ -165,14 +165,14 @@
             </div>
             <div class="row">
                 <div class="col-12 mt-3">
-                    <div><label class="label-1">Report Data Filter</label></div>
+                    <div><span class="label-1">Report Data Filter</span></div>
                 </div>
                 <div class="row mt-3 div-report-data-filter">
                     <div class="mb-2 col-4" data-filter="taskType">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Task Type</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="taskTypeFilter">Task Type</label>
                             <div class="col-8">
-                                <select class="form-select" id="taskTypeFilter">
+                                <select class="form-select" id="taskTypeFilter" name="taskTypeFilter">
                                     <option value="">All</option>
                                     <option value="MT-Admin">MT-Admin</option>
                                     <option value="ATMS">ATMS</option>
@@ -185,12 +185,9 @@
                     </div>
                     <div class="mb-2 col-4" data-filter="hubNode">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Hub</label>
-                            <!-- <div class="col-8 position-relative">
-                                <input type="text" class="form-control" id="hubNodeFilter" autocomplete="off">
-                            </div> -->
+                            <label class="col-4 col-form-label p-0 custom-line" for="hubFilter">Hub</label>
                             <div class="col-8">
-                                <select class="form-select" id="hubFilter" onchange="changeHub()">
+                                <select class="form-select" id="hubFilter" name="hubFilter" onchange="changeHub()">
                                     <option value="">All</option>
                                 </select>
                             </div>
@@ -198,12 +195,9 @@
                     </div>
                     <div class="mb-2 col-4" data-filter="hubNode">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Node</label>
-                            <!-- <div class="col-8 position-relative">
-                                <input type="text" class="form-control" id="hubNodeFilter" autocomplete="off">
-                            </div> -->
+                            <label class="col-4 col-form-label p-0 custom-line" for="nodeFilter">Node</label>
                             <div class="col-8">
-                                <select class="form-select" id="nodeFilter">
+                                <select class="form-select" id="nodeFilter" name="nodeFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
@@ -211,35 +205,34 @@
                     </div>
                     <div class="mb-2 col-4" data-filter="taskID">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Task ID</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="taskIDFilter">Task ID</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="taskIDFilter">
+                                <input type="text" class="form-control" value="" id="taskIDFilter" name="taskIDFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="taskStatus">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Task Status</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="taskStatusFilter">Task Status</label>
                             <div class="col-8 position-relative">
-                                <input type="text" class="form-control" id="taskStatusFilter" autocomplete="off">
+                                <input type="text" class="form-control" id="taskStatusFilter" autocomplete="off" name="taskStatusFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="indentID">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Indent ID</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="indentIDFilter">Indent ID</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="indentIDFilter">
+                                <input type="text" class="form-control" value="" id="indentIDFilter" name="indentIDFilter">
                             </div>
                         </div>
                     </div>
                     
                     <div class="mb-2 col-4" data-filter="vehicle">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Vehicle Type</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="vehicleTypeFilter">Vehicle Type</label>
                             <div class="col-8">
-                                <!-- <input type="text" class="form-control" value="" id="vehicleTypeFilter"> -->
-                                <select class="form-select" id="vehicleTypeFilter">
+                                <select class="form-select" id="vehicleTypeFilter" name="vehicleTypeFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
@@ -247,27 +240,27 @@
                     </div>
                     <div class="mb-2 col-4" data-filter="vehicle">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Vehicle Number</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="vehicleNumberFilter">Vehicle Number</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="vehicleNumberFilter">
+                                <input type="text" class="form-control" value="" id="vehicleNumberFilter" name="vehicleNumberFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="driver">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Driver Name</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="driverNameFilter">Driver Name</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="driverNameFilter">
+                                <input type="text" class="form-control" value="" id="driverNameFilter" name="driverNameFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="driver">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Mobile Number</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="mobileNumberFilter">Mobile Number</label>
                             <div class="col-8">
                                 <div class="input-group">
                                     <span class="input-group-text">+65</span>
-                                    <input type="number" class="form-control" value="" id="mobileNumberFilter" autocomplete="off"
+                                    <input type="number" class="form-control" value="" id="mobileNumberFilter" name="mobileNumberFilter" autocomplete="off"
                                         onKeypress="return (/[\d]/.test(String.fromCharCode(event.keyCode)))">
                                 </div>
                             </div>
@@ -275,52 +268,36 @@
                     </div>
                     <div class="mb-2 col-4" data-filter="activity">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Activity</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="activityFilter">Activity</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" id="activityFilter">
+                                <input type="text" class="form-control" value="" id="activityFilter" name="activityFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="purpose">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Purpose</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="purposeFilter">Purpose</label>
                             <div class="col-8">
-                                <!-- <input type="text" class="form-control" value="" id="purposeFilter"> -->
-                                <select class="form-select" id="purposeFilter">
+                                <select class="form-select" id="purposeFilter" name="purposeFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <!-- <div class="mb-3 col-4" data-filter="remarks">
-                        <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Remarks</label>
-                            <div class="col-8">
-                                <input type="text" class="form-control" value="" id="remarksFilter">
-                            </div>
-                        </div>
-                    </div> -->
-                    <!-- <div class="mb-3 col-4" data-filter="executionTime">
-                        <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Execution Time</label>
-                            <div class="col-8">
-                                <input type="text" class="form-control" value="" readonly id="executionTimeFilter">
-                            </div>
-                        </div>
-                    </div> -->
+                   
                     <div class="mb-2 col-4" data-filter="actualTime">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Actual Date</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="actualTimeFilter">Actual Date</label>
                             <div class="col-8">
-                                <input type="text" class="form-control" value="" readonly id="actualTimeFilter">
+                                <input type="text" class="form-control" value="" readonly id="actualTimeFilter" name="actualTimeFilter">
                             </div>
                         </div>
                     </div>
                     <div class="mb-2 col-4" data-filter="supportedUnit">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Supported Unit</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="supportedUnitFilter">Supported Unit</label>
                             <div class="col-8">
-                                <select class="form-select" id="supportedUnitFilter">
+                                <select class="form-select" id="supportedUnitFilter" name="supportedUnitFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
@@ -328,23 +305,12 @@
                     </div>
                     
                     
-                    <!-- <div class="mb-3 col-4" data-filter="odometer">
-                        <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Odometer</label>
-                            <div class="col-8">
-                                <div class="input-group mb-3">
-                                    <input type="number" class="form-control" value="" id="startOdometerFilter">
-                                    <span class="input-group-text">-</span>
-                                    <input type="number" class="form-control" value="" id="endOdometerFilter">
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
+                    
                     <div class="mb-2 col-8" data-filter="mileageCaptured">
                         <div class="row">
-                            <label class="col-4 col-form-label p-0 custom-line">Minimum Mileage Captured</label>
+                            <label class="col-4 col-form-label p-0 custom-line" for="mileageCapturedFilter">Minimum Mileage Captured</label>
                             <div class="col-4">
-                                <input type="number" class="form-control" value="" id="mileageCapturedFilter">
+                                <input type="number" class="form-control" value="" id="mileageCapturedFilter" name="mileageCapturedFilter">
                             </div>
                         </div>
                     </div>

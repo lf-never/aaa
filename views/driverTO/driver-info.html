@@ -24,11 +24,6 @@
 <link rel="stylesheet" href="../transfer/transfer.css">
 <script type="text/javascript" src="../transfer/transfer.js"></script>
 
-<!-- <link rel="stylesheet" href="../leaflet/dist/leaflet.css">
-<link rel="stylesheet" href="../leaflet-contextmenu/dist/leaflet.contextmenu.min.css">
-<script type="text/javascript" src="../leaflet/dist/leaflet.js"></script>
-<script type="text/javascript" src="../leaflet-contextmenu/dist/leaflet.contextmenu.min.js"></script>
-<script type="text/javascript" src="../MovingMarker.js"></script> -->
 
 <link rel="stylesheet" href="../css/common-style.css">
 <link rel="stylesheet" href="../css/common-bootstrap.css">
@@ -330,7 +325,7 @@
         font-size: 16px;
         font-weight: 500;
         background-color: white;
-        /* height: 260px; */
+
     }
     .driverAssessmentContentDiv {
         border: 1px solid white;
@@ -339,7 +334,7 @@
         font-size: 16px;
         font-weight: 500;
         background-color: white;
-        /* height: 260px; */
+
     }
     .driverPlatformConfContentDiv, .licenceListDiv {
         border: 1px solid white;
@@ -404,7 +399,7 @@
             <div class="driver-info-container mx-5 " style="overflow: auto;">
                 <div class="container-fluid h-100 px-5">
                     <div class="row px-3  pt-3">
-                        <label class="driver-username" style="font-size: 28px; font-weight: 600; color: black;"></label>
+                        <span class="driver-username" style="font-size: 28px; font-weight: 600; color: black;"></span>
                     </div>
                     <div class="layui-tab layui-driver-tab layui-tab-brief" lay-filter="docDemoTabBrief1">
                         <ul class="layui-tab-title">
@@ -426,37 +421,30 @@
                             <div class="layui-tab-item layui-show p-2">
                                 <div class="row align-items-end">
                                     <div class="col-auto">
-                                        <label class="info-title">Status</label>
+                                        <span class="info-title">Status</span>
                                         <div class="circle-status" style="width: 100%;">
                                             <div class="div-table">
                                                 <div class="div-table-cell">
                                                     <div class="div-circle driver-statusColor" style="background-color: #1B9063;"></div>
                                                 </div>
                                                 <div class="div-table-cell">
-                                                    <label class="driver-status">Deployable</label>
+                                                    <label class="driver-status" for="driver-status-for">Deployable</label>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-auto px-5">
-                                        <div class="view-live-location">
-                                            <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
-                                            <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">View Live Location</label>
-                                        </div>
-                                    </div> -->
+
                                     <div class="col-auto px-5">
                                         <% if (pageList.find(item => item.page == 'Profile' && item.action == 'Edit')) { %>
                                         <div class="edit-driver">
                                             <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
-                                            <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
+                                            <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;" for="driver-edit-for">Edit</label>
                                         </div>
                                         <% } %>
                                         <style>
                                             .hoto-div {
                                                 border-radius: 5px;
-                                                /* 
-                                                background-color: #1C9063;
-                                                color: white; */
+      
                                                 color: #1C9063 !important;
                                                 font-weight: bolder;
                                                 border: solid 1px #dfdede;
@@ -465,120 +453,100 @@
                                                 padding: 0 10px;
                                             }
                                         </style>
-                                        <label class="hoto-info hoto-div" style="display: none; ">Driver had been hoto!</label>
-										<label class="loan-info hoto-div" style="display: none; ">Driver had been loan out!</label>
+                                        <label for="hoto-for" class="hoto-info hoto-div" style="display: none; ">Driver had been hoto!</label>
+										<label for="loan-for" class="loan-info hoto-div" style="display: none; ">Driver had been loan out!</label>
                                     </div>
                                 </div>
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2">
-                                        <label style="font-size: 20px; font-weight: bolder;">Military Personnel Details</label>
+                                        <label for="title-for" style="font-size: 20px; font-weight: bolder;">Military Personnel Details</label>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Vocation</label><br>
-                                        <label class="info-value driver-vocation"></label>
+                                        <span class="info-title">Vocation</span><br>
+                                        <span class="info-value driver-vocation"></span>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Role</label><br>
-                                        <label class="info-value driver-role"></label>
+                                        <span class="info-title">Role</span><br>
+                                        <span class="info-value driver-role"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Unit</label><br>
-                                        <label class="info-value driver-unit"></label>
+                                        <span class="info-title">Unit</span><br>
+                                        <span class="info-value driver-unit"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Node / Hub</label><br>
-                                        <label class="info-value driver-nodeHub"></label>
+                                        <span class="info-title">Node / Hub</span><br>
+                                        <span class="info-value driver-nodeHub"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Enlistment Date</label><br>
-                                        <label class="info-value driver-enlistmentDate"></label>
+                                        <span class="info-title">Enlistment Date</span><br>
+                                        <span class="info-value driver-enlistmentDate"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Operationally Ready Date (ORD)</label><br>
-                                        <label class="info-value driver-operationallyReadyDate"></label>
+                                        <span class="info-title">Operationally Ready Date (ORD)</span><br>
+                                        <span class="info-value driver-operationallyReadyDate"></span>
                                     </div>
                                 </div>
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">    
                                     <div class="col-12 my-2">
-                                        <label style="font-size: 20px; font-weight: bolder;">Personnel Details</label>
+                                        <span style="font-size: 20px; font-weight: bolder;">Personnel Details</span>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">NRIC</label><br>
-                                        <label class="info-value driver-nric"></label>
+                                        <span class="info-title">NRIC</span><br>
+                                        <span class="info-value driver-nric"></span>
                                         <img alt="" class="img-showNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;" src="../images/show.svg">
                                         <img alt="" class="img-noShowNRIC" style="width: 20px; cursor: pointer;margin-left: 0.5rem;display: none;" src="../images/noShow.svg">
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Date of Birth</label><br>
-                                        <label class="info-value driver-birthday"></label>
+                                        <span class="info-title">Date of Birth</span><br>
+                                        <span class="info-value driver-birthday"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Contact No.</label><br>
-                                        <label class="info-value driver-contactNo"></label>
+                                        <span class="info-title">Contact No.</span><br>
+                                        <span class="info-value driver-contactNo"></span>
                                     </div>
-                                    <!-- <div class="col-6 mt-2">
-                                        <label class="info-title">Blood Type</label><br>
-                                        <label class="info-value driver-bloodType"></label>
-                                    </div> -->
+                                   
                                 </div>
-                                <!-- <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
-                                <div class="row">
-                                    <div class="col-12 my-2">
-                                        <label style="font-size: 20px; font-weight: bolder;">Emergency Contacts</label>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="info-title">Name</label><br>
-                                        <label class="info-value driver-emergency-username"></label>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="info-title">Relationship</label><br>
-                                        <label class="info-value driver-emergency-relationship"></label>
-                                    </div>
-                                    <div class="col-6 mt-2">
-                                        <label class="info-title">Contact No.</label><br>
-                                        <label class="info-value driver-emergency-contactNo"></label>
-                                    </div>
-                                </div> -->
+                            
                             </div>
                             <% } %>
                             <% if (pageList.find(item => item.page == 'License')) { %>
                             <div class="layui-tab-item p-2">
                                 <div class="row">
                                     <div class="col-12 my-2" style="display: flex; justify-content: flex-start;">
-                                        <label style="font-size: 20px; font-weight: bolder;">Military Driving Permit</label>
+                                        <span style="font-size: 20px; font-weight: bolder;">Military Driving Permit</span>
                                         <% if (pageList.find(item => item.page == 'Driving Permit' && item.action == 'Edit')) { %>
                                             <div id="driverBaseinfoEditImg" style="display: flex; justify-content: center; align-items: center; padding-top: 5px;">
                                                 <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/edit.svg">
-                                                <label class="user-select-none  driver-baseinfo-edit-label" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
+                                                <label for="driver-baseinfo-for" class="user-select-none  driver-baseinfo-edit-label" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
                                             </div>
-                                            <div id="driverBaseinfoSaveImg" style="display: flex; justify-content: center; align-items: center; padding-top: 10px; display: none;">
+                                            <div id="driverBaseinfoSaveImg" style="padding-top: 10px; display: none;">
                                                 <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px; margin-left: 20px;" src="../images/save.svg">
-                                                <label class="user-select-none driver-baseinfo-save-label" style="color: #3899ED; font-weight: 600;margin-left: 2px; cursor: pointer;">Save</label>
+                                                <label for="driver-baseinfo-save-for" class="user-select-none driver-baseinfo-save-label" style="color: #3899ED; font-weight: 600;margin-left: 2px; cursor: pointer;">Save</label>
                                             </div>
                                         <% } %>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Permit No.</label><br>
-                                        <label class="info-value driver-permitNo"></label>
+                                        <span class="info-title">Permit No.</span><br>
+                                        <span class="info-value driver-permitNo"></span>
                                         <input class="form-control driver-permitNo-input" placeholder="Permit No." style="background-color: white !important;border: 1px solid #c7c6c4 !important; display: none;"></input>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Date of Issue</label><br>
-                                        <label class="info-value driver-permitDateOfIssue"></label>
+                                        <span class="info-title">Date of Issue</span><br>
+                                        <span class="info-value driver-permitDateOfIssue"></span>
                                         <input class="form-control driver-permitDateOfIssue-input" placeholder="" style="background-color: white !important;border: 1px solid #c7c6c4 !important; display: none;"></input>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Status.</label><br>
-                                        <label class="driverCurrentPermitStatus" style="display: none;"></label>
+                                        <span class="info-title">Status.</span><br>
+                                        <span class="driverCurrentPermitStatus" style="display: none;"></span>
                                         <select class="form-select " id="driver-permitStatus-select" style="width: 50%;" disabled>
                                             <option value="valid">Valid</option>
                                             <option value="invalid">Invalid</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
-                                        <label class="info-title">Reason</label><br>
+                                        <span class="info-title">Reason</span><br>
                                         <div style="width: 100%; display: flex;">
                                             <select class="form-select " id="driver-permitInvalidReason-select" style="width: 50%;" disabled>
                                                 <option value="NA">NA</option>
@@ -589,26 +557,26 @@
                                         </div>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Class</label><br>
-                                        <label class="info-value driver-permitType"></label>
+                                        <span class="info-title">Class</span><br>
+                                        <span class="info-value driver-permitType"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Category</label><br>
-                                        <label class="info-value driver-permitCategory"></label>
+                                        <span class="info-title">Category</span><br>
+                                        <span class="info-value driver-permitCategory"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Demerit Points</label><br>
-                                        <label class="info-value driver-demeritPoints"></label>
+                                        <span class="info-title">Demerit Points</span><br>
+                                        <span class="info-value driver-demeritPoints"></span>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <label class="info-title">Operationally Ready Date (ORD)</label><br>
-                                        <label class="info-value driver-operationallyReadyDate"></label>
+                                        <span class="info-title">Operationally Ready Date (ORD)</span><br>
+                                        <span class="info-value driver-operationallyReadyDate"></span>
                                     </div>
                                 </div>
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2">
-                                        <label style="font-size: 20px; font-weight: bolder;">Mileage</label>
+                                        <span style="font-size: 20px; font-weight: bolder;">Mileage</span>
                                     </div>
                                     <div class="content-detail">
                                         <div class="content-mileage-div">
@@ -621,9 +589,9 @@
                                                             </div>
                                                         </div>
                                                         <div class="px-3 py-2" style="width: calc(100% - 80px);">
-                                                            <div style="color: #b6b6b6;width: 100%;height: 15px;display: flex;justify-content: start;align-items: center;"><label>TOTAL MILEAGE</label></div>
+                                                            <div style="color: #b6b6b6;width: 100%;height: 15px;display: flex;justify-content: start;align-items: center;"><span>TOTAL MILEAGE</span></div>
                                                             <div style="color: #262626;font-size: x-large;font-weight: 600;width: 100%;height: 35px;display: flex;justify-content: start;align-items: start;">
-                                                                <label class="driverTotalMileageLabel"></label>
+                                                                <span class="driverTotalMileageLabel"></span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -647,9 +615,9 @@
                                                             </div>
                                                         </div>
                                                         <div class="px-3 py-2" style="width:calc(100% - 80px);">
-                                                            <div style="color: #b6b6b6;width: 100%;height: 15px;display: flex;justify-content: start;align-items: center;"><label>MILEAGE EARNED</label></div>
+                                                            <div style="color: #b6b6b6;width: 100%;height: 15px;display: flex;justify-content: start;align-items: center;"><span>MILEAGE EARNED</span></div>
                                                             <div style="color: #262626;font-size: x-large;font-weight: 600;width: 100%;height: 35px;display: flex;justify-content: start;align-items: start;">
-                                                                <label class="">0</label>
+                                                                <span class="">0</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -660,24 +628,19 @@
                                                     </div>
                                                     <div class="px-3" style="width: 100%;color: #1b7c5b;display: flex;">
                                                         <div style="color: white;width: 100%;height: 100%;display: flex;justify-content: start;align-items: center;">
-                                                            <label style="font-weight: 600;color: #262626;">3,000 km</label>
-                                                            <label style="color: #a2a2a2;">&nbsp more to your first bonus</label>
+                                                            <span style="font-weight: 600;color: #262626;">3,000 km</span>
+                                                            <span style="color: #a2a2a2;">&nbsp more to your first bonus</span>
                                                         </div>
                                                         <div style="width: 50%;height: 100%;display: flex;justify-content: flex-end;align-items: center;">
-                                                            <label>0</label>
-                                                            <label style="color: #c5c5c5;">/3000</label>
+                                                            <span>0</span>
+                                                            <span style="color: #c5c5c5;">/3000</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="permit-type-info fs-6" style="width: 50%; color: #a2a2a2; padding-left: 20px;">
-                                                    <label>YOUR PAST REWARDS</label>
+                                                    <span>YOUR PAST REWARDS</span>
                                                     <div class="past-rewards-div row">
-                                                        <!-- div style="width: 100px;">01/02/21</div>
-                                                        <div style="width: calc(100% - 100px);">Bonus of $3000 disbursed</div>
-                                                        <div style="width: 100px;">24/01/21</div>
-                                                        <div style="width: calc(100% - 100px);">Approved by HQ</div>
-                                                        <div style="width: 100px;">23/02/21</div>
-                                                        <div style="width: calc(100% - 100px);">Mileage Clocked</div -->
+                                                  
                                                     </div>
                                                 </div>
                                             </div>
@@ -687,7 +650,7 @@
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2" style="display: contents;">
-                                        <div class="col-6" style="padding-left: 1rem;"><label style="font-size: 20px; font-weight: bolder;">Category</label></div>
+                                        <div class="col-6" style="padding-left: 1rem;"><span style="font-size: 20px; font-weight: bolder;">Category</span></div>
                                         <% if (pageList.find(item => item.page == 'Category' && item.action == 'Edit' )) { %>
                                             <div class="col-6" style="text-align: right;padding-right: 1rem; display: flex; align-items: center; justify-content: flex-end;">
                                                 <button type="button" class="btn btn-success btn-create-assessment" style="background-color: #1C9063;">Add Category</button>
@@ -709,7 +672,7 @@
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2" style="display: contents;">
-                                        <div class="col-6" style="padding-left: 1rem;"><label class="platformsLabel" style="font-size: 20px; font-weight: bolder;">Test Results</label></div>
+                                        <div class="col-6" style="padding-left: 1rem;"><span class="platformsLabel" style="font-size: 20px; font-weight: bolder;">Test Results</span></div>
                                         <% if (pageList.find(item => item.page == 'Test Results' && item.action == 'Edit' )) { %>
                                         <div class="col-6" style="text-align: right;padding-right: 1rem; display: flex; align-items: center; justify-content: flex-end;">
                                             <button type="button" class="btn btn-success btn-create-vehicleClass" style="background-color: #1C9063;">Add Test Results</button>
@@ -742,7 +705,7 @@
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2" style="display: contents;">
-                                        <div class="col-6" style="padding-left: 1rem;"><label class="platformsLabel" style="font-size: 20px; font-weight: bolder;">Platforms</label></div>
+                                        <div class="col-6" style="padding-left: 1rem;"><span class="platformsLabel" style="font-size: 20px; font-weight: bolder;">Platforms</span></div>
                                         <% if (pageList.find(item => item.page == 'Platforms' && item.action == 'Edit' )) { %>
                                         <div class="col-6" style="text-align: right;padding-right: 1rem; display: flex; align-items: center; justify-content: flex-end;">
                                             <button type="button" class="btn btn-success btn-create-platformconf" style="background-color: #1C9063;">Add Platform</button>
@@ -770,7 +733,7 @@
                                 <div class="row my-4" style="display: none;height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row" style="display: none;">
                                     <div class="col-12 my-2" style="display: contents;">
-                                        <div class="col-6" style="padding-left: 1rem;"><label style="font-size: 20px; font-weight: bolder;">Incident Records</label></div>
+                                        <div class="col-6" style="padding-left: 1rem;"><span style="font-size: 20px; font-weight: bolder;">Incident Records</span></div>
                                         <div class="col-6" style="text-align: right; padding-right: 1rem; display: flex; align-items: center; justify-content: flex-end;">
                                             <button type="button" class="btn btn-success btn-create-incident" style="background-color: #1C9063;">Create Incident</button>
                                             <div class="content-hide-show active" divType="incident" style="margin-left: 10px; background-image: url(../images/hide-green.svg)">
@@ -779,26 +742,7 @@
                                     </div>
                                     <div class="content-detail">
                                         <div class="categoryContentDiv incidentListDiv" style="color: black; padding-left: 20px;">
-                                            <!-- <div class="row pt-4" style="display: flex;">
-                                                <div class="col-2">Date Of Issue</div>
-                                                <div class="col-2">Points Awarded</div>
-                                                <div class="col-8">Remarks</div>
-                                            </div>
-                                            <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-                                                <div class="col-2">5 Sep 22</div>
-                                                <div class="col-2">+3</div>
-                                                <div class="col-8">[+3]failing to give way at an uncontrolled junction, junction, or roundabout</div>
-                                            </div>
-                                            <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-                                                <div class="col-2">5 Sep 21</div>
-                                                <div class="col-2">0</div>
-                                                <div class="col-8">[+3]failing to give way at an uncontrolled junction, junction, or roundabout</div>
-                                            </div>
-                                            <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-                                                <div class="col-2">1 Jan 21</div>
-                                                <div class="col-2">0</div>
-                                                <div class="col-8">Stopping in yellow box</div>
-                                            </div> -->
+                                           
 
                                             <table aria-hidden="true" id="categoryContentDiv-table"></table>
                                         </div>
@@ -807,7 +751,7 @@
                                 <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                 <div class="row">
                                     <div class="col-12 my-2" style="display: contents;">
-                                        <div class="col-6" style="padding-left: 1rem;"><label style="font-size: 20px; font-weight: bolder;">Civilian Licence</label></div>
+                                        <div class="col-6" style="padding-left: 1rem;"><span style="font-size: 20px; font-weight: bolder;">Civilian Licence</span></div>
                                         <% if (pageList.find(item => item.page == 'Civilian Licence' && item.action == 'Edit' )) { %>
                                         <div class="col-6" style="text-align: right; padding-right: 1rem; display: flex; align-items: center; justify-content: flex-end;">
                                             <button type="button" class="btn btn-success btn-create-civilian-licence" style="background-color: #1C9063;">Add Licence</button>
@@ -877,10 +821,10 @@
                                         <div class="achievement-content-div">
                                             <div class="achievement-self-div">
                                                 <div class="achievement-self-head row py-2">
-                                                    <div class="col-5"><label class="current-month-label" style="font-size: 20; font-weight: 900; padding-left: 20px;"></label></div>
+                                                    <div class="col-5"><span for="" class="current-month-label" style="font-size: 20; font-weight: 900; padding-left: 20px;"></span></div>
                                                     <div class="col-7" style="display: flex; align-items: center; justify-content: flex-end; padding-right: 20px;">
                                                         <div class="date-select-div" style="width: fit-content; height: 24px;display: flex; align-items:center; border: 1px solid #f6f6f6; border-radius: 5px;">
-                                                            <label class="date-label" style="min-width: 60px; font-size: 16px; font-weight: 900; padding-left: 5px;"></label>
+                                                            <span for="date-sel-for" class="date-label" style="min-width: 60px; font-size: 16px; font-weight: 900; padding-left: 5px;"></span>
                                                             <img alt="" class="date-select-img" style="width: 32px; padding-left: 5px; padding-right: 5px;" src="../images/achievement/calender.svg">
                                                         </div>
                                                     </div>
@@ -920,7 +864,7 @@
                                             </div>
                                             <div class="achievement-leaderBoard-div"  style="padding-bottom: 20px;">
                                                 <div class="achievement-leaderBoard-head">
-                                                    <label style="font-size: 20px; font-weight: 900; color: #484848;">Leaderboard</label>
+                                                    <span style="font-size: 20px; font-weight: 900; color: #484848;">Leaderboard</span>
                                                 </div>
                                                 <div class="achievement-leaderBoard-container">
                                                     <div class="achievement-leaderBoard-nav">
@@ -952,32 +896,32 @@
         <div class="col-2">
             <div class="row">
                 <div class="py-4 fs-6" style="padding-left: 0px;">
-                    <label style="color: #ffffff;font-weight: 600;">Activity Log</label>
+                    <span style="color: #ffffff;font-weight: 600;">Activity Log</span>
                 </div>
                 <div class="tab-content ps-0" id="pills-tabContent" style="display: none;">
                     <div class="tab-pane fade show active" id="pills-key-personnel" role="tabpanel">
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>7 Sep 22, 08:00</label></div>
-                                <div><label>Maintenance Assigned</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>7 Sep 22, 08:00</span></div>
+                                <div><span>Maintenance Assigned</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>6 Sep 22, 13:04</label></div>
-                                <div><label>Driver Reassigned</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>6 Sep 22, 13:04</span></div>
+                                <div><span>Driver Reassigned</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>6 Sep 22, 12:47</label></div>
-                                <div><label>Book In</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>6 Sep 22, 12:47</span></div>
+                                <div><span>Book In</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                     </div>
@@ -985,25 +929,25 @@
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>7 Sep 22, 08:00</label></div>
-                                <div><label>Maintenance Assigned</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>7 Sep 22, 08:00</span></div>
+                                <div><span>Maintenance Assigned</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>6 Sep 22, 13:04</label></div>
-                                <div><label>Driver Reassigned</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>6 Sep 22, 13:04</span></div>
+                                <div><span>Driver Reassigned</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                         <div class="time-line">
                             <div class="time-line-axis"></div>
                             <div class="time-line-content">
-                                <div><label>6 Sep 22, 12:47</label></div>
-                                <div><label>Book In</label></div>
-                                <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                                <div><span>6 Sep 22, 12:47</span></div>
+                                <div><span>Book In</span></div>
+                                <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                             </div>
                         </div>
                     </div>

@@ -39,7 +39,7 @@ $(function () {
         });
     }
 
-    if (userType && userType.toUpperCase() == 'LICENSING OFFICER') {
+    if (userType?.toUpperCase() == 'LICENSING OFFICER') {
         $(".tab-list").show();
         $(".tab-list .btn-tab").on('click', function() {
             $('.btn-tab').removeClass('active');

@@ -49,11 +49,11 @@ $(function () {
 })
 
 const parseFile = function(files) {
-    if (files && files.length > 0) {
+    if (files?.length > 0) {
         let fileName = files[0].name
         let fileNameArray = fileName.split('.');
         let fileType = fileNameArray[fileNameArray.length - 1]
-        if (fileType && fileType.toLowerCase() != 'xls' && fileType.toLowerCase() != 'xlsx') {
+        if (fileType?.toLowerCase() != 'xls' && fileType.toLowerCase() != 'xlsx') {
             $.alert({
                 title: 'Warn',
                 content: 'Just support .xls or .xlsx file!',

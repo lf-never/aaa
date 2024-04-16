@@ -296,7 +296,6 @@ const FilterOnChange = async function () {
     
 
     setTimeout(function() {
-        // $('.assigned-indents-table tbody tr').before('<div style="width: 100%;height: 10px;"/>');
         $('.assigned-indents-table thead tr th:first').removeClass("sorting_asc");
     }, 1000);
 }

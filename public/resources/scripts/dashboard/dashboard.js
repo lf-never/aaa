@@ -7,11 +7,10 @@ jconfirm.defaults = {
 }
 
 $(function () {
-    // $('.search-input').on('keyup', _.debounce( FilterOnChange, 500 ))
-    // initMTRacTable();
+
     initTaskTable();
     initPage();
-    // InitFilter();
+
 
     setInterval(() => {
         table.ajax.reload(null, false)
@@ -39,13 +38,11 @@ const getGroupList = async function() {
                 console.error(res.data.respMessage);
                 return null;
             }
+        } else if (res.respCode === 1) {
+            return res.respMessage;
         } else {
-            if (res.respCode === 1) {
-                return res.respMessage;
-            } else {
-                console.error(res.respMessage);
-                return null;
-            }
+            console.error(res.respMessage);
+            return null;
         }
     });
 }
@@ -109,15 +106,6 @@ const initUnit = async function (hubNodeList) {
 const initPage = async function () {
     
     const initPurpose = async function () {
-        // let purposeList = await axios.get('/mtAdmin/getPurposeModeType')
-        //     .then(function (res) {
-        //         if (res.respCode === 1) {
-        //             return res.respMessage;
-        //         } else {
-        //             console.error(res.respMessage);
-        //             return [];
-        //         }
-        //     });
 
         let purposeList = await axios.post('/vehicle/getPurpose').then(result => {
             if (result.respCode == 1) {
@@ -191,8 +179,8 @@ const initPage = async function () {
             $('.taskActivity').parent().show()
 
             $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-            } else {
+          
+            if(!$('.customer-button input').prop('checked')) {
                 $('.hub-node-btn').show();
             }
             $('.taskId').show();
@@ -425,8 +413,7 @@ window.showActivity = function (e) {
 }
 
 const initTaskTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+
     table = $('.task-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -453,11 +440,7 @@ const initTaskTable = function () {
                 params.pageNum = d.start
                 params.pageLength = d.length
 
-                // console.log(d.order)
-                // if (d.order[0].column == 3) {
-                //     params.sortBy = 'driverName'
-                //     params.sort = d.order[0].dir
-                // }
+
                 
                 params.hub = $(".select-hub").val()
                 params.node = $(".select-node").val()
@@ -916,8 +899,7 @@ window.showMTRacMitigation = function (e) {
     });
 }
 const initMTRacTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+
     table = $('.mtRac-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -1190,8 +1172,7 @@ window.showOddDes = function (e) {
 }
 
 const initODDTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+
     let columns = [
         {
             "data": "driverName",
@@ -1350,8 +1331,7 @@ window.showSurveyRemark = function (e) {
 }
 
 const initSurveyTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+
     table = $('.survey-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -1552,8 +1532,7 @@ window.showIncidentDes = function (e) {
     });
 }
 const initIncidentTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+ 
     table = $('.incident-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -1879,15 +1858,7 @@ const initCVTable = function () {
                     let returnBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-green mx-1" onclick="returnLoan(${ full.loanId ?? 0 })">Return</button>`
                     let cancelBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-gray mx-1" onclick="cancelLoan(${ full.loanId ?? 0 })">Cancel</button>`
 
-                    // if (data == 'pending') {
-                    //     return startBtn
-                    // } else if (data == 'started') {
-                    //     return completeBtn
-                    // } else if (data == 'completed') {
-                    //     return returnBtn
-                    // } else {
-                    //     return  _.capitalize(data)
-                    // }
+                    
 
                     if (data == 'pending') {
                         if (operationList.includes('Start')) {
@@ -1919,8 +1890,7 @@ const initCVTable = function () {
 }
 
 const initATMSTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+ 
     table = $('.atms-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -2396,26 +2366,26 @@ const initUrgentTaskTable = function () {
             sortable: false,
             render: function (data, type, full, meta) {
                 if (!data) return '-'
-                    data = data.toString().toLowerCase();
-                    if (data == 'waitcheck') data = 'pending';
+                data = data.toString().toLowerCase();
+                if (data == 'waitcheck') data = 'pending';
 
-                    let bgColor = '#CE5018'
-                    if (data == 'waitcheck' || data == 'pending') {
-                        bgColor = '#1B9063'
-                    } else if (data == 'ready') {
-                        bgColor = '#1C9600'
-                    } else if (data == 'started') {
-                        bgColor = '#0d6efd'
-                    } else if (data == 'completed') {
-                        bgColor = '#afaf0c'
-                    } else if (data == 'cancelled') {
-                        bgColor = '#5A33DD'
-                    }
-                    return `  
-                        <div style="color: ${ bgColor }; border-radius: 3px; padding: 3px 3px; font-weight: bolder;">
-                            ${ _.capitalize(data) }
-                        </div>
-                    `
+                let bgColor = '#CE5018'
+                if (data == 'waitcheck' || data == 'pending') {
+                    bgColor = '#1B9063'
+                } else if (data == 'ready') {
+                    bgColor = '#1C9600'
+                } else if (data == 'started') {
+                    bgColor = '#0d6efd'
+                } else if (data == 'completed') {
+                    bgColor = '#afaf0c'
+                } else if (data == 'cancelled') {
+                    bgColor = '#5A33DD'
+                }
+                return `  
+                    <div style="color: ${ bgColor }; border-radius: 3px; padding: 3px 3px; font-weight: bolder;">
+                        ${ _.capitalize(data) }
+                    </div>
+                `
             }
         },
         {
@@ -2513,11 +2483,7 @@ const initUrgentTaskTable = function () {
                     if (full.operation.includes('Cancel')) {
                         if (![ 'started', 'completed', 'cancelled' ].includes(full.status.toLowerCase())) {
                             html += `<button type="button" class="btn btn-sm ms-1 custom-btn-gray" onclick="cancelIndent('${ data }', '${ full.id }')" title="Cancel">Cancel</button>`
-                            // if (moment(full.startTime).diff(moment()) >= 3600 * 1000) {
-                            // } else {
-                            //     html += `
-                            //     <button type="button" class="btn btn-sm ms-1 custom-btn-gray" style="cursor: not-allowed;" title="Cancel should < 1hr before start time.">Cancel</button>`
-                            // }
+                            
                         }
                     } 
                     if (full.operation.includes('Re-Assign')) {
@@ -2557,11 +2523,7 @@ const initUrgentTaskTable = function () {
                 params.pageNum = d.start
                 params.pageLength = d.length
 
-                // console.log(d.order)
-                // if (d.order[0].column == 3) {
-                //     params.sortBy = 'driverName'
-                //     params.sort = d.order[0].dir
-                // }
+                
                 
                 params.hub = $(".select-hub").val()
                 params.node = $(".select-node").val()

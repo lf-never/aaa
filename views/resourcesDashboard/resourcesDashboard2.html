@@ -37,9 +37,6 @@
             border: solid 2px #00FF14 !important;
         }
 
-        /* .active3 {
-            background-color: #00FF14 !important;
-        } */
 
         .resourceUsedByNode-image {
             text-align: right;
@@ -54,7 +51,6 @@
         }
         
         .border_corner{
-            /* z-index: 2500; */
             position: absolute;
             width: 12px;
             height: 12px;
@@ -100,7 +96,7 @@
             <div class="col-12 text-end">
                 <div class="row">
                     <div class="col-6 " style="text-align: left;">
-                        <label class="div-top-date-hub">Available Resource (Hub)</label>
+                        <span class="div-top-date-hub">Available Resource (Hub)</span>
                     </div>
                     <div class="col-6" style="display: flex;justify-content: flex-end;padding-right: 0;">
                         <input class="form-control input-height current-date custom-input screen-input" style="text-align: center;border: 0;width: 230px;" readonly/>
@@ -128,44 +124,27 @@
                 </div>
             </div>
         </div>
-        <!-- <div class="row px-0 mx-0 my-2">
-            <div class="col-12 text-center" style="background-color: #0F0D47;">
-                <label class="fw-bold">Resource Used By Node</label>
-            </div>
-        </div>
-        <div class="row px-0 mx-0">
-            <div class="col-12" style="border: solid 1px #0C407E;position: relative;">
-                <div class="border_corner border_corner_left_top"></div>
-                <div class="border_corner border_corner_right_top"></div>
-                <div class="border_corner border_corner_left_bottom"></div>
-                <div class="border_corner border_corner_right_bottom"></div>
-                <div class="resourceUsedByNode-image p-2">
-                    <img alt="" src="../images/resourcesDashboard/driver-orange.svg"> Driver &nbsp;&nbsp;
-                    <img alt="" src="../images/resourcesDashboard/vehicle-blue.svg"> Vehicle
-                </div>
-               <div class="resourceUsedByNode"></div>
-            </div>
-        </div> -->
+        
     
         <div class="row px-0 mx-0 my-2" style="height: 32px;">
             <div class="col-2 text-center div-node" style="width: 18%;">
                 <div style="background-color: #0F0D47;padding-right: 0.1rem;">
-                    <label class="fw-bold labelHub" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label> Nodes Availability
+                    <span class="fw-bold labelHub" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></span> Nodes Availability
                 </div>
             </div>
             <div class="col-10 text-center div-hub-node" style="background-color: #0F0D47;width: 82%;">
                 <div class="row" style="text-align: right;">
-                    <div class="col-3" style="padding-left: 0;"><label class="fw-bold2 labelHubNode" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label></div>
+                    <div class="col-3" style="padding-left: 0;"><span class="fw-bold2 labelHubNode" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></span></div>
                     <div class="col-9" style="padding-left: 0;">
-                        <label class="fw-bold2" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;">(Vehicle)&nbsp;&nbsp;</label>
-                        <label class="fw-bold2 labelLoanOutByVehicle" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label>
+                        <span class="fw-bold2" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;">(Vehicle)&nbsp;&nbsp;</span>
+                        <span class="fw-bold2 labelLoanOutByVehicle" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></span>
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <!-- <label class="fw-bold2 labelOnHold" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label> -->
+                       
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <label class="fw-bold2" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;">(Driver)&nbsp;&nbsp;</label>
-                        <label class="fw-bold2 labelLoanOutByDriver" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label>
+                        <span class="fw-bold2" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;">(Driver)&nbsp;&nbsp;</span>
+                        <span class="fw-bold2 labelLoanOutByDriver" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></span>
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <label class="fw-bold2 labelStatusInvalidByDriver" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></label>
+                        <span class="fw-bold2 labelStatusInvalidByDriver" style="color: #00FF14;font-weight: bold;font-size: 1.1rem;"></span>
                     </div>
                 </div>
                 
@@ -186,12 +165,9 @@
                             <div class="border_corner border_corner_left_bottom"></div>
                             <div class="border_corner border_corner_right_bottom"></div>
                             <div class="vehicle-total p-1" style="text-align: right;display: none;">
-                                 Total: <label class="vehicle-label2"></label>
+                                 Total: <span class="vehicle-label2"></span>
                             </div>  
                             <div class="resourceUsedByNode-image p-2" style="padding-top: 0 !important;">
-                                <!-- <div class="row">
-                                    <div class="col-12 p-2" style="text-align: center !important;">Vehicle Availability</div>
-                                </div> -->
                               
                             </div>
                             <div class="resourceUsedInWeeklyAvailabilityChart" style="height: 240px;"></div>
@@ -203,11 +179,9 @@
                             <div class="border_corner border_corner_right_top"></div>
                             <div class="border_corner border_corner_left_bottom"></div>
                             <div class="border_corner border_corner_right_bottom"></div>
-                            <div class="driver-total p-1" style="text-align: right;display: none;"> Total: <label class="driver-label2"></label></div>  
+                            <div class="driver-total p-1" style="text-align: right;display: none;"> Total: <span class="driver-label2"></span></div>  
                             <div class="resourceUsedByNode-image p-2" style="padding-top: 0 !important;">
-                                <!-- <div class="row">
-                                    <div class="col-12 p-2" style="text-align: center !important;">TO Availability</div>
-                                </div> -->
+
                                 
                             </div>
                             <div class="resourceUsedInWeeklyAvailabilityChart2" style="height: 240px;"></div>
@@ -224,8 +198,8 @@
                             <div class="row">
                                 <div class="col-6 p-2" style="text-align: left !important;">Current Usage</div>
                                 <div class="col-6 p-2">
-                                    <img alt="" src="../images/resourcesDashboard/driver-orange.svg"> Driver <label class="driver-label"></label> &nbsp;&nbsp;
-                                    <img alt="" src="../images/resourcesDashboard/vehicle-blue.svg"> Vehicle <label class="vehicle-label"></label>
+                                    <img alt="" src="../images/resourcesDashboard/driver-orange.svg"> Driver <span class="driver-label"></span> &nbsp;&nbsp;
+                                    <img alt="" src="../images/resourcesDashboard/vehicle-blue.svg"> Vehicle <span class="vehicle-label"></span>
                                 </div>
                             </div>
                         </div>

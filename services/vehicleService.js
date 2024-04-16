@@ -1837,7 +1837,7 @@ module.exports.markAsUnavailable = async function (req, res) {
         }
     } catch(error) {
         log.error(error);
-        return res.json(utils.response(0, error && error.message ? error.message : 'MarkAsUnavailable exec fail!'));  
+        return res.json(utils.response(0, error?.message ? error.message : 'MarkAsUnavailable exec fail!'));  
     }
 }
 
@@ -1876,7 +1876,7 @@ module.exports.cancelMarkAsUnavailable = async function (req, res) {
         return res.json(utils.response(1, 'Cancel MarkAsUnavailable Success!'));  
     } catch(error) {
         log.error(error);
-        return res.json(utils.response(0, error && error.message ? error.message : 'Cancel MarkAsUnavailable exec fail!'));  
+        return res.json(utils.response(0, error?.message ? error.message : 'Cancel MarkAsUnavailable exec fail!'));  
     }
 }
 
@@ -1956,7 +1956,7 @@ module.exports.getLeaveRecordByDate = async function (req, res) {
         return res.json(utils.response(1, {leaveRecord, operation: operationList}));  
     } catch(error) {
         log.error(error);
-        return res.json(utils.response(0, error && error.message ? error.message : 'getLeaveRecordByDate exec fail!'));  
+        return res.json(utils.response(0, error?.message ? error.message : 'getLeaveRecordByDate exec fail!'));  
     }
 }
 
@@ -2193,7 +2193,7 @@ module.exports.getUserVehicleSummaryList = async function (req, res) {
     }
 
     try {
-        let sql = ``;
+        let sql;
         if (currentUser.userType == "CUSTOMER") {
             sql = `
                 SELECT l.vehicleNo
@@ -2284,7 +2284,7 @@ module.exports.getVehicleEffectiveData = async function (req, res) {
         return res.json(utils.response(1, {taskList: effectiveTaskList, hotoList: effectiveHotoList, loanList: effectiveLoanList}));
     } catch (error) {
         log.error(error)
-        return res.json(utils.response(0, error && error.message ? error.message : 'getDriverEffectiveData fail!'));
+        return res.json(utils.response(0, error?.message ? error.message : 'getDriverEffectiveData fail!'));
     }
 }
 
@@ -2549,30 +2549,30 @@ const returnVehicleLoan = async function(vehicleNo, loanList, userId) {
     let errorMsg = '';
     try {
         for (let loanOut of loanList) {
-            loanOut = await loan.findByPk(loanOut.id);
-            if (loanOut) {
+            let dbloanOut = await loan.findByPk(loanOut.id);
+            if (dbloanOut) {
                 await sequelizeObj.transaction(async transaction => {
                     let newLoanRecord = {
-                        driverId: loanOut.driverId,
-                        vehicleNo: loanOut.vehicleNo,
-                        indentId: loanOut.indentId, 
-                        taskId: loanOut.taskId,
-                        startDate: loanOut.startDate,
-                        endDate: loanOut.endDate, 
-                        groupId: loanOut.groupId,
+                        driverId: dbloanOut.driverId,
+                        vehicleNo: dbloanOut.vehicleNo,
+                        indentId: dbloanOut.indentId, 
+                        taskId: dbloanOut.taskId,
+                        startDate: dbloanOut.startDate,
+                        endDate: dbloanOut.endDate, 
+                        groupId: dbloanOut.groupId,
                         returnDate: moment().format('YYYY-MM-DD HH:mm:ss'),
                         returnBy: userId,
-                        creator: loanOut.creator,
+                        creator: dbloanOut.creator,
                         returnRemark: 'System auto return when driver deactivate.',
-                        actualStartTime: loanOut.actualStartTime,
-                        actualEndTime: loanOut.actualEndTime,
-                        unitId: loanOut.unitId,
-                        activity: loanOut.activity,
-                        purpose: loanOut.purpose,
-                        createdAt: loanOut.createdAt
+                        actualStartTime: dbloanOut.actualStartTime,
+                        actualEndTime: dbloanOut.actualEndTime,
+                        unitId: dbloanOut.unitId,
+                        activity: dbloanOut.activity,
+                        purpose: dbloanOut.purpose,
+                        createdAt: dbloanOut.createdAt
                     };
                     await loanRecord.create(newLoanRecord);
-                    await loan.destroy({ where: { id: loanOut.id } });
+                    await loan.destroy({ where: { id: dbloanOut.id } });
                     await OperationRecord.create({
                         id: null,
                         operatorId: userId,
@@ -2589,13 +2589,13 @@ const returnVehicleLoan = async function(vehicleNo, loanList, userId) {
                 })
 
                 await sequelizeSystemObj.transaction(async transaction => {
-                    if(loanOut.groupId > 0){
+                    if(dbloanOut.groupId > 0){
                         await sequelizeSystemObj.query(`
-                            update job_task set taskStatus = 'Completed' where id = ${ loanOut.taskId }
+                            update job_task set taskStatus = 'Completed' where id = ${ dbloanOut.taskId }
                         `, { type: QueryTypes.UPDATE, replacements: [] })
                         let sysTask = await sequelizeSystemObj.query(`
                             SELECT tripId FROM job_task
-                            WHERE id = ${ loanOut.taskId } 
+                            WHERE id = ${ dbloanOut.taskId } 
                         `, { type: QueryTypes.SELECT })
                         let tripStatus = await sequelizeSystemObj.query(`
                             SELECT jt.taskStatus FROM job_task jt

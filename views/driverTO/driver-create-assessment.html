@@ -9,8 +9,8 @@
         <div class="row">
             <input id="driverAssessmentRecordId" value="" style="display: none;"/>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                <label class="info-title">Assessment</label><br>
-                <select class="form-select " id="driver-assessmentType-select">
+                <label class="info-title" for="driver-assessmentType-select">Assessment</label><br>
+                <select class="form-select " id="driver-assessmentType-select" name="driver-assessmentType-select"">
                   <option value="Category A Assessment">Category A Assessment</option>
                   <option value="Category B Assessment">Category B Assessment</option>
                   <option value="Category C Assessment">Category C Assessment</option>
@@ -20,13 +20,13 @@
             </div>
     
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                <label class="info-title">Date</label><br>
+                <label class="info-title" for="issueTime-input">Date</label><br>
                 <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;">
-                <input placeholder="" class="form-control issueTime-input" style="padding-left: 2rem;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly="" lay-key="35">
+                <input placeholder="" class="form-control issueTime-input" name="issueTime-input" style="padding-left: 2rem;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly="" lay-key="35">
             </div>
     
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-              <label class="info-title">Status</label><br>
+              <label class="info-title" for="assessmentStatus">Status</label><br>
               <input type="radio" name="assessmentStatus" value="Pass">&nbsp;&nbsp;Pass</input>
               <input style="margin-left: 10px;" type="radio" name="assessmentStatus" value="Fail">&nbsp;&nbsp;Fail</input>
             </div>

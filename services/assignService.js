@@ -102,13 +102,11 @@ let TaskUtils = {
                         driverFrom: 'transport'
                     }
                     if(!sysDriver) {
-                        driverObj.status = systemStatus ? systemStatus : 'Assigned'
+                        driverObj.status = systemStatus || 'Assigned';
                     }
                     await _SystemDriver.Driver.upsert(driverObj)
-                } else {
-                    if(!status){
-                        await _SystemTask.Task.update({ taskStatus: 'Assigned' }, { where: { id: taskId } })   
-                    } 
+                } else if (!status){
+                    await _SystemTask.Task.update({ taskStatus: 'Assigned' }, { where: { id: taskId } })
                 }
                 if(vehicle && vehicle != ''){
                     let sysVehicle = await _SystemVehicle.Vehicle.findOne({ where: { taskId: taskId } })
@@ -119,7 +117,7 @@ let TaskUtils = {
                         permitType: vehicle.permitType,
                     }
                     if(!sysVehicle) {
-                        vehicleObj.vehicleStatus = systemStatus ? systemStatus : 'available'
+                        vehicleObj.vehicleStatus = systemStatus || 'available'
                     }
                     await _SystemVehicle.Vehicle.upsert(vehicleObj)
                 }
@@ -158,17 +156,9 @@ let TaskUtils = {
         let locationList = await TaskUtils.GetDestination(newLocation);
         if(locationList.length > 0) locationList = Array.from(new Set(locationList.map(loc2 => { return loc2.locationName.toLowerCase() })));
         if(newLocation.length == 1){
-            if(locationList.length > 0) {
-                return true
-            } else {
-                return false
-            }
+            return locationList.length > 0
         } else if(newLocation.length > 1) {
-            if(locationList.length > 1) {
-                return true
-            } else {
-                return false
-            }
+            return locationList.length > 1
         } else {
             return false
         }
@@ -177,12 +167,10 @@ let TaskUtils = {
         let unitList = [];
         if (!hub) {
             unitList = await Unit.findAll({ where: { unit: { [Op.not]: null, } }, group: ['unit', 'subUnit'] })
+        } else if (node) {
+            unitList = await Unit.findAll({ where: { unit: hub, subUnit: node }, group: ['unit', 'subUnit'] })
         } else {
-            if (node) {
-                unitList = await Unit.findAll({ where: { unit: hub, subUnit: node }, group: ['unit', 'subUnit'] })
-            } else {
-                unitList = await Unit.findAll({ where: { unit: hub }, group: ['unit', 'subUnit'] })
-            }
+            unitList = await Unit.findAll({ where: { unit: hub }, group: ['unit', 'subUnit'] })
         }
         return unitList.map(unit => unit.id);
     },
@@ -200,11 +188,7 @@ let TaskUtils = {
             )
         `, { type: QueryTypes.SELECT, replacements: params });
         log.info(`leave driver ${ JSON.stringify(leaveDriverIds.length) }`)
-        if(leaveDriverIds.length > 0) {
-            return false
-        } else {
-            return true
-        }
+        return leaveDriverIds.length == 0;
     },
     verifyVehicleLeave: async function (vehicleNo, startDate, endDate) {
         let params = []; 
@@ -219,11 +203,7 @@ let TaskUtils = {
             : '(? >= startTime AND ? <= endTime) OR (? >= startTime AND ? <= endTime) OR (? < startTime AND ? > endTime) '}
             )
         `, { type: QueryTypes.SELECT, replacements: params });
-        if(leaveVehicleNos.length > 0) {
-            return false
-        } else {
-            return true
-        }
+        return leaveVehicleNos.length == 0;
     }, 
     initOperationRecord: async function(operatorId, taskId, beforeDriverId, afterDriverId, beforeVehicleNo, afterVehicleNo, businessType) {
         let typeName = null;
@@ -244,48 +224,14 @@ let TaskUtils = {
             businessType: businessType,
             businessId: taskId,
             optType: typeName,
-            beforeData: `${ beforeDriverId && beforeDriverId != '' ? `driverId:${ beforeDriverId },` : '' }${ beforeVehicleNo && beforeVehicleNo != '' ? `vehicleNo:${ beforeVehicleNo }` : '' }`,
-            afterData: `${ afterDriverId && afterDriverId != '' ? `driverId:${ afterDriverId },` : '' }${ afterVehicleNo && afterVehicleNo != '' ? `vehicleNo:${ afterVehicleNo }` : '' }`,
+            beforeData: `driverId:${ beforeDriverId }, vehicleNo:${ beforeVehicleNo }`,
+            afterData: `driverId:${ afterDriverId }, vehicleNo:${ afterVehicleNo}`,
             optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
             remarks: remarks
         }
         await OperationRecord.create(obj)
     },
     getClosestHubNodeListByLocation: async function (locationName, groupName) {
-        const checkParams = async function (locationName, groupName) {
-            // Check params null
-            if (!locationName || !groupName) {
-                let errorMessage = `getClosestHubNodeListByLocation: Location Name or Group Name is empty! (LocationName: ${ locationName }, groupName: ${ groupName })`
-                log.error(errorMessage)
-                throw errorMessage
-            }
-    
-            // check locationName exist
-            let location = await sequelizeSystemObj.query(` SELECT locationName, lat, lng FROM location WHERE locationName = ? `, { type: QueryTypes.SELECT, replacements: [ locationName ] })
-            if (!location || !location.length) {
-                let errorMessage = `Location Name ${ locationName } does not exist!`
-                log.error(errorMessage)
-                throw errorMessage
-            }
-
-            location = location[0]
-            return location
-        }
-        const checkOutHubNodeByDistance = async function (location) {
-            let result = []
-            let hubNodeList = await sequelizeObj.query(` SELECT id, unit AS hub, subUnit AS node, lat, lng, 'location' AS dataFrom FROM unit WHERE lat IS NOT NULL AND lng IS NOT NULL `, { type: QueryTypes.SELECT })
-            for (let hubNode of hubNodeList) {
-                let distance = utils.getPointDistance(location, { lat: hubNode.lat, lng: hubNode.lng })
-                hubNode.distance = distance
-            }
-
-            // sort by distance asc
-            result = _.sortBy(hubNodeList, function(o) { 
-				return o.distance;
-			});
-            return result
-        }
-
         try {
             // [ { hub: null, node: null }, ... ]
             let hubNodeList = [ ]
@@ -300,7 +246,7 @@ let TaskUtils = {
                 // log.warn(`Location Name ${ locationName } has no lat or lng.(Lat: ${ location.lat }, Lng: ${ location.lng })`)
                 // find out hub/node list by groupName
                 let result = await sequelizeObj.query(` SELECT id, unit AS hub, subUnit AS node , \`group\`, 'group' AS dataFrom FROM unit WHERE FIND_IN_SET( ?, \`group\` ) `, { type: QueryTypes.SELECT, replacements: [ groupName ] })
-                if (result && result.length) {
+                if (result?.length > 0) {
                     log.info(`Find out hub/node by groupName "${ groupName }".`)
                     hubNodeList = result
                 } else {
@@ -317,6 +263,7 @@ let TaskUtils = {
             log.info(`getClosestHubNodeListByLocation => ${ JSON.stringify(hubNodeList, null, 4) }`)
             return hubNodeList
         } catch (error) {
+            log.error(error);
             throw error
         }
     },
@@ -329,18 +276,18 @@ let TaskUtils = {
             where vl.status = 1 
         `
         let replacements1 = [];
-        if(endDate == null || endDate == ''){
-            leaveVehicleSql += `
-                and ((? >= vl.startTime AND ? <= vl.endTime) or (? <= vl.startTime))
-            `
-            replacements1.push(startDate, startDate, startDate)
-        } else {
+        if(endDate) {
             leaveVehicleSql += `
                 and ((? >= vl.startTime AND ? <= vl.endTime) 
                 OR (? >= vl.startTime AND ? <= vl.endTime) 
                 OR (? < vl.startTime AND ? > vl.endTime))
             `
             replacements1.push(startDate, startDate, endDate, endDate, startDate, endDate)
+        } else {
+            leaveVehicleSql += `
+                and ((? >= vl.startTime AND ? <= vl.endTime) or (? <= vl.startTime))
+            `
+            replacements1.push(startDate, startDate, startDate)
         }
         leaveVehicleSql += ` GROUP BY vl.vehicleNo`
         let leaveVehicle = await sequelizeObj.query(leaveVehicleSql, { type: QueryTypes.SELECT, replacements: replacements1 })
@@ -372,18 +319,18 @@ let TaskUtils = {
             where vehicleNo is not null
         `
         let replacements3 = []
-        if(endDate == null || endDate == ''){
-            hotoVehicleListByNotScopeSql += `
-                and ((? >= startDateTime AND ? <= endDateTime)  OR (? <= startDateTime))
-            `
-            replacements3.push(startDate, startDate, startDate)
-        } else {
+        if(endDate){
             hotoVehicleListByNotScopeSql += `
                 and ((? >= startDateTime AND ? <= endDateTime) 
                 OR (? >= startDateTime AND ? <= endDateTime) 
                 OR (? < startDateTime AND ? > endDateTime))
             `
             replacements3.push(startDate, startDate, endDate, endDate, startDate, endDate)
+        } else {
+            hotoVehicleListByNotScopeSql += `
+                and ((? >= startDateTime AND ? <= endDateTime)  OR (? <= startDateTime))
+            `
+            replacements3.push(startDate, startDate, startDate)
         }
         if(startDate && endDate) {
             hotoVehicleListByNotScopeSql += `
@@ -421,20 +368,6 @@ let TaskUtils = {
             taskVehicle = taskVehicle.map(item => item.vehicleNo)
             log.warn(`task vehicleList ${ JSON.stringify(taskVehicle) }`)
         }
-        if(noOfDriver == 0){
-            // 2023-07-14 hoto vehicle not loan out
-            // hotoVehicle = await sequelizeObj.query(`
-            //     SELECT vehicleNo FROM hoto 
-            //     WHERE vehicleNo IS NOT NULL 
-            //     AND (('${ startDate }' >= startDateTime AND '${ startDate }' <= endDateTime) 
-            //     OR ('${ endDate }' >= startDateTime AND '${ endDate }' <= endDateTime) 
-            //     OR ('${ startDate }' < startDateTime AND '${ endDate }' > endDateTime)
-            //     OR '${ startDate }' >= startDateTime) and status = 'Approved'
-            //     GROUP BY vehicleNo
-            // `, { type: QueryTypes.SELECT })
-            // hotoVehicle = hotoVehicle.map(item => item.vehicleNo)
-            // log.warn(`hoto vehicelList ${ JSON.stringify(hotoVehicle) }`)
-        }
         let excludeVehicle = leaveVehicle.concat(taskVehicle).concat(loanOutVehicle).concat(hotoVehicle).concat(hotoVehicleListByNotScope)    
         excludeVehicle = excludeVehicle.map(item => item);
         excludeVehicle = Array.from(new Set(excludeVehicle))
@@ -450,16 +383,16 @@ let TaskUtils = {
                     select ho.vehicleNo, ho.unitId, ho.toHub, ho.toNode from hoto ho where ho.status = 'Approved'
         `
         let replacementsByvehicleList = []
-        if(endDate == null || endDate == '') {
-            vehicleListSql += `
-                and (? >= ho.startDateTime AND ? <= ho.endDateTime)
-            `
-            replacementsByvehicleList.push(startDate, startDate)
-        } else {
+        if(endDate) {
             vehicleListSql += `
                 and (? >= ho.startDateTime AND ? <= ho.endDateTime)
             `
             replacementsByvehicleList.push(startDate, endDate)
+        } else {
+            vehicleListSql += `
+                and (? >= ho.startDateTime AND ? <= ho.endDateTime)
+            `
+            replacementsByvehicleList.push(startDate, startDate)
         }
         vehicleListSql += ` ) h ON h.vehicleNo = a.vehicleNo 
         where a.groupId is null
@@ -684,15 +617,14 @@ let TaskUtils = {
         try {
             if(!serverTaskId) serverTaskId = job_taskId
             let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: serverTaskId } })
-            if(loan2ByTaskId) throw 'The operation failed because the current data status has changed.';
+            if(loan2ByTaskId) throw new Error('The operation failed because the current data status has changed.');
             let checkTask = await Task.findOne({ where: { taskId: serverTaskId } })
             if(checkTask) {
-                if(checkTask.mobileStartTime) throw 'The task has started disabling operations.'
+                if(checkTask.mobileStartTime) throw new Error('The task has started disabling operations.')
             }        
             if(node == '-') node = null
             let driver = null;
             let vehicle = null;
-            let vehicleType;
             let taskObj = await this.getDriverIdAndVehicleNoByTaskId(serverTaskId);
             let loanObj = await this.getLoanByTaskId(serverTaskId);
 
@@ -722,7 +654,7 @@ let TaskUtils = {
             // }
             //if location 
             let state = await this.verifyLocation(systemTask.pickupDestination, systemTask.dropoffDestination);
-            if(!state) throw `Location does not exist, allocation failed.`;
+            if(!state) throw new Error(`Location does not exist, allocation failed.`);
             let systemRequest = await _SystemRequest.Request.findByPk(systemTask.requestId);
 
             await sequelizeSystemObj.transaction(async transaction => {
@@ -743,25 +675,21 @@ let TaskUtils = {
             let option = { taskId: job_taskId, driver, vehicle, status: false, systemStatus: systemStatus ?? null }
             let result = await this.assignTaskBySystem(option)
             if (result.code != 1)  throw result.message;
-            if(taskObj){
-                if(taskObj.driverId){
-                    if(taskObj.driverId != driverId) {
-                        await FirebaseService.createFirebaseNotification2([{
-                            taskId: serverTaskId,
-                            token: '',
-                            driverId: taskObj.driverId,
-                            vehicleNo: taskObj.vehicleNumber
-                        }], 'INFO', 'Task cancelled.')
-                    }
-                }
+            if(taskObj?.driverId != driverId) {
+                await FirebaseService.createFirebaseNotification2([{
+                    taskId: serverTaskId,
+                    token: '',
+                    driverId: taskObj.driverId,
+                    vehicleNo: taskObj.vehicleNumber
+                }], 'INFO', 'Task cancelled.')
             }
             await sequelizeObj.transaction(async transaction => {
                 let checkTask2 = await Task.findOne({ where: { taskId: serverTaskId } })
                 if((systemTask.noOfDriver >= systemTask.driverNo && systemTask.vehicleType != '-') || checkTask2){
                     let task = { 
                         taskId: serverTaskId, 
-                        driverId: driverId ? driverId : null, 
-                        vehicleNumber: vehicleNo ? vehicleNo : null, 
+                        driverId: driverId || null, 
+                        vehicleNumber: vehicleNo || null, 
                         indentId: systemTask.tripNo, 
                         indentStartTime: systemTask.periodStartDate, 
                         indentEndTime: systemTask.periodEndDate ? systemTask.periodEndDate : '', 
@@ -780,46 +708,44 @@ let TaskUtils = {
                         task.creator = userId
                     }
                     await Task.upsert(task)
-                } else {
-                    if(driverId || vehicleNo){
-                        let loanByTaskId = await loan.findOne({ where: { taskId: serverTaskId } })
-                        if(loanByTaskId) {
-                            if(loanByTaskId.driverId && !driverId) {
-                                await loan.destroy({ where: { taskId: serverTaskId } });
-                            }
-                            if(loanByTaskId.vehicleNo && !vehicleNo) {
-                                await loan.destroy({ where: { taskId: serverTaskId } });
-                            }
+                } else if(driverId || vehicleNo){
+                    let loanByTaskId = await loan.findOne({ where: { taskId: serverTaskId } })
+                    if(loanByTaskId) {
+                        if(loanByTaskId.driverId && !driverId) {
+                            await loan.destroy({ where: { taskId: serverTaskId } });
                         }
-                        let loanByTaskId2 = await loan.findOne({ where: { taskId: serverTaskId } })
-                        if(loanByTaskId2) {
-                            await loan.update({  
-								taskId: serverTaskId,
-                                indentId: systemTask.tripNo, 
-                                driverId: driverId ? driverId : null,
-                                vehicleNo: vehicleNo ? vehicleNo : null, 
-                                startDate: systemTask.periodStartDate, 
-                                endDate: systemTask.periodEndDate, 
-                                groupId: systemTask.groupId,
-                                unitId: unitId,
-                                purpose: (systemRequest ? systemRequest.purposeType : '' ),
-                                activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
-                            }, { where: { taskId: serverTaskId } })
-                        } else {
-                            await loan.create({  
-                                taskId: serverTaskId,
-                                indentId: systemTask.tripNo, 
-                                driverId: driverId ? driverId : null,
-                                vehicleNo: vehicleNo ? vehicleNo : null, 
-                                startDate: systemTask.periodStartDate, 
-                                endDate: systemTask.periodEndDate, 
-                                groupId: systemTask.groupId,
-                                unitId: unitId,
-                                purpose: (systemRequest ? systemRequest.purposeType : '' ),
-                                activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
-                                creator: userId
-                            })
+                        if(loanByTaskId.vehicleNo && !vehicleNo) {
+                            await loan.destroy({ where: { taskId: serverTaskId } });
                         }
+                    }
+                    let loanByTaskId2 = await loan.findOne({ where: { taskId: serverTaskId } })
+                    if(loanByTaskId2) {
+                        await loan.update({  
+                            taskId: serverTaskId,
+                            indentId: systemTask.tripNo, 
+                            driverId: driverId || null,
+                            vehicleNo: vehicleNo || null, 
+                            startDate: systemTask.periodStartDate, 
+                            endDate: systemTask.periodEndDate, 
+                            groupId: systemTask.groupId,
+                            unitId: unitId,
+                            purpose: (systemRequest ? systemRequest.purposeType : '' ),
+                            activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
+                        }, { where: { taskId: serverTaskId } })
+                    } else {
+                        await loan.create({  
+                            taskId: serverTaskId,
+                            indentId: systemTask.tripNo, 
+                            driverId: driverId || null,
+                            vehicleNo: vehicleNo || null, 
+                            startDate: systemTask.periodStartDate, 
+                            endDate: systemTask.periodEndDate, 
+                            groupId: systemTask.groupId,
+                            unitId: unitId,
+                            purpose: (systemRequest ? systemRequest.purposeType : '' ),
+                            activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
+                            creator: userId
+                        })
                     }
                 }
                 
@@ -945,7 +871,10 @@ let TaskUtils = {
                 where jt.id  = ?
             `, { type: QueryTypes.SELECT, replacements: [ taskId ] })
             log.warn('system INDENT type ===> '+JSON.stringify(systemIndent))
-            return systemIndent ? systemIndent[0] ? systemIndent[0].referenceId : null : null;
+            if (systemIndent?.length > 0) {
+                return systemIndent[0].referenceId;
+            }
+            return null;
         } catch (error) {
             log.error(error)
         }
@@ -1027,7 +956,6 @@ module.exports = {
             let node = req.body.node;
             let unitId = req.body.unitId;
             let noOfVehicle =  req.body.noOfVehicle
-            let dataType = req.body.dataType;
             if (!userId) return res.json(utils.response(0, `UserID ${ userId } does not exist!.`));
             if(unitId){
                 let unitOjb = await Unit.findOne({ where: { id: unitId } })
@@ -1053,9 +981,7 @@ module.exports = {
             let hub = req.body.hub;
             let node = req.body.node;
             let unitId = req.body.unitId;
-            let taskId = req.body.taskId;
             let noOfDriver = req.body.noOfDriver;
-            let dataType = req.body.dataType;
             let purpose = req.body.purpose;
             if (!userId) return res.json(utils.response(0, `UserID ${ userId } does not exist!.`));  
             if(node == '-' || !node) node = null
@@ -1133,7 +1059,7 @@ module.exports = {
             } else {
                 unit = await Unit.findOne({where: { unit: hub, subUnit: { [Op.is]: null } }})
             }
-            if(!unit) throw `The hub/node does not exist.`;
+            if(!unit) throw new Error(`The hub/node does not exist.`);
             let result = await TaskUtils.assignTaskByTaskId(taskId, driverId, vehicleNo, hub, node, unit.id, req.cookies.userId);
             if (result.code == 0)  return res.json(utils.response(0, result.message));
             return res.json(utils.response(1, true));
@@ -1402,13 +1328,13 @@ module.exports = {
         return res.json(utils.response(1, 'success'));
     },
     reassignMvTaskApprove: async function(req, res) {
-        let { dataType, taskId, optType, remarks } = req.body;
+        let { dataType, taskId, optType } = req.body;
         let preTaskId = taskId;
         if(dataType.toLowerCase() == 'atms') preTaskId = 'AT-'+preTaskId;
         let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: preTaskId } })
         if(loan2ByTaskId) return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
         let checkTask = await Task.findOne({ where: { taskId: preTaskId } })
-        if(checkTask && checkTask.mobileStartTime) {
+        if(checkTask?.mobileStartTime) {
             return res.json(utils.response(0, 'The task has started disabling operations.'));
         }        
         
@@ -1599,8 +1525,7 @@ module.exports = {
             if(taskObj){
                 taskId = taskObj.taskId;
                 if(taskObj.mobileStartTime || (taskObj.vehicleStatus).toLowerCase() == 'cancelled') return res.json(utils.response(0, `The operation failed because the state of the data has changed.`));
-            } 
-            let loanObj = await TaskUtils.getLoanByTaskId(`${ taskId }`);
+            }
             let loanObjStatus = await loan.findOne({where: { taskId: 'AT-'+mtAdminID }});
             let loanObj2Status = await loanRecord.findOne({where: { taskId: 'AT-'+mtAdminID }});
             if(loanObjStatus || loanObj2Status) {
@@ -1669,8 +1594,8 @@ module.exports = {
                             businessType: 'atms task assign',
                             businessId: 'AT-'+mtAdminID,
                             optType: 'cancel loan',
-                            beforeData: `${ loanOut.driverId && loanOut.driverId != '' ? `driverId:${ loanOut.driverId },` : '' }${ loanOut.vehicleNo && loanOut.vehicleNo != '' ? `vehicleNo:${ loanOut.vehicleNo }` : '' }`,
-                            afterData: `${ loanOut.driverId && loanOut.driverId != '' ? `driverId:${ loanOut.driverId },` : '' }${ loanOut.vehicleNo && loanOut.vehicleNo != '' ? `vehicleNo:${ loanOut.vehicleNo }` : '' }`,
+                            beforeData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
+                            afterData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
                             optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                             remarks: `cancel loan ${ loanOut.driverId ? 'driver' : '' }${ loanOut.vehicleNo ? 'vehicle' : '' }` 
                         })
@@ -1722,8 +1647,6 @@ module.exports = {
             let bothNum = bothTaskList.length;
             let toOnlyNum = toOnlyTaskList.length;
             let vehicleOnlyNum = vehicleOnlyTaskList.length;
-            // let driverNum = bothNum > 0 ? bothNum : toOnlyNum;
-            // let vehicleNum = bothNum > 0 ? vehicleOnlyNum > 0 ? bothNum + vehicleOnlyNum : bothNum : vehicleOnlyNum;
             if(taskData.length <= 0) return res.json(utils.response(1, `trip does not exist.`));
             let hubNodeList = await TaskUtils.getClosestHubNodeListByLocation(taskData[0].pickupDestination, taskData[0].groupName)
             if(hubNodeList.length <= 0) return res.json(utils.response(1, `No hub, node available.`));
@@ -1821,20 +1744,18 @@ module.exports = {
                                     // 2024-02-20 atms indent resp
                                     await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
                                 }
-                            } else {
-                                if(newRequestList[index2].driverId || newRequestList[index2].vehicleNo){
-                                    let result = await TaskUtils.assignTaskByTaskId(taskData[index].id, 
-                                        newRequestList[index2].driverId ?? null, 
-                                        newRequestList[index2].vehicleNo ?? null, 
-                                        newRequestList[index2].hub, 
-                                        newRequestList[index2].node,
-                                        newRequestList[index2].unitId,
-                                        0, 'Assigned (System)', preMvTaskId
-                                        );
-                                    if (result.code == 0)  return res.json(utils.response(0, result.message));
-                                    // 2024-02-20 atms indent resp
-                                    await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
-                                }
+                            } else if(newRequestList[index2].driverId || newRequestList[index2].vehicleNo){
+                                let result = await TaskUtils.assignTaskByTaskId(taskData[index].id, 
+                                    newRequestList[index2].driverId ?? null, 
+                                    newRequestList[index2].vehicleNo ?? null, 
+                                    newRequestList[index2].hub, 
+                                    newRequestList[index2].node,
+                                    newRequestList[index2].unitId,
+                                    0, 'Assigned (System)', preMvTaskId
+                                    );
+                                if (result.code == 0)  return res.json(utils.response(0, result.message));
+                                // 2024-02-20 atms indent resp
+                                await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
                             }
                         } else {
                             continue;

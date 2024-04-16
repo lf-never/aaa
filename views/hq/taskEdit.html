@@ -31,6 +31,7 @@
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-0">
           <div class="modal-header modal-header-background">
+             <h5 class="modal-title">New Task</h5>
               <button type="button" class="btn-close btn-close-white mtAdminCancel" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -52,7 +53,7 @@
                               </div>
                           </div>
                           <div class="mb-2 row">
-                            <label class="col-sm-5 col-form-label">Request Type:</label>
+                            <label class="col-sm-5 col-form-label" for="requestType">Request Type:</label>
                             <div class="col-sm-7">
                                 <select class="form-select requestType-select" name="requestType">
                                     <option value="2">Both</option>
@@ -70,13 +71,13 @@
                               </div>
                           </div>
                           <div class="mb-2 row hub-select-row" style="display: none;">
-                            <label class="col-sm-5 col-form-label">Hub:</label>
+                            <label class="col-sm-5 col-form-label" for="hub">Hub:</label>
                             <div class="col-sm-7">
                                 <select class="form-select hub-select" name="hub"></select>
                             </div>
                         </div>
                         <div class="mb-2 row node-select-row" style="display: none;">
-                            <label class="col-sm-5 col-form-label">Node:</label>
+                            <label class="col-sm-5 col-form-label" for="node">Node:</label>
                             <div class="col-sm-7">
                                 <select class="form-select node-select" name="node"></select>
                             </div>
@@ -92,7 +93,7 @@
                                       <div class="col-sm-7" id="category-radio">
                                         <div class="form-check">
                                           <input class="form-check-input" type="radio" name="category" id="MV" value="MV" checked>
-                                          <label class="form-check-label" for="MV">MV</label>
+                                          <label for="category-for" class="form-check-label" for="MV">MV</label>
                                         </div>
                                       </div>
                                   </div>
@@ -107,13 +108,13 @@
                                   
                                   <div class="mb-2 row mt-2" id="date-select">
                                     <div class="col-sm-5 mb-2">
-                                      <label class="col-form-label mb-2">Start Date:</label>
+                                      <label class="col-form-label mb-2" for="periodStartDate">Start Date:</label>
                                     </div>
                                     <div class="col-sm-7 mb-2">
                                       <input class="form-control" id="periodStartDate" name="periodStartDate" autocomplete="off" lay-key="8" readonly>
                                     </div>
                                     <div class="col-sm-5 mb-2">
-                                      <label class="col-form-label mb-2">End Date:</label>
+                                      <label class="col-form-label mb-2" for="periodEndDate">End Date:</label>
                                     </div>
                                     <div class="col-sm-7 mb-2">
                                       <input class="form-control" id="periodEndDate" name="periodEndDate" autocomplete="off" lay-key="9" readonly>
@@ -208,35 +209,7 @@
                                           </div>
                                       </div>
                                   </div>
-                                  <!-- <div class="mb-2 row">
-                                      <label for="pocName" class="col-sm-5 col-form-label">POC:</label>
-                                      <div class="col-sm-7">
-                                          <input class="form-control" id="pocName" name="pocName"
-                                              autocomplete="off">
-                                      </div>
-                                  </div> -->
-                                  <!-- <div class="mb-2 row">
-                                      <label for="contactNumber" class="col-sm-5 col-form-label">Mobile
-                                          Number:</label>
-                                      <div class="col-sm-7">
-                                          <div class="input-group">
-                                              <span class="input-group-text" id="contactNumberPrefix">+65</span>
-                                              <input type="text" class="form-control" id="contactNumber" name="contactNumber" autocomplete="off" onKeypress="return (/[\d]/.test(String.fromCharCode(event.keyCode)))">
-                                          </div>
-                                      </div>
-                                  </div> -->
-                        
-                                  <!-- <div class="mb-2 row" id="serviceProviderSelect">
-          
-                                  </div> -->
-                                  <!-- <div class="mb-3 row">
-                                      <label for="tripRemarks" class="col-sm-5 col-form-label">Trip Remarks:</label>
-                                      <div class="col-sm-7">
-                                          <textarea rows="2" class="form-control" id="tripRemarks" name="tripRemarks"
-                                              placeholder="<5 days require justification"
-                                              autocomplete="off" disabled></textarea>
-                                      </div>
-                                  </div> -->
+                                 
                               </div>
                           </form>
                       </div>

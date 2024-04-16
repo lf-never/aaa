@@ -175,7 +175,6 @@
         .alert-danger{
             border:solid 1px #E53A40;
             background-color: #FAE1E2;
-            /* color: black; */
             font-weight: bold;
             color: rgb(212, 2, 2);
         }
@@ -225,9 +224,7 @@
                         <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="driver-task">Driver Task</button>
                     <% } %>
                     <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="mtRac">MT RAC</button>
-                    <!-- <% if (userType.toLowerCase() !== 'customer') { %> -->
-                        <!-- <button class="btn btn-dashboard btn-light me-4" data-item="incident">Incident</button> -->
-                    <!-- <% } %> -->
+
                     <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="odd">ODD</button>
                     <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="survey">Survey</button>
                     <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="cv-loan">Sys Loan Task</button>
@@ -263,7 +260,7 @@
                         </div>
                     <% } %>
                     <% if (userType.toLowerCase() === 'hq' || userType.toLowerCase() === 'customer' || userType.toLowerCase() === 'administrator') { %>
-                        <div class="customer-button col-auto" style="line-height: 40px;;">
+                        <div class="customer-button col-auto" style="line-height: 40px;">
                             <input class="form-check-input" style="margin-top: 12px; margin-right: 5px; cursor: pointer;" <%= userType.toLowerCase() === 'customer' ? 'checked="true"' : '' %> type="checkbox" value="" id="select-customer">
                             <label class="form-check-label" style="font-weight: bold;" for="select-customer">
                                 Customer
@@ -367,7 +364,7 @@
                         <input id="oddId" value="" style="display: none;"/>
                 
                         <div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-                            <label class="info-title">Remarks:</label><br>
+                            <label class="info-title" for="background-remarks-for">Remarks:</label><br>
                             <textarea rows="3" class="form-control odd-remarks-input" lay-key="5"></textarea>
                         </div>
                     </div>

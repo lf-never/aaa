@@ -153,7 +153,7 @@ const initMarkAsUnAvailablePage = async function(vehicleNo, date, endDate) {
     });
 
     layui.use('laydate', function () {
-        laydate = layui.laydate;
+        let laydate = layui.laydate;
         laydate.render({
             elem: '#markAsUnavailable-date-from',
             lang: 'en',

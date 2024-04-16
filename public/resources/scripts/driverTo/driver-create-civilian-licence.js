@@ -168,7 +168,7 @@ const addOrEditCivilianLicence = async function(){
     let civilianLicenceObj = {
         civilianLicence: $('#driver-licence').val() ?? null,
         dateOfIssue: $('.lssueDate-input').val() ?? null,
-        cardSerialNumber: $('.cardSerialNo-input').val() ? $('.cardSerialNo-input').val() : cardSerialNo ? cardSerialNo : null
+        cardSerialNumber: $('.cardSerialNo-input').val() ? $('.cardSerialNo-input').val() : (cardSerialNo ?? null)
     }
     let state = checkField(civilianLicenceObj);
     civilianLicenceObj.dateOfIssue = civilianLicenceObj.dateOfIssue ? moment(civilianLicenceObj.dateOfIssue, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;

@@ -3,8 +3,7 @@
     * {
         margin: 0;
         padding: 0;
-        /* border: 0; */
-        font-family: 'Inter'
+        font-family: 'Inter', sans-serif;
     }
     .row {
         --bs-gutter-x: 0;
@@ -76,14 +75,14 @@
         <div class="modal-body" style="padding-bottom: 2rem;">
           <div class="row">
             <div class="content-div pb-5" style="overflow-y: auto; height: calc(100% - 45px)">
-                <label class="currentTripId" style="display: none;"></label>
+                <span class="currentTripId" style="display: none;"></span>
                 <div class="container-fluid px-3 mt-3">
                     <div style="background-color: white; box-shadow: 2px 2px 5px #8b8b8b; border-radius: 8px; border-top: 12px solid #1d6348;"
                         class="pt-2 pb-1">
                         <div class="px-3">
                             <div class="row mt-2">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Purpose*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-purpose-for">Purpose*</label>
                                 </div>
                             </div>
                             <div class="row">
@@ -96,7 +95,7 @@
                             </div>
                             <div class="row mt-2">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Date Time Start*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-startTime-for">Date Time Start*</label>
                                 </div>
                             </div>
                             <div class="row" id="startTimeCalender">
@@ -108,7 +107,7 @@
             
                             <div class="row mt-2">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Date Time End*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-endTime-for">Date Time End*</label>
                                 </div>
                             </div>
                             <div class="row" id="endTimeCalender">
@@ -119,7 +118,7 @@
                             </div>
                             <div class="row mt-2">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Vehicle*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-vehicle-for">Vehicle*</label>
                                 </div>
                             </div>
                             <div class="row">
@@ -141,7 +140,7 @@
                             </div>
                             <div class="row mt-2">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Reporting Location*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-reportingLocation-for">Reporting Location*</label>
                                 </div>
                             </div>
                             <div class="row">
@@ -164,7 +163,7 @@
             
                             <div class="row mt-3">
                                 <div class="col-12">
-                                    <label class="custom-size3 custom-color1 py-1">Destination*</label>
+                                    <label class="custom-size3 custom-color1 py-1" for="mobileTask-detination-for">Destination*</label>
                                 </div>
                             </div>
                             <div class="row">

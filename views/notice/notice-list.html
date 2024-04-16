@@ -144,7 +144,6 @@
         padding-left: 1rem !important;
     }
     .jconfirm .jconfirm-box div.jconfirm-closeIcon {
-        /* display: block !important; */
         color: white;
         top: 15px;
     }
@@ -167,8 +166,9 @@
             </div>
             <div id="notice-detail">
                 <div class="row m-0 align-items-center notice-detail-back">
-                    <img alt="" class="img-back cursor-pointer" src="/images/resourcesDashboard/left.png"
-                        onclick="NoticeUtil.backNoticeList()" role="button">
+                    <button class="img-back cursor-pointer" onclick="NoticeUtil.backNoticeList()">  
+                        <img alt="" class="img-back cursor-pointer" src="/images/resourcesDashboard/left.png"/> 
+                    </button>
                 </div>
                 <div class="m-0 overflow-y-auto" style="height: calc(100% - 30px); padding: 0 10px;max-width: 500px;">
                     <div class="row m-0 py-3">

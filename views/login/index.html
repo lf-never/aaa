@@ -83,7 +83,6 @@
             }
             .form-control:focus, input.form-control:focus{
                 border-color:#3EA3AC;
-                box-shadow: none;
                 color: #3EA3AC;
                 border-width: 0 !important;
                 border-bottom: solid 2px #3EA3AC !important;
@@ -135,12 +134,12 @@
                         <td>
                             <div class="login-content mb-1 p-5">
                                 <div class="mb-3 px-5">
-                                    <label class="form-label">Name</label>
-                                    <input type="text" id="username" class="form-control"  placeholder="" autocomplete="off">
+                                    <label class="form-label" for="username">Name</label>
+                                    <input type="text" id="username" name="username" class="form-control"  placeholder="" autocomplete="off">
                                 </div>
                                 <div class="mb-3 px-5">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" id="password" class="form-control"  placeholder="" autocomplete="off">
+                                    <label class="form-label" for="password">Password</label>
+                                    <input type="password" id="password" name="password" class="form-control"  placeholder="" autocomplete="off">
                                 </div>
                                 <div class="mb-3 px-5">
                                     <p class="text-end"><a href="#" style="color: #316b8c;">Forgot Password?</a></p>

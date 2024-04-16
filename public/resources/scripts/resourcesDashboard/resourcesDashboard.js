@@ -391,7 +391,7 @@ const initDriverClassAndVehicleClass = function(driverClass, vehicleClass){
             initBusOrPersonnelPageHub(driverByHubData)
         }
     } 
-    if(driverClass && driverClass.length > 0){
+    if(driverClass?.length > 0){
         driverClass = driverClass.map(driver => { return driver });
         driverClass = Array.from(new Set(driverClass));
         let num = driverClass.length
@@ -413,7 +413,7 @@ const initDriverClassAndVehicleClass = function(driverClass, vehicleClass){
         }
     }
 
-    if(vehicleClass && vehicleClass.length > 0){
+    if(vehicleClass?.length > 0){
         vehicleClass = vehicleClass.map(vehicle => { return vehicle });
         vehicleClass = Array.from(new Set(vehicleClass));
         let num = vehicleClass.length

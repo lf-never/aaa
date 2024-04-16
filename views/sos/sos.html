@@ -176,7 +176,6 @@
         .alert-danger{
             border:solid 1px #E53A40;
             background-color: #FAE1E2;
-            /* color: black; */
             font-weight: bold;
             color: rgb(212, 2, 2);
         }
@@ -209,8 +208,7 @@
                 <div class="tab-list" style="float: left;">
                     <button class="btn btn-sm btn-dashboard btn-light active me-4" data-item="Incident">Incident</button>
                     <button class="btn btn-sm btn-dashboard btn-light me-4" data-item="Breakdown">Breakdown</button>
-                    <!-- <button class="btn btn-dashboard btn-light me-4" data-item="Hazard/Near Miss Report">Hazard/Near Miss Report</button>
-                    <button class="btn btn-dashboard btn-light me-4" data-item="Road Closure">Road Closure</button> -->
+ 
                 </div>
                 <div class="filter row justify-content-start pt-2">
                     <div class="col-auto pt-2">
@@ -229,16 +227,18 @@
                         </div>
                     <% } %>
                     <% if ( [ 'hq', 'administrator', 'customer' ].includes(userType.toLowerCase())) { %>
-                        <div class="customer-button col-auto" style="line-height: 40px;;">
+                        <div class="customer-button col-auto" style="line-height: 40px;">
                             <input class="form-check-input" style="margin-top: 12px; margin-right: 5px; cursor: pointer;" type="checkbox" <%= userType.toLowerCase() === 'customer' ? 'checked="true"' : '' %> value="" id="select-customer">
                             <label class="form-check-label" style="font-weight: bold;" for="select-customer">
                                 Customer
                             </label>
                         </div>
-                        <div class="col-auto pt-2 user-group-params show-group-select" style="<%= userType.toLowerCase() === 'customer' ? '' : 'display: none;' %>">
-                            <select class="form-select select-group py-0" placeholder="Group">
-                            </select>
-                        </div>
+                        <%if (userType.toLowerCase() != 'customer'){ %>
+                            <div class="col-auto pt-2 user-group-params show-group-select">
+                                <select class="form-select select-group py-0" placeholder="Group">
+                                </select>
+                            </div>
+                        <% } %>
                     <% } %>
                     <div class="col-auto pt-2" style="position: relative;">
                         <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 2px;margin-left: 0.3rem;"/>
@@ -268,8 +268,8 @@
                         <input id="oddId" value="" style="display: none;"/>
                 
                         <div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-                            <label class="info-title">Remarks:</label><br>
-                            <textarea rows="3" class="form-control odd-remarks-input" lay-key="5"></textarea>
+                            <label class="info-title" for="odd-remarks-input">Remarks:</label><br>
+                            <textarea rows="3" class="form-control odd-remarks-input" name="odd-remarks-input" lay-key="5"></textarea>
                         </div>
                     </div>
                 </div>

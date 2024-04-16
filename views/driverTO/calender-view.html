@@ -24,11 +24,7 @@
 <link rel="stylesheet" href="../transfer/transfer.css">
 <script type="text/javascript" src="../transfer/transfer.js"></script>
 
-<!-- <link rel="stylesheet" href="../leaflet/dist/leaflet.css">
-<link rel="stylesheet" href="../leaflet-contextmenu/dist/leaflet.contextmenu.min.css">
-<script type="text/javascript" src="../leaflet/dist/leaflet.js"></script>
-<script type="text/javascript" src="../leaflet-contextmenu/dist/leaflet.contextmenu.min.js"></script>
-<script type="text/javascript" src="../MovingMarker.js"></script> -->
+
 
 <link rel="stylesheet" href="../css/common-style.css">
 <link rel="stylesheet" href="../css/common-bootstrap.css">
@@ -164,7 +160,7 @@
 	}
 	.driver-leave {
 		background-color: #f1b9b9 !important;
-		/* border: solid 1px #ce0a0a; */
+
 	}
 
 	.layui-laydate {
@@ -176,12 +172,12 @@
 	<div class="container-fluid">
 		<div class="row mx-0 justify-content-between" style="line-height: 40px;">
 			<div class="col-sm-4 col-md-4 col-lg-3 col-xl-2" id="selectedMonth123">
-				<label class="selectedMonth user-select-none"></label>
+				<span class="selectedMonth user-select-none"></span>
 				<img alt="" class="arrow-img" style="margin-top: -4px;margin-left: 10px;" src="../scripts/driverTo/icons/arrow-down.svg">
 			</div>
 			<div class="col-sm-4 col-md-4 col-lg-3 col-xl-2" style="text-align: right;">
 				<img alt="" class="arrow-img pre-week" style="margin-top: -4px;margin-right: 10px;" src="../scripts/driverTo/icons/arrow-left.svg">
-				<label class="selectedWeek user-select-none"></label>
+				<label class="selectedWeek user-select-none" for="selectedWeek-for"></label>
 				<img alt="" class="arrow-img next-week" style="margin-top: -4px;margin-left: 10px;" src="../scripts/driverTo/icons/arrow-right.svg">
 			</div>
 		</div>
@@ -190,7 +186,7 @@
 				<div class="search-img-div"></div>
 				<input class="search-input" placeholder="Search Transport Operator"/>
 			</div>
-			<!-- <input class="search-input" placeholder="Search Transport Operator"/> -->
+
 		</div>
 
 		<div class="row mx-2" style="margin-top: 20px;">
@@ -201,19 +197,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="number-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Mon</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="week-for">Mon</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="indentCount-fro">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="driverCount-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -221,19 +217,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="weekday6-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Tue</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="view-week-for">Tue</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="calender-indentCount-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="calender-driverCount-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -241,19 +237,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="calendar-weekday6-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Wed</label></div>
+							<div class="bd-highlight py-1"><label class="week"  for="wed-for">Wed</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="date0-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="driver-count0-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -261,19 +257,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="calendar-weekday6-view-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Thu</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="week-thu-for">Thu</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="incident-view-date0-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="driverCount-date0-view-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -281,19 +277,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="fri-weekday-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Fri</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="fri-week-for">Fri</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="fri-indentCount-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="fri-driverCount-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -301,19 +297,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="sat-weekday-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Sat</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="sat-week-for">Sat</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="sat-indentCount-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="sat-driverCount-for">0</label>
 							</div>
 						</div>
 					</td>
@@ -321,19 +317,19 @@
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight p-1">
 								<div class="weekday">
-									<label>6</label>
+									<label for="sun-weekday-for">6</label>
 								</div>
 							</div>
-							<div class="bd-highlight py-1"><label class="week">Sun</label></div>
+							<div class="bd-highlight py-1"><label class="week" for="sun-week-for">Sun</label></div>
 						</div>
 						<div class="d-flex flex-row justify-content-center">
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-								<label class="date-label indentCount">0</label>
+								<label class="date-label indentCount" for="sun-indentCount-for">0</label>
 							</div>
 							<div class="bd-highlight px-1">
 								<img alt="" class="date-img" src="../scripts/driverTo/icons/person.svg">
-								<label class="date-label driverCount">0</label>
+								<label class="date-label driverCount" for="sun-driverCount-for">0</label>
 							</div>
 						</div>
 					</td>

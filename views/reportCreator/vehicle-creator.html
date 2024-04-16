@@ -29,18 +29,13 @@
 <body style="background-color: white !important;">
     <div class="container-full report-form">
         <div class="row">
-            <!-- <div class="mb-2 row">
-                <label class="col-sm-2 col-form-label">Report Date Range</label>
-                <div class="col-sm-3">
-                    <input type="text" readonly class="form-control" value="" id="reportDateRange">
-                </div>
-            </div> -->
+           
             <div class="col-7 mt-3">
-                <div><label class="label-1">Report Data Group Selection</label></div>
-                <div><label class="label-2">Choose the data to be included in the report</label></div>
+                <div><span class="label-1">Report Data Group Selection</span></div>
+                <div><span class="label-2">Choose the data to be included in the report</span></div>
             </div>
             <div class="col-5 mt-3">
-                <div><label class="label-1">Selected Data Group</label></div>
+                <div><span class="label-1">Selected Data Group</span></div>
             </div>
             <div class="col-7">
                 <div class="row">
@@ -140,17 +135,14 @@
         </div>
         <div class="row">
             <div class="col-12 mt-3">
-                <div><label class="label-1">Report Data Filter</label></div>
+                <div><span class="label-1">Report Data Filter</span></div>
             </div>
             <div class="row mt-3 div-report-data-filter">
                 <div class="mb-2 col-3 hub-node-div">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">Hub</label>
-                        <!-- <div class="col-8 position-relative">
-                            <input type="text" class="form-control" id="hubNodeFilter" autocomplete="off">
-                        </div> -->
+                        <label class="col-4 col-form-label p-0 custom-line" for="hubFilter">Hub</label>
                         <div class="col-8">
-                            <select class="form-select" id="hubFilter">
+                            <select class="form-select" id="hubFilter" name="hubFilter">
                                 <option value="">All</option>
                             </select>
                         </div>
@@ -158,12 +150,9 @@
                 </div>
                 <div class="mb-2 col-3 hub-node-div">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">Node</label>
-                        <!-- <div class="col-8 position-relative">
-                            <input type="text" class="form-control" id="hubNodeFilter" autocomplete="off">
-                        </div> -->
+                        <label class="col-4 col-form-label p-0 custom-line" for="nodeFilter">Node</label>
                         <div class="col-8">
-                            <select class="form-select" id="nodeFilter">
+                            <select class="form-select" id="nodeFilter" name="nodeFilter">
                                 <option value="">All</option>
                             </select>
                         </div>
@@ -171,9 +160,9 @@
                 </div>
                 <div class="mb-2 col-3">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">Permit Type</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="permitType">Permit Type</label>
                         <div class="col-8">
-                            <select class="form-select" id="permitType">
+                            <select class="form-select" id="permitType" name="permitType">
                                 <option value="">All</option>
                             </select>
                         </div>
@@ -181,9 +170,9 @@
                 </div>
                 <div class="mb-2 col-3">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">Status</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="vehicleStatus">Status</label>
                         <div class="col-8">
-                            <select class="form-select" id="vehicleStatus">
+                            <select class="form-select" id="vehicleStatus" name="vehicleStatus">
                                 <option value="">All</option>
                             </select>
                         </div>
@@ -191,9 +180,9 @@
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">Vehicle Category</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="vehicleCategory">Vehicle Category</label>
                         <div class="col-8">
-                            <select class="form-select" id="vehicleCategory">
+                            <select class="form-select" id="vehicleCategory" name="vehicleCategory">
                                 <option value="">All</option>
                             </select>
                         </div>
@@ -201,50 +190,50 @@
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">PM completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="PM-Date-Range">PM completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="PM-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="PM-Date-Range" name="PM-Date-Range">
                         </div>
                     </div>
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">WPT1 completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="WPT1-Date-Range">WPT1 completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="WPT1-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="WPT1-Date-Range" name="WPT1-Date-Range">
                         </div>
                     </div>
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">WPT2 completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="WPT2-Date-Range">WPT2 completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="WPT2-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="WPT2-Date-Range" name="WPT2-Date-Range">
                         </div>
                     </div>
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">WPT3 completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="WPT3-Date-Range">WPT3 completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="WPT3-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="WPT3-Date-Range" name="WPT3-Date-Range">
                         </div>
                     </div>
                 </div>
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">MPT completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="MPT-Date-Range">MPT completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="MPT-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="MPT-Date-Range" name="MPT-Date-Range">
                         </div>
                     </div>
                 </div>
                 
                 <div class="mb-2 col-6">
                     <div class="row">
-                        <label class="col-4 col-form-label p-0 custom-line">AVI completion date range</label>
+                        <label class="col-4 col-form-label p-0 custom-line" for="AVI-Date-Range">AVI completion date range</label>
                         <div class="col-8">
-                            <input type="text" class="form-control" value="" readonly id="AVI-Date-Range">
+                            <input type="text" class="form-control" value="" readonly id="AVI-Date-Range" name="AVI-Date-Range">
                         </div>
                     </div>
                 </div>

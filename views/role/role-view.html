@@ -212,7 +212,6 @@
         .alert-danger{
             border:solid 1px #E53A40;
             background-color: #FAE1E2;
-            /* color: black; */
             font-weight: bold;
             color: rgb(212, 2, 2);
         }
@@ -229,24 +228,15 @@
     </style>
     <body style="background-color: white !important;">
         <div class="row px-4 py-2 mx-0" style="box-shadow: 0 5px 5px #a5a4a4;">
-            <label class="fs-6 fw-bold" style="color: #133034;">Manage Role</label>
+            <span class="fs-6 fw-bold" style="color: #133034;">Manage Role</span>
         </div>
         <div class="row px-3 py-2 mx-0 mt-3 justify-content-between">
             <div class="col-10 col-sm-8">
                 <div class="row">
-                    <label class="roleId" style="display: none;"></label>
+                    <span class="roleId" style="display: none;"></span>
                     <div class="col-2 col-sm-3 col-xs-6">
                         <input class="form-control form-control-sm search-module" name="search-module" placeholder="Role Name"/>
                     </div>
-                    <!-- <div class="col-2 col-sm-3 col-xs-6">
-                        <select class="form-select form-select-sm search-type">
-                            <option value="">All</option>
-                            <option value="Alert">Alert</option>
-                            <option value="Info">Info</option>
-                            <option value="Update">Update</option>
-                            <option value="Scheduled">Scheduled</option>
-                        </select>
-                    </div> -->
                     <div class="col-2 col-sm-3 col-xs-6">
                         <button class="btn btn-sm btn-clear" name="clean-all">Clear all</button>
                     </div>
@@ -262,7 +252,7 @@
         <div class="container-fluid p-3 m-0" style="overflow: auto;">
             
             <div class="row m-0" style="padding: 10px;">
-                <div class="table-common task-table-container active table-shadow" data-item="incident" style="border-radius: 1em;box-shadow: 0 0 5px rgb(201, 201, 201);border: solid 1px rgb(201, 201, 201); border-radius: 5px;">
+                <div class="table-common task-table-container active table-shadow" data-item="incident" style="box-shadow: 0 0 5px rgb(201, 201, 201);border: solid 1px rgb(201, 201, 201); border-radius: 5px;">
                     <table aria-hidden="true" class="table role-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                     </table>
                 </div>

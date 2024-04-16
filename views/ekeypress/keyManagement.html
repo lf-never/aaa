@@ -145,11 +145,11 @@
                 <div class="col-8 py-3 opt-btn-div" style="margin-top: 0.25rem;">
                     <% if (pageList.find(item => item.module == 'Mustering' )) { %>
                         <div class="px-2 py-0 btn-opt" onclick="scanEkeypressQRCode()" role="button" tabindex="0">
-                            <label style="margin-top: 3px;">Mustering</label>
+                            <label for="key-mustering-for" style="margin-top: 3px;">Mustering</label>
                         </div>
                     <% } %>
                     <div class="px-2 mx-2 py-0 btn-opt" onclick="toAddKeyOptRecordPage()" role="button" tabindex="0">
-                        <label style="margin-top: 3px;">Record Manually</label>
+                        <label for="key-record-for" style="margin-top: 3px;">Record Manually</label>
                     </div>
                 </div>
             </div>

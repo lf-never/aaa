@@ -312,16 +312,7 @@ const initPage = async function (hub) {
     }
 
     initVehicleServicing(newXaxisList, newSeriesList);
-    // $('.btn-button').on('click', function () {
-    //     $('.btn-button').removeClass('active')
-    //     if(($(this).text()).toLowerCase() != 'all'){
-    //         typeTitle = $(this).text();
-    //     } else {
-    //         typeTitle = ''
-    //     }
-    //     initPageData(hubTitle, typeTitle, $("#select-vehicle-input").val(), $('.executionDate-input').val())
-    //     initTabEventHandler('.btn-button', $(this).text())
-    // });
+
     $('#purposeType').off('change').on('change', function () {
         typeTitle = $(this).val()
         initPageData(hubTitle, typeTitle, $("#select-vehicle-input").val(), $('.executionDate-input').val())
@@ -403,22 +394,8 @@ const initPage2 = async function () {
         $('#unit-hub-top').empty();
         let  html2= `<option value=''>Overview</option>`
         verifyNum = unitList.length
-        // if(unitList.length == 1){
-        //     html = ``;
-        // } else {
-        // //     html = `<div class="col-auto py-1">
-        // //     <button type="button" class="btn-top btn-Overview active" value=''>Overview</button>
-        // // </div>
-        
-        // // `;
-        // html= `<option value=''>Overview<option>`
-        // }
-        
-            
+
         for(let unit of unitList){
-            // if(unit) html += `<div class="col-auto py-1">
-            //             <button type="button" class="btn-top btn-${ (unit).replaceAll(" ","-") } ${ verifyNum == 1 ? 'active' : '' }" value="${ unit }">${ unit }</button>
-            //         </div>`;
             if(unit && unit != '') html2 += `<option value="${ unit }">${ unit }</option>`;
         }
         $('#unit-hub-top').append(html2);   
@@ -443,17 +420,6 @@ const initPage2 = async function () {
 
 const initPageData = async function (hub, type, vehicle, dateRange) {
     const getIndentAllocationGraph = async function (hub, type, vehicle, dateRange) {
-        // if(Cookies.get('userType').toUpperCase() == 'CUSTOMER') {
-        //     return await axios.post('/hqDashboard/GetIndentAllocationGraphByCustomer', { hub: hub, type: type, vehicle: vehicle, dateRange: dateRange })
-        //     .then(function (res) {
-        //         return res.respMessage ? res.respMessage : res.data.respMessage;
-        //     });
-        // } else {
-        // return await axios.post('/hqDashboard/getIndentAllocationGraph', { hub: hub, type: type, vehicle: vehicle, dateRange: dateRange })
-        // .then(function (res) {
-        //     return res.respMessage ? res.respMessage : res.data.respMessage;
-        // });
-        // }
         return await axios.post('/hqDashboard/getIndentAllocationGraph', { hub: hub, type: type, vehicle: vehicle, dateRange: dateRange })
             .then(function (res) {
                 return res.respMessage ? res.respMessage : res.data.respMessage;
@@ -710,7 +676,6 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
     }
 
     const initWPTDueThisWeek = function (data) {
-        // $('#week-div-row').empty();
         let html = ``;
         for(let week of data) {
             if((week.unit).toLowerCase() === 'total'){
@@ -764,17 +729,7 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
             
             emphasis:{focus:'series'},
         }
-        // if((data.name).toLowerCase() === 'admin'){
-        //     series.color = '#6495F2'
-        // } else if((data.name).toLowerCase() === 'ops') {
-        //     series.color = '#30C69D'
-        // }else if((data.name).toLowerCase() === 'training') {
-        //     series.color = '#005D4A'
-        // }else if((data.name).toLowerCase() === 'exercise') {
-        //     series.color = '#F39300'
-        // } else {
-        //     series.color = '#B9B9B9'
-        // }
+
         newSeries.push(series)
     }
 
@@ -842,32 +797,16 @@ const initPageData = async function (hub, type, vehicle, dateRange) {
 
 const initClickPage = function () {
     $('#unit-hub-top').off('change').on('change', async function () {
-        // if(($(this).text()).toLowerCase() != 'overview'){
-            // hubTitle = $(this).val();
-            hubTitle = $('#unit-hub-top').val()
-        // } else {
-        //     hubTitle = ''
-        // }
+        hubTitle = $('#unit-hub-top').val()
         await initPage(hubTitle)
-        // initClickPage()
         typeTitle = ''
         await initPageData(hubTitle, typeTitle, $("#select-vehicle-input").val(), $('.executionDate-input').val())
-        // initTabEventHandler('.btn-top', $(this).text())
     });
 
     $('#select-vehicle').on('change', function () {
         initPageData(hubTitle, typeTitle, $("#select-vehicle-input").val(), $('.executionDate-input').val())
     })
 }
-
-// const initTabEventHandler = function (btnClass, title) {
-//     $(btnClass).removeClass('active');
-//     if(title.toLowerCase() != ''){
-//         $(`.btn-${ (title).replaceAll(" ","-") }`).addClass('active');
-//     } else {
-//         $(`.btn-Overview`).addClass('active');
-//     }
-// }
 
 
 const initLayuiDate = function () {
@@ -887,7 +826,7 @@ const initNumFormat = function (number) {
     let thousands_sep = ',';
     let decimals = 1;
     let dec_point = '.';
-    number = (number + '').replace(/[^0-9+-Ee.]/g, '');
+    number = (number + '').replace(/[^\d+-.eE]/g, '');;
     let n = !isFinite(+number) ? 0 : +number,
         pre = !isFinite(+decimals) ? 0 : Math.abs(decimals),
         sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,

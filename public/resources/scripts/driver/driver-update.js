@@ -163,8 +163,6 @@ const updateUserEventHandler = function () {
         if (result) {
             $('#update-driver').modal('hide');
             initDriverTaskViewPage();
-        } else {
-            
         }
 
     })

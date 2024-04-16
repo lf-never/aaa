@@ -86,12 +86,12 @@
 		<div class="content-div">
 			<div class="content-top-div py-2" style="width: 100%; height: 60px; display: flex;">
 				<div class="mx-2" style="width:fit-content; height: 100%; display: flex; justify-content: center; align-items: center;">
-					<label style="font-size: 16px; font-weight: 900px;">Box:</label>
-					<select id="box-site-select" class="form-control" style="width: 150px; margin-left: 10px;">
+					<label for="box-site-select" style="font-size: 16px; font-weight: 900px;">Box:</label>
+					<select id="box-site-select" name="box-site-select" class="form-control" style="width: 150px; margin-left: 10px;">
 					</select>
 				</div>
 				<div style="width: fit-content; display: none; justify-content: flex-start; align-items: center; margin: 10px;">
-					<div class="add-record-btn" onclick="addKeyRecord()" role="button" tabindex="0"><label>Record Manually</label></div>
+					<div class="add-record-btn" onclick="addKeyRecord()" role="button" tabindex="0"><label for="scan-record-for">Record Manually</label></div>
 				</div>
 			</div>
 			<div class="scan-div" style="width: 100%; height: width; display: flex; justify-content: center; align-items: flex-start;">
@@ -99,7 +99,7 @@
 			</div>
 			<div class="keyperss-info" style="width: 100%; display: none;">
 				<div style="width: 100%; display: flex; justify-content: flex-start; align-items: center; margin: 10px;">
-					<div class="continue-scan" onclick="backToScan()" role="button" tabindex="0"><label>Continue Scanning</label></div>
+					<div class="continue-scan" onclick="backToScan()" role="button" tabindex="0"><label for="scan-scanning-for">Continue Scanning</label></div>
 				</div>
 				<div class="keypress-box-div">
 				</div>

@@ -28,7 +28,7 @@
                       <form id="base-task-form">
                         <div class="mb-2 col-md-12 col-lg-10 col-sm-10">
                            <div class="row">
-                                <label class="col-sm-5 col-form-label">Activity Name:</label>
+                                <label class="col-sm-5 col-form-label" for="activityName">Activity Name:</label>
                                 <div class="col-sm-7">
                                     <textarea class="form-control" id="activityName" name="activityName" placeholder="Activity Name" autocomplete="off"></textarea>
                                 </div>
@@ -36,7 +36,7 @@
                         </div>
                         <div class="mb-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                <label for="purposeType" class="col-sm-5 col-form-label">Purpose:</label>
+                                <label for="purposeType" class="col-sm-5 col-form-label" for="purposeType">Purpose:</label>
                                 <div class="col-sm-7">
                                     <select class="form-select" id="purposeType" name="purposeType">
                                         <option value=""></option>
@@ -46,8 +46,8 @@
                         </div>
                         <div class="mb-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                <label class="col-sm-5 col-form-label">Request For:</label>
-                                <div class="col-sm-7">
+                                <label class="col-sm-5 col-form-label" for="reques-hub-node-for">Request For:</label>
+                                <div class="col-sm-7 reques-hub-node-for" name="reques-hub-node-for">
                                     <div class="row">
                                         <div class="col-6">
                                             <select class="form-select select-myHub" placeholder="hub">
@@ -75,7 +75,7 @@
                         </div>
                         <div class="mb-2 mt-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                <label class="col-sm-5 col-form-label mb-2">Start Time:</label>
+                                <label class="col-sm-5 col-form-label mb-2" for="periodStartDate">Start Time:</label>
                                 <div class="col-sm-7 mb-2">
                                     <input class="form-control" id="periodStartDate" name="periodStartDate" autocomplete="off" lay-key="8" readonly>
                                 </div>
@@ -83,7 +83,7 @@
                         </div>
                         <div class="mb-2 mt-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                <label class="col-sm-5 col-form-label mb-2">End Time:</label>
+                                <label class="col-sm-5 col-form-label mb-2" for="periodEndDate">End Time:</label>
                                 <div class="col-sm-7 mb-2">
                                     <input class="form-control" id="periodEndDate" name="periodEndDate" autocomplete="off" lay-key="9" readonly>
                                 </div>
@@ -100,15 +100,15 @@
                         </div>
                         <div class="mb-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                <label class="col-sm-5 col-form-label">Resource Qty:</label>
+                                <label class="col-sm-5 col-form-label" for="resource-qty-input">Resource Qty:</label>
                                 <div class="col-sm-7">
-                                    <input type="number" class="form-control resource-qty-input" onkeyup="value=value.replace(/[^\d]/g,'')">
+                                    <input type="number" class="form-control resource-qty-input" name="resource-qty-input" onkeyup="value=value.replace(/[^\d]/g,'')">
                                 </div>
                             </div>
                         </div>
                         <div class="mb-2 col-md-12 col-lg-10 col-sm-10">
                             <div class="row">
-                                 <label class="col-sm-5 col-form-label">Explanation:</label>
+                                 <label class="col-sm-5 col-form-label" for="explanation">Explanation:</label>
                                  <div class="col-sm-7">
                                      <textarea class="form-control" id="explanation" name="explanation" placeholder="Explanation" autocomplete="off"></textarea>
                                  </div>

@@ -36,7 +36,7 @@ $(function () {
 const initReportHtml = async function () {
     const InitReportDateRange = function (elem) {
         layui.use(['laydate'], function () {
-            laydate = layui.laydate;
+            let laydate = layui.laydate;
             laydate.render({
                 elem: elem,
                 lang: 'en',

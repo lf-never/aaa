@@ -19,7 +19,7 @@ $(() => {
 
     initBasicProfileHandler();
     layui.use('element', function(){
-        chatTabElement = layui.element;
+        let chatTabElement = layui.element;
         $('.user-select-none').on('click', function(title) {
             let layId = this.getAttribute('lay-id');
             if (layId === 'page-1') {

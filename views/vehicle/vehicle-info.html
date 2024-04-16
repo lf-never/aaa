@@ -127,9 +127,6 @@
         border-top-right-radius: 25px;
     }
 
-    table.dataTable tbody tr {
-        background-color: white;
-    }
 
     .table-shadow {
         box-shadow: none;
@@ -354,8 +351,8 @@
         <div class="vehicle-info-container mx-3 " style="overflow: auto;">
             <div class="container-fluid px-5">
                 <div class="row px-3  pt-3">
-                    <label class="vehicleType-label" style="font-size: 18px; font-weight: 200; color: #6c757d;height: 20px;"></label>
-                    <label class="vehicleNo-label" style="font-size: 28px; font-weight: 600; color: black;"></label>
+                    <span class="vehicleType-label" style="font-size: 18px; font-weight: 200; color: #6c757d;height: 20px;"></span>
+                    <span class="vehicleNo-label" style="font-size: 28px; font-weight: 600; color: black;"></span>
                 </div>
                 <div class="layui-tab layui-vehicle-tab layui-tab-brief" lay-filter="docDemoTabBriefVehicle">
                     <ul style="padding-left: 0px;" class="layui-tab-title">
@@ -382,20 +379,18 @@
                                 <div class="col-12" style="display: flex;">
                                     <div class="view-live-location" style="display: none;">
                                         <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../scripts/driverTo/icons/map.svg">
-                                        <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">View Live Location</label>
+                                        <span class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">View Live Location</span>
                                     </div>
                                     <% if (pageList.find(item => item.page == 'Profile' && item.action == 'Edit')) { %>
                                     <div class="edit-content-btn-div px-4">
                                         <img alt="" style="width: 20px; cursor: pointer; margin-top: -4px;" src="../images/edit.svg">
-                                        <label class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</label>
+                                        <span class="user-select-none" style="color: #3899ED; font-weight: 600;margin-left: 6px; cursor: pointer;">Edit</span>
                                     </div>
                                     <% } %>
                                     <style>
                                         .hoto-div {
                                             border-radius: 5px;
-                                            /* 
-                                            background-color: #1C9063;
-                                            color: white; */
+            
                                             color: #1C9063 !important;
                                             font-weight: bolder;
                                             border: solid 1px #dfdede;
@@ -404,60 +399,60 @@
                                             padding: 0 10px;
                                         }
                                     </style>
-                                    <label class="hoto-info hoto-div" style="display: none;">Vehicle had been hoto!</label>
-                                    <label class="loan-info hoto-div" style="display: none;">Vehicle had been loan out!</label>
+                                    <span class="hoto-info hoto-div" style="display: none;">Vehicle had been hoto!</span>
+                                    <span class="loan-info hoto-div" style="display: none;">Vehicle had been loan out!</span>
                                 </div>
                                 <div class="col-12 my-2">
-                                    <label style="font-size: 20px; font-weight: bolder;">Ownership Details</label>
+                                    <span style="font-size: 20px; font-weight: bolder;">Ownership Details</span>
                                 </div>
                                 <div class="col-6">
-                                    <label class="info-title">Node</label><br>
-                                    <label class="info-value vehicle-subunit"></label>
+                                    <span class="info-title">Node</span><br>
+                                    <span class="info-value vehicle-subunit"></span>
                                 </div>
                                 <div class="col-6">
-                                    <label class="info-title">Hub</label><br>
-                                    <label class="info-value vehicle-unit"></label>
+                                    <span class="info-title">Hub</span><br>
+                                    <span class="info-value vehicle-unit"></span>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">Odometer</label><br>
-                                    <label class="info-value vehicle-mileage"></label>
+                                    <span class="info-title">Odometer</span><br>
+                                    <span class="info-value vehicle-mileage"></span>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">Status</label><br>
+                                    <label class="info-title" for="vehicle-status">Status</label><br>
                                     <div class="row status-div">
                                         <div class="status-label" style="padding:0px; margin-left: 5px;"></div>
-                                        <span style="width: fit-content !important;" id="vehicle-status">Deployable</span>
+                                        <span style="width: fit-content !important;" id="vehicle-status" name="vehicle-status">Deployable</span>
                                     </div>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">Key Tag ID</label><br>
-                                    <label class="info-value vehicle-keyTagId"></label>
+                                    <span class="info-title">Key Tag ID</span><br>
+                                    <span class="info-value vehicle-keyTagId"></span>
                                 </div>
                             </div>
                             <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                             <div class="row">    
                                 <div class="col-12 my-2">
-                                    <label style="font-size: 20px; font-weight: bolder;">Vehicle Specifications</label>
+                                    <span style="font-size: 20px; font-weight: bolder;">Vehicle Specifications</span>
                                 </div>
                                 <div class="col-6">
-                                    <label class="info-title">Vehicle No.</label><br>
-                                    <label class="info-value vehicle-no"></label>
+                                    <span class="info-title">Vehicle No.</span><br>
+                                    <span class="info-value vehicle-no"></span>
                                 </div>
                                 <div class="col-6">
-                                    <label class="info-title">Vehicle Name</label><br>
-                                    <label class="info-value vehicle-type"></label>
+                                    <span class="info-title">Vehicle Name</span><br>
+                                    <span class="info-value vehicle-type"></span>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">Description</label><br>
-                                    <label class="info-value vehicle-dimensions"></label>
+                                    <span class="info-title">Description</span><br>
+                                    <span class="info-value vehicle-dimensions"></span>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">Speed Limit</label><br>
-                                    <label class="info-value vehicle-speedlimit"></label>
+                                    <span class="info-title">Speed Limit</span><br>
+                                    <span class="info-value vehicle-speedlimit"></spanspanspan>
                                 </div>
                                 <div class="col-6 mt-2">
-                                    <label class="info-title">AVI Date</label><br>
-                                    <label class="info-value avi-date"></label>
+                                    <span class="info-title">AVI Date</span><br>
+                                    <span class="info-value avi-date"></span>
                                 </div>
                             </div>
                         </div>
@@ -480,10 +475,10 @@
                                         </div>
                                         <div class="status-filter-nav">
                                             <div class="status-filter-item active" past="0">
-                                                <label style="font-weight:bolder;font-size: large;">Upcoming</label>
+                                                <span style="font-weight:bolder;font-size: large;">Upcoming</span>
                                             </div>
                                             <div class="status-filter-item status-filter-item-past" past="1">
-                                                <label style="font-weight:bolder;font-size: large;">Past</label>
+                                                <span style="font-weight:bolder;font-size: large;">Past</span>
                                             </div>
                                         </div>
                                     </div>
@@ -509,9 +504,7 @@
                             <div class="container-fluid h-100 m-0" style="overflow: auto;">
                                 <div class="">
                                     <div class="row m-0" style="padding: 10px;">
-                                        <!-- <div class="vehicle-release-btn" style="display: none;" onclick="releaseVehicle()">
-                                            <label class="fs-6">Release</label>
-                                        </div> -->
+                                       
                                         <div class="table-common table-shadow">
                                             <table aria-hidden="true" class="table vehicle-maintenance-table pb-2 w-100" style="white-space: nowrap; border-collapse:collapse !important;">
                                                 
@@ -557,25 +550,25 @@
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>7 Sep 22, 08:00</label></div>
-                            <div><label>Maintenance Assigned</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>7 Sep 22, 08:00</span></div>
+                            <div><span>Maintenance Assigned</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                         </div>
                     </div>
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>6 Sep 22, 13:04</label></div>
-                            <div><label>Driver Reassigned</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>6 Sep 22, 13:04</span></div>
+                            <div><span>Driver Reassigned</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                         </div>
                     </div>
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>6 Sep 22, 12:47</label></div>
-                            <div><label>Book In</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>6 Sep 22, 12:47</span></div>
+                            <div><span>Book In</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
                         </div>
                     </div>
                 </div>
@@ -583,25 +576,25 @@
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>7 Sep 22, 08:00</label></div>
-                            <div><label>Maintenance Assigned</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>7 Sep 22, 08:00</span></div>
+                            <div><span>Maintenance Assigned</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                         </div>
                     </div>
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>6 Sep 22, 13:04</label></div>
-                            <div><label>Driver Reassigned</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>6 Sep 22, 13:04</span></div>
+                            <div><span>Driver Reassigned</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                         </div>
                     </div>
                     <div class="time-line">
                         <div class="time-line-axis"></div>
                         <div class="time-line-content">
-                            <div><label>6 Sep 22, 12:47</label></div>
-                            <div><label>Book In</label></div>
-                            <div><label>Next WPT 2 scheduled on 13-14 Sep 22</label></div>
+                            <div><span>6 Sep 22, 12:47</span></div>
+                            <div><span>Book In</span></div>
+                            <div><span>Next WPT 2 scheduled on 13-14 Sep 22</span></div>
                         </div>
                     </div>
                 </div>
@@ -616,13 +609,13 @@
             <div class="modal-header" style="background-color: #1C9063 !important;">
                 <h4>Rectify</h4>
             </div>
-            <div class="modal-body" style="padding-bottom: 2rem;">
+            <div class="modal-body" style="padding-bottom: 2rem;"> 
                 <div class="row">
                     <input id="oddId" value="" style="display: none;"/>
             
                     <div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-                        <label class="info-title">Remarks:</label><br>
-                        <textarea rows="3" class="form-control odd-remarks-input"></textarea>
+                        <label class="info-title" for="odd-remarks-input">Remarks:</label><br>
+                        <textarea rows="3" class="form-control odd-remarks-input" name="odd-remarks-input"></textarea>
                     </div>
                 </div>
             </div>
@@ -643,7 +636,7 @@
             <div class="modal-body" style="padding-bottom: 2rem;">
                 <div class="row">
                     <div class="col-md-12 col-sm-12 col-lg-12 mt-2 avi-date-input1-div">
-                        <label class="info-title">AVI Date</label><br>
+                        <label class="info-title" for="aviDateInput1">AVI Date</label><br>
                         <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
                         <input name="aviDateInput1" id="aviDateInput1" placeholder="DD/MM/YYYY" class="form-control" style="padding-left: 30px ;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
                     </div>

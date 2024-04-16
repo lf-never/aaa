@@ -132,8 +132,7 @@ export async function initDriverTaskCreatePage () {
                 if (result) {
                     $('#create-driver').modal('hide');
                     initDriverTaskViewPage();
-                } else {
-                }
+                } 
             })
         })
     }

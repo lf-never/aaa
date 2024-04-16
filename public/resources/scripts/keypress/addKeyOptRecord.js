@@ -194,7 +194,7 @@ const initDriverSearch = async function () {
 
     $("#driver-select .search-select input").on("keyup", function () {
         let val = $(this).val()
-        let filterUnits = driverSummaryList.filter(item => ((item.nric && item.nric.toLowerCase().indexOf(val.toLowerCase()) != -1) || (item.driverName && item.driverName.toLowerCase().indexOf(val.toLowerCase()) != -1)))
+        let filterUnits = driverSummaryList.filter(item => ((item.nric?.toLowerCase().indexOf(val.toLowerCase()) != -1) || (item.driverName?.toLowerCase().indexOf(val.toLowerCase()) != -1)))
         InsertFilterOption(this, filterUnits)
     })
 

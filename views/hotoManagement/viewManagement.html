@@ -47,7 +47,6 @@
 
         .span-table.active {
             font-weight: bold;
-            /* font-size: 1.5rem; */
             border-bottom: 4px solid #1B9063 !important;
             color: #1B9063 !important;
         }
@@ -61,24 +60,10 @@
             </div>
             <div class="row select-div-row" style="padding-left: 1rem;padding-right: 1rem;padding-bottom: 1rem;display: none;">
                 <div class="col-auto pt-2 from-hub-div">
-                    <!-- <div class="row"> -->
-                        <!-- <div class="col-4" style="line-height: 2.2rem;">
-                            <label class="lable-name">From Hub: </label>
-                        </div>
-                        <div class="col-7"> -->
-                            <select class="form-select form-hub" placeholder="hub"></select>
-                        <!-- </div> -->
-                    <!-- </div> -->
+                    <select class="form-select form-hub" placeholder="hub"></select>
                 </div>
                 <div class="col-auto pt-2 from-node-div">
-                    <!-- <div class="row">
-                        <div class="col-3" style="line-height: 2.2rem;">
-                            <label class="lable-name">From Node: </label>
-                        </div>
-                        <div class="col-8"> -->
-                            <select class="form-select form-node" placeholder="node"><option value="all">Node:All</option></select>
-                        <!-- </div>
-                    </div>                 -->
+                    <select class="form-select form-node" placeholder="node"><option value="all">Node:All</option></select>
                 </div>
                 <div class="col-auto pt-2 driver-vehicle-div">
                     <input class="form-control screen-vehicle-input screen-vehicle" style="display: none;" placeholder="Vehicle No"/>             
@@ -86,9 +71,6 @@
                 </div>
                 <div class="col-auto pt-2 permitType-div">
                     <input class="form-control" name="permitType" id="permitType" autocomplete="off" placeholder="Permit Type: All" />
-                    <!-- <select class="form-select form-control" name="permitType" id="permitType">
-                        <option value="">Permit Type: All</option>
-                    </select> -->
                 </div>
                 <div class="col-auto pt-2 clearAll-hoto-div">
                     <button class="btn btn-clear clearAll-hoto" type="button" style="font-weight: bold;color: #BEBEBE;">Clear all</button>
@@ -98,80 +80,51 @@
         <div class="body-bottom mx-3 mt-4 rounded" style="background-color: white;">
             <div class="row mx-1" style="padding: 10px;">
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Activity Name: </label>
-                    <label class="activityName-view"></label>
+                    <label class="lable-name" for="viewManagement-activityName-for">Activity Name: </label>
+                    <span class="activityName-view"></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Purpose: </label>
-                    <label class="purpose-view"></label>
+                    <label class="lable-name" for="viewManagement-purpose-for">Purpose: </label>
+                    <span class="purpose-view"></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Start Time:  </label>
-                    <label class="startTime-view"></label>
+                    <label class="lable-name" for="viewManagement-startTime-for">Start Time:  </label>
+                    <span class="startTime-view" ></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">End Time: </label>
-                    <label class="endTime-view"></label>
+                    <label class="lable-name" for="viewManagement-endTime-for">End Time: </label>
+                    <span class="endTime-view" ></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Resource:  </label>
-                    <label class="resource-view"></label>
+                    <label class="lable-name" for="viewManagement-resource-for">Resource:  </label>
+                    <span class="resource-view" ></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Resource Qty:  </label>
-                    <label class="resourceQty-view"></label>
+                    <label class="lable-name" for="viewManagement-resourceQty-for">Resource Qty:  </label>
+                    <span class="resourceQty-view" ></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Request Status: </label>
-                    <label class="status-view"></label>
+                    <label class="lable-name" for="viewManagement-status-for">Request Status: </label>
+                    <span class="status-view"></span>
                 </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Type: </label>
-                    <label class="type-view"></label>
+                    <label class="lable-name" for="viewManagement-type-for">Type: </label>
+                    <span class="type-view" ></span>
+                </div>
+            
+                <div class="col-md-6 col-lg-3 col-sm-6 py-2">
+                    <label class="lable-name" for="viewManagement-requestFor-for">Request For: </label>
+                    <span class="requestFor-view" ></span>
                 </div>
                 
-                <!-- <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">My Hub: </label>
-                    <label class="hub-view"></label>
-                </div>
                 <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">My Node: </label>
-                    <label class="node-view"></label>
-                </div> -->
-                <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name">Request For: </label>
-                    <label class="requestFor-view"></label>
-                </div>
-                
-                <!-- <div class="col-md-6 col-lg-3 col-sm-6 py-2 from-hub-div" style="display: none;">
-                    <div class="row">
-                        <div class="col-3" style="line-height: 2.2rem;">
-                            <label class="lable-name">From Hub: </label>
-                        </div>
-                        <div class="col-8">
-                            <select class="form-select form-hub" placeholder="hub"></select>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3 col-sm-6 py-2 from-node-div" style="display: none;">
-                    <div class="row">
-                        <div class="col-3" style="line-height: 2.2rem;">
-                            <label class="lable-name">From Node: </label>
-                        </div>
-                        <div class="col-8">
-                            <select class="form-select form-node" placeholder="node"><option value="all">Node:All</option></select>
-                        </div>
-                    </div>                
-                </div> -->
-                
-                <div class="col-md-6 col-lg-3 col-sm-6 py-2">
-                    <label class="lable-name updateTime-name">Update Time: </label>
-                    <label class="updateTime-view"></label>
+                    <label class="lable-name updateTime-name" for="viewManagement-updateTime-for">Update Time: </label>
+                    <span class="updateTime-view" ></span>
                 </div>
                
                 <div class="col-md-12 col-lg-3 col-sm-12 py-2">
-                    <label class="lable-name">Explanation: </label>
-                    <label class="explanation-view"></label>
+                    <label class="lable-name" for="viewManagement-explanation-for">Explanation: </label>
+                    <span class="explanation-view"></span>
                 </div>
 
             </div>

@@ -51,9 +51,6 @@ const initDriverMenuEventHandler = function () {
             case 'waypoint-upload':
                 initWaypointUploadPage();
                 break;
-            case 'location-create':
-                // initLocationViewPage();
-                break;
             case 'location-view':
                 initLocationViewPage();
                 break;

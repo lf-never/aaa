@@ -22,10 +22,7 @@
                 margin-right: 10px;
             }
             .opt-btn-div {
-                /* width: 120px;
-                height: 40px; */
                 padding: 0 10px;
-                /* border: 1px solid #c8c5c5; */
                 border-radius: 10px;
                 display: flex;
                 justify-content: center;
@@ -39,13 +36,6 @@
     <body>
         <audio id="sound" autoplay="autoplay"></audio>
 
-        <!-- <table aria-hidden="true">
-            <tr>
-                <td><%- include('menu.html') -%></td>
-                <td><div id="map" style="width: 100%; height: 100%; "></div></td>
-            </tr>
-        </table> -->
-
         <div style="width: 100%; height: 100%">
             <div style="float: left;">
                 <%- include('menu.html') -%>
@@ -53,18 +43,18 @@
             <div style="float: right; width: calc(100% - 90px); height: 100%; position:fixed; right: 0;">
                 <div id="common-head" class="common-head" style="width: 100%; height: 60px; border-bottom: 1px solid #f4f4f4; display: flex; align-items: center; background-color: white;">
                     <div class="head-left" style="width: 20%; height: 100%; display: flex; align-items: center;">
-                        <label class="mx-3 user-fullName-label" style="font-size: 22px; font-weight: 700;"></label>
+                        <span class="mx-3 user-fullName-label" for="user-fullName-for" style="font-size: 22px; font-weight: 700;"></span>
                     </div>
                     <div class="head-center" style="width: 50%; height: 100%; display: flex; align-items: center;">
-                        <label class="mx-3 warn-message-label" style="font-size: 16px; color:  black;">
-                        </label>
+                        <span class="mx-3 warn-message-label" for="warn-message-for" style="font-size: 16px; color:  black;">
+                        </span>
                     </div>
                     <div class="head-rigth" style="width: 30%; height: 100%;">
                         <div style="width: 100%; height: 50%; display: flex;    justify-content: center;">
-                            <label class="mx-3 userType-label" style="font-size: 18px; font-weight: 700; "></label><br/>
+                            <span class="mx-3 userType-label" for="userType-for" style="font-size: 18px; font-weight: 700; "></span><br/>
                         </div>
                         <div style="width: 100%; height: 50%; display: flex; align-items: flex-start; justify-content: center;">
-                            <label class="mx-3 user-lastLoginTime-label" style="font-size: 12px; line-height: 20px; color: rgb(87, 87, 87);"></label>
+                            <span class="mx-3 user-lastLoginTime-label" for="user-lastLoginTime-for" style="font-size: 12px; line-height: 20px; color: rgb(87, 87, 87);"></span>
                         </div>
                     </div>
                 </div>
@@ -97,22 +87,22 @@
         <div class="row" style="position: absolute; top: 20px; left: calc(50% - 112px); z-index: 10; ">
             <div class="col align-self-center" style="text-align: center;display: none;">
                 <div class="tab-top">
-                    <label class="btn-plan user-select-none active" data-action="plan">PLAN</label>
-                    <label class="btn-monitor user-select-none" data-action="monitor">MONITOR</label>
+                    <label class="btn-plan user-select-none active" for="user-select-for" data-action="plan">PLAN</label>
+                    <label class="btn-monitor user-select-none" for="user-select2-for" data-action="monitor">MONITOR</label>
                 </div>
             </div>
         </div>
         
         <div class="menu-app-container" style="display: none;">
             <div class="menu-top-spacer"></div>
-            <label style="color: #F6BC13; font-size: medium; line-height: 20px; padding-left: 5px;">I APPLICATIONS</label>
+            <label style="color: #F6BC13; font-size: medium; line-height: 20px; padding-left: 5px;" for="applications-for">I APPLICATIONS</label>
             <div class="apps-details container-fluid">
                 <div class="row">
                     <% if (pageList.find(item => item.module == 'Driver Control')) { %>
                     <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                         <div class="menu-item" data-action="app-driver" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
                             <img alt="" src="./images/index/Driver Control.svg"><br>
-                            <label class="text-wrap">Driver<br>Control</label>
+                            <label class="text-wrap" for="driver-control-for">Driver<br>Control</label>
                         </div>
                     </div>
                     <% } %>
@@ -120,7 +110,7 @@
                     <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                         <div class="menu-item" data-action="app-noGoZone" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight-NoGoZone" aria-controls="offcanvasRight-NoGoZone">
                             <img alt="" src="./images/index/app-dashboard-white.png"><br>
-                            <label class="text-wrap">No-Go<br>Zone</label>
+                            <label class="text-wrap" for="no-go-zone-for">No-Go<br>Zone</label>
                         </div>
                     </div>
                     <% } %>
@@ -128,7 +118,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-driverTrack">
                                 <img alt="" src="./images/index/Driver Track.svg"><br>
-                                <label class="text-wrap">Driver<br>Track</label>
+                                <label class="text-wrap" for="driver-track-for">Driver<br>Track</label>
                             </div>
                         </div>
                     <% } %>
@@ -136,7 +126,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-role" data-bs-toggle="offcanvas">
                                 <img alt="" src="./images/index/manage role.svg"><br>
-                                <label class="text-wrap">Manage<br>Role</label>
+                                <label class="text-wrap" for="manage-role-for">Manage<br>Role</label>
                             </div>
                         </div>
                     <% } %>
@@ -144,7 +134,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-user" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight-User" aria-controls="offcanvasRight-User">
                                 <img alt="" src="./images/index/Manage User.svg"><br>
-                                <label class="text-wrap">Manage<br>User</label>
+                                <label class="text-wrap" for="manage-user-for">Manage<br>User</label>
                             </div>
                         </div>
                     <% } %>
@@ -152,21 +142,16 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-event">
                                 <img alt="" src="./images/index/Events.svg"><br>
-                                <label class="text-wrap">Events</label>
+                                <label class="text-wrap" for="events-for">Events</label>
                             </div>
                         </div>
                     <% } %>
-                    <!-- <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
-                        <div class="menu-item" data-action="app-landing">
-                            <img alt="" src="./images/index/app-dashboard-white.png"><br>
-                            <label class="text-wrap">Transport<br>Landing</label>
-                        </div>
-                    </div> -->
+
                     <% if (pageList.find(item => item.module == 'Task Assign')) { %>
                     <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                         <div class="menu-item" data-action="app-dashboard">
                             <img alt="" src="./images/index/TaskAssign.svg"><br>
-                            <label class="text-wrap">TaskAssign</label>
+                            <label class="text-wrap" for="taskAssign-for">TaskAssign</label>
                         </div>
                     </div>
                     <% } %>
@@ -174,7 +159,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-resources">
                                 <img alt="" src="./images/index/Resources.svg"><br>
-                                <label class="text-wrap">Resources</label>
+                                <label class="text-wrap" for="resources-for">Resources</label>
                             </div>
                         </div>
                     <% } %>
@@ -183,10 +168,10 @@
                         <div class="menu-item" data-action="app-mtAdmin">
                             <img alt="" src="./images/index/MT-Admin.svg"><br>
                             <% if (userType == 'CUSTOMER') { %>
-                                <label class="text-wrap">Create Task</label>
+                                <label class="text-wrap" for="create-task-for">Create Task</label>
                             <% } %>
                             <% if (userType != 'CUSTOMER') { %>
-                                <label class="text-wrap">MT-Admin</label>
+                                <label class="text-wrap" for="mt-admin-for">MT-Admin</label>
                             <% } %>
                         </div>
                     </div>
@@ -195,7 +180,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-mvDashboard">
                                 <img alt="" src="./images/index/Dashboard.svg"><br>
-                                <label class="text-wrap">Dashboard</label>
+                                <label class="text-wrap" for="dashboard-for">Dashboard</label>
                             </div>
                         </div>
                     <% } %>
@@ -203,7 +188,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-mvDashboardTask">
                                 <img alt="" src="./images/index/MV Dashboard.svg"><br>
-                                <label class="text-wrap">MV Dashboard</label>
+                                <label class="text-wrap" for="mv-dashboard-for">MV Dashboard</label>
                             </div>
                         </div>
                     <% } %>
@@ -211,7 +196,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-resourcesDashboard">
                                 <img alt="" src="./images/index/Resources Dashboard.svg"><br>
-                                <label class="text-wrap">Resources Dashboard</label>
+                                <label class="text-wrap" for="resources-dashboard-for">Resources Dashboard</label>
                             </div>
                         </div>
                     <% } %>
@@ -219,7 +204,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-resourcesDashboard2">
                                 <img alt="" src="./images/index/Resources Dashboard2.svg"><br>
-                                <label class="text-wrap">Resources Dashboard2</label>
+                                <label class="text-wrap" for="resources-dashboard2-for">Resources Dashboard2</label>
                             </div>
                         </div>
                     <% } %>
@@ -227,7 +212,7 @@
                     <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                         <div class="menu-item" data-action="app-taskDashboard">
                             <img alt="" src="./images/index/task Dashboard.svg"><br>
-                            <label class="text-wrap">Task Dashboard</label>
+                            <label class="text-wrap" for="task-dashboard-for">Task Dashboard</label>
                         </div>
                     </div>
                     <% } %>
@@ -235,7 +220,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0 app-notification">
                             <div class="menu-item" data-action="app-notification">
                                 <img alt="" src="./images/index/notification.svg"><br>
-                                <label class="text-wrap">Create Notification</label>
+                                <label class="text-wrap" for="create-notification-for">Create Notification</label>
                             </div>
                         </div>
                     <% } %>
@@ -244,7 +229,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0 app-menu-sos">
                             <div class="menu-item" data-action="app-menu-sos">
                                 <img alt="" src="./images/index/SOS.svg"><br>
-                                <label class="text-wrap">SOS</label>
+                                <label class="text-wrap" for="sos-for">SOS</label>
                             </div>
                         </div>
                     <% } %>
@@ -252,7 +237,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0 app-report">
                             <div class="menu-item" data-action="app-menu-report">
                                 <img alt="" src="./images/index/report.svg"><br>
-                                <label class="text-wrap">Offence Report</label>
+                                <label class="text-wrap" for="offence-report-for">Offence Report</label>
                             </div>
                         </div>
                     <% } %>
@@ -260,7 +245,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0 app-report-creator">
                             <div class="menu-item" data-action="app-menu-report-creator">
                                 <img alt="" src="./images/index/report.svg"><br>
-                                <label class="text-wrap">Report Creator</label>
+                                <label class="text-wrap"  for="report-creator-for">Report Creator</label>
                             </div>
                         </div>
                     <% } %>
@@ -269,7 +254,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-menu-ekeypress">
                                 <img alt="" src="./images/index/key.svg"><br>
-                                <label class="text-wrap">Keypress Management</label>
+                                <label class="text-wrap" for="keypress-management-for">Keypress Management</label>
                             </div>
                         </div>
                     <% } %>
@@ -277,7 +262,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0 div-hoto">
                             <div class="menu-item" data-action="app-Hoto">
                                 <img alt="" src="./images/hoto/return.svg" style="width: 30px !important;"><br>
-                                <label class="text-wrap" style="line-height: 2rem;;">HOTO</label>
+                                <label class="text-wrap" style="line-height: 2rem;" for="hoto-for">HOTO</label>
                             </div>
                         </div>
                     <% } %>
@@ -285,7 +270,7 @@
                         <div class="col col-sm-4 col-md-4 col-lg-4 p-0">
                             <div class="menu-item" data-action="app-urgentDuty">
                                 <img alt="" src="./images/index/MT-Admin.svg"><br>
-                                <label class="text-wrap">Urgent Duty</label>
+                                <label class="text-wrap" for="urgent-duty-for">Urgent Duty</label>
                             </div>
                         </div>
                     <% } %>
@@ -294,8 +279,6 @@
         </div>
         <div class="left-view-container" id="tool" style="background-color: white;width: 70px;border-bottom-right-radius: 10px;">
             <div class="vehicle-status-view view-obd"></div>
-            <!-- <div class="vehicle-status-view view-waypoint"></div> -->
-            <!-- <div class="vehicle-status-view view-incident"></div> -->
             <div class="vehicle-status-view view-missing-car"></div>
             <div class="vehicle-status-view view-camera"></div>
             <div class="vehicle-status-view view-traffic-incident"></div>
@@ -307,7 +290,7 @@
                 <div class="modal-content" style="max-width: 500px;">
                     <div class="modal-header">
                         <h4 class="modal-title">Change Password</h4>
-                        <!-- <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> -->
+
                     </div>
                     <div class="modal-body">
                         <form class="row">
@@ -330,7 +313,7 @@
                         <div class="row my-1" style="display: flex; justify-content: flex-end;">
                             <div class="mt-1" style="width: 33%;display: flex;justify-content: flex-end;">
                                 <div class="opt-btn-div change-pwd-opt-btn" style="background-color: #1B9063;">
-                                    <label style="color: white;" class="opt-btn-label">Confirm</label>
+                                    <label style="color: white;" class="opt-btn-label" for="confirm-for">Confirm</label>
                                 </div>
                             </div>
                         </div>
@@ -343,7 +326,7 @@
                 <div class="modal-content" style="max-width: 500px;">
                     <div class="modal-header">
                         <h4 class="modal-title">Edit E-Mail</h4>
-                        <!-- <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> -->
+
                     </div>
                     <div class="modal-body">
                         <form class="row">
@@ -355,7 +338,7 @@
                         <div class="row my-3" style="display: flex; justify-content: flex-end;">
                             <div class="mt-1" style="width: 33%;display: flex;justify-content: flex-end;">
                                 <div class="opt-btn-div change-email-opt-btn" style="background-color: #1B9063;">
-                                    <label style="color: white;" class="opt-btn-label fs-6">Confirm</label>
+                                    <label style="color: white;" class="opt-btn-label fs-6" for="confirm2-for">Confirm</label>
                                 </div>
                             </div>
                         </div>

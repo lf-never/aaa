@@ -25,8 +25,6 @@ const checkNumber = function (number) {
         || isNaN(number)
         || typeof number == 'undefined') {
         return false
-    } else if (isNaN(number)) {
-        return false
     } else {
         return true
     }
@@ -296,7 +294,6 @@ const getIndentTypesReport = async function (month, groupId) {
                 for (let key in result[ monthStr ]) {
                     if (indent.purposeType.toLowerCase().startsWith(key.toLowerCase())) {
                         result[ monthStr ][ key ]++
-                        continue
                     }
                 }
             }
@@ -419,7 +416,6 @@ const getVehicleReport = async function (month, groupId) {
                 for (let key in result) {
                     if (r.purposeType.toLowerCase().startsWith(key.toLowerCase())) {
                         result[ key ] += r.count
-                        continue
                     }
                 }
             }
@@ -1643,10 +1639,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         }
         //calc node to hoto in days
         let nodeToHotoInList = nodeHotoDataList.filter(item => {
-            if (item.driverId && item.role == 'TO' && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.driverId && item.role == 'TO' && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
         });
         if (nodeToHotoInList && nodeToHotoInList.length > 0) {
             let nodeHotoInDriverIds = nodeToHotoInList.map(item => item.driverId);
@@ -1663,10 +1656,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         //calc node to hoto out days
         let nodeToHotoOutDays = 0;
         let nodeToHotoOutList = nodeHotoDataList.filter(item => {
-            if (item.driverId && item.role == 'TO' && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.driverId && item.role == 'TO' && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
         });
         if (nodeToHotoOutList && nodeToHotoOutList.length > 0) {
             let nodeHotoOutDriverIds = nodeToHotoOutList.map(item => item.driverId);
@@ -1682,10 +1672,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         //calc node to loan out days
         let tempNodeToLoanOutDays = 0;
         let nodeToLoanOutList = nodeLoanDataList.filter(item => {
-            if (item.driverId && item.role == 'TO' && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.driverId && item.role == 'TO' && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
         });
         if (nodeToLoanOutList && nodeToLoanOutList.length > 0) {
             let nodeLoanOutDriverIds = nodeToLoanOutList.map(item => item.driverId);
@@ -1725,10 +1712,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         }
         //calc node vehicle hoto in days
         let nodeVehicleHotoInList = nodeHotoDataList.filter(item => {
-            if (item.vehicleNo && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.vehicleNo && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
         });
         if (nodeVehicleHotoInList && nodeVehicleHotoInList.length > 0) {
             let nodeHotoInVehicleNos = nodeVehicleHotoInList.map(item => item.vehicleNo);
@@ -1745,10 +1729,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         //calc node vehicle hoto out days
         let nodeVehicleHotoOutDays = 0;
         let nodeVehicleHotoOutList = nodeHotoDataList.filter(item => {
-            if (item.vehicleNo && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.vehicleNo && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
         });
         if (nodeVehicleHotoOutList && nodeVehicleHotoOutList.length > 0) {
             let nodeHotoOutVehicleNos = nodeVehicleHotoOutList.map(item => item.vehicleNo);
@@ -1764,10 +1745,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         //calc node vehicle loan out days
         let tempNodeVehicleLoanOutDays = 0;
         let nodeVehicleLoanOutList = nodeLoanDataList.filter(item => {
-            if (item.vehicleNo && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit) {
-                return true;
-            }
-            return false;
+            return item.vehicleNo && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
         });
         if (nodeVehicleLoanOutList && nodeVehicleLoanOutList.length > 0) {
             let nodeLoanOutVehicleNos = nodeVehicleLoanOutList.map(item => item.vehicleNo);
@@ -2067,7 +2045,6 @@ module.exports = {
             let pageNum = Number(req.body.pageNum).valueOf();
             let pageLength = Number(req.body.pageLength).valueOf();
 
-            let result = {}
             if (resourceType ==  '2') {
                 let report2Data = await getTOLicecsingReport2(user, selectedYear, selectedMonth, permitType, selectedHub, selectedNode, pageNum, pageLength);
 
@@ -2077,8 +2054,6 @@ module.exports = {
 
                 return res.json({ respMessage: report1Data.data, recordsFiltered: report1Data.totalCount, recordsTotal: report1Data.totalCount });
             }
-
-            return res.json(utils.response(1, result))
         } catch (error) {
             log.error(`(report): `, error)
             return res.json(utils.response(0, error))

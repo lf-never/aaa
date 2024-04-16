@@ -10,8 +10,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-    table {
-        -webkit-print-color-adjust:exact;
+    @media print {  
+        table {  
+            print-color-adjust: exact;  
+        }  
     }
     
     #indent-echart {
@@ -70,10 +72,7 @@
         border-bottom: 5px solid #399062;
         color: black;
     }
-    /* table tr:first-child td {
-        color: #3e5bcd !important;
-        font-weight: 700;
-    } */
+
     .reason-detail-content-div {
         border: 1px solid white;
         border-radius: 10px;
@@ -101,20 +100,18 @@
     <div class="" style="height: 100%; width: 100%;">
         <div class="report-content" style="height: 100%;">
             <div class="report-title">
-                <label>Licensing Report</label>
+                <span>Licensing Report</span>
             </div>
             <div class="py-2 px-2" style="background: #f3f3f3;width: 100%; height: calc(100% - 60px);">
                 <div class="content-head px-3">
                     <div style="display: flex; padding: 0px;" class="col-7 report-type">
                         <div class="report-type-tab tab-1 active">
-                            <label>CDL Application Status</label>
+                            <span>CDL Application Status</span>
                         </div>
                         <div class="report-type-tab tab-2">
-                            <label>Military Driving Permits Issued</label>
+                            <span>Military Driving Permits Issued</span>
                         </div>
-                        <!-- <div class="report-type-tab tab-3">
-                            <label>CDL Collection Status</label>
-                        </div> -->
+                       
                     </div>
                     <div style="display: flex;" class="col-5 limit-condition justify-content-end">
                         <div class="row justify-content-end">
@@ -123,7 +120,7 @@
                                 </select>
                             </div>
                             <div class="col-auto" style="width: 130px; padding-right: 0;">
-                                <!-- input type="text" class="form-control selectedMonth" style="height: 35px; font-size: 15px; color: #399062;"/ -->
+    
                                 <select class="form-select form-control selectedMonth" id="select-hub" style="height: 35px; font-size: 15px; color: #399062;">
                                 </select>
                             </div>

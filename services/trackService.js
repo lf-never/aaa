@@ -305,7 +305,7 @@ module.exports.getDriverAndDeviceList2 = async function (req, res) {
 
         const checkTimeIfMissing = function (time) {
             let flag = conf.VehicleMissingFrequency;
-            flag = flag ? flag : 0;
+            flag = flag || 0;
             flag = Number.parseInt(flag);
             return moment().diff(moment(time), 'm') > flag;
         }
@@ -501,9 +501,7 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
                 sql += ` AND vv.updatedAt LIKE ? `
                 replacements.push(selectedDate+'%')
             }
-            if (user.userType === CONTENT.USER_TYPE.HQ || user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
-                
-            } else if (user.userType === CONTENT.USER_TYPE.UNIT) {
+            if (user.userType === CONTENT.USER_TYPE.UNIT) {
                 let unitIdList = await unitService.getUnitPermissionIdList(user);
                 if (unitIdList.length) {
                     sql += ` AND ( vv.unitId IN ( ? ) AND vv.groupId IS NULL ) `
@@ -536,7 +534,7 @@ module.exports.getDriverAndDeviceList = async function (req, res) {
 
         const checkTimeIfMissing = function (time) {
             let flag = conf.VehicleMissingFrequency;
-            flag = flag ? flag : 0;
+            flag = flag || 0;
             flag = Number.parseInt(flag);
             return moment().diff(moment(time), 'm') > flag;
         }
@@ -781,7 +779,7 @@ module.exports.getTrackDashboardInfo = async function (req, res) {
         }
         
         // Sort by event time
-        if (result.list && result.list.length) {
+        if (result.list?.length > 0) {
             let newList = result.list.sort((a, b) => {
                 let a_time = [a.hardBraking.occTime, a.rapidAcc.occTime, a.speeding.occTime, a.missing.occTime]
                 let b_time = [b.hardBraking.occTime, b.rapidAcc.occTime, b.speeding.occTime, b.missing.occTime]
@@ -971,7 +969,6 @@ module.exports.getEventLatestSpeedInfo = async function (req, res) {
         let deviceId = req.body.deviceId;
         let vehicleNo = req.body.vehicleNo;
         let type = req.body.type;
-        let occTime = req.body.occTime;
         let startTime = req.body.startTime;
         let endTime = req.body.endTime;
 

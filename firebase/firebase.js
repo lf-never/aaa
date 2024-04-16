@@ -40,7 +40,7 @@ module.exports.createFirebaseNotification = async function (taskIdList, title, c
                     log.info(`Task ${ taskId } has no driver, no need send firebase notification`)
                 } else {
                     let user = await User.findOne({ where: { driverId: task.driverId } })
-                    if (user && user.firebaseToken) {
+                    if (user?.firebaseToken) {
                         notificationList.push({
                             taskId,
                             token: user.firebaseToken,
@@ -57,7 +57,6 @@ module.exports.createFirebaseNotification = async function (taskIdList, title, c
             }
         }
         if (notificationList.length) {
-            // sendNotification(notificationList, title, content);
             log.info(`Current Notification length => ${ notificationList.length }`)
             let count = Math.ceil(notificationList.length / 100);
             log.info(`Notification will be cut into parts => ${ count }`)
@@ -94,7 +93,6 @@ module.exports.createFirebaseNotification = async function (taskIdList, title, c
 module.exports.createFirebaseNotification2 = async function (notificationList, title, content) {
     try {
         if (notificationList.length) {
-            // sendNotification(notificationList, title, content);
             log.info(`Current Notification length => ${ notificationList.length }`)
             let count = Math.ceil(notificationList.length / 100);
             log.info(`Notification will be cut into parts => ${ count }`)

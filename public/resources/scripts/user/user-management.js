@@ -124,7 +124,7 @@ $(function () {
                 params.pageNum = d.start
                 params.pageLength = d.length
                 let order = d.order;
-                if (order && order.length > 0) {
+                if (order?.length > 0) {
                     let orderColumn = order[0].column;
                     params.orderField = orderColumn == 3 ? 'unit' : orderColumn == 5 ? 'createdAt' : orderColumn == 7 ? 'ord' : 'name';
                     params.orderType = order[0].dir;
@@ -497,7 +497,7 @@ window.viewUserOptHistory = async function(userBaseId, userName) {
         let respCode = res.data.respCode;
         let optInfoList = res.data.respMessage;
         if (respCode == 1) {
-            if (optInfoList && optInfoList.length > 0) {
+            if (optInfoList?.length > 0) {
                 for(let temp of optInfoList) {
                   $('.user-opt-detail-content-div').append(`
                     <div class="row py-1" style="display: flex; border-bottom: 1px solid #e2dede; font-size: 14px;">

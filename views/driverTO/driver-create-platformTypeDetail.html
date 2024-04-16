@@ -9,34 +9,34 @@
         <div class="row">
             <input id="driverPermitTypeDetailId" value="" style="display: none;"/>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                <label class="info-title">Test Type</label><br>
-                <select class="form-select " id="driver-permitType-select">
+                <label class="info-title" for="driver-permitType-select">Test Type</label><br>
+                <select class="form-select " id="driver-permitType-select" name="driver-permitType-select">
                 </select>
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                <label class="info-title">Pass Date</label><br>
+                <label class="info-title" for="passTime-input">Pass Date</label><br>
                 <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;">
-                <input placeholder="" class="form-control passTime-input" style="padding-left: 2rem;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly="" lay-key="16">
+                <input placeholder="" class="form-control passTime-input" name="passTime-input" style="padding-left: 2rem;background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly="" lay-key="16">
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-              <label class="info-title">Past Mileage(km)</label><br>
-              <input type="number" class="form-control basePermitTypeMileage-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+              <label class="info-title" for="basePermitTypeMileage-input">Past Mileage(km)</label><br>
+              <input type="number" class="form-control basePermitTypeMileage-input" name="basePermitTypeMileage-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-              <label class="info-title">No of Attempts</label><br>
-              <input type="number" class="form-control attemptNums-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+              <label class="info-title" for="attemptNums-input">No of Attempts</label><br>
+              <input type="number" class="form-control attemptNums-input" name="attemptNums-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-              <label class="info-title">Tester Code</label><br>
-              <input class="form-control testerCode-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+              <label class="info-title" for="testerCode-input">Tester Code</label><br>
+              <input class="form-control testerCode-input" name="testerCode-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2 score-div" style="display: none;">
-              <label class="info-title">Score</label><br>
-              <input onkeyup="value=value.replace(/[^\d]/g,'')" onblur="checkScore(this)" class="form-control score-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+              <label class="info-title" for="score-input">Score</label><br>
+              <input onkeyup="value=value.replace(/[^\d]/g,'')" name="score-input" onblur="checkScore(this)" class="form-control score-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
             </div>
             <div class="col-md-12 col-sm-12 col-lg-6 mt-2 demerit-point-div" style="display: none;">
-              <label class="info-title">Demerit Point</label><br>
-              <input onkeyup="value=value.replace(/[^\d]/g,'')" onblur="checkDemeritPoint(this)" class="form-control demerit-point-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+              <label class="info-title" for="demerit-point-input">Demerit Point</label><br>
+              <input onkeyup="value=value.replace(/[^\d]/g,'')" name="demerit-point-input" onblur="checkDemeritPoint(this)" class="form-control demerit-point-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
             </div>
         </div>
 
@@ -57,17 +57,17 @@
           <div class="modal-body" style="padding-bottom: 2rem;">
               <div class="row delete-info-div" style="display: none;">
                   <div class="col-md-6 col-sm-6 col-lg-6">
-                      <label class="info-title">Delete By:</label><br><label class="delete-by-label"></label>
+                      <label class="info-title" for="delete-by-for">Delete By:</label><br><span class="delete-by-label"></span>
                   </div>
                   <div class="col-md-6 col-sm-6 col-lg-6">
-                      <label class="info-title">Delete Date Time:</label><br><label class="delete-time-label"></label>
+                      <label class="info-title" for="delete-date-time-for">Delete Date Time:</label><br><span class="delete-time-label"></span>
                   </div>
               </div>
               <div class="row">
                   <input id="currentPermitDetailId" value="" style="display: none;"/>
                   <div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-                      <label class="info-title">Please enter reason for deletion of record:</label><br>
-                      <textarea rows="3" class="form-control delete-remarks-input"></textarea>
+                      <label class="info-title" for="delete-remarks-input">Please enter reason for deletion of record:</label><br>
+                      <textarea rows="3" class="form-control delete-remarks-input" name="delete-remarks-input"></textarea>
                   </div>
               </div>
           </div>

@@ -397,7 +397,7 @@ const refreshPocation = function () {
     }
     axios.post("/vehicle/getVehicleLastPosition", { vehicleNoArray: vehicleNoArray }).then(async res => {
         let vehicleLastPosList = res.result.driverList;
-        if (vehicleLastPosList && vehicleLastPosList.length > 0) {
+        if (vehicleLastPosList?.length > 0) {
             for (let vehicleLastPos of vehicleLastPosList) {
                 $(".location-label-" + vehicleLastPos.vehicleNo).text(vehicleLastPos.position);
             }
@@ -412,7 +412,7 @@ const deleteVehicle = async function (vehicleNo) {
             let taskList = effectiveDataList ? effectiveDataList.taskList : [];
             let hotoList = effectiveDataList ? effectiveDataList.hotoList : [];
             let loanList = effectiveDataList ? effectiveDataList.loanList : [];
-            if ((taskList && taskList.length > 0) || (hotoList && hotoList.length > 0) || (loanList && loanList.length > 0)) {
+            if ((taskList?.length > 0) || (hotoList?.length > 0) || (loanList?.length > 0)) {
                 let startedTask = taskList ? taskList.find(item => item.driverStatus.toLowerCase() == 'started') : null;
                 if (startedTask) {
                     $.confirm({

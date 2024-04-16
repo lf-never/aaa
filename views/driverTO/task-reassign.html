@@ -113,8 +113,8 @@
             <div class="modal-title">
                 <div class="title-content py-4" style="display: flex;">
                     <div style="width: calc(100% - 50px); padding-left: 20px;">
-                        <label class="intentId-label"></label><br/>
-                        <label class="title-purpose-label fs-4" style="font-weight: 600;"></label>
+                        <span for="taskReassign-intentId-for" class="intentId-label"></span><br/>
+                        <span  for="taskReassign-title-purpose-for" class="title-purpose-label fs-4" style="font-weight: 600;"></span>
                     </div>
                     <div style="width: 50px; text-align: center; height: 100%; padding-top: 10px;">
                         <img alt="" class="close-img" src="../images/x-close.svg">
@@ -132,14 +132,14 @@
                                         <div class="info-value taskExecutionDate"></div>
                                     </div>
                                     <div class="row">
-                                        <label class="info-title">Status</label>
-                                        <div class="circle-status" style="width: 110px; margin-left: 10px;">
+                                        <label class="info-title" for="taskReassign-status-for">Status</label>
+                                        <div class="circle-status taskReassign-status-for" name="taskReassign-status-for" style="width: 110px; margin-left: 10px;">
                                             <div class="div-table">
                                                 <div class="div-table-cell">
                                                     <div class="div-circle task-statusColor" style="background-color: #0d55f0;"></div>
                                                 </div>
                                                 <div class="div-table-cell">
-                                                    <label class="task-status">Assigned</label>
+                                                    <label class="task-status" for="taskReassign-assigned-for">Assigned</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -147,7 +147,7 @@
                                     <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                     <div class="row">    
                                         <div class="col-12 my-2">
-                                            <label class="serviceModelLabel" style="font-size: 16px; font-weight: bolder;"></label>
+                                            <span class="serviceModelLabel" style="font-size: 16px; font-weight: bolder;"></span>
                                         </div>
                                         <div class="col-12" style="display: flex;">
                                             <div style="width: 30px;">
@@ -180,7 +180,7 @@
                                     <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                     <div class="row">
                                         <div class="col-12 my-2">
-                                            <label style="font-size: 16px; font-weight: bolder;">Vehicle Details</label>
+                                            <label for="taskReassign-vehicle-info-for" style="font-size: 16px; font-weight: bolder;">Vehicle Details</label>
                                         </div>
                                         <div class="col-12">
                                             <div>
@@ -197,36 +197,36 @@
                                     <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                     <div class="row">
                                         <div class="col-12 my-2">
-                                            <label style="font-size: 16px; font-weight: bolder;">Reason(s) for reassignment</label>
+                                            <label for="taskReassign-reason-title-for" style="font-size: 16px; font-weight: bolder;">Reason(s) for reassignment</label>
                                         </div>
                                         <div class="col-12">
                                             <div class="driver-reasons" style="padding-left: 10px; display: none;">
                                                 <div class="row">
                                                     <div class="reassignReasonDiv active px-2" style="width: 160px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Reallocation to Ops</label> 
+                                                        <label for="taskReassign-realloction-for" style="line-height: 22px; padding-top: 9px;">Reallocation to Ops</label> 
                                                     </div>
                                                     <div class="reassignReasonDiv px-2 mx-2" style="width: 180px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Driver on urgent leave</label> 
+                                                        <label for="taskReassign-driver-urgent-leave-for" style="line-height: 22px; padding-top: 9px;">Driver on urgent leave</label> 
                                                     </div>
                                                 </div>
                                                 <div class="row pt-2">
                                                     <div class="reassignReasonDiv px-2" style="width: 80px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Others</label> 
+                                                        <label for="taskReassign-others-for" style="line-height: 22px; padding-top: 9px;">Others</label> 
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="vehicle-reasons" style="padding-left: 10px; display: none;">
                                                 <div class="row">
                                                     <div class="reassignReasonDiv active px-2" style="width: 210px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Vehicle Under Maintenance</label> 
+                                                        <label for="taskReassign-vehicle-under-for" style="line-height: 22px; padding-top: 9px;">Vehicle Under Maintenance</label> 
                                                     </div>
                                                     <div class="reassignReasonDiv px-2 mx-2" style="width: 180px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Vehicle Out Of Service</label> 
+                                                        <label for="taskReassign-vehicle-out-for" style="line-height: 22px; padding-top: 9px;">Vehicle Out Of Service</label> 
                                                     </div>
                                                 </div>
                                                 <div class="row pt-2">
                                                     <div class="reassignReasonDiv px-2" style="width: 80px;">
-                                                        <label style="line-height: 22px; padding-top: 9px;">Others</label> 
+                                                        <label for="taskReassign-vehicle-others-for" style="line-height: 22px; padding-top: 9px;">Others</label> 
                                                     </div>
                                                 </div>
                                             </div>
@@ -242,12 +242,12 @@
                     <div class="row my-3" style="display: flex;">
                         <div class="mt-1" style="width: 50%;display: flex;justify-content: flex-start;">
                             <div class="opt-btn-div tr-opt-btn-div-cancel" onclick="cancleEditTask();" role="button" tabindex="0">
-                                <label class="opt-btn-label fs-6">Cancel</label>
+                                <label for="taskReassing-cancel-for" class="opt-btn-label fs-6">Cancel</label>
                             </div>
                         </div>
                         <div class="mt-1 reassign-btn-div" style="width: 50%;display: flex;justify-content: flex-end;">
                             <div onclick="confirmEditTask();" role="button" tabindex="0" class="opt-btn-div tr-opt-btn-div-create" style="background-color: #1B9063;width: 200px;">
-                                <label style="color: white;" class="opt-btn-label fs-6">Reassign</label>
+                                <label for="taskReassign-reassign-for" style="color: white;" class="opt-btn-label fs-6">Reassign</label>
                             </div>
                         </div>
                     </div>

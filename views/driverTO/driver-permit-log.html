@@ -17,7 +17,7 @@
       <div class="modal-header" style="background-color: #1C9063 !important;">
         <h4 class="modal-title">Remarks</h4>
         <div class="opt-div">
-          <label class="addpermitlog-label" style="margin-right: 5px;" onclick="addPermitLog()" role="button">New</label>
+          <span class="addpermitlog-label" style="margin-right: 5px;" onclick="addPermitLog()" role="button" tabindex="0">New</span>
           <button type="button" class="btn-close btn-close-white driverCancel" style="padding-top: 2px;" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
       </div>
@@ -25,24 +25,24 @@
         <div class="row">
           <div class="row last-log-div">
             <div class="col-md-6 col-sm-6 col-lg-6">
-                <label class="info-title">Remarks By:</label><br><label class="remark-by-label"></label>
+                <label for="driverPermit-remarksBy-for" class="info-title">Remarks By:</label><br><span class="remark-by-label"></span>
             </div>
             <div class="col-md-6 col-sm-6 col-lg-6">
-                <label class="info-title">Date Time:</label><br><label class="remark-time-label"></label>
+                <label for="driverPermit-dataTime-for" class="info-title">Date Time:</label><br><span class="remark-time-label"></span>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12 col-sm-12 col-lg-12 mt-2">
-                <label class="info-title">Remarks:</label><br>
-                <textarea rows="3" class="form-control permit-remarks-input"></textarea>
+                <label class="info-title" for="permit-remarks-input">Remarks:</label><br>
+                <textarea rows="3" class="form-control permit-remarks-input" name="permit-remarks-input"></textarea>
             </div>
           </div>
         </div>
 
         <div class="row logs-div">
             <div class="col-12 mt-2">
-              <label style="color: black; font-weight: 900;">Remarks List</label><br>
-              <div class="driverRemarksLogContentDiv">
+              <label style="color: black; font-weight: 900;" for="driverRemarksLogContentDiv">Remarks List</label><br>
+              <div class="driverRemarksLogContentDiv" name="driverRemarksLogContentDiv">
               </div>
             </div>
         </div>

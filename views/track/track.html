@@ -34,7 +34,6 @@
             position: absolute;
             left: 3%;
             top: 5%;
-            background-color: #bababa;
             border-radius: 10px;
             width: 500px;
             background-color: rgba(51, 49, 50, .8);
@@ -57,7 +56,6 @@
             z-index: 2;
             position: absolute;
             bottom: 2%;
-            background-color: #bababa;
             border-radius: 10px;
             background-color: rgb(255 255 255 / 63%);
         }
@@ -79,7 +77,6 @@
         }
         .convoy-btn{
             background-color: #337ab7;
-            /*border-color: #337ab7;*/
             color: white;
             border: 1px solid transparent;
             padding: 3px 8px;
@@ -114,6 +111,10 @@
         }
         .layui-transfer-box {
             border-radius: 5px !important;
+            background-color: rgba(51, 49, 50, .8) !important;
+            border-width: 0 !important;
+            color: white !important;
+            height: 302px !important;
         }
         .layui-input-block span {
             color: white !important;
@@ -124,18 +125,7 @@
         .layui-form-checkbox span {
             color: white !important;
         }
-        .layui-form-checkbox:hover span{
-            /* color: black !important; */
-        }
-        .layui-transfer-data li:hover span {
-            /* color: black !important; */
-        }
-        .layui-transfer-box {
-            background-color: rgba(51, 49, 50, .8) !important;
-            border-width: 0 !important;
-            color: white !important;
-            height: 302px !important;
-        }
+       
         .layui-transfer-header {
             height: 28px !important;
             line-height: 28px !important;
@@ -150,9 +140,7 @@
         .layui-transfer-search .layui-input {
             height: 26px !important;
         }
-        .layui-transfer-search .layui-icon-search {
-            /* margin-top: -11px !important; */
-        }
+
         .layui-collapse {
             border-width: 0 !important;
         }
@@ -222,57 +210,36 @@
                     <table aria-hidden="true" class="track-table">
                         <tr>
                             <td>
-                                <label>Select Date :</label>
+                                <span>Select Date :</span>
                             </td>
                             <td>
                                 <div style="height: 28px; width: 190px; background-color: #242122; padding: 2px 15px 2px 15px;border-radius: 5px;">
-                                    <label class="layui-icon layui-icon-date selectDate" style="cursor: pointer;font-size: 13px; width: 100%;">&nbsp;&nbsp;</label>
+                                    <span class="layui-icon layui-icon-date selectDate" style="cursor: pointer;font-size: 13px; width: 100%;">&nbsp;&nbsp;</span>
                                 </div>
                             </td>
                         </tr>
                         <tr>
-                            <td><label>Device Name:</label></td>
+                            <td><span>Device Name:</span></td>
                             <td class="px-3 py-2" style="background-color: rgba(51, 49, 50, .8); border-radius: 5px;">
-                                <!-- <div>
-                                    <input class="form-control form-control-sm" style="color: white; border-width: 0; background-color: rgba(51, 49, 50, .8);" placeholder="Search" type="search" />
-                                </div> -->
+                                
                                 <div id="convoy-select" class="demo-transfer" style="min-height: 100px; max-height: 200px; overflow-y: auto;"></div>
                             </td>
                         </tr>
                         
                         <tr>
                             <td>
-                                <label>Select Time :</label>
+                                <span>Select Time :</span>
                             </td>
                             <td>
                                 <div style="height: 28px; width: 190px; background-color: #242122; padding: 2px 15px 2px 15px;border-radius: 5px;">
-                                    <label class="layui-icon layui-icon-date selectTime" style="cursor: pointer;font-size: 13px; width: 100%;">&nbsp;&nbsp;</label>
+                                    <span class="layui-icon layui-icon-date selectTime" style="cursor: pointer;font-size: 13px; width: 100%;">&nbsp;&nbsp;</span>
                                 </div>
                             </td>
                         </tr>
-                        <!-- <tr>
-                            <td>
-                                <label>Start Time :</label>
-                            </td>
-                            <td>
-                                <div style="height: 28px; width: 190px; background-color: #242122; padding: 2px 15px 2px 15px;border-radius: 5px;">
-                                    <label class="layui-icon layui-icon-date start-time" style="cursor: pointer;font-size: 13px;">&nbsp;&nbsp;</label>
-                                </div>
-                            </td>
-                        </tr>
+                        
                         <tr>
                             <td>
-                                <label>End Time :</label>
-                            </td>
-                            <td>
-                                <div style="height: 28px; width: 190px; background-color: #242122; padding: 2px 15px 2px 15px;border-radius: 5px;">
-                                    <label class="layui-icon layui-icon-date end-time" style="cursor: pointer;font-size: 13px;">&nbsp;&nbsp;</label>
-                                </div>
-                            </td>
-                        </tr> -->
-                        <tr>
-                            <td>
-                                <label>Speed :</label>
+                                <span>Speed :</span>
                             </td>
                             <td>
                                 <select class="convoy-select speed" style="width: 190px; height: 28px;">
@@ -317,9 +284,7 @@
         </div>
     </div>
     <div class="track-action row" style="width: 60px;">
-        <!-- <button class="convoy-btn convoy-track-action convoy-pause">Pause</button> -->
-        
-        <!-- <button class="convoy-btn convoy-track-action convoy-continue">Continue</button> -->
+      
     </div>
 
     <div class="realTimeSpeed" style="width: 98%; margin-left: 1%">

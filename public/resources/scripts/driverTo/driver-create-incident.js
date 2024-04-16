@@ -11,7 +11,7 @@ $(function () {
 
 const initDataDetail = async function () {
     const initDataTable = function (unitList) {
-        let table = $('#categoryContentDiv-table').DataTable({
+        $('#categoryContentDiv-table').DataTable({
             "ordering": true,
             "searching": false,
             "autoWidth": false,

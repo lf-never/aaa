@@ -595,7 +595,7 @@ const initMonthHandler = async function () {
 
     //stat effective task number.
     let effectiveTaskNum = 0;
-    if (taskList && taskList.length > 0) {
+    if (taskList?.length > 0) {
         for (let temp of taskList) {
             if (temp.taskId && temp.taskId.indexOf('onEvent') == -1) {
                 effectiveTaskNum++;

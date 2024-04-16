@@ -4,8 +4,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-    table {
-        -webkit-print-color-adjust:exact;
+    @media print {  
+        table {  
+            print-color-adjust: exact;  
+        }  
     }
     
     #indent-echart {
@@ -88,14 +90,14 @@
                 <table aria-hidden="true" class="indents-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">Utilisation</th>
+                            <th colspan="5" id="">Utilisation</th>
                         </tr>
                         <tr>
-                            <th></th>
-                            <th>Unit Average Qty</th>
-                            <th>Previous Month Qty</th>
-                            <th>Current Month Qty</th>
-                            <th>Indication (% Change)</th>
+                            <th id=""></th>
+                            <th id="">Unit Average Qty</th>
+                            <th id="">Previous Month Qty</th>
+                            <th id="">Current Month Qty</th>
+                            <th id="">Indication (% Change)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,14 +113,14 @@
                 <table aria-hidden="true" class="indentTypes-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">Indent Types</th>
+                            <th colspan="5"  id="">Indent Types</th>
                         </tr>
                         <tr>
-                            <th></th>
-                            <th>Ops</th>
-                            <th>Operation</th>
-                            <th>Training</th>
-                            <th>Admin</th>
+                            <th id=""></th>
+                            <th id="">Ops</th>
+                            <th id="">Operation</th>
+                            <th id="">Training</th>
+                            <th id="">Admin</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -142,14 +144,14 @@
                 <table aria-hidden="true" class="safety-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">Transport Safety</th>
+                            <th colspan="5" id="">Transport Safety</th>
                         </tr>
                         <tr>
-                            <th></th>
-                            <th>Incident</th>
-                            <th>Rapid Acc</th>
-                            <th>Hard Braking</th>
-                            <th>Speeding</th>
+                            <th id=""></th>
+                            <th id="">Incident</th>
+                            <th id="">Rapid Acc</th>
+                            <th id="">Hard Braking</th>
+                            <th id="">Speeding</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,11 +167,11 @@
                 <table aria-hidden="true" class="to-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">TO</th>
+                            <th colspan="5" id="">TO</th>
                         </tr>
                         <tr>
-                            <th>Personnel</th>
-                            <th>Qty</th>
+                            <th id="">Personnel</th>
+                            <th id="">Qty</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -182,11 +184,11 @@
                 <table aria-hidden="true" class="vehicle-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">Vehicle</th>
+                            <th colspan="5" id="">Vehicle</th>
                         </tr>
                         <tr>
-                            <th>Vehicle Usage</th>
-                            <th>Qty</th>
+                            <th id="">Vehicle Usage</th>
+                            <th id="">Qty</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -199,14 +201,14 @@
                 <table aria-hidden="true" class="tos-report-table" style="width: 100%; text-align: center;">
                     <thead>
                         <tr style="background-color: #1F4E78; color: white;">
-                            <th colspan="5">TOS Feedback</th>
+                            <th colspan="5" id="">TOS Feedback</th>
                         </tr>
                         <tr>
-                            <th style="min-width: 50px;"></th>
-                            <th>Indent ID</th>
-                            <th>TO</th>
-                            <th>Date Time</th>
-                            <th>Description</th>
+                            <th style="min-width: 50px;" id=""></th>
+                            <th id="">Indent ID</th>
+                            <th id="">TO</th>
+                            <th id="">Date Time</th>
+                            <th id="">Description</th>
                         </tr>
                     </thead>
                     <tbody>

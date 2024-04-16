@@ -21,11 +21,6 @@
         }
 
         .div-node {
-          /* border: 1px solid #e3e3e3;
-          border-radius: 10px;
-          background-color: #FAFAFA; */
-          /* margin-right: 1.1rem!important;
-          margin-bottom: 0.6rem!important; */
           width: 500px;
           height: 200px;
         }
@@ -50,9 +45,7 @@
           margin-top: -7rem !important;
         }
 
-        .div-row-nodes {
-          /* height: 20px !important; */
-        }
+       
 
         .leaflet-popup-content {
           width: unset !important; 
@@ -222,11 +215,8 @@
             bottom: 25px;
         }
         marquee {
-            /* direction: right;
-            ehavior: scroll; */
             font-size: 0.9rem;
             line-height: 25px;
-            /* display: inline; */
         }
         .default_theme {
           width: 12px;
@@ -335,9 +325,7 @@
           </div>
       </div>
 
-      <!-- <div class="col-5" style="text-align: right;padding-right: 1rem;">
-          <button type="button" class="btn btn-primary mvAndMtTotal-close">close</button>
-      </div> -->
+
         
     </div>
     
@@ -357,13 +345,7 @@
       </div>
     </div>
 
-    <!-- <div class="div-deployed">
-      <div class="row px-0" style="padding-left: 0.5rem;padding-right: 0.2rem !important;">
-        <div class="row py-2 div-deployed-top" style="padding-right: 0.9rem !important;padding-top: 0rem !important;overflow-x: auto;flex-wrap: nowrap;display: flex;justify-content: normal;align-items: center;">
-          
-        </div>
-      </div>
-    </div> -->
+
   
     <div class="row px-0 py-2" style="height: 100%;">
         <div class="px-0" style="height: 100%;">
@@ -381,13 +363,13 @@
                           <div style="height: 50px; line-height: 1;">
                             <div class="div-table">
                               <div class="div-table-cell">
-                                <label class="text-black"  >Speeding</label>
-                                <label class="text-black" style=" padding-top: 0;"> </label>
+                                <span class="text-black"  >Speeding</span>
+                                <span class="text-black" style=" padding-top: 0;"> </span>
                               </div>
                             </div>
                           </div>
                           <div class="mt-1"><img alt="" src="../images/transport/event/Speeding.svg"></div>
-                          <div><label class="card-font-number speeding">0</label></div>
+                          <div><span class="card-font-number speeding">0</span></div>
                       </div>
                   </div>
                   <div class="col p-2 pb-0" style="padding-left: 0 !important;">
@@ -395,13 +377,13 @@
                           <div style="height: 50px; line-height: 1;">
                             <div class="div-table">
                               <div class="div-table-cell">
-                                <label class="text-black" >Rapid</label><br>
-                                <label class="text-black" style=" padding-top: 0;">Acc</label>
+                                <span class="text-black" >Rapid</span><br>
+                                <span class="text-black" style=" padding-top: 0;">Acc</span>
                               </div>
                             </div>
                           </div>
                           <div class="mt-1"><img alt="" src="../images/transport/event/Rapid Acc.svg"></div>
-                          <div><label class="card-font-number rapidAcc">0</label></div>
+                          <div><span class="card-font-number rapidAcc">0</span></div>
                       </div>
                   </div>
                   <div class="col p-2 pb-0" style="padding-left: 0 !important;">
@@ -410,13 +392,13 @@
                             <div class="div-table">
                               <div class="div-table-cell">
 
-                                <label class="text-black">Hard</label>
-                                <label class="text-black" style=" padding-top: 0;">Braking</label>
+                                <span class="text-black">Hard</span>
+                                <span class="text-black" style=" padding-top: 0;">Braking</span>
                               </div>
                             </div>
                           </div>
                           <div class="mt-1"><img alt="" src="../images/transport/event/Hard Braking.svg"></div>
-                          <div><label class="card-font-number hardBraking">0</label></div>
+                          <div><span class="card-font-number hardBraking">0</span></div>
                       </div>
                   </div>
                   <div class="col p-2 pb-0" style="padding-left: 0 !important;">
@@ -425,13 +407,13 @@
                             <div class="div-table">
                               <div class="div-table-cell">
                                 
-                                <label class="text-black">Missing</label>
-                                <label class="text-black" style=" padding-top: 0;"> </label>
+                                <span class="text-black">Missing</span>
+                                <span class="text-black" style=" padding-top: 0;"> </span>
                               </div>
                             </div>
                           </div>
                           <div class="mt-1"><img alt="" src="../images/transport/event/Idle Time.svg"></div>
-                          <div><label class="card-font-number missing">0</label></div>
+                          <div><span class="card-font-number missing">0</span></div>
                       </div>
                   </div>
                   <div class="col p-2 pb-0" style="padding-left: 0 !important;">
@@ -440,32 +422,27 @@
                           <div class="div-table">
                             <div class="div-table-cell">
                             
-                              <label class="text-black" >Alert</label>
-                              <label class="text-black" style=" padding-top: 0;"> </label>
+                              <span class="text-black" >Alert</span>
+                              <span class="text-black" style=" padding-top: 0;"> </span>
                             </div>
                           </div>
                         </div>
                         <div class="mt-1"><img alt="" src="../images/transport/event/alert-white.svg"></div>
-                        <div><label class="card-font-number noGoAlert">0</label></div>
+                        <div><span class="card-font-number noGoAlert">0</span></div>
                     </div>
                   </div>
 
                   <div class="col-12">
                     <div class="row mx-2 my-2">
                       <div class="col-6 text-start">
-                        <label class="showReal showRealSpeed px-2" style="border: solid 1px #215bc7; border-radius: 5px; line-height: 1.5; cursor: pointer;  color: #215bc7;user-select: none;">>>> Realtime Speeding</label><br>
+                        <span class="showReal showRealSpeed px-2" style="border: solid 1px #215bc7; border-radius: 5px; line-height: 1.5; cursor: pointer;  color: #215bc7;user-select: none;">>>> Realtime Speeding</span><br>
                       </div>
                       <div class="col-6 text-end">
-                        <label class="showReal showRealAlert px-2" style="border: solid 1px #215bc7; border-radius: 5px; line-height: 1.5; cursor: pointer;  color: #215bc7;user-select: none;">>>> Realtime Alert</label>
+                        <span class="showReal showRealAlert px-2" style="border: solid 1px #215bc7; border-radius: 5px; line-height: 1.5; cursor: pointer;  color: #215bc7;user-select: none;">>>> Realtime Alert</span>
                       </div>
                     </div>
                   </div>
-                  <!-- <div class="col-12 text-end mt-2" style="padding-right: 5px; line-height: 1;">
-                    <label class="showReal showRealSpeed" style="cursor: pointer; font-weight: 600; color: #215bc7;user-select: none;">>>> Realtime Speeding</label><br>
-                  </div>
-                  <div class="col-12 text-end mt-2 mb-2" style="padding-right: 5px; line-height: 1;">
-                    <label class="showReal showRealAlert" style="cursor: pointer; font-weight: 600; color: #215bc7;user-select: none;">>>> Realtime Alert</label>
-                  </div> -->
+                 
               </div>
               <div class="row driver-datas position-relative">
                   
@@ -517,15 +494,13 @@
     .dataTables_wrapper.no-footer .dataTables_scrollBody {
         border-bottom: none;
     }
-    /* .event-table th {
-      white-space: nowrap;
-    } */
+
   </style>
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 90%;">
       <div class="modal-content">
           <div class="modal-header" style="background-color: #1B9063 !important;">
               <h5 class="modal-title" style="color: white;">Attention</h5>
-              <label class="modal-time" style="margin-left: 80px; color: white; font-weight: 300; font-size: 15px;"></label>
+              <span class="modal-time" style="margin-left: 80px; color: white; font-weight: 300; font-size: 15px;"></span>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body" style="padding-bottom: 2em; padding-top: 1em;">
@@ -533,42 +508,42 @@
                   <div class="col-2 px-2">
                     <div class="driver-statistics-card driver-statistics-card2 active" data-type="all" style="height: fit-content !important; background-color: rgb(170, 170, 170) !important; ">
                       <div>
-                        <label class="text-black">ALL</label>
+                        <span class="text-black">ALL</span>
                       </div>
                     </div>
                   </div>
                   <div class="col-2 px-2">
                     <div class="driver-statistics-card driver-statistics-card2" data-type="speeding" style="height: fit-content !important; background-color: #BF9F27 !important;">
                       <div>
-                        <label class="text-black">Speeding</label>
+                        <span class="text-black">Speeding</span>
                       </div>
                     </div>
                   </div>
                   <div class="col-2  px-2">
                     <div class="driver-statistics-card driver-statistics-card2" data-type="rapidAcc" style="height: fit-content !important; background-color: #6287F3 !important;">
                       <div>
-                        <label class="text-black">Rapid Acc</label>
+                        <span class="text-black">Rapid Acc</span>
                       </div>
                     </div>
                   </div>
                   <div class="col-2  px-2">
                     <div class="driver-statistics-card driver-statistics-card2" data-type="hardBraking" style="height: fit-content !important; background-color: #79BCDF !important;">
                       <div>
-                        <label class="text-black">Hard Braking</label>
+                        <span class="text-black">Hard Braking</span>
                       </div>
                     </div>
                   </div>
                   <div class="col-2  px-2">
                     <div class="driver-statistics-card driver-statistics-card2" data-type="missing" style="height: fit-content !important; background-color: #B976EA !important;">
                       <div>
-                        <label class="text-black">Missing</label>
+                        <span class="text-black">Missing</span>
                       </div>
                     </div>
                   </div>
                   <div class="col-2  px-2">
                     <div class="driver-statistics-card driver-statistics-card2" data-type="noGoZone" style="height: fit-content !important; background-color: #db7198  !important;">
                       <div>
-                        <label class="text-black">Alert</label>
+                        <span class="text-black">Alert</span>
                       </div>
                     </div>
                   </div>
@@ -579,17 +554,14 @@
                   </div>
                   <div class="mt-3 col-6 col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-6 echarts-div">
                       <div class="echarts-title">
-                          <label class="modal-title2"></label>
+                          <span class="modal-title2"></span>
                       </div>
                       <div id="speed-echart" style="height: 480px;"></div>
                   </div>
               </div>
               
           </div>
-          <!-- <div class="modal-footer">
-              <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-sm btn-primary" id="btn-ok">OK</button>
-          </div> -->
+         
       </div>
   </div>
 </div>
@@ -611,25 +583,24 @@
 
 <% if ([ 'hq', 'administrator' ].includes(userType.toLowerCase())) { %>
 <div class="modal fade" id="modal-hubConf" style="min-width: 1250px; overflow-x: auto;" tabindex="-1" data-backdrop="static" data-keyboard="false">
-  <style>
-  </style>
+
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
           <div class="modal-header" style="background-color: #1B9063 !important;">
               <h5 class="modal-title fs-5" style="color: white;">Color Configuration</h5>
-              <label class="modal-time" style="margin-left: 80px; color: white; font-weight: 300; font-size: 15px;"></label>
+              <span class="modal-time" style="margin-left: 80px; color: white; font-weight: 300; font-size: 15px;"></span>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body text-center" style="overflow-y: auto;">
               <div class="row py-2" style="background-color: #f1f1f1;">
                   <div class="col-3">
-                    <label class="fw-bold">Hub</label>
+                    <span class="fw-bold">Hub</span>
                   </div>
                   <div class="col-4">
-                    <label class="fw-bold">Current Color</label>
+                    <span class="fw-bold">Current Color</span>
                   </div>
                   <div class="col-5">
-                    <label class="fw-bold">New Color</label>
+                    <span class="fw-bold">New Color</span>
                   </div>
               </div>
               <div class="color-item-container">

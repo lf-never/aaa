@@ -44,15 +44,7 @@
 		padding: 2em 1em;
 		box-shadow: 0 0 10px #d1d1d1;
 	}
-	/* .laydate-month-list>li {
-		margin: 0;
-	}
-	.layui-laydate-content {
-		height: 140px
-	}
-	.layui-laydate-content>table {
-		display: none;
-	} */
+	
 	.arrow-img {
 		width: 20px;
 		cursor: pointer;
@@ -95,11 +87,7 @@
 		border-radius: 13px; 
 		text-align: center;
 	}
-	.calender-container table tbody tr:first-child td:first-child {
-		/* background-color: #1B9063; */
-		/* border-top-left-radius: 15px; */
-		/* border: solid 1px rgb(212, 212, 212); */
-	}
+	
 	.calender-container .weekday.active {
 		width: 25px; 
 		height: 25px; 
@@ -159,7 +147,7 @@
 		background-color: white;
 
 		position: absolute; 
-		/* right: 24%; */
+
 		margin-top: 5px;
 		display: none;
 		z-index: 10;
@@ -197,7 +185,7 @@
 		white-space: nowrap;
 		cursor: pointer;
 
-		/* display: inline-block; */
+	
 		text-overflow: ellipsis;
 		overflow: hidden;
 	}
@@ -276,17 +264,6 @@
 		padding: 2px;
 	}
 
-	.date {
-		width: 1.8em;
-		text-align: center;
-	}
-	.date.active {
-		background-color: #1B9063;
-		border-radius: 1em;
-		font-weight: bold;
-		line-height: 1.8em;
-		color: white;
-	}
 	.vehicle-leave {
 		background-color: #f1b9b9 !important;
 	}
@@ -300,8 +277,8 @@
 		<div class="row mx-0 justify-content-between" style="line-height: 40px;">
 			<div class="col-auto ms-3">
 				<img alt="" class="arrow-img pre-month mx-2" style="margin-top: -11px;" src="../scripts/driverTo/icons/arrow-left.svg">
-				<label id="selectedMonth" class="selectedMonth user-select-none" style="display: none;"></label>
-				<label id="selectedMonth2" class="selectedMonth2 user-select-none"></label>
+				<label id="selectedMonth" for="selectedMonth-for" class="selectedMonth user-select-none" style="display: none;"></label>
+				<span id="selectedMonth2" class="selectedMonth2 user-select-none"></span>
 				<img alt="" class="arrow-img next-month mx-2" style="margin-top: -11px;" src="../scripts/driverTo/icons/arrow-right.svg">
 			</div>
 			<div class="col-auto me-3" style="text-align: left;">

@@ -80,7 +80,7 @@ const initVehicleClassList = async function() {
     if (code == 1)  {
         $('.permitTypeDetailDiv').empty();
         let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
-        if (dataList && dataList.length > 0) {
+        if (dataList?.length > 0) {
         for(let temp of dataList) {
           let operationList = temp.operation.split(',')
           let actionHtml = ``;
@@ -97,9 +97,7 @@ const initVehicleClassList = async function() {
             `;
           }
 
-          // if (!actionHtml) {
-          //   actionHtml = temp.approveStatus;
-          // }
+
           $('.permitTypeDetailDiv').append(`
             <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
               <div style="width: calc(100%/7);">${ temp.permitType.indexOf('CL ') > -1 ? `PRT ${ temp.permitType }` : temp.permitType}</div>
@@ -159,7 +157,11 @@ const initPermitTypeSelect = async function() {
       $("#driver-permitType-select").empty();
       let optionHtml = `<option value=""></option>`;
       for (let item of permitTypeList) {
-          optionHtml += `<option value="${item.permitType}">${item.permitType.indexOf('CL ') > -1 ? `PRT ${ item.permitType }` : item.permitType}</option>`
+        let permitType = item.permitType
+        if(item.permitType.indexOf('CL ') > -1){
+          permitType = `PRT ${ item.permitType }`
+        }
+        optionHtml += `<option value="${item.permitType}">${ permitType }</option>`
       }
       $("#driver-permitType-select").append(optionHtml);
 

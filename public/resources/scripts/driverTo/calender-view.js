@@ -101,12 +101,12 @@ const initMonthSelectHandler = function () {
 
 const initWeekDaysHandler = async function (weekIndex, year, month) {
 	const initWeekDaysLabel = function (weekIndex, year, month) {
-		let date = moment({ year, month });
-		date = date.add(weekIndex, 'W');
+		let initDate = moment({ year, month })
+		let date = initDate.add(weekIndex, 'W');
 		let startDate = date.startOf('isoWeek').format('DD');
 		let endDate = date.endOf('isoWeek').format('DD');
 		let currentMonth = date.startOf('isoWeek').format('MMM');
-		selectedWeek = `${ currentMonth } ${ startDate }-${ endDate }`
+		let selectedWeek = `${ currentMonth } ${ startDate }-${ endDate }`
 		console.log(`selectedWeek => ${ selectedWeek }`);
 		let dateList = []
 		for (let index = 0; index < 7; index++) {
@@ -155,7 +155,6 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 	const initDriverContainer = async function (startDate, driverList) {
 		let driverIndex = 0;
 		for (let driver of driverList) {
-			// if (driver.driverName != 'br100-2') continue;
 			driverIndex ++;
 			let html = `
 				<td>
@@ -171,23 +170,13 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 				</td>
 			`;
 
-			// let driverLeaveDays = await axios.post('/driver/getDriverLeaveDays',{
-			// 	driverId: driver.driverId
-			// }).then(function (res) {
-			// 	if (res.data.respCode === 1) {
-			// 		return res.data.respMessage
-			// 	} else {
-			// 		return [];
-			// 	}
-			// });
-
 			let tdWidth = $('.weekTaskInfo td:last').width();
 
 			let maxTaskMarginTop = 0;
 			// index => Use for judge current date index
 			for (let index = 0; index < 7; index++) {
 				let taskHtml = ``, totalTask = [], totalDriver = [];
-				// let checkTask = false;
+	
 				let currentDate = moment(startDate).add(index, 'day');
 
 				let barCount = 0;
@@ -216,27 +205,10 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 					dayLength = getDateLength(calculateEndDate, calculateStartDate) + 1;
 					// max size is 7 ever week
 					if (dayLength > 7) dayLength = 7;
-
-					// if (moment(moment(startDate).add(6, 'day').format('YYYY-MM-DD')).isBefore(moment(task.indentEndTime).format('YYYY-MM-DD'))) {
-					// 	console.log(111)
-					// 	dayLength = getDateLength(moment(startDate).endOf('isoWeek'), task.indentStartTime) + 1
-					// 	if (dayLength > 7) dayLength = 7
-					// } else if (moment(startDate).isSameOrBefore(moment(task.indentStartTime))) {
-					// 	console.log(222)
-					// 	dayLength = getDateLength(task.indentEndTime, task.indentStartTime) + 1
-					// } else {
-					// 	console.log(333)
-					// 	dayLength = getDateLength(task.indentEndTime, startDate) + 1
-					// }
-					// console.log('dayLength -> ', dayLength)
 					
 					// IF through monday, need check here
-					// if ((index == 0 && currentDate.get('date') >= moment(task.indentStartTime).get('date')) 
 					if ((index == 0 && moment(moment(currentDate).format('YYYY-MM-DD')).isSameOrAfter(moment(task.indentStartTime).format('YYYY-MM-DD'))) 
-					// || currentDate.isSame(task.indentStartTime, 'day')) {
 					|| moment(moment(currentDate).format('YYYY-MM-DD')).isSame(moment(task.indentStartTime).format('YYYY-MM-DD'))) {
-
-						// if (currentDate.isSame(task.indentStartTime, 'day')) {
 						barCount ++;
 						let theme = "Default"
 						if (task.purpose == 'Driving Training' || task.purpose == 'Training') theme = 'Training'
@@ -248,48 +220,13 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
 						let color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color
 
-						// check if exist other task through today
-						// let hasPreTaskOgThough = 0;
-						// let targetTaskList = driver.taskList.filter(item => {
-						// 	return item.driverId == task.driverId && item.taskId != task.taskId
-						// })
-						// for (let tempTask of targetTaskList) {
-						// 	if (moment(tempTask.indentStartTime).get('date') == moment(task.indentStartTime).get('date')) {
-						// 		if (moment(tempTask.indentStartTime).isBefore(task.indentStartTime)) {
-						// 			hasPreTaskOgThough ++;
-						// 		} else if (moment(tempTask.indentStartTime).isSame(task.indentStartTime)) {
-						// 			if (task.indentId > tempTask.indentId) {
-						// 				hasPreTaskOgThough ++;
-						// 			}
-						// 		}
-						// 	} else if (moment(tempTask.indentEndTime).get('date') >= moment(task.indentStartTime).get('date') 
-						// 		&& moment(tempTask.indentStartTime).get('date') <= moment(task.indentStartTime).get('date')) {
-						// 		// console.log(tempTask)
-						// 		hasPreTaskOgThough ++;
-						// 	}
-						// }
-						// check if exist on-leave task before( on-leave only happen in one day )
-						// if (task.taskId) {
-						// 	let onLeaveTaskList = driver.taskList.filter(item => {
-						// 		if (item.driverId == task.driverId && !item.taskId) {
-						// 			if (moment(item.indentStartTime).get('date') < moment(task.indentStartTime).get('date')
-						// 			&& moment(item.indentEndTime).get('date') >= moment(task.indentStartTime).get('date')) {
-						// 				return true;
-						// 			}
-						// 		}
-						// 	})
-						// 	hasPreTaskOgThough += onLeaveTaskList.length
-						// }
 						let preThoughTask = null;
 						for (let tempTask of driver.taskList) {
 							if (task.taskId != tempTask.taskId) {
-								// if (moment(tempTask.indentStartTime).diff(moment(task.indentStartTime), 'd') == 0) {
 								if (getDateLength(tempTask.indentStartTime, task.indentStartTime) == 0) {
 									if (task.indentId != tempTask.indentId) {
 										preThoughTask = tempTask;
 									}
-								// } else if (moment(tempTask.indentEndTime).diff(moment(task.indentStartTime), 'd') >= 0 
-								// 	&& moment(tempTask.indentStartTime).diff(moment(task.indentStartTime), 'd') <= 0) {
 								} else if (getDateLength(tempTask.indentEndTime,task.indentStartTime) >= 0 
 									&& getDateLength(tempTask.indentStartTime, task.indentStartTime) <= 0) {
 										preThoughTask = tempTask;
@@ -304,9 +241,9 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 							// This on-leave record
 							let label = ''
 							if (realDateLength > 1) {
-								label = `${ task.reason + `, ` + moment(task.indentStartTime).format('MM-DD HH:mm') + '-' + moment(task.indentEndTime).format('MM-DD HH:mm') }`
+								label = `${ task.reason } , ${ moment(task.indentStartTime).format('MM-DD HH:mm') } - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
 							} else {
-								label = `${ task.reason + `, ` + moment(task.indentStartTime).format('HH:mm') + '-' + moment(task.indentEndTime).format('HH:mm') }`
+								label = `${ task.reason } ,  ${ moment(task.indentStartTime).format('HH:mm') } - ${ moment(task.indentEndTime).format('HH:mm') }`
 							}
 							let eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
 							let eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
@@ -321,7 +258,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						} else {
 							// for show while task need more than one day
 							let label = ''
-							let taskTypeLabel = task.taskId.indexOf('CU-') != -1 ? 'CU-' : task.dataFrom == 'MT-ADMIN' ? 'MT-' : task.dataFrom == 'SYSTEM' ? 'SYS-' : '';
+							let taskTypeLabel = task.taskId.indexOf('CU-') != -1 ? 'CU-' : (task.dataFrom == 'MT-ADMIN' ? 'MT-' : (task.dataFrom == 'SYSTEM' ? 'SYS-' : ''));
 							if (realDateLength > 1) {
 								label = `${taskTypeLabel + task.purpose }, ${ moment(task.indentStartTime).format('MM-DD HH:mm') } - ${ moment(task.indentEndTime).format('MM-DD HH:mm')}`
 							} else {
@@ -342,7 +279,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						}
 						task.marginTop = marginTop
 						
-						// checkTask = true;
+				
 					}
 
 					if (currentDate.get('date') >= moment(task.indentStartTime).get('date') && currentDate.get('date') <= moment(task.indentEndTime).get('date')) {
@@ -353,46 +290,6 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 					}
 				}
 
-				// if (!checkTask) {
-				// 	let isPreDay = currentDate.isBefore(moment(), 'day');
-				// 	let isDriverLeave = driverLeaveDays.indexOf(currentDate.format('YYYY-M-D')) != -1;
-
-				// 	if (isPreDay) {
-				// 		if(isDriverLeave) {
-				// 			// html += `<td class="empty-task-td driver-leave" ></td>`
-				// 			taskHtml += `
-				// 				<div class="driver-task-container driver-leave" oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day')}')">
-				// 					<label>On Leave</label>
-				// 				</div>
-				// 			`
-				// 		}
-				// 	} else {
-				// 		if (isDriverLeave) {
-				// 			// html += `<td class="empty-task-td driver-leave" oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day')}')"></td>`
-				// 			taskHtml += `
-				// 				<div class="driver-task-container driver-leave" class="driver-leave" oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day')}')">
-				// 					<label>On Leave</label>
-				// 				</div>
-				// 			`
-				// 		} else {
-				// 			// html += `<td class="empty-task-td" oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day')}')"></td>`
-				// 			taskHtml += `
-				// 				<div class="driver-task-container" oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day')}')">
-				// 					<label></label>
-				// 				</div>
-				// 			`
-				// 		}
-				// 	}
-					
-				// } else {
-				// 	// html += `
-				// 	// 	<td class="${ currentDate.isBefore(moment(), 'day') ? 'preMonth' : '' }">
-				// 	// 		${ taskHtml }
-				// 	// 	</td>
-				// 	// `
-				// }
-
-				
 				html += `
 					<td oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day').format('YYYY-MM-DD HH:mm:ss')}')" 
 						style="vertical-align: top;" class="${ currentDate.isBefore(moment(), 'day') ? 'preMonth' : '' }">
@@ -400,12 +297,6 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 					</td>
 				`
 
-				// debugger
-				// console.log(totalTask.length)
-				// console.log(Array.from(new Set(totalDriver)).length)
-				// console.log(index)
-				// debugger
-				// Init Column Count Num
 				let $targetTD = $('.weekTaskInfo tr').eq(0).find('td').eq(index + 1)
 
 				let targetIndentCount = Number.parseInt($targetTD.find('.indentCount').html())
@@ -413,24 +304,7 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 
 				let targetDriverCount = Number.parseInt($targetTD.find('.driverCount').html())
 				$targetTD.find('.driverCount').html(targetDriverCount + Array.from(new Set(totalDriver)).length)
-			}
-
-			// let diffStartDay = moment(driver.indentStartTime).diff(moment(startDate), 'day');
-			// // console.log(diffStartDay)
-			// for (let i = 0; i < diffStartDay; i++) {
-			// 	html += `<td class="${ moment(startDate).add(i, 'day').isBefore(moment(), 'day') ? 'preMonth' : '' }"></td>`;
-			// }
-			// let indentDaysCount = driver.indentEndTime ? (moment(driver.indentEndTime).diff(moment(), 'day')) : 1
-			// html += `
-			// 	<td colspan="${ indentDaysCount }" class="${ moment(startDate).add(diffStartDay, 'day').isBefore(moment(), 'day') ? 'preMonth' : '' }">
-			// 		<div class="driver-task-container active">
-			// 			<label>${ driver.purpose }<br><span>${ moment(driver.indentStartTime).format('HH:mm') }</span></label>
-			// 		</div>
-			// 	</td>
-			// `
-			// for (let i = 0; i < (7 - diffStartDay - indentDaysCount); i++) {
-			// 	html += `<td class="${ moment(startDate).add(diffStartDay + indentDaysCount + i, 'day').isBefore(moment(), 'day') ? 'preMonth' : '' }"></td>`
-			// }	
+			}	
 
 			let trHeight = maxTaskMarginTop + 50;
 			html = `<tr style="height: ${trHeight}px;">${html}</tr>`
@@ -452,48 +326,14 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 	let unit = Cookies.get('selectedUnit');
 	let subUnit = Cookies.get('selectedSubUnit');
 	let driverList = await getTOCalenderDriverList(startDate, endDate, unit, subUnit);
-	// let driverList = [
-	// 	{
-	// 		driverId: 1,
-	// 		driverName: 'AAA', 
-	// 		taskList: [
-	// 			{
-	// 				indentId: 1,
-	// 				purpose: 'Purpose 1',
-	// 				indentStartTime: '2022-11-3 10:00:00',
-	// 			},
-	// 			{
-	// 				indentId: 2,
-	// 				purpose: 'Purpose 2',
-	// 				indentStartTime: '2022-11-3 16:00:00',
-	// 			}
-	// 		]
-	// 	},
-	// 	{
-	// 		driverId: 2,
-	// 		driverName: 'BBB', 
-	// 		taskList: [
-	// 			{
-	// 				indentId: 11,
-	// 				purpose: 'Purpose 1',
-	// 				indentStartTime: '2022-11-4 10:00:00',
-	// 			},
-	// 			{
-	// 				indentId: 12,
-	// 				purpose: 'Purpose 2',
-	// 				indentStartTime: '2022-11-5 16:00:00',
-	// 			}
-	// 		]
-	// 	}
-	// ]
+
 	initDriverContainer(currentStartDate, driverList);
 }
 
 const editDriverTask = function(taskId, indentStartTime) {
 	let nowTime = moment();
 	indentStartTime = moment(indentStartTime);
-	let action = 'edit';
-	//if (indentStartTime.isAfter(nowTime)) {
+
 		$('#driver-task-edit').modal('show');
 		axios.post('/driver/getDriverTaskByTaskId', { taskId: taskId}).then(res => { 
 			let task = res.data.respMessage;

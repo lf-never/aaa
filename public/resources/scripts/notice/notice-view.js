@@ -110,7 +110,7 @@ let noticeTable = null;
                         render: function (data, type, full, meta) {
                             if (!data) {
                                 return '-'
-                            } else if (data && data.length > 30) {
+                            } else if (data?.length > 30) {
                                 return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeTitle(this)" role="button" tabindex="0">${ data.slice(0, 30) + '...' }</span>`
                             } else {
                                 return data;
@@ -144,7 +144,7 @@ let noticeTable = null;
                         render: function (data, type, full, meta) {
                             if (!data) {
                                 return '-'
-                            } else if (data && data.length > 30) {
+                            } else if (data?.length > 30) {
                                 return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showNoticeDescription(this)" role="button" tabindex="0">${ data.slice(0, 30) + '...' }</span>`
                             } else {
                                 return data;

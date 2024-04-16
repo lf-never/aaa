@@ -41,13 +41,12 @@ const initCreateEditPage = async function () {
             for (let unit of unitList) {
                 if (unit.hub === selectedUnit) {
                     for(let node of unit.nodeList) {
-                        let html2 = ``;
+                        let html2;
                         if(node.node){ 
                            html2 = `<option name="subUnitType" value="${ node.node }">${ node.node }</option>`
                         }else{
                             html2 = `<option name="subUnitType" value="${ node.node }">-</option>`
                         }
-                        // if(node.node) html2 = `<option name="subUnitType" value="${ node.node }">${ node.node }</option>`
                         $(".driver-node-select").append(html2);
                     }
                 } else {
@@ -155,7 +154,6 @@ const initCreateEditPage = async function () {
             }
             $('.enlistment-date-input').val(driver.enlistmentDate ? moment(driver.enlistmentDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
             $('.ORD-input').val(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
-            // if(driver.nric) driver.nric = ((driver.nric).toString()).substr(0, 1) + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4)
             $('.NRIC-input').val(driver.nric ? driver.nric : '')
             $('.birth-date-input').val(driver.birthday ? moment(driver.birthday, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
             $('.contact-no-input').val(driver.contactNumber)
@@ -193,7 +191,7 @@ const initCreateEditPage = async function () {
         $('.driver-vocation-select').empty();
         let html = '<option></option>';
         for(let item of data){
-            html += `<option>${ item ? item : '-' }</option>`;
+            html += `<option>${ item ?? '-' }</option>`;
         }
         $('.driver-vocation-select').append(html)
     }
@@ -254,12 +252,7 @@ const initCreateEditPage = async function () {
     }
     initUnitGroup(await getSystemGroup())
 
-    // const getPermitTypeList = async function () {
-    //     return axios.post('/driver/getPermitTypeList')
-    //             .then(function (res) {
-    //                 return res.respMessage ? res.respMessage : res.data.respMessage;
-    //     });
-    // }
+
     const initDriverClassData = async function (driverClassList) {
         $('#driver-class-div').empty();
         let html = '';
@@ -275,11 +268,14 @@ const initClickEditDriver = function () {
     const confirmCreateOrSave = function() {
         $('.opt-btn-div-edit').off('click').on('click', function () {
                 let classList = [];
-                for (let i = 0; i < $('.driver-class-input').length; i++) {
-                    if($('.driver-class-input')[i].checked) {
-                        if($('.driver-class-input')[i].value && ($('.driver-class-input')[i].value).toUpperCase() != 'NULL') classList.push($('.driver-class-input')[i].value)
+                for(let item of $('.driver-class-input')){
+                    if(item.checked) {
+                        if(item.value && (item.value).toUpperCase() != 'NULL') {
+                            classList.push(item.value)
+                        } 
                     }
                 }
+
                 let driver = {
                     "action": $('.opt-btn-div-edit').val(),
                     "driverId": $('.layui-tab-content').val(),
@@ -349,8 +345,8 @@ const initClickEditDriver = function () {
             }
             if(key == 'nric') {   
                 let regular = /^[S,T]\d{7}[A-Z]$/;     
-                // let regular = /^[S,T]\d{3}[A-Z]$/ ;     
-                if ((regular).test($('.NRIC-input').val()) == false) {
+                
+                if (!(regular).test($('.NRIC-input').val())) {
                     $.alert('The nric format is incorrect.')
                     return false
                 } 
@@ -363,10 +359,8 @@ const initClickEditDriver = function () {
             if(key == 'unit'){
                 if($('.driver-role-select').val().toLowerCase() == 'to' || $('.driver-role-select').val().toLowerCase() == 'tl'){
                     continue
-                } else {
-                    if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
-                        continue
-                    }
+                } else if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
+                    continue
                 }
             }
 
@@ -411,9 +405,5 @@ const clearFormData = function () {
     $('.NRIC-input').val('')
     $('.birth-date-input').val('')
     $('.contact-no-input').val('')
-    // $("#driver-class-div").find('input:checkbox').each(function () {
-    //     $(this).prop('checked',false);
-    // });
-    // $('.cardSerialNo-input').val('')
-    // $('.lssue-date-input').val('')
+
 }

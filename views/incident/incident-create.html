@@ -13,43 +13,43 @@
             <div class="modal-body">
                 <form class="row">
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Incident Name : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="incidentName">Incident Name : &nbsp;</label>
                         <div class="col-sm-8">
-                            <input class="form-control form-control-sm incidentName" />
+                            <input class="form-control form-control-sm incidentName" name="incidentName"/>
                         </div>
                     </div>
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Incident Type : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="incidentType">Incident Type : &nbsp;</label>
                         <div class="col-sm-8">
-                            <select class="form-select form-select-sm incidentType">
+                            <select class="form-select form-select-sm incidentType" name="incidentType">
                             </select>
                         </div>
                     </div>
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Incident Time : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="incidentTime">Incident Time : &nbsp;</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control form-control-sm incidentTime">
+                            <input type="text" class="form-control form-control-sm incidentTime" name="incidentTime">
                         </div>
                     </div>
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Block Period : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="blockTime">Block Period : &nbsp;</label>
                         <div class="col-sm-4">
-                            <input type="number" min="1" value="0" class="form-control form-control-sm blockTime"/> 
+                            <input type="number" min="1" value="0" class="form-control form-control-sm blockTime" name="blockTime"/> 
                         </div>
                         <div class="col-sm-2 px-0">
                              &nbsp;Min
                         </div>
                     </div>
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Incident Position : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="incidentPosition">Incident Position : &nbsp;</label>
                         <div class="col-sm-8">
-                            <input type="text" readonly disabled class="form-control form-control-sm incidentPosition">
+                            <input type="text" readonly disabled class="form-control form-control-sm incidentPosition" name="incidentPosition">
                         </div>
                     </div>
                     <div class="mb-2 row">
-                        <label class="col-sm-4 col-form-label text-end">Description : &nbsp;</label>
+                        <label class="col-sm-4 col-form-label text-end" for="description">Description : &nbsp;</label>
                         <div class="col-sm-8">
-                            <textarea class="form-control form-control-sm description"></textarea>
+                            <textarea class="form-control form-control-sm description" name="description"></textarea>
                         </div>
                     </div>
                 </form>

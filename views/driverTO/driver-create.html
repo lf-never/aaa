@@ -60,74 +60,74 @@
                                 <div class="layui-tab-item layui-show p-2">
                                     <div class="row">
                                         <div class="col-12 my-2">
-                                            <label style="font-size: 16px; font-weight: bolder;">Military Personnel Details</label>
+                                            <label style="font-size: 16px; font-weight: bolder;" for="military-details-for">Military Personnel Details</label>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                                            <label class="info-title">Role</label><br>
-                                            <!-- <input class="form-control vocation-input" placeholder="Vocation" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input> -->
+                                            <label class="info-title" for="role">Role</label><br>
+                                            
                                             <select class="form-select driver-role-select" name="role">
 
                                             </select>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                                            <label class="info-title">Vocation</label><br>
+                                            <label class="info-title" for="Vocation">Vocation</label><br>
                                             <select class="form-select driver-vocation-select" name="Vocation">
 
                                             </select>    
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                                            <label class="info-title">Unit</label><br>
-                                            <!-- <input class="form-control driver-unit-input" placeholder="Unit"></input> -->
+                                            <label class="info-title" for="Unit">Unit</label><br>
+
                                             <select class="form-select driver-unit-select" name="Unit"></select>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                                            <label class="info-title">Hub</label><br>
-                                            <!-- <input class="form-control hub-input" placeholder="Hub" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input> -->
+                                            <label class="info-title" for="hub">Hub</label><br>
+                                           
                                             <select class="form-select driver-hub-select" name="hub">
 
                                             </select>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2">
-                                            <label class="info-title">Node</label><br>
-                                            <!-- <input class="form-control node-input" placeholder="Node" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input> -->
+                                            <label class="info-title" for="node">Node</label><br>
+                                            
                                             <select class="form-select driver-node-select" name="node">
 
                                             </select>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2 driver-div-date">
-                                            <label class="info-title">Enlistment Date</label><br>
+                                            <label class="info-title" for="enlistment-date-input">Enlistment Date</label><br>
                                             <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
-                                            <input placeholder="DD/MM/YYYY" placeholder-class="enlistment-date-placeholder" class="form-control enlistment-date-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
-                                            <!-- <label class="info-title" style="font-size: 10px;">Please enter the current odometer reading</label> -->
+                                            <input placeholder="DD/MM/YYYY" placeholder-class="enlistment-date-placeholder" class="form-control enlistment-date-input" name="enlistment-date-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
+                                            
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6 mt-2 driver-div-date">
-                                            <label class="info-title">Operationally Ready Date (ORD)</label><br>
+                                            <label class="info-title" for="ORD-input">Operationally Ready Date (ORD)</label><br>
                                             <img alt="" src="../images/driver/calendar.png" style="width: 20px;height: 20px;position: absolute;margin-top: 0.4rem;margin-left: 0.3rem;"/>
-                                            <input placeholder="DD/MM/YYYY" class="form-control ORD-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
-                                            <!-- <label class="info-title" style="font-size: 10px;">Please enter the current odometer reading</label> -->
+                                            <input placeholder="DD/MM/YYYY" class="form-control ORD-input" name="ORD-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
+                                            
                                         </div>
                                     </div>
                                     <div class="row my-4" style="height: 1px; background-color: rgb(233, 233, 233); border-radius: 2px;"></div>
                                     <div class="row">    
                                         <div class="col-12 my-2">
-                                            <label style="font-size: 16px; font-weight: bolder;">Personnel Details</label>
+                                            <label style="font-size: 16px; font-weight: bolder;" for="personnel-details-for">Personnel Details</label>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6">
-                                            <label class="info-title">NRIC</label><br>
-                                            <input class="form-control NRIC-input" placeholder="NRIC" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
+                                            <label class="info-title" for="NRIC-input">NRIC</label><br>
+                                            <input class="form-control NRIC-input" name="NRIC-input" placeholder="NRIC" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6">
-                                            <label class="info-title">Driver Name</label><br>
-                                            <input class="form-control driver-name-input" placeholder="Driver Name" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
+                                            <label class="info-title" for="driver-name-input">Driver Name</label><br>
+                                            <input class="form-control driver-name-input" name="driver-name-input" placeholder="Driver Name" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
 
                                         <div class="col-md-12 col-sm-12 col-lg-6">
-                                            <label class="info-title">Date of Birth</label><br>
-                                            <input placeholder="Date of Birth" class="form-control birth-date-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
+                                            <label class="info-title" for="birth-date-input">Date of Birth</label><br>
+                                            <input placeholder="Date of Birth" class="form-control birth-date-input" name="birth-date-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;" readonly></input>
                                         </div>
                                         <div class="col-md-12 col-sm-12 col-lg-6">
-                                            <label class="info-title">Contact No.</label><br>
-                                            <input oninput="value=value.replace(/[^\d]/g,'')" class="form-control contact-no-input" placeholder="Contact No." style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
+                                            <label class="info-title" for="contact-no-input">Contact No.</label><br>
+                                            <input oninput="value=value.replace(/[^\d]/g,'')" class="form-control contact-no-input" name="contact-no-input" placeholder="Contact No." style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
                                     </div>
                                 </div>
@@ -137,12 +137,12 @@
                     <div class="row my-3" style="display: flex;">
                         <div class="mt-1" style="width: 50%;display: flex;justify-content: flex-end;">
                             <div class="opt-btn-div opt-btn-div-driver-cancel custom-btn-gray modal-footer-bunton-cancel-lg">
-                                <label class="opt-btn-label fs-6">Cancel</label>
+                                <label class="opt-btn-label fs-6" for="opt-cancel">Cancel</label>
                             </div>
                         </div>
                         <div class="mt-1" style="width: 50%;display: flex;justify-content: flex-start;">
                             <div class="opt-btn-div opt-btn-div-edit modal-footer-bunton-confirm-lg" value="" style="background-color: #1B9063;">
-                                <label style="color: white;" class="opt-btn-label fs-6">Confirm</label>
+                                <label style="color: white;" class="opt-btn-label fs-6" for="opt-confirm">Confirm</label>
                             </div>
                         </div>
                     </div>

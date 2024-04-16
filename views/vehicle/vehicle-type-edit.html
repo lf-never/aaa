@@ -44,30 +44,30 @@
                                 <div class="layui-tab-item layui-show p-2">
                                     <div class="row">
                                         <div class="col-6">
-                                            <label class="info-title">Vehicle Name</label><br>
+                                            <label class="info-title" for="vehicleType">Vehicle Name</label><br>
                                             <input class="form-control" placeholder="Vehicle Name" name="vehicleType" id="vehicleType" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
                                         <div class="col-6">
-                                            <label class="info-title">Vehicle Category</label><br>
+                                            <label class="info-title" for="vehicleCategory">Vehicle Category</label><br>
                                             <input class="form-control" placeholder="" name="vehicleCategory" id="vehicleCategory" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
                                         <div class="col-6 mt-2">
-                                            <label class="info-title">Description</label><br>
-                                            <input class="form-control vehicle-dimensions-input" placeholder="Enter Description(if any)" name="vehicleDimensions" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
+                                            <label class="info-title" for="vehicle-dimensions-input">Description</label><br>
+                                            <input class="form-control vehicle-dimensions-input" name="vehicle-dimensions-input" placeholder="Enter Description(if any)" name="vehicleDimensions" style="background-color: white !important;border: 1px solid #c7c6c4 !important;"></input>
                                         </div>
                                         <div class="col-6 mt-2">
-                                            <label class="info-title">Permit Type</label><br>
-                                            <select class="form-select permit-type-select" aria-placeholder="Select Vehicle Name" name="permitTypeSelect" id="permitTypeSelect">
+                                            <label for="permit-type-select" class="info-title">Permit Type</label><br>
+                                            <select class="form-select permit-type-select" name="permit-type-select" aria-placeholder="Select Vehicle Name" name="permitTypeSelect" id="permitTypeSelect">
                                             </select>
                                         </div>
                                         <div class="col-6 mt-2">
-                                            <label class="info-title">For ATMS</label><br>
+                                            <label for="forATMS-for" class="info-title">For ATMS</label><br>
                                             <input type="radio" name="belongTo" value="atms">&nbsp;&nbsp;Yes</input>
                                             <input style="margin-left: 10px;" type="radio" name="belongTo" value="server">&nbsp;&nbsp;No</input>
                                         </div>
                                         <div class="col-6 mt-2 baseline-qty-div" style="display: none;">
-                                            <label class="info-title">BaseLine Qty</label><br>
-                                            <input onkeyup="value=value.replace(/[^\d]/g,'')" class="form-control baseline-qty-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
+                                            <label for="baseline-qty-input" class="info-title">BaseLine Qty</label><br>
+                                            <input onkeyup="value=value.replace(/[^\d]/g,'')" name="baseline-qty-input" class="form-control baseline-qty-input" style="background-color: white !important;border: 1px solid #c7c6c4 !important;">
                                           </div>
                                     </div>
                                 </div>
@@ -77,10 +77,10 @@
                     <div class="row my-3 px-4" style="display: flex;">
                         <div class="mt-1" style="width: 100%;display: flex;justify-content: center;">
                             <div class="opt-btn-div opt-btn-div-cancel custom-btn-gray modal-footer-bunton-cancel-lg" onclick="cancleEditVehicleType();" role="button" tabindex="0">
-                                <label class="opt-btn-label fs-6">Cancel</label>
+                                <label for="cancel-for" class="opt-btn-label fs-6">Cancel</label>
                             </div>
                             <div onclick="confirmCreateOrSave(this);" role="button" tabindex="0" class="opt-btn-div opt-btn-div-create modal-footer-bunton-confirm-lg" style="background-color: #1B9063; margin-left: 10px;">
-                                <label style="color: white;" class="opt-btn-label fs-6">Submit</label>
+                                <label for="submit-for" style="color: white;" class="opt-btn-label fs-6">Submit</label>
                             </div>
                         </div>
                     </div>

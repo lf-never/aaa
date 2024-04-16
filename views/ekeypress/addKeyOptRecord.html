@@ -228,7 +228,7 @@
         <div class="col-3 ps-2" style="display: flex; justify-content: left; align-items: center;">
         </div>
         <div class="col-6" style="display: flex;justify-content: center;align-items: center;">
-            <label class="page-title-label" style="color: white;font-weight:bolder;font-size: large;">Record Manually</label>
+            <label for="addKey-manually-for" class="page-title-label" style="color: white;font-weight:bolder;font-size: large;">Record Manually</label>
         </div>
         <div class="col-3" style="display: flex;justify-content: flex-end;align-items: center; right: 0px;">
             <div class="download-div" style="width: 32px; height: 32px; border-radius: 16px; margin-right: 10px; display: flex;justify-content: center;align-items: center;">
@@ -244,7 +244,7 @@
             <div class="px-3 pb-3">
                 <div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Driver NRIC / Name *</label>
+                        <label for="addKey-driver-nric-name-for" class="custom-size3 custom-color1 py-1">Driver NRIC / Name *</label>
                     </div>
                 </div>
                 <div class="row">
@@ -266,7 +266,7 @@
                 </div>
                 <div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Box Name *</label>
+                        <label for="addKey-box-name-for"class="custom-size3 custom-color1 py-1">Box Name *</label>
                     </div>
                 </div>
                 <div class="row">
@@ -288,7 +288,7 @@
                 </div>
                 <div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Vehicle Number*</label>
+                        <label for="addKey-vehicleNo-for" class="custom-size3 custom-color1 py-1">Vehicle Number*</label>
                     </div>
                 </div>
                 <div class="row">
@@ -310,7 +310,7 @@
                 </div>
 				<div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Key Slot No. *</label>
+                        <label for="addKey-slotNo-for" class="custom-size3 custom-color1 py-1">Key Slot No. *</label>
                     </div>
                 </div>
                 <div class="row">
@@ -320,7 +320,7 @@
                 </div>
 				<div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Option Type *</label>
+                        <label for="addKey-optionType-for" class="custom-size3 custom-color1 py-1">Option Type *</label>
                     </div>
                 </div>
 				<div class="row" id="optionTypeRadio" style="display: flex; align-items: center; justify-content: flex-start;">
@@ -329,7 +329,7 @@
                 </div>
                 <div class="row mt-2">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Transact Date Time *</label>
+                        <label for="addKey-transactTime-for" class="custom-size3 custom-color1 py-1">Transact Date Time *</label>
                     </div>
                 </div>
                 <div class="row" id="optTimeCalender">
@@ -340,7 +340,7 @@
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <label class="custom-size3 custom-color1 py-1">Reason *</label>
+                        <label for="addKey-reason-for" class="custom-size3 custom-color1 py-1">Reason *</label>
                     </div>
                 </div>
                 <div class="row mb-4">
@@ -370,26 +370,26 @@
             <div class="qrcode-content-div" style="width: 100%; height: fit-content; padding-left: 40px; font-weight: 900;">
                 <div class="row">
                     <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Site Id:</label>&nbsp;&nbsp;<label class="keySiteIdLabel" style="font-weight: 300;"></label>
+                        <span>Site Id:</span>&nbsp;&nbsp;<label for="keySiteIdLabel-for" class="keySiteIdLabel" style="font-weight: 300;"></label>
                     </div>
                     <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Slot No.:</label>&nbsp;&nbsp;<label class="keySlotIdLabel" style="font-weight: 300;"></label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Tag Id:</label>&nbsp;&nbsp;<label class="keyTagIdLabel" style="font-weight: 300;"></label>
-                    </div>
-                    <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Type:</label>&nbsp;&nbsp;<label class="optTypeLabel" style="font-weight: 300;"></label>
+                        <span>Slot No.:</span>&nbsp;&nbsp;<span class="keySlotIdLabel" style="font-weight: 300;"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Reason:</label>&nbsp;&nbsp;<label class="keyReason" style="font-weight: 300;"></label>
+                        <span>Tag Id:</span>&nbsp;&nbsp;<span class="keyTagIdLabel" style="font-weight: 300;"></span>
                     </div>
                     <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
-                        <label>Transaction Time:</label>&nbsp;&nbsp;<label class="keyTransTimeLabel" style="font-weight: 300;"></label>
+                        <span>Type:</span>&nbsp;&nbsp;<span class="optTypeLabel" style="font-weight: 300;"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
+                        <span>Reason:</span>&nbsp;&nbsp;<span class="keyReason" style="font-weight: 300;"></span>
+                    </div>
+                    <div class="col-6" style="display: flex; justify-content: flex-start; align-items: center;">
+                        <span>Transaction Time:</span>&nbsp;&nbsp;<span class="keyTransTimeLabel" style="font-weight: 300;"></span>
                     </div>
                 </div>
             </div>

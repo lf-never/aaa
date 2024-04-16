@@ -15,6 +15,10 @@ module.exports.response = function (code, respMessage) {
     }
 };
 
+module.exports.stringNotEmpty = function (params) {
+    return params != null && params != undefined && params != '';
+};
+
 module.exports.generateDateTime = function (time) {
     if (time) {
         return moment(time).format('YYYY-MM-DD HH:mm:ss')

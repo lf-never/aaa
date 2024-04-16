@@ -139,7 +139,7 @@ const initMarkAsUnAvailablePage = async function(driverId, driverName, date, end
     });
 
     layui.use('laydate', function () {
-        laydate = layui.laydate;
+        let laydate = layui.laydate;
         laydate.render({
             elem: '#markAsUnavailable-date-from',
             lang: 'en',
@@ -222,7 +222,7 @@ const DisabledLayDate = async function () {
         layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
 
             let tdTemp = $(tdElem);
-            if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+            if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
                 tdTemp.addClass('laydate-disabled');
                 tdTemp.css('color', 'orange');
             } else {

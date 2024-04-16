@@ -44,9 +44,6 @@
             border-top-right-radius: 25px;
         }
 
-        table.dataTable tbody tr {
-            background-color: white;
-        }
 
         .table-shadow {
             box-shadow: none;
@@ -267,7 +264,7 @@
                             <% if (pageList.find(item => item.action == 'New')) { %>
                                 <div class="vehicle-add-btn" onclick="initVehicleEditPage('create')" role="button" tabindex="0">
                                     <div class="vehicle-add-img"></div>
-                                    <label class="vehicle-add-label fs-6">New Vehicle</label>
+                                    <span class="vehicle-add-label fs-6">New Vehicle</span>
                                 </div>
                             <% } %>
                         </div>
