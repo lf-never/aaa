@@ -86,9 +86,6 @@ const initReport = async function () {
     if (reportData.tosFeedback) {
         initTOSReport(reportData.tosFeedback)
     }
-    if (reportData.unitFeedback) {
-        initUnitReport(reportData.unitFeedback)
-    }
 }
 
 const initIndentReport = function (data) {
@@ -351,12 +348,9 @@ const initTOReport = function (data) {
         }
         $('.to-report-table>tbody').html(html);
     } 
-    const intiTOChart = function (data) {
 
-    }
 
     initTOTable(data)
-    intiTOChart(data)
 }
 const initVehicleReport = function (data) {
     const initVehicleTable = function (data) {
@@ -372,12 +366,10 @@ const initVehicleReport = function (data) {
         }
         $('.vehicle-report-table>tbody').html(html);
     } 
-    const intiVehicleChart = function (data) {
 
-    }
 
     initVehicleTable(data)
-    intiVehicleChart(data)
+
 }
 
 const initTOSReport = function (data) {
@@ -436,21 +428,8 @@ const initTOSReport = function (data) {
         }
         $('.tos-report-table>tbody').html(html);
     } 
-    const intiTOSChart = function (data) {
 
-    }
 
     initTOSTable(data)
-    intiTOSChart(data)
-}
-const initUnitReport = function (data) {
-    const intiUnitTable = function (data) {
 
-    }
-    const intiUnitChart = function (data) {
-
-    }
-
-    intiUnitTable(data)
-    intiUnitChart(data)
 }

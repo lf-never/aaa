@@ -177,19 +177,7 @@ window.editRoleHandler = async function (e) {
                 click: function (obj) {
                 },
                 oncheck: function (obj) {
-                    // console.log(obj.data.id)
-                    // if (obj.data.id == 531 || obj.data.id == 541) {
-                    //     console.log(obj.elem.next().hasClass('layui-form-checked'))
-                    //     if (!obj.elem.next().hasClass('layui-form-checked')) {
-                    //         // $('input[name="layuiTreeCheck_1000"]').next().trigger('click')
-                    //         setTimeout(() => {
-                    //             roleTree.setChecked('choose-menu', 1000);
-                    //         }, 100)
-                    //     }
-                    //     // roleTree.setChecked('choose-menu', 1000);
-                    //     // let result = roleTree.getChecked('choose-menu')
-                    //     // console.log(result)
-                    // }
+                    
                 }
             });
           });
@@ -206,10 +194,10 @@ window.editRoleHandler = async function (e) {
     } else {
         $('#edit-role .modal-title').html('Add Role')
     }
-    $('.roleId').html(roleId ? roleId : '')
+    $('.roleId').html(roleId ?? '')
     $('input[name="roleName"]').val(row ? row.roleName : '')
     
-    let menuPageList = await getMenuPageRequest(roleId ? roleId : undefined)
+    let menuPageList = await getMenuPageRequest(roleId ?? undefined)
     initMenuPageHandler(menuPageList)
 
     $('#edit-role').modal('show')

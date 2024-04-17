@@ -107,7 +107,6 @@ const initIncidentEventHandler = function () {
         if (result) {
             initIncidentViewPage();
             showIncidentMarkerHandler();
-        } else {
         }
     }
 

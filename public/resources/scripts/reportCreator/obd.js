@@ -162,9 +162,7 @@ const removeSelectedReportDataGroup = function (val) {
 }
 const removeReportDataGroup = function (e) {
     let val = $(e).closest('li').attr("data-val")
-    let name = $(e).closest('li').attr("data-name")
     $(e).closest('li').remove()
-    // removeReportDataFilter(name)
     $('.report-data-group input[type="checkbox"]').each(function () {
         if ($(this).val() == val) {
             $(this).prop('checked', false)
@@ -183,8 +181,7 @@ const createTaskReport = async function () {
     let reportGroupSelectionTitle = []
     $('.drag-list > li').each(function () {
         let val = $(this).attr("data-val")
-        let name = $(this).attr("data-name")
-        //console.log(name + " -- " + val)
+        
         reportGroupSelectionTitle.push(val)
     })
     
@@ -219,10 +216,7 @@ const createTaskReport = async function () {
 
     console.log(reportGroupSelectionTitle)
     console.log(filter)
-    // if (!filter.occTimeRange) {
-    //     simpleAlert('Please select report date range!')
-    //     return
-    // }
+
     if (reportGroupSelectionTitle.length == 0) {
         simpleAlert('Please choose the data to be included in the report!')
         return

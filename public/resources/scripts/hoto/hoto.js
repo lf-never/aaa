@@ -33,10 +33,8 @@ $(async function() {
             if(number.length > 2 || number.length == 0) {
                 vehicleTable.ajax.reload(null, true)
             }
-        } else {
-            if(number.length > 3 || number.length == 0) {
-                driverTable.ajax.reload(null, true)
-            }
+        } else if(number.length > 3 || number.length == 0) {
+            driverTable.ajax.reload(null, true)
         }
     });
 });
@@ -84,13 +82,10 @@ const submitHotoAll = function (el) {
 
 const submitReturnAll = function () {
     let ops
-    let opsTable
     if(dataType == 'vehicle') {
         ops = '.saf-vehicle-table'
-        opsTable = vehicleTable
     } else {
         ops = '.saf-driver-table'
-        opsTable = driverTable
     }
     let checkVehicleDetail = $(`${ ops } .checkVehicleDetail`)
     
@@ -98,7 +93,7 @@ const submitReturnAll = function () {
         let checkAll = $(item).prop("checked")
         if(checkAll) {
             let hotoId = $(item).attr('value');
-            //alert(hotoId);
+
             submitReturn(hotoId)
         }
     }
@@ -658,9 +653,11 @@ window.initLayDate = function (vehicleNo) {
         layui.each(elem.find('tr'), function (trIndex, trElem) {
             layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
                 let tdTemp = $(tdElem);
-                if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
-                    tdTemp.addClass('laydate-disabled');
-                    tdTemp.css('color', 'orange');
+                if(driverLeaveDays){
+                    if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
+                        tdTemp.addClass('laydate-disabled');
+                        tdTemp.css('color', 'orange');
+                    }
                 }
             });
         });
@@ -691,7 +688,7 @@ window.initLayDate = function (vehicleNo) {
             },
             done: (value) => {
                 if (value) {
-                    // if (moment(value).format('YYYY/MM/dd HH:mm') == (moment($(`.to-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val())).format('YYYY/MM/dd HH:mm')) return
+                    
                     if (moment(value).format('YYYY-MM-DD HH:mm:ss') > (moment($(`.to-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val()).format('YYYY-MM-DD HH:mm:ss')) || moment(value).format('YYYY-MM-DD HH:mm:ss') == (moment($(`.to-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val())).format('YYYY-MM-DD HH:mm:ss') ) {
                         $.alert({
                             title: 'Warn',
@@ -722,7 +719,7 @@ window.initLayDate = function (vehicleNo) {
             },
             done: (value) => {
                 if ($(`.from-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val()) {
-                    // if (moment($(`.from-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val()).format('YYYY/MM/dd HH:mm') == (moment(value)).format('YYYY/MM/dd HH:mm')) return
+                    
                     if (moment($(`.from-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val()).format('YYYY-MM-DD HH:mm:ss') > (moment(value).format('YYYY-MM-DD HH:mm:ss')) || moment($(`.from-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val()).format('YYYY-MM-DD HH:mm:ss') == (moment(value)).format('YYYY-MM-DD HH:mm:ss')) {
                         $.alert({
                             title: 'Warn',

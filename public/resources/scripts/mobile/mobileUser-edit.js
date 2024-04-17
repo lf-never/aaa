@@ -5,7 +5,7 @@ import { customPopupInfo } from '../common-script.js'
 $(function () {
     $('#user-password2').on('blur' , function () {
         let userPassword = $('#user-password2').val().trim();
-        let regular = /^[0-9]{4,10}$/;
+        let regular = /^\d{4,10}$/;
         if(!regular.test(userPassword)){
             $('#password-feedback2').text('Please enter 4-10 digits!');
             $('#user-password2').val('');
@@ -81,7 +81,7 @@ export async function initMobileUserEditPage (user) {
 
     unitList = await initUnitList();
     let userResult = await getMobileUser(user);
-    // console.log(userResult);
+    
     if (userResult.length) {
         currentUser.userId = userResult[0].userId;
         currentUser.username = userResult[0].username;

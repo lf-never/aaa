@@ -67,10 +67,7 @@ let currentNoticeID = null, currentNotice = null;
                 initLayDate(currentNotice)
             }
             
-            // $('#edit-notice .coverImage-list').html(`
-            //     <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="upload/notification/notification-default.png" />
-            // `);
-            // $('#edit-notice .mainImage-list').empty();
+            
         })
     })
 
@@ -96,12 +93,10 @@ let currentNoticeID = null, currentNotice = null;
         if ($('input[name="startDateTime"]').val()) {
             if (type) {
                 defaultStartTimeValue = moment($('input[name="startDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY 00:00')
+            } else if (notice) {
+                defaultStartTimeValue = moment(notice.startDateTime).format('DD/MM/YYYY HH:mm')
             } else {
-                if (notice) {
-                    defaultStartTimeValue = moment(notice.startDateTime).format('DD/MM/YYYY HH:mm')
-                } else {
-                    defaultStartTimeValue = moment($('input[name="startDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY HH:mm')
-                }
+                defaultStartTimeValue = moment($('input[name="startDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY HH:mm')
             }
         }
 
@@ -167,12 +162,10 @@ let currentNoticeID = null, currentNotice = null;
         if ($('input[name="endDateTime"]').val()) {
             if (type) {
                 defaultEndTimeValue = moment($('input[name="endDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY 00:00')
+            } else if (notice) {
+                defaultEndTimeValue = moment(notice.endDateTime).format('DD/MM/YYYY HH:mm')
             } else {
-                if (notice) {
-                    defaultEndTimeValue = moment(notice.endDateTime).format('DD/MM/YYYY HH:mm')
-                } else {
-                    defaultEndTimeValue = moment($('input[name="endDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY HH:mm')
-                }
+                defaultEndTimeValue = moment($('input[name="endDateTime"]').val(), 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY HH:mm')
             }
         }
 
@@ -503,7 +496,7 @@ let currentNoticeID = null, currentNotice = null;
 
                 notice.startDateTime = notice.startDateTime ? moment(notice.startDateTime, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : null;
                 notice.endDateTime = notice.endDateTime ? moment(notice.endDateTime, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : null;
-                // notice.scheduledTime = notice.scheduledTime;
+                
 
                 if (['DV', 'LOA'].includes(notice.toType)) {
                     notice.laptopHubNodeList = null;

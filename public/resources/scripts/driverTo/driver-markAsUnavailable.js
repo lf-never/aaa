@@ -7,7 +7,7 @@ $(function() {
     });
 
     $('#driver-markAsUnavailable .markAsUnavailable-day').on('click', function(){
-        if (true == $(this).prop("checked")) {
+        if ($(this).prop("checked")) {
             $('#driver-markAsUnavailable .markAsUnavailable-day').prop('checked', false);
             $(this).prop('checked', true);
         }
@@ -28,11 +28,9 @@ const confirmMarkDriver = async function(optType) {
     let startDate = $('#driver-markAsUnavailable #markAsUnavailable-date-from').val();
     let endDate = $('#driver-markAsUnavailable #markAsUnavailable-date-to').val();
     let dayType = 'all';
-    if ($('#markAsUnavailable-date-all').prop('checked') == true){
-        dayType = 'all';
-    } else if ($('#markAsUnavailable-date-am').prop('checked') == true){
+    if ($('#markAsUnavailable-date-am').prop('checked')){
         dayType = 'am';
-    } else if ($('#markAsUnavailable-date-pm').prop('checked') == true){
+    } else if ($('#markAsUnavailable-date-pm').prop('checked')){
         dayType = 'pm';
     }
     let reason =  $('#driver-markAsUnavailable .reassignReasonDiv.active label').text();
@@ -59,12 +57,10 @@ const confirmMarkDriver = async function(optType) {
             driverLeaveDays = null;
 
             markAsUnAvailableCallback();
-        } else {
-            if(res.data){
-                $.alert(res.data.respMessage);
-            }else{
-                $.alert(res.respMessage);
-            }
+        } else if(res.data){
+            $.alert(res.data.respMessage);
+        } else{
+            $.alert(res.respMessage);
         }
     });
 }
@@ -95,7 +91,6 @@ const initMarkAsUnAvailablePage = async function(driverId, driverName, date, end
     }).then(function (res) {
         let respCode = res.data ? res.data.respCode : res.respCode
         let respMsp = res.respCode ? res.respMessage : res.data.respMessage
-
         if (respCode == 1) {
             let leaveRecord = respMsp ? respMsp.leaveRecord : null;
             if (leaveRecord) {
@@ -129,12 +124,9 @@ const initMarkAsUnAvailablePage = async function(driverId, driverName, date, end
                         $(this).prop('checked', true);
                     }
                 });
-            } else {
-                if (!respMsp.operation || !respMsp.operation.includes('Mark Leave')) {
-                    $('.dl-opt-btn-div-create').hide();
-                }
+            } else if (!(respMsp?.operation?.includes('Mark Leave'))) {
+                $('.dl-opt-btn-div-create').hide();
             }
-            
         }
     });
 

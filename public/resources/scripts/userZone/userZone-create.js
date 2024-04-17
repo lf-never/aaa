@@ -1,4 +1,4 @@
-import { drawPolygon, removeMapObject, fitBounds, initMapClickEvent, cancelMapClickEvent } from '../common-map.js'
+import { drawPolygon, removeMapObject, initMapClickEvent, cancelMapClickEvent } from '../common-map.js'
 import { initUserZoneViewPage } from '../userZone/userZone-view.js'
 
 $(function () {

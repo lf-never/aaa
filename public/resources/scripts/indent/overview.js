@@ -14,7 +14,7 @@ const initOverview = async function (hub, node) {
         initData('#vehicleEnded', vehicleData.vehicleTodayCompleted, vehicleData.vehicleTodayAssigned, '#vehicleTodayCheckedPercentage');
         initData('#vehicleYetToStartTask', vehicleData.vehicleTodayYetToStart, vehicleData.vehicleTodayAssigned, '#vehicleYetToStartTaskPercentage');
         initData('#vehicleOnGoing', vehicleData.vehicleTodayStarted, vehicleData.vehicleTodayAssigned, '#vehicleOnGoingPercentage');
-        // initData('#vehicleOwnedWithMe', vehicleData.vehicleOwnedWithMe, vehicleData.vehicleOwned, '#vehicleOwnedWithMePercentage');
+        
         initData('#vehicleAssigned', vehicleData.vehicleDeployed, vehicleData.vehicleOwned, '#vehicleAssignedPercentage');
         initData('#vehicleUnAssigned', vehicleData.vehicleDeployable, vehicleData.vehicleOwned, '#vehicleUnAssignedPercentage');
         initData('#vehicleMaintenance1', vehicleData.vehicleMaintenance, vehicleData.vehicleOwned, '#vehicleMaintenancePercentage');
@@ -22,13 +22,12 @@ const initOverview = async function (hub, node) {
         
         initData('#vehicleOwned', vehicleData.vehicleOwned);
         initData('#vehicleTodayAssigned', vehicleData.vehicleTodayAssigned + " / "  + vehicleData.vehicleTodayAssignedEffective + " / " + vehicleData.vehicleDeployed);
-        // initData('#vehicleAvailable', vehicleData.vehicleAvailable);
-        // initData('#vehicleOwned-available', '/' + vehicleData.vehicleOwned);
+        
         initData('#vehicleDeployed', vehicleData.vehicleDeployed);
         initData('#vehicleDeployable', vehicleData.vehicleDeployable);
         initData('#vehicleMaintenance', vehicleData.vehicleMaintenance);
         initData('#vehicleOutOfService', vehicleData.vehicleOutOfService);
-        // initData('#vehicleOnhold', vehicleData.vehicleOnhold);
+        
 
         initData('#tsOperatorYetToStartTask', tsOperatorData.tsOperatorTodayYetToStart, tsOperatorData.tsOperatorTodayAssigned, '#tsOperatorYetToStartTaskPercentage');
         initData('#tsOperatorOnGoing', tsOperatorData.tsOperatorTodayStarted, tsOperatorData.tsOperatorTodayAssigned, '#tsOperatorOnGoingPercentage');
@@ -71,10 +70,8 @@ const initData = function (vehicleId, idData, total, idPercentage) {
         }
         let idPercentageData = roundNumbers(idData, total);
         $(idPercentage).css('width', idPercentageData + '%');
-    }else {
-        if(total == 0 || idData == 0) {
-            $(idPercentage).css('width', '0%');
-        }
+    }else if(total == 0 || idData == 0) {
+        $(idPercentage).css('width', '0%');
     }
 }
 
@@ -109,6 +106,14 @@ window.reloadHtml = function (hub, node) {
     // console.log(Cookies.get('selectedSubUnit'))
     let unit = Cookies.get('selectedUnit') ? Cookies.get('selectedUnit') : Cookies.get('hub')
     let subUnit = Cookies.get('selectedSubUnit') ? Cookies.get('selectedSubUnit') : Cookies.get('node')
-    initOverview(unit ? unit : hub, subUnit ? subUnit : node)
-    // window.location.reload();
+    let __unitHub = unit;
+    if(!unit) {
+        __unitHub = hub
+    }
+    let __subUnitNode = subUnit;
+    if(!subUnit){
+        __subUnitNode = node;
+    }
+    initOverview(__unitHub, __subUnitNode)
+    
 }

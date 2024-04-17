@@ -11,9 +11,7 @@ const InitExecutionDatePicker = function (elem) {
         onChange: function (formated) {
             $(`.${elem}-div>input`).val(formated.join(' ~ '))
             $(`#${elem}`).find('.layui-select-btn').removeClass('btn-success-number')
-            // if (formated[0] != formated[1]) {
-            //     FilterOnChange()
-            // }
+            
         }
     });
 

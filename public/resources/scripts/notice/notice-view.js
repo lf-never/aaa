@@ -94,9 +94,7 @@ let noticeTable = null;
                         return params
                     },
                 },
-                initComplete : function (settings, json) {
-                    // $(".saf-driver-table thead tr th:nth-child(5)").removeClass('sorting_desc');
-                },
+               
                 columns: [
                     {
                         data: "id",

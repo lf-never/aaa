@@ -66,9 +66,6 @@ const initPage = async function(){
     getVehicleTypeList()
 
     const initLayDate = function () {
-        layui.use('layer', function(){
-            layer = layui.layer;
-        });
         layui.use('laydate', function(){
             let laydate = layui.laydate;
     
@@ -154,16 +151,6 @@ const initPage = async function(){
     })
 
 
-    // const initStatus = async function (){
-    //     axios.post("/driver/getTODriverStatusList").then(async res => {
-    //         let driverStatusList = res.data.respMessage;
-    //         let list = driverStatusList.map(o => {
-    //             return `<option value="${item}">${item}</option>`
-    //         }).join('')
-    //         $("#drivingPermitStatus").append(`<option value="">All</option>` + list)
-    //     })
-    // }
-    // initStatus()
 
     const getRoleVocation = async function () {
         return axios.post('/getRoleVocation')
@@ -194,7 +181,7 @@ const initPage = async function(){
     const initVocationSelect = function (data) {
         $('.driver-vocation-select').empty();
         for(let item of data){
-            $('.driver-vocation-select').append(`<option>${ item ? item : '-' }</option>`);
+            $('.driver-vocation-select').append(`<option>${ item ?? '-' }</option>`);
         }
     }
 

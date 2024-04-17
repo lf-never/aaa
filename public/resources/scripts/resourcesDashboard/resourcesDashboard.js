@@ -28,7 +28,7 @@ $(async function () {
             let obj = {}
             if(unitByHub){
                 driverClass = driverClass.reduce(function(item, next) {
-                    // obj[next.subunit] ? '' : obj[next.subunit] = true && item.push(next);
+                    
                     if(!obj[next.subunit]){
                         obj[next.subunit] = true;
                         item.push(next)
@@ -37,7 +37,7 @@ $(async function () {
                  }, []);
                  let obj2 = {}
                  vehicleClass = vehicleClass.reduce(function(item, next) {
-                    // obj2[next.subunit] ? '' : obj2[next.subunit] = true && item.push(next);
+                    
                     if(!obj2[next.subunit]){
                         obj2[next.subunit] = true;
                         item.push(next)
@@ -46,7 +46,7 @@ $(async function () {
                   }, []);
             } else {
                 driverClass = driverClass.reduce(function(item, next) {
-                    // obj[next.unit] ? '' : obj[next.unit] = true && item.push(next);
+                    
                     if(!obj[next.unit]) {
                         obj[next.unit] = true; 
                         item.push(next)
@@ -55,7 +55,7 @@ $(async function () {
                  }, []);
                  let obj2 = {}
                  vehicleClass = vehicleClass.reduce(function(item, next) {
-                    // obj2[next.unit] ? '' : obj2[next.unit] = true && item.push(next);
+                    
                     if(!obj2[next.unit]){
                         obj2[next.unit] = true;
                         item.push(next)
@@ -178,6 +178,18 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
         vehicleDetailEventHtml = ` 'char-node-bus-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }', '${ item.subunit }', true, '${ item.unit }' `
     }
 
+    let __nodeDivTitle = ''
+    if(hubNode == 'hub'){
+        if(item.unit.toLowerCase() == 'dv_loa'){
+            __nodeDivTitle = 'DV/LOA'
+        } else {
+            __nodeDivTitle = item.unit
+        }
+    } else if(item.subunit.toLowerCase() == 'dv_loa'){
+        __nodeDivTitle = 'DV/LOA'
+    } else {
+        __nodeDivTitle = item.subunit
+    }
     return `
         <div class="node-card card-detail ${ customClass } px-0" style="height: 283px !important;">
             <div class="card-detail-title px-2">
@@ -185,11 +197,11 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
                     <div class="col-3 text-start">
                     </div>
                     <div class="col-6 text-center">
-                        <label style="cursor: pointer;" ${ hubNodeEventHtml }>${ hubNode == 'hub' ? ((item.unit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.unit) : ((item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit)}</label>
+                        <label style="cursor: pointer;" ${ hubNodeEventHtml }>${ __nodeDivTitle }</label>
                     </div>
                     <div class="col-3 text-end">
-                        <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;'}" draggable="false"/>
-                        <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" draggable="false"/>
+                        <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState ? 'display: block;display: inline;' : 'display: none;'}" draggable="false"/>
+                        <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel ? 'display: block;display: inline;' : 'display: none;' }" draggable="false"/>
                     </div>
                 </div>
             </div>
@@ -515,7 +527,7 @@ const clickPeople = function (optionClass, subunit, record, unit) {
                 dataObj = item.driverPurposeData
             }
         }
-        if(record == true) driverClass.push({ "unit": unit, "subunit": subunit })
+        if(record) driverClass.push({ "unit": unit, "subunit": subunit })
         $(`.div-people-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'block')
         $(`.div-all-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'none')
     } else {
@@ -526,7 +538,7 @@ const clickPeople = function (optionClass, subunit, record, unit) {
                 dataObj = item.driverPurposeData
             }
         }
-        if(record == true) driverClass.push({ "unit": unit, "subunit": null })
+        if(record) driverClass.push({ "unit": unit, "subunit": null })
         $(`.div-people-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'block')
         $(`.div-all-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'none')
     }
@@ -542,14 +554,7 @@ const clickPeople = function (optionClass, subunit, record, unit) {
         data.push({ value: dataObj[i].startedTaskCount > 0 ? dataObj[i].startedTaskCount : null, name: dataObj[i].purpose })
         color.push(CONTENT_NODE_COLOR[i])
     }
-    // let driverPercent = initTotalAndAssignedTotal(startedTaskCountTotal, total)
-    // if(unitByHub) {
-    //     $(`#div-people-node-driverPercent-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
-    //     $(`#div-people2-node-driverPercent-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
-    // } else {
-    //     $(`#div-people-hub-driverPercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
-    //     $(`#div-people2-hub-driverPercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ driverPercent }%`)
-    // }
+    
     initDriverAndVehicleChar('MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
 } 
 
@@ -573,7 +578,7 @@ const clickBus = function (optionClass, subunit, record, unit) {
                     dataObj = item.vehiclePurposeData
                 }
             }
-            if(record == true) vehicleClass.push({ "unit": unit, "subunit": subunit })
+            if(record) vehicleClass.push({ "unit": unit, "subunit": subunit })
             $(`.div-bus-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'block')
             $(`.div-all-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'none')
         } else {
@@ -582,7 +587,7 @@ const clickBus = function (optionClass, subunit, record, unit) {
                     dataObj = item.vehiclePurposeData
                 }
             }
-            if(record == true) vehicleClass.push({ "unit": unit, "subunit": null })
+            if(record) vehicleClass.push({ "unit": unit, "subunit": null })
             $(`.div-bus-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'block')
             $(`.div-all-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'none')
         }
@@ -601,14 +606,7 @@ const clickBus = function (optionClass, subunit, record, unit) {
             data.push({ value: dataObj[i].startedTaskCount > 0 ? dataObj[i].startedTaskCount : null, name: dataObj[i].purpose })
             color.push(CONTENT_NODE_COLOR[i])
         }
-        // let vehiclePercent = initTotalAndAssignedTotal(startedTaskCountTotal, total)
-        // if(unitByHub){
-        //     $(`#div-bus-node-vehiclePercent-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).text(`${ vehiclePercent }%`)
-        //     $(`#div-bus-node2-vehiclePercent-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).text(`${ vehiclePercent }%`)
-        // } else {
-        //     $(`#div-bus-hub-vehiclePercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ vehiclePercent }%`)
-        //     $(`#div-bus-hub2-vehiclePercent-${ (unit.toString()).replaceAll(" ","_") }`).text(`${ vehiclePercent }%`)
-        // }   
+ 
         
         initVehicleChar('Started / MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
 } 
@@ -650,91 +648,7 @@ const clickSubUnit = function (subunit, record, unit) {
 const initVehicleChar = function (text, item, data, data2, color, startedTaskCountTotal) {
     $(`.${ item }`).empty().append(generateVehicleCardHtml(data2, color, startedTaskCountTotal))
 
-    // if($(`.${ item }`) && $(`.${ item }`).length > 0) {
-    //     let legendLeft = '44%'
-    //     let legendTop = '26%'
-    //     if(item.indexOf("people") != -1){
-    //         legendLeft = '55%'
-    //         legendTop = '32%'
-    //     } 
-    //     var myChart = echarts.init(document.querySelector(`.${ item }`));
-    //     var option = {
-    //         title: {
-    //             text: text,
-    //             left: '13%',
-    //             top: '10px',
-    //             textStyle: {
-    //                 color: '#F3F3F3',
-    //                 fontSize: 13
-    //             }
-    //         },
-    //         tooltip: {
-    //             trigger: 'item'
-    //         },
-    //         legend: {
-    //             orient: 'vertical',
-    //             top: legendTop,
-    //             left: legendLeft,
-    //             selectedMode: false,
-    //             data: data2,
-    //             formatter: (name)=> {
-    //                 let value = 0;
-    //                 for(let item of data2){
-    //                     if(item.name == name) {
-    //                         value = item.value
-    //                     }
-    //                 }
-    //                 let html = `${ name == 'Driving Training' ? 'Driving\nTraining' : name }  ${ value ? value : 0 }`
-    //                 return html
-    //             },
-    //             textStyle: {
-    //                 color: '#F3F3F3',
-                    
-    //             }
-    //         },
-    //         color: color,
-    //         stillShowZeroSum: false,
-    //         graphic: [{
-    //             type: 'text',
-    //             left: '27%',
-    //             top: '52%',
-    //             style: {
-    //             text: `${ startedTaskCountTotal }/${ total }`,
-    //             textAlign: 'center',
-    //             fill: '#F3F3F3',
-    //             fontSize: 12,
-    //             lineHeight: 16
-    //             }
-    //         }],
-    //         series: [
-    //             {
-    //             type: 'pie',
-    //             top: '16%',
-    //             left: '-40%',
-    //             radius: ['60%', '80%'],
-    //             avoidLabelOverlap: false,
-    //             label: {
-    //                 show: false,
-    //                 position: 'center'
-    //             },
-    //             emphasis: {
-    //                 label: {
-    //                 show: false,
-    //                 fontSize: 40,
-    //                 fontWeight: 'bold'
-    //                 }
-    //             },
-    //             labelLine: {
-    //                 show: false
-    //             },
-    //             data: data 
-    //             }
-    //         ]
-    //     };
-    //     myChart.setOption(option);
-    // } else {
-    //     return
-    // }
+    
 }
 
 const initDriverAndVehicleChar = function (text, item, data, data2, color, total, startedTaskCountTotal) {
@@ -774,7 +688,7 @@ const initDriverAndVehicleChar = function (text, item, data, data2, color, total
                             value = item.value
                         }
                     }
-                    let html = `${ name == 'Driving Training' ? 'Driving\nTraining' : name }  ${ value ? value : 0 }`
+                    let html = `${ name == 'Driving Training' ? 'Driving\nTraining' : name }  ${ value ?? 0 }`
                     return html
                 },
                 textStyle: {
@@ -877,8 +791,8 @@ const initBusAndPersonnelPageByHub = async function (driverClass, vehicleClass) 
                                 <div class="" style="text-align: center;font-weight: bold;white-space:nowrap;line-height: 2.75rem;cursor:pointer;" onclick="clickHub('${ item.unit }')" role="button" tabindex="0">${ item.unit }</div>
                             </div>
                             <div class="col-3" style="padding-left: 0;padding-right: 0.2rem;text-align: right;">
-                                <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
-                                <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                                <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                                <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
                             </div>
                         </div>
                 
@@ -989,8 +903,8 @@ const initBusAndPersonnelPageByNode = async function (driverClass, vehicleClass,
                     <div class="" style="text-align: center;font-weight: bold;white-space:nowrap;line-height: 2.75rem;">${ (item.subunit.toLowerCase()) == 'dv_loa' ? 'DV/LOA' : item.subunit }</div>
                 </div>
                 <div class="col-3" style="padding-left: 0;padding-right: 0.2rem;text-align: right;">
-                    <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
-                    <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel == true ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                    <img alt="" src="../images/resourcesDashboard/sosphone.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.driverByState ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
+                    <img alt="" src="../images/resourcesDashboard/c.svg" style="width: 23px !important;height: 22px;cursor:pointer;${ item.mtRacByRiskLevel ? 'display: block;display: inline;' : 'display: none;' }" alt="" draggable="false"/>
                 </div>
             </div>
     
@@ -1163,7 +1077,7 @@ const initBusOrPersonnelPageNode = async function (driverByNodeData) {
                                 <div class="col-2" style="padding-left: 0.23rem;">
                                     <img alt="" src="../images/resourcesDashboard/people3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                                 </div>
-                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa == true ? 'DV/LOA' : item.subunit }</div>
+                                <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa ? 'DV/LOA' : item.subunit }</div>
                                 <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-people2-node-driverPercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">
 
                                 </div>
@@ -1187,7 +1101,7 @@ const initBusOrPersonnelPageNode = async function (driverByNodeData) {
                     <div class="col-2" style="padding-left: 0.23rem;">
                         <img alt="" src="../images/resourcesDashboard/bus3.svg" class="personnel" style="height: 20px;margin-right: 1rem;cursor:pointer;" alt="" draggable="false"/>
                     </div>
-                    <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa == true ? 'DV/LOA' : item.subunit }</div>
+                    <div class="col-8" style="text-align: center;font-weight: bold;line-height: 2rem;cursor:pointer;white-space:nowrap;padding-left: 0;padding-right: 0;">${ (item.subunit.toLowerCase()) == 'dv_loa' || dvLoa ? 'DV/LOA' : item.subunit }</div>
                     <div class="col-2" style="text-align: right;font-size: 1.2rem;font-weight: bold;line-height: 2rem;padding-left: 0;padding-right: 0.23rem;" id="div-bus-node2-vehiclePercent-${ (item.unit).replaceAll(" ","_") }-${ (item.subunit).replaceAll(" ","_") }">
 
                     </div>

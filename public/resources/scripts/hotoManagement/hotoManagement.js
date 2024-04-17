@@ -69,20 +69,7 @@ const initSelectStatus = function(tableType){
 
 const initSelect = async function(){
     const initDate = function () {
-        // layui.use('laydate', function(){
-        //     let laydate = layui.laydate;
-        //     laydate.render({
-        //         elem: '.execution-date',
-        //         type: 'date',
-        //         lang: 'en',
-        //         trigger: 'click',
-        //         range: '~',
-        //         btns: ['clear', 'confirm'],
-        //         done: function () {
-        //             dataTable.ajax.reload(null, true)
-        //         }
-        //     });
-        // });
+
     
         layui.use('laydate', function(){
             let laydate = layui.laydate;
@@ -239,19 +226,6 @@ const initPage = async function () {
             });
         }
         
-        const DisabledLayDate = function () {
-            let elem = $(".layui-laydate-content");
-            let driverLeaveDays = []
-            layui.each(elem.find('tr'), function (trIndex, trElem) {
-                layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                    let tdTemp = $(tdElem);
-                    if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
-                        tdTemp.addClass('laydate-disabled');
-                        tdTemp.css('color', 'orange');
-                    }
-                });
-            });
-        }
 
         layui.use(['laydate'], function () {
             let laydate = layui.laydate;
@@ -265,11 +239,9 @@ const initPage = async function () {
                 holidays: [parent.publidHolidays],
                 ready: () => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 change: (value) => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 done: (value) => {
                     if (value) {
@@ -301,11 +273,9 @@ const initPage = async function () {
                 holidays: [parent.publidHolidays],
                 ready: () => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 change: () => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 done: (value) => {
                     if ($('#periodStartDate').val() && value) {
@@ -666,18 +636,7 @@ const initTable = async function() {
                 return option
             }
         },   
-        "initComplete" : function (settings, json) {
-            // $(".data-list thead tr th:first").removeClass('sorting_asc');
-        },
         "columns": [
-            // { 
-            //     data: null, 
-            //     title: "S/N",
-            //     sortable: false ,
-            //     "render": function (data, type, full, meta) {
-            //         return meta.row + 1 + meta.settings._iDisplayStart
-            //     }
-            // },
             { 
                 data: 'id', 
                 title: "Request ID",
@@ -698,7 +657,7 @@ const initTable = async function() {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivityName(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data ?? '' }
                             </span><br>
                         </div>
                         `
@@ -737,11 +696,7 @@ const initTable = async function() {
                         } else if(data.toLowerCase() == 'endorsed') {
                             status = ` Pending Assign `
                         } else if(data.toLowerCase() == 'assigned') {
-                            // if(full.assignQtyStatus) {
-                            //     status = ` Pending Assign `
-                            // } else {
-                                status = ` Pending Approval `
-                            // }
+                            status = ` Pending Approval `
                         } else {
                             status = data
                         }
@@ -769,7 +724,7 @@ const initTable = async function() {
                 defaultContent: '-',
                 render: function (data, type, full, meta) {
                     return `
-                        <label>${ data ? data : '-' }</label><br>
+                        <label>${ data ?? '-' }</label><br>
                         <label>${ full.vehicleType ? full.vehicleType : '-' }</label>
                     `
                 }
@@ -790,7 +745,7 @@ const initTable = async function() {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showExplanation(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data ?? '' }
                             </span><br>
                         </div>
                         `

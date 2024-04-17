@@ -94,17 +94,7 @@ export async function initUserCreatePage (userId) {
                 }
             });
     } 
-    const getCurrentUserList = function () {
-        return axios.post('/getCurrentUser')
-            .then(function (res) {
-                if (res.respCode === 1) {
-                    return res.respMessage
-                } else {
-                    console.error(res.respMessage)
-                    return [];
-                }
-            });
-    }
+
     
     const initUnitTypePage = function () {
         $('#edit-user #unitType').empty();
@@ -190,17 +180,7 @@ export async function initUserCreatePage (userId) {
     }
 
     $('#edit-user').modal('show');
-    // if($(`#edit-user .modal-title`).text() === 'Create User'){
-    //     if((currentUser.userType).toUpperCase() == 'UNIT') {
-    //         $("#edit-user #unitType option:first").prop("selected", 'selected');
-    //         $('#edit-user #unitType').trigger('change');
-    //     } else {
-    //         $('#edit-user .unit,#edit-user .subUnit').hide();
-    //     }
-    //     if((currentUser.userType).toUpperCase() != 'CUSTOMER'){
-    //         $('.unitGroup-row').css('display', 'none');
-    //     }
-    // }
+
     if($(`#edit-user .modal-title`).text() === 'Create User') {
         $('#user-userName').val('')
         $('#user-nric').val('')

@@ -117,22 +117,7 @@ const initPage = async function () {
             monthStart = monthStart.add(1, 'months');
         }
         $('.selectedMonth').append(monthSelectedHtml);
-        // let maxMonth = moment().add(-1, 'months').format('YYYY-MM');
-        // layui.use('laydate', function() {
-        //     let laydate = layui.laydate;
-        //     laydate.render({
-        //         elem: '.selectedMonth',
-        //         type: 'month',
-        //         lang: 'en',
-        //         trigger: 'click',
-        //         value: maxMonth,
-        //         max: maxMonth,
-        //         btns: ['clear', 'confirm'],
-        //         done: (value) => {
-        //             reloadResourceReport()
-        //         }
-        //     });
-        // })
+        
     };
     initDateSelect();
     initHubAndNode();
@@ -170,9 +155,7 @@ const reloadResourceReport = async function () {
                         let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
                         let selectedYear = $('.selectedYear').val();
                         let selectedMonth = $('.selectedMonth').val();
-                        // if (!selectedMonth) {
-                        //     selectedMonth = moment().add(-1, 'months').format('MM');
-                        // }
+
 
                         return {
                             "pageNum": d.start, 
@@ -327,13 +310,10 @@ const reloadResourceReport = async function () {
                     url: "/licensingMonthReport",
                     type: "POST",
                     data: function (d) {
-                        // let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
-                        // let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
+                        
                         let selectedYear = $('.selectedYear').val();
                         let selectedMonth = $('.selectedMonth').val();
-                        // if (!selectedMonth) {
-                        //     selectedMonth = moment().add(-1, 'months').format('MM');
-                        // }
+                        
                         let selectedPermitType = $('.permitTypeSelect').val();
 
                         return {
@@ -402,110 +382,106 @@ const reloadResourceReport = async function () {
                 ],
             });
         }
+    } else if (report3Table) {
+        report3Table.ajax.reload(null, true);
     } else {
-        if (report3Table) {
-            report3Table.ajax.reload(null, true);
-        } else {
-            report3Table = $('.data-list-3').DataTable({
-                "ordering": false,
-                "searching": false,
-                "paging": true,
-                "autoWidth": false,
-                "fixedHeader": true,
-                "scrollX": "auto",
-                "scrollCollapse": true,
-                "language": PageHelper.language(),
-                "lengthMenu": PageHelper.lengthMenu(),
-                "dom": PageHelper.dom(),
-                "pageLength": PageHelper.pageLength(),
-                "processing": false,
-                "serverSide": true,
-                "destroy": true,
-                "sAjaxDataProp": "respMessage",
-                "ajax": {
-                    url: "/licensingMonthReport",
-                    type: "POST",
-                    data: function (d) {
-                        let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
-                        let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
-                        let selectedYear = $('.selectedYear').val();
-                        let selectedMonth = $('.selectedMonth').val();
-                        // if (!selectedMonth) {
-                        //     selectedMonth = moment().add(-1, 'months').format('MM');
-                        // }
+        report3Table = $('.data-list-3').DataTable({
+            "ordering": false,
+            "searching": false,
+            "paging": true,
+            "autoWidth": false,
+            "fixedHeader": true,
+            "scrollX": "auto",
+            "scrollCollapse": true,
+            "language": PageHelper.language(),
+            "lengthMenu": PageHelper.lengthMenu(),
+            "dom": PageHelper.dom(),
+            "pageLength": PageHelper.pageLength(),
+            "processing": false,
+            "serverSide": true,
+            "destroy": true,
+            "sAjaxDataProp": "respMessage",
+            "ajax": {
+                url: "/licensingMonthReport",
+                type: "POST",
+                data: function (d) {
+                    let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
+                    let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
+                    let selectedYear = $('.selectedYear').val();
+                    let selectedMonth = $('.selectedMonth').val();
 
-                        return {
-                            "pageNum": d.start, 
-                            "pageLength": d.length,
-                            "selectedHub": hub,
-                            "selectedNode": node,
-                            "selectedYear": selectedYear,
-                            "selectedMonth": selectedMonth,
-                            "resourceType": currentReportType
-                        };
+
+                    return {
+                        "pageNum": d.start, 
+                        "pageLength": d.length,
+                        "selectedHub": hub,
+                        "selectedNode": node,
+                        "selectedYear": selectedYear,
+                        "selectedMonth": selectedMonth,
+                        "resourceType": currentReportType
+                    };
+                }
+            },   
+            "initComplete" : function (settings, json) {
+            },
+            "columns": [
+                { 
+                    data: null, 
+                    title: "S/N",
+                    sortable: false ,
+                    "render": function (data, type, full, meta) {
+                        return meta.row + 1 + meta.settings._iDisplayStart
                     }
-                },   
-                "initComplete" : function (settings, json) {
                 },
-                "columns": [
-                    { 
-                        data: null, 
-                        title: "S/N",
-                        sortable: false ,
-                        "render": function (data, type, full, meta) {
-                            return meta.row + 1 + meta.settings._iDisplayStart
-                        }
-                    },
-                    { 
-                        data: 'year', 
-                        title: "Year",
-                        sortable: false 
-                    },
-                    { 
-                        data: 'month', 
-                        title: "Month",
-                        sortable: false 
-                    },
-                    { 
-                        data: 'unitFullName', 
-                        title: "Units",
-                        sortable: false 
-                    },
-                    { 
-                        data: 'successedNo', 
-                        title: "No. Success",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: null, 
-                        title: "No. Collected",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return '-';
-                        } 
-                    },
-                    { 
-                        data: null, 
-                        title: "No. Pending Collection",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return '-';
-                        } 
-                    },
-                    { 
-                        data: null, 
-                        title: "Reason",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            return '-';
-                        } 
-                    }
-                ],
-            });
-        }
+                { 
+                    data: 'year', 
+                    title: "Year",
+                    sortable: false 
+                },
+                { 
+                    data: 'month', 
+                    title: "Month",
+                    sortable: false 
+                },
+                { 
+                    data: 'unitFullName', 
+                    title: "Units",
+                    sortable: false 
+                },
+                { 
+                    data: 'successedNo', 
+                    title: "No. Success",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: null, 
+                    title: "No. Collected",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return '-';
+                    } 
+                },
+                { 
+                    data: null, 
+                    title: "No. Pending Collection",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return '-';
+                    } 
+                },
+                { 
+                    data: null, 
+                    title: "Reason",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        return '-';
+                    } 
+                }
+            ],
+        });
     }
 }
 

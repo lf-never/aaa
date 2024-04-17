@@ -104,10 +104,10 @@ module.exports.updateUserZone = async function (req, res) {
             await UserZone.update({ zoneName: userZone.zoneName, color: userZone.color, polygon: userZone.polygon }, { where: { id: userZone.id } })
             
             // send mq
-            let polygonStr = userZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
-            polygonStr = polygonStr.join(',');
-            polygonStr = 'CreateCAZone:' + userZone.owner + '=';
-            ActiveMQ.publicCreateUserZone(Buffer.from(JSON.stringify(polygonStr)));
+            // let polygonStr = userZone.polygon.map(position => { return `${ position[0] }:${ position[1] }` });
+            // polygonStr = polygonStr.join(',');
+            // polygonStr = 'CreateCAZone:' + userZone.owner + '=';
+            // ActiveMQ.publicCreateUserZone(Buffer.from(JSON.stringify(polygonStr)));
         }).catch(error => {
             throw error
         });

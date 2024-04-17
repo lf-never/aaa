@@ -20,10 +20,7 @@ $(function () {
     }
 
     $('.btn-registerAccount').on('click', function(){
-        // const state = { dataFrom: 'server' }
-        // const url = "/user/registerUser"
-        // window.history.pushState(state, '', url);
-        // window.location.href = url;
+        
 
         window.location.href = encodeURI("/user/registerUser?dataFrom="+'server')
     })

@@ -188,14 +188,11 @@ const initTrafficDashboardPage = async function () {
 			driver: $(this).data('driver'),
 			occTime: $(this).data('occtime'),
 		}
-		// showOBDSpeedChart(option);
-		// console.log(option)
+		
 		showEventHistory(offenceListOption)
 	})
 
-	if (Cookies.get('current_tab') == '0') {
-
-	} else if (Cookies.get('current_tab') == '1') {
+	if (Cookies.get('current_tab') == '1') {
 		initIllegalMarker(trackDashboardInfo);
 	}
 }
@@ -213,13 +210,13 @@ const showVehiclePositionHandler = async function () {
 	}
 	const clearOffenceMarkerList = function (marker) {
 		for (let marker of offenceMarkerList) {
-			// map.removeLayer(marker);
+			
 			removeMapObject(marker)
 		}
 		offenceMarkerList = []
 	}
 
-	// createMarkerCluster.clearLayers();
+	
 	let vehiclePositionList = await getPositionListRequest();
 	clearOffenceMarkerList();
 	if (!vehiclePositionList || !vehiclePositionList.length) return;
@@ -261,30 +258,26 @@ const showVehiclePositionHandler = async function () {
 			// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
 			if (position.rpm == 0) {
 				option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
-			} else {
-				if (Number.parseFloat(position.speed) > position.limitSpeed) option.iconUrl = `./images/vehicle/Speeding.svg`
-				else {
-					if (!position.onRoad && !position.parked) {
-						option.iconUrl = `./images/vehicle/Vehicle0.svg`
-					} else if (position.parked) {
-						option.iconUrl = `./images/vehicle/Vehicle2.svg`
-					} else if (position.onRoad) {
-						option.iconUrl = `./images/vehicle/Vehicle.svg`
-					}
-					// option.iconUrl = `./images/vehicle/Vehicle${ position.onRoad ? '' : '2' }.svg`
-				}
+			} else if (Number.parseFloat(position.speed) > position.limitSpeed){
+				option.iconUrl = `./images/vehicle/Speeding.svg`
+			} else if (!position.onRoad && !position.parked) {
+				option.iconUrl = `./images/vehicle/Vehicle0.svg`
+			} else if (position.parked) {
+				option.iconUrl = `./images/vehicle/Vehicle2.svg`
+			} else if (position.onRoad) {
+				option.iconUrl = `./images/vehicle/Vehicle.svg`
 			}
 			vehicleMarker = drawMarker(position, option);
 		} 
 		
-		// createMarkerCluster.addLayer(vehicleMarker);
+	
 		storeOffenceMarkerList(vehicleMarker);
 		bindTooltip(vehicleMarker, toolTipHtml,	toolTipOffset);
 		// When update marker, also need update its marker icon and tooltip
 		// updateMapObject('track', { id: position.deviceId, mapObject: vehicleMarker }, option, {content: toolTipHtml, offset: toolTipOffset});
 	}
 
-	// map.addLayer(createMarkerCluster);
+	
 }
 
 const drawSpeedMarker = function (speed, color) {
@@ -297,15 +290,7 @@ const drawSpeedMarker = function (speed, color) {
     </div>`;
 }
 
-// const drawMarker2 =  function(icoUrl, position) {
-//     let myIcon = L.divIcon({
-//         html: icoUrl,
-//         iconSize: [32, 32],
-//         iconAnchor: [15, 28]
-//     });
-//     let marker = L.marker([position.lat, position.lng], {draggable: false, icon: myIcon});
-//     return marker;
-// }
+
 
 const showEventHistory = async function (option) {
 	const getEventHistoryRequest = function (option) {
@@ -382,14 +367,7 @@ const showEventHistory = async function (option) {
 			});
 		}
 	
-		// console.log('type: ', option.type);
-		// console.log('deviceId: ', option.deviceId);
-		// console.log('vehicleNo: ', option.vehicleNo);
-		// console.log('violationType: ', option.violationType);
-		// console.log('driver: ', option.driver);
-		// console.log('startTime: ', option.startTime);
-		// console.log('endTime: ', option.endTime);
-		// console.log('occTime: ', option.occTime);
+
 		
 		getSpeedListRequest(option.deviceId, option.vehicleNo, option.type, option.occTime, option.startTime, option.endTime).then((result) => {
 			if (!result?.list) {
@@ -532,7 +510,7 @@ const showEventHistory = async function (option) {
 
 window.drawEventPopup = async function (e) {
 	let row = dataTables.row($(e).data('row')).data()
-	// console.log(row);
+	
 	const getPositionList = async function (body) {
 		return axios.post('/track/getEventPositionHistory', body).then(result => {
 			return result.respMessage

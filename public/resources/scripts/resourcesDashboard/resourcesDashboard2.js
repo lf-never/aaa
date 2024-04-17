@@ -81,12 +81,7 @@ const initLoanOutByVehicle = async function (hub, node) {
     });
 }
 
-// const initOnHoldByVehicle = async function (hub, node) {
-//     return await axios.post('/resourcesDashboard/getVehicleTotalByOnhold', { pageType: 'Resources Dashboard2', hub, node })
-//     .then(function (res) {
-//         return res.respMessage ? res.respMessage : res.data.respMessage;
-//     });
-// }
+
 
 const initLoanOutByDriver = async function (hub, node) {
     return await axios.post('/resourcesDashboard/getDriverTotalByLoanOut', { pageType: 'Resources Dashboard2', hub, node })
@@ -342,11 +337,9 @@ const initDriverTotalChart = async function (timeNeeded, hub, node) {
         if(node) {
             if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
                 if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.driverRoleData
-            } else {
-                if((item.subunit).toLowerCase() == (node).toLowerCase()) {
-                    dataObj = item.driverRoleData
-                } 
-            }
+            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                dataObj = item.driverRoleData
+            } 
         } else {
             dataObj = item.driverRoleData
         }
@@ -388,7 +381,7 @@ const initDriverTotalChart = async function (timeNeeded, hub, node) {
                             value = item.value
                         }
                     }
-                    let html = `${ name }     ${ value ? value : 0 }`
+                    let html = `${ name }     ${ value ?? 0 }`
                     return html
                 },
                 textStyle: {
@@ -464,11 +457,9 @@ const initIndentTotalChart = async function (timeNeeded, hub, node) {
         if(node) {
             if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
                 if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.taskPurposeData
-            } else {
-                if((item.subunit).toLowerCase() == (node).toLowerCase()) {
-                    dataObj = item.taskPurposeData
-                } 
-            }
+            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                dataObj = item.taskPurposeData
+            } 
         } else {
             dataObj = item.taskPurposeData
         }
@@ -522,7 +513,7 @@ const initIndentTotalChart = async function (timeNeeded, hub, node) {
                             value = item.value
                         }
                     }
-                    let html = `${ name }  ${ value ? value : 0 }`
+                    let html = `${ name }  ${ value ?? 0 }`
                     return html
                 },
                 textStyle: {
@@ -599,11 +590,9 @@ const initDriverAndVehicleAvailabilityWeeklyChart = async function (hub, node, c
             if(node) {
             if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
                 if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj.push(item)
-            } else {
-                if((item.subunit).toLowerCase() == (node).toLowerCase()) {
-                    dataObj.push(item)
-                } 
-            }
+            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                dataObj.push(item)
+            } 
         } else {
             dataObj.push(item)
         }
@@ -819,11 +808,9 @@ const initDriverAndVehicleDeployedTotalWeeklyChart = async function (hub, node, 
             if(node) {
             if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
                 if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj.push(item)
-            } else {
-                if((item.subunit).toLowerCase() == (node).toLowerCase()) {
-                    dataObj.push(item)
-                } 
-            }
+            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                dataObj.push(item)
+            } 
         } else {
             dataObj.push(item)
         }

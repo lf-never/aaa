@@ -7,7 +7,7 @@ $(function() {
     });
 
     $('#vehicle-markAsUnavailable .markAsUnavailable-day').on('click', function(){
-        if (true == $(this).prop("checked")) {
+        if ($(this).prop("checked")) {
             $('#vehicle-markAsUnavailable .markAsUnavailable-day').prop('checked', false);
             $(this).prop('checked', true);
         }
@@ -18,7 +18,7 @@ $(function() {
         $(this).addClass('active');
     });
 
-    //initVehicleLeaveDays();
+    
 });
 
 const initVehicleLeaveDays = async function() {
@@ -38,18 +38,16 @@ const initVehicleLeaveDays = async function() {
 
 const cancleMarkVehicle = function() {
     $('#vehicle-markAsUnavailable').modal('hide');
-    driverLeaveDays = null;
+
 }
 
 const confirmMarkVehicle = async function(optType) {
     let startDate = $('#vehicle-markAsUnavailable #markAsUnavailable-date-from').val();
     let endDate = $('#vehicle-markAsUnavailable #markAsUnavailable-date-to').val();
     let dayType = 'all';
-    if ($('#markAsUnavailable-date-all').prop('checked') == true){
-        dayType = 'all';
-    } else if ($('#markAsUnavailable-date-am').prop('checked') == true){
+    if ($('#markAsUnavailable-date-am').prop('checked')){
         dayType = 'am';
-    } else if ($('#markAsUnavailable-date-pm').prop('checked') == true){
+    } else if ($('#markAsUnavailable-date-pm').prop('checked')){
         dayType = 'pm';
     }
     let reason =  $('#vehicle-markAsUnavailable .reassignReasonDiv.active label').text();
@@ -144,10 +142,8 @@ const initMarkAsUnAvailablePage = async function(vehicleNo, date, endDate) {
                         $(this).prop('checked', true);
                     }
                 });
-            } else {
-                if (!respMsp.operation || !respMsp.operation.includes('Mark Event')) {
-                    $('.vl-opt-btn-div-create').hide();
-                }
+            } else if (!respMsp.operation || !respMsp.operation.includes('Mark Event')) {
+                $('.vl-opt-btn-div-create').hide();
             }
         }
     });

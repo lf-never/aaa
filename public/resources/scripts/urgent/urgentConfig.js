@@ -205,8 +205,9 @@ window.cancelUrgentDutyById = async function(id) {
                 btnClass: 'custom-btn-green', 
                 action: function(){
                     let cancelledCause = null;
-                    if($('#cancelledCause').val() == '') cancelledCause = null
-                    $('#cancelledCause').val() ? cancelledCause = $('#cancelledCause').val() : cancelledCause = null
+                    if($('#cancelledCause').val() && $('#cancelledCause').val() != ''){
+                        cancelledCause = $('#cancelledCause').val()
+                    }
                     return axios.post('/urgent/cancelUrgentDutyById',{ id, cancelledCause: cancelledCause })
                     .then(function (res) {
                         if(res.respCode != 1){
@@ -272,8 +273,8 @@ const initDetail = function () {
                 if(node) node = node.substring(node.lastIndexOf(":")+1, node.length)
                 if(hub) hub = hub.toLowerCase() === 'all' ? null : hub;
                 if(node) node = node.toLowerCase() === 'all' ? null : node;
-                hub = hub ? hub : null;
-                node = node ? node : null;
+                hub = hub ?? null;
+                node = node ?? null;
                 let idDateOrder
                 let endDateOrder
                 for (let orderField of d.order) {
@@ -369,7 +370,7 @@ const initDetail = function () {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data ?? '' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.cancelledName ? full.cancelledName : '' }</label><br>
                             <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
@@ -395,12 +396,10 @@ const initDetail = function () {
                             if (operation.includes('cancel')) {
                                 html += `<button type="button" class="px-2 py-0 btn-assigned btn btn-danger" onclick="cancelUrgentDutyById('${data}')">Cancel</button> `
                             }
+                        } else if((full.status).toLowerCase() == 'waitcheck') {
+                            html += `Pending`
                         } else {
-                            if((full.status).toLowerCase() == 'waitcheck') {
-                                html += `Pending`
-                            } else {
-                                html += `${ full.status }`
-                            }
+                            html += `${ full.status }`
                         }
                         return html
                 }
@@ -442,7 +441,7 @@ const initHubAndNode = async function () {
                 $(".node-select").empty();
                 for (let unit of unitList) {
                     if (unit.unit === selectedUnit) {
-                        let html2 = ``;
+                        let html2 ;
                         if(unit.subUnit){
                             html2 = `<option name="subUnitType" data-unitId="${ unit.id }" value="${ unit.subUnit }">${ unit.subUnit }</option>`
                         }else{
@@ -487,7 +486,9 @@ const initVehicleDriverPage = async function () {
                 let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId;
                 let startDate = `${ moment($('#periodStartDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 09:30`;
                 let endDate = `${ moment($('#periodEndDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 17:00`;
-                vehicleList = await getVehicleList($('#purposeType').val(), mtUnitId ? mtUnitId : unitId, urgentDutyRequect, startDate, endDate, $('.hub-select option:selected').val(), $('.node-select option:selected').val() ? $('.node-select option:selected').val() : null);
+                let __vehicleUnitId = mtUnitId
+                if(!mtUnitId) __vehicleUnitId = unitId
+                vehicleList = await getVehicleList($('#purposeType').val(), __vehicleUnitId, urgentDutyRequect, startDate, endDate, $('.hub-select option:selected').val(), $('.node-select option:selected').val() ? $('.node-select option:selected').val() : null);
                 $('#vehicleNo-shadow .form-search-select').empty()
                 for(let vehicle of vehicleList){
                     $(e).next().find(".form-search-select").append(`<li data-unitId="${ vehicle.unitId }">${vehicle.vehicleNo}</li>`)
@@ -526,7 +527,9 @@ const initVehicleDriverPage = async function () {
                 let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId
                 let startDate = `${ moment($('#periodStartDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 09:30`;
                 let endDate = `${ moment($('#periodEndDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 17:00`;
-                driverList = await getDriverList($('#purposeType').val(), mtUnitId ? mtUnitId : unitId, urgentDutyRequect, startDate, endDate);
+                let __driverUnitId = mtUnitId
+                if(!mtUnitId) __driverUnitId = unitId
+                driverList = await getDriverList($('#purposeType').val(), __driverUnitId, urgentDutyRequect, startDate, endDate);
                 if(driverList.length > 0) driverList = driverList.sort((a, b) => a.driverName.localeCompare(b.driverName));
                 $('#driver-shadow .form-search-select').empty()
                 for(let driver of driverList){
@@ -572,9 +575,7 @@ const initPage = async function () {
     const initPurposeType = function (purposeTypeList) {
         $('#purposeType').empty()
         let html = `<option>${ purposeTypeList[0] }</option>` ;
-        // for(let item of purposeTypeList){
-        //     html+= `<option>${ item }</option>`;
-        // }
+        
         $('#purposeType').append(html)
     }
     initPurposeType(['Urgent Duty']);
@@ -733,15 +734,18 @@ const verifyVehicleTypeAndVehicleAndDriver = async function () {
         let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId
         let startDate = `${ moment($('#periodStartDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 09:30`;
         let endDate = `${ moment($('#periodEndDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') } 17:00`;
-        let newVehicleList = await getVehicleList($('#purposeType').val(), mtUnitId ? mtUnitId : unitId, urgentDutyRequect, startDate, endDate, $('.hub-select').val(), $('.node-select').val());
+        let __newVehicleUnitId = mtUnitId
+        if(!mtUnitId) __newVehicleUnitId = unitId
+        let newVehicleList = await getVehicleList($('#purposeType').val(), __newVehicleUnitId, urgentDutyRequect, startDate, endDate, $('.hub-select').val(), $('.node-select').val());
         let result = newVehicleList.some(item=> item.vehicleNo == $('#vehicleNo').val())
         if(!result) {
             $('#vehicleNo').val('');
             $('#vehicleNo').attr('data-unitId', null)
             $('#vehicleNo-shadow .form-search-select').empty()   
         }
-        let newDriverList = null;
-        newDriverList = await getDriverList($('#purposeType').val(), mtUnitId ? mtUnitId : unitId, urgentDutyRequect, startDate, endDate);
+        let __newDriverUnitId = mtUnitId
+        if(!mtUnitId) __newDriverUnitId = unitId
+        let newDriverList = await getDriverList($('#purposeType').val(), __newDriverUnitId, urgentDutyRequect, startDate, endDate);
         let driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
         if(!driverResult) {
             $('#driver').val('');
@@ -935,22 +939,20 @@ const getDriverList = async function (purpose, unitId, vehicleType, startDate, e
                 }
             });
         } else {
-        return []
+            return []
         }
+    } else if(startDate && endDate && vehicleType){
+        return axios.post('/urgent/getDriverByGroupId', { editUserId, vehicleType, startDate, endDate })
+        .then(function (res) {
+            if (res.respCode === 1) {
+                return res.respMessage;
+            } else {
+                console.error(res.respMessage);
+                return null;
+            }
+        });
     } else {
-        if(startDate && endDate && vehicleType){
-            return axios.post('/urgent/getDriverByGroupId', { editUserId, vehicleType, startDate, endDate })
-            .then(function (res) {
-                if (res.respCode === 1) {
-                    return res.respMessage;
-                } else {
-                    console.error(res.respMessage);
-                    return null;
-                }
-            });
-        } else {
         return []
-        }
     }
 }
 
@@ -978,21 +980,19 @@ const getVehicleList = async function (purpose, unitId, vehicleType,startDate, e
         } else {
             return []
         }
+    } else if(startDate && endDate && vehicleType && purpose) {
+        return axios.post('/urgent/getVehicleByGroupId', { editUserId, vehicleType, startDate, endDate })
+        .then(function (res) {
+            if (res.respCode === 1) {
+                return res.respMessage;
+            } else {
+                console.error(res.respMessage);
+                return [];
+            }
+        });
     } else {
-        if(startDate && endDate && vehicleType && purpose) {
-            return axios.post('/urgent/getVehicleByGroupId', { editUserId, vehicleType, startDate, endDate })
-            .then(function (res) {
-                if (res.respCode === 1) {
-                    return res.respMessage;
-                } else {
-                    console.error(res.respMessage);
-                    return [];
-                }
-            });
-        } else {
-            return []
-        } 
-    }
+        return []
+    } 
 }
 
 const getUnitIdByUserId = async function (userId) {
@@ -1106,7 +1106,7 @@ const confirmUrgentDuty = function (id) {
                 clearPageData();
                 $('#urgentDutyModal').modal('hide')
                 dataTable.ajax.reload(null, false) 
-                return
+                
             });
         } else {
             await createUrgentConfig(urgentConfig).then((res) => {
@@ -1122,7 +1122,7 @@ const confirmUrgentDuty = function (id) {
                 clearPageData();
                 $('#urgentDutyModal').modal('hide')
                 dataTable.ajax.reload(null, false) 
-                return
+                
             });
         }
         $(this).removeClass('btn-disabled')
@@ -1133,7 +1133,7 @@ const clearPageData = function () {
     data = ''
     $('.resourceType').val('')
     $('.resourceType').trigger('change')
-    // $('#purposeType').val('');
+    
     $('.hub-select').val('');
     $('.hub-select').trigger('change')
     $('.node-select').val('');

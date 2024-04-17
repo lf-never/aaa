@@ -14,20 +14,13 @@ $(() => {
 	// initRadioBtnEventHandler();
 	Cookies.get('current_tab', 0);
 
-	if (Cookies.get('current_tab') == '0') {
-		// showVehiclePositionHandler();
-		// vehicleInterval = setInterval(showVehiclePositionHandler, 5000);
-	}
 	
 	initOffenceCardActiveHandler();
 
-	// initTrafficDashboardPage();
+	
 	illegalInterval = setInterval(initTrafficDashboardPage, 10 * 60 * 1000);
 
-	// initRealAlertPage();
-	// alertIllegalInterval = setInterval(initRealAlertPage, 5000);
-	// initRealSpeedingPage();
-	// speedingIllegalInterval = setInterval(initRealSpeedingPage, 5000);
+
 	
 
 	layui.use('layer', function () {
@@ -266,14 +259,11 @@ const initTrafficDashboardPage = async function () {
 			node: $(this).data('node'),
 			group: $(this).data('groupname'),
 		}
-		// showOBDSpeedChart(option);
-		// console.log(offenceListOption)
+		
 		showEventHistory(offenceListOption)
 	})
 
-	if (Cookies.get('current_tab') == '0') {
-
-	} else if (Cookies.get('current_tab') == '1') {
+	if (Cookies.get('current_tab') == '1') {
 		initIllegalMarker(trackDashboardInfo);
 	}
 }
@@ -291,13 +281,13 @@ const showVehiclePositionHandler = async function () {
 	}
 	const clearOffenceMarkerList = function (marker) {
 		for (let marker of offenceMarkerList) {
-			// map.removeLayer(marker);
+	
 			removeMapObject(marker)
 		}
 		offenceMarkerList = []
 	}
 
-	// createMarkerCluster.clearLayers();
+
 	let vehiclePositionList = await getPositionListRequest();
 	clearOffenceMarkerList();
 	if (!vehiclePositionList || !vehiclePositionList.length) return;
@@ -310,7 +300,7 @@ const showVehiclePositionHandler = async function () {
 
 		let vehicleMarker = null;
 		let toolTipOffset = { direction: 'top', offset: [1, -60] };
-		let toolTipHtml = ` `;
+		let toolTipHtml;
 		if (position.type === 'mobile') {
 			toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
 								<label>${ position.vehicleNo }<br>${ position.driverName }</label>
@@ -331,30 +321,26 @@ const showVehiclePositionHandler = async function () {
 			// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
 			if (position.rpm == 0) {
 				option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
-			} else {
-				if (Number.parseFloat(position.speed) > position.limitSpeed) option.iconUrl = `./images/vehicle/Speeding.svg`
-				else {
-					if (!position.onRoad && !position.parked) {
-						option.iconUrl = `./images/vehicle/Vehicle0.svg`
-					} else if (position.parked) {
-						option.iconUrl = `./images/vehicle/Vehicle2.svg`
-					} else if (position.onRoad) {
-						option.iconUrl = `./images/vehicle/Vehicle.svg`
-					}
-					// option.iconUrl = `./images/vehicle/Vehicle${ position.onRoad ? '' : '2' }.svg`
-				}
+			} else if (Number.parseFloat(position.speed) > position.limitSpeed){
+				option.iconUrl = `./images/vehicle/Speeding.svg`
+			} else if (!position.onRoad && !position.parked) {
+				option.iconUrl = `./images/vehicle/Vehicle0.svg`
+			} else if (position.parked) {
+				option.iconUrl = `./images/vehicle/Vehicle2.svg`
+			} else if (position.onRoad) {
+				option.iconUrl = `./images/vehicle/Vehicle.svg`
 			}
 			vehicleMarker = drawMarker(position, option);
 		} 
 		
-		// createMarkerCluster.addLayer(vehicleMarker);
+
 		storeOffenceMarkerList(vehicleMarker);
 		bindTooltip(vehicleMarker, toolTipHtml,	toolTipOffset);
 		// When update marker, also need update its marker icon and tooltip
 		// updateMapObject('track', { id: position.deviceId, mapObject: vehicleMarker }, option, {content: toolTipHtml, offset: toolTipOffset});
 	}
 
-	// map.addLayer(createMarkerCluster);
+	
 }
 
 const drawSpeedMarker = function (speed, color) {
@@ -367,15 +353,7 @@ const drawSpeedMarker = function (speed, color) {
     </div>`;
 }
 
-// const drawMarker2 =  function(icoUrl, position) {
-//     let myIcon = L.divIcon({
-//         html: icoUrl,
-//         iconSize: [32, 32],
-//         iconAnchor: [15, 28]
-//     });
-//     let marker = L.marker([position.lat, position.lng], {draggable: false, icon: myIcon});
-//     return marker;
-// }
+
 
 const showEventHistory = async function (option) {
 	const getEventHistoryRequest = function (option) {
@@ -768,7 +746,7 @@ window.drawEventPopup = async function (e) {
 				if (marker) simpleMap.removeLayer(marker);
 				marker = drawSimpleMarker(positionList[index], { iconUrl: './icons/icon-car-red2.png', iconSize: [25, 25] })
 				
-				let titleContent = ``
+				let titleContent
 				if (row.driver != 'undefined') {
 					titleContent = row.driver + `(${ row.vehicleNo })`
 				} else {
@@ -805,7 +783,7 @@ const initSimpleMap = function (id) {
     let osmUrl = '';
     console.log(Cookies.get('userLocalMapTile'))
     if (Cookies.get('userLocalMapTile').toLowerCase() === 'false') {
-		// osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		
         osmUrl = 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=m&x={x}&y={y}&z={z}';
     } else {
         osmUrl = '../map/Tiles/{z}/{x}/{y}.png';
@@ -841,7 +819,7 @@ const initNoGoZone = async function (zoneName) {
 			__points.push([point.lat, point.lng])
 		}
 		let polygon = L.polygon(__points, options).addTo(simpleMap);
-		// simpleMap.fitBounds(polygon.getBounds());
+		
 		return polygon;
 	}
 

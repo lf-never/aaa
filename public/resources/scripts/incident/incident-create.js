@@ -1,4 +1,4 @@
-import { initCustomToast, initCustomModal, customPopupInfo } from '../common-script.js'
+import {  customPopupInfo } from '../common-script.js'
 import { initIncidentViewPage, showIncidentMarker } from '../incident/incident-view.js'
 
 $(function () {
@@ -131,7 +131,7 @@ const createIncidentEventHandler = async function () {
             if(key == 'lat' || key == 'lng'){
                 continue
             }
-            let regexp = new RegExp("^[ ]+$");
+            let regexp = /^[ ]+$/
             if (data[key] == null || data[key] == "" || (regexp.test(data[key]))) {
                 $.alert({
                     title: 'Warn',
@@ -150,9 +150,9 @@ const createIncidentEventHandler = async function () {
         if (currentIncident.incidentNo) {
             incident.incidentNo = currentIncident.incidentNo
             result = await updateIncidentRequest(incident)
-        } else {
-            if(incident) result = await createIncidentRequest(incident)
-        }
+        } else if(incident) {
+            result = await createIncidentRequest(incident)
+        } 
         if (result) {
             $('#create-incident').modal('hide');
             initIncidentViewPage();

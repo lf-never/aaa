@@ -213,149 +213,147 @@ const reloadResourceReport = async function () {
                 ],
             });
         }
+    } else if (toReportTable) {
+        toReportTable.ajax.reload(null, true);
     } else {
-        if (toReportTable) {
-            toReportTable.ajax.reload(null, true);
-        } else {
-            toReportTable = $('.data-list-toReport').on('order.dt', function () {
-            }).DataTable({
-                "ordering": true,
-                "searching": false,
-                "paging": true,
-                "autoWidth": false,
-                "fixedHeader": true,
-                "scrollX": "auto",
-                "scrollCollapse": true,
-                "language": PageHelper.language(),
-                "lengthMenu": PageHelper.lengthMenu(),
-                "dom": PageHelper.dom(),
-                "pageLength": PageHelper.pageLength(),
-                "processing": false,
-                "serverSide": true,
-                "destroy": true,
-                "sAjaxDataProp": "respMessage",
-                "ajax": {
-                    url: "/arbReportByTO",
-                    type: "POST",
-                    data: function (d) {
-                        let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
-                        let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
-                        let selectedDateRangeArray = [];
-                        let selectedDateRange = $('#select-dataRange').val();
-                        if (!selectedDateRange) {
-                            let currentDay = moment().format('YYYY-MM-DD');
-                            let preMonthDay = moment().add(-1, 'month').format('YYYY-MM-DD');
-                            selectedDateRangeArray.push(preMonthDay);
-                            selectedDateRangeArray.push(currentDay);
-                        } else {
-                            selectedDateRange = selectedDateRange.trim();
-                            selectedDateRangeArray = selectedDateRange.split('~');
-                        }
-                        
-                        selectedDateRangeArray = selectedDateRangeArray.map(item => moment(item.trim(), 'DD/MM/YYYY').format('YYYY-MM-DD'))
-
-                        let sortBy = '';
-                        let sort = '';
-                        if (d.order[0].column == 3) {
-                            sortBy = 'speeding'
-                            sort = d.order[0].dir
-                        } else if (d.order[0].column == 4) {
-                            sortBy = 'hardBraking'
-                            sort = d.order[0].dir
-                        } else if (d.order[0].column == 5) {
-                            sortBy = 'rapidAcc'
-                            sort = d.order[0].dir
-                        } else if (d.order[0].column == 6) {
-                            sortBy = 'nogoAlert'
-                            sort = d.order[0].dir
-                        } else if (d.order[0].column == 7) {
-                            sortBy = 'total'
-                            sort = d.order[0].dir
-                        }
-
-                        return {
-                            "pageNum": d.start, 
-                            "pageLength": d.length,
-                            "sortBy": sortBy,
-                            "sort": sort,
-                            "hub": hub,
-                            "node": node,
-                            "dateTimeZone": selectedDateRangeArray
-                        };
+        toReportTable = $('.data-list-toReport').on('order.dt', function () {
+        }).DataTable({
+            "ordering": true,
+            "searching": false,
+            "paging": true,
+            "autoWidth": false,
+            "fixedHeader": true,
+            "scrollX": "auto",
+            "scrollCollapse": true,
+            "language": PageHelper.language(),
+            "lengthMenu": PageHelper.lengthMenu(),
+            "dom": PageHelper.dom(),
+            "pageLength": PageHelper.pageLength(),
+            "processing": false,
+            "serverSide": true,
+            "destroy": true,
+            "sAjaxDataProp": "respMessage",
+            "ajax": {
+                url: "/arbReportByTO",
+                type: "POST",
+                data: function (d) {
+                    let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
+                    let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
+                    let selectedDateRangeArray = [];
+                    let selectedDateRange = $('#select-dataRange').val();
+                    if (!selectedDateRange) {
+                        let currentDay = moment().format('YYYY-MM-DD');
+                        let preMonthDay = moment().add(-1, 'month').format('YYYY-MM-DD');
+                        selectedDateRangeArray.push(preMonthDay);
+                        selectedDateRangeArray.push(currentDay);
+                    } else {
+                        selectedDateRange = selectedDateRange.trim();
+                        selectedDateRangeArray = selectedDateRange.split('~');
                     }
-                },   
-                "initComplete" : function (settings, json) {
+                    
+                    selectedDateRangeArray = selectedDateRangeArray.map(item => moment(item.trim(), 'DD/MM/YYYY').format('YYYY-MM-DD'))
+
+                    let sortBy = '';
+                    let sort = '';
+                    if (d.order[0].column == 3) {
+                        sortBy = 'speeding'
+                        sort = d.order[0].dir
+                    } else if (d.order[0].column == 4) {
+                        sortBy = 'hardBraking'
+                        sort = d.order[0].dir
+                    } else if (d.order[0].column == 5) {
+                        sortBy = 'rapidAcc'
+                        sort = d.order[0].dir
+                    } else if (d.order[0].column == 6) {
+                        sortBy = 'nogoAlert'
+                        sort = d.order[0].dir
+                    } else if (d.order[0].column == 7) {
+                        sortBy = 'total'
+                        sort = d.order[0].dir
+                    }
+
+                    return {
+                        "pageNum": d.start, 
+                        "pageLength": d.length,
+                        "sortBy": sortBy,
+                        "sort": sort,
+                        "hub": hub,
+                        "node": node,
+                        "dateTimeZone": selectedDateRangeArray
+                    };
+                }
+            },   
+            "initComplete" : function (settings, json) {
+            },
+            "columns": [
+                { 
+                    data: null, 
+                    title: "S/N",
+                    sortable: false ,
+                    visible: false,
+                    "render": function (data, type, full, meta) {
+                        return meta.row + 1 + meta.settings._iDisplayStart
+                    }
                 },
-                "columns": [
-                    { 
-                        data: null, 
-                        title: "S/N",
-                        sortable: false ,
-                        visible: false,
-                        "render": function (data, type, full, meta) {
-                            return meta.row + 1 + meta.settings._iDisplayStart
+                { 
+                    data: 'hub', 
+                    title: "Hub/Node",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        if (full.hub == 'ALL') {
+                            return full.hub;
                         }
-                    },
-                    { 
-                        data: 'hub', 
-                        title: "Hub/Node",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            if (full.hub == 'ALL') {
-                                return full.hub;
-                            }
-                            return full.hub + '/' + (full.node ? full.node : '-');
-                        } 
-                    },
-                    { 
-                        data: 'fullName', 
-                        title: "Driver Name",
-                        width: '20%',
-                        sortable: false
-                    },
-                    { 
-                        title: 'Speeding', 
-                        data: 'speeding', 
-                        sortable: true,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: 'hardBraking', 
-                        title: "Hard Braking",
-                        sortable: true,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: 'rapidAcc', 
-                        title: "Rapid Acceleration",
-                        sortable: true,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: 'nogoAlert', 
-                        title: "Alert",
-                        sortable: true,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: 'total', 
-                        title: "Total",
-                        sortable: true,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                ],
-            });
-        }
+                        return full.hub + '/' + (full.node ? full.node : '-');
+                    } 
+                },
+                { 
+                    data: 'fullName', 
+                    title: "Driver Name",
+                    width: '20%',
+                    sortable: false
+                },
+                { 
+                    title: 'Speeding', 
+                    data: 'speeding', 
+                    sortable: true,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: 'hardBraking', 
+                    title: "Hard Braking",
+                    sortable: true,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: 'rapidAcc', 
+                    title: "Rapid Acceleration",
+                    sortable: true,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: 'nogoAlert', 
+                    title: "Alert",
+                    sortable: true,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: 'total', 
+                    title: "Total",
+                    sortable: true,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+            ],
+        });
     }
 }
 

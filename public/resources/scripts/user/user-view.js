@@ -75,9 +75,7 @@ const initDataTables = async function () {
 }
 
 export function initUserViewPage () {
-    // initDataTables();
-    // $('#view-user').modal('show');
-    // window.open(`/user/userMangement`);
+    
     $('title').html('User Management')
     $('.iframe-page').attr('src', '/user/userMangement')
 }
@@ -112,10 +110,7 @@ window.initUserDeleteEventHandler = async function (userId) {
     } 
 
     customConfirm('Confirm', 'Are you sure to delete this user ?', async function () {
-        // if (Cookies.get('userId') == userId) {
-        //     customPopupInfo('Attention', 'Can not delete your self account!')
-        //     return;
-        // }
+
         let result = await deleteUser({ userId })
         if (result) {
             initUserViewPage();

@@ -27,10 +27,10 @@ $(() => {
 
         let tab = $(this).data('tab');
         if (tab == 1) {
-            // showHubNode();
+         
             $('iframe').attr('src', './indent/overview');
         } else if (tab == 2) {
-            // showHubNode();
+  
             $('iframe').attr('src', './vehicle/vehicleTask');
             if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
                 $('.customer-button').show();
@@ -46,7 +46,7 @@ $(() => {
                 }
             }
         } else if(tab == 3) {
-            // showHubNode();
+            
             $('.action-button').show();
             $('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
             if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
@@ -62,16 +62,16 @@ $(() => {
             }
             $('iframe').attr('src', './driver/driverTask');
         } else if(tab == 4) {
-            // showHubNode();
+            
             $('iframe').attr('src', './resources/paradeState');	
         } else if(tab == 5) {
-            // showHubNode();
+            
             $('iframe').attr('src', './licensing');	
         } else if(tab == 6) {
-            // showHubNode();
+            
             $('iframe').attr('src', './hoto');	
         } else if(tab == 7) {
-            // showHubNode();
+            
             $('iframe').attr('src', './vehicleType');	
         } else {
             console.log(`Tab ${ tab } does not exist now.`)
@@ -114,9 +114,7 @@ $(() => {
 const showHubNode = function () {
     $('.select-hub').show();
     $('.select-node').show();
-    // $('#select-hub').val('');
-    // $('#select-node').empty();
-    // $('#select-node').append(`<option value="">Node: All</option>`);
+    
 }
 const changeHubAndNode = function () {
     const changeHubAndNodeInitData = function () {
@@ -215,12 +213,9 @@ const initHubAndNode = async function () {
                 setTimeout(() => {
                     $('#select-node').trigger('change');
                 }, 100)
-            } else {
-                // $('#select-node').append(`<option value="">Node: All</option>`);
-            }
+            } 
             let optionHtml = '';
             for (let item of subunitData) {
-                let addAttr = node ? (node === item.subUnit ? 'selected' : 'disabled') : ''
                 optionHtml += `<option value="${ item.subUnit }" >Node: ${ item.subUnit ? item.subUnit : '-' }</option>`
             }
             $('#select-node').append(optionHtml);
@@ -241,13 +236,11 @@ const initGroup = async function () {
                         console.error(res.data.respMessage);
                         return null;
                     }
+                } else if (res.respCode === 1) {
+                    return res.respMessage;
                 } else {
-                    if (res.respCode === 1) {
-                        return res.respMessage;
-                    } else {
-                        console.error(res.respMessage);
-                        return null;
-                    }
+                    console.error(res.respMessage);
+                    return null;
                 }
             });
     }

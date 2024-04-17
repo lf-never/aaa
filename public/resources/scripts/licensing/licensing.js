@@ -109,7 +109,7 @@ window.showDriverNric = function(el, nric, type) {
     } else {
         option.find('.img-noShowNRIC').show()
         option.find('.img-showNRIC').hide()
-        option.find('.view-driver-nric').text(nric ? nric : '-')
+        option.find('.view-driver-nric').text(nric ?? '-')
     }
 }
 
@@ -250,7 +250,7 @@ const initDriverTable = function () {
                 }
             },
             {
-                "data": null, 
+                "data": '', 
                 "title": "Age",
                 "orderable": false,
                 "defaultContent": '-' ,
@@ -259,7 +259,7 @@ const initDriverTable = function () {
                     if (birthday) {
                         let birthday = moment(full.birthday, 'YYYY-MM-DD');
                         let currentDate = moment(moment().format('YYYY-MM-DD'));
-                        return currentDate.diff(birthday, 'y');
+                        return `${ currentDate.diff(birthday, 'y') }`;
                     } else {
                         return '-'
                     }
@@ -373,9 +373,9 @@ const showPendingInfo = function(pendingUser, pendingDate, pendingReason) {
     $('.apply-pending-info-div').show();
     $("#pendingConfirm").hide();
 
-    $('.apply-pending-by-label').text(pendingUser ? pendingUser : '-');
-    $('.apply-pending-time-label').text(pendingDate ? pendingDate : '-');
-    $('.apply-pending-remarks-input').val(pendingReason ? pendingReason : '-');
+    $('.apply-pending-by-label').text(pendingUser ?? '-');
+    $('.apply-pending-time-label').text(pendingDate ?? '-');
+    $('.apply-pending-remarks-input').val(pendingReason ?? '-');
 }
 
 const showFailInfo = function(failUser, failDate, failReason) {
@@ -383,9 +383,9 @@ const showFailInfo = function(failUser, failDate, failReason) {
     $('.apply-fail-info-div').show();
     $("#failConfirm").hide();
 
-    $('.apply-fail-by-label').text(failUser ? failUser : '-');
-    $('.apply-fail-time-label').text(failDate ? failDate : '-');
-    $('.apply-fail-remarks-input').val(failReason ? failReason : '-');
+    $('.apply-fail-by-label').text(failUser ?? '-');
+    $('.apply-fail-time-label').text(failDate ?? '-');
+    $('.apply-fail-remarks-input').val(failReason ?? '-');
 }
 
 const showRejectInfo = function(rejectUser, rejectDate, rejectReason) {
@@ -393,9 +393,9 @@ const showRejectInfo = function(rejectUser, rejectDate, rejectReason) {
     $('.apply-reject-info-div').show();
     $("#rejectConfirm").hide();
 
-    $('.apply-reject-by-label').text(rejectUser ? rejectUser : '-');
-    $('.apply-reject-time-label').text(rejectDate ? rejectDate : '-');
-    $('.apply-reject-remarks-input').val(rejectReason ? rejectReason : '-');
+    $('.apply-reject-by-label').text(rejectUser ?? '-');
+    $('.apply-reject-time-label').text(rejectDate ?? '-');
+    $('.apply-reject-remarks-input').val(rejectReason ?? '-');
 }
 
 const approve = function(driverId, permitType, optType, reason) {
@@ -507,6 +507,6 @@ window.reloadHtml = function () {
 }
 
 const redirectToDriverInfo = function (driverId) {
-    //window.location.href = `../driver/driver-info`;
+    
     window.open("/driver/driver-info?driverId="+driverId);
 }

@@ -1,5 +1,5 @@
-import { customPopupInfo, customConfirm } from '../common-script.js'
-import { drawMarker, drawMarkerCenter, drawMarkerWithIconAnchor, drawPolyLine, removeMapObject, setView } from '../common-map.js'
+import { customPopupInfo } from '../common-script.js'
+import { drawMarkerWithIconAnchor, removeMapObject, setView } from '../common-map.js'
 
 let locationList = [];
 let locationViewDataTable = null;

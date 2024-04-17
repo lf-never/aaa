@@ -136,7 +136,7 @@ const initTaskViewPage = function(task, resourceType) {
         $('.vehicle-reasons').hide();
         $('.driver-reasons').show();
     }
-    //initVehicleDriverSelect(task);
+
     $('.vehicleNo-img-select').text(currentReassignVehicleNo);
     $('.vehicleNo-img-select').attr('value', currentReassignVehicleNo);
     $('.driver-img-select').text(task.driverName);

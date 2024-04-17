@@ -78,7 +78,7 @@ const initMaintenance = function() {
                     if (full.type == 'AVI' && full.maintenanceOperationList && full.maintenanceOperationList.includes('Edit AVI Date')) {
                         html += `<img alt="" class="vehicle-avi-time" onclick="configAviTime('${data ? moment(data).format("YYYY-MM-DD") : ''}')" role="button" style="width: 20px; cursor: pointer; margin-top: -4px; padding-left: 4px;" src="../images/edit.svg">`;
                     }
-                    return html ? html : '-';
+                    return html ?? '-';
                 }
             },
             {

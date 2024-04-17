@@ -50,18 +50,9 @@ $(function () {
                 return params
             },
         },
-        "initComplete": function (settings, json) {
-            // $(".saf-vehicle-table thead tr th:first").append(`<input type="checkbox" class="checkAll" onchange="checkAllOrNot()" />`);
-            // $(".saf-vehicle-table thead tr th:first").removeClass('sorting_asc');
-        },  
+        
         "columns": [
-            // { 
-            //     data: 'vehicleNo',  orderable: false, width: '5%', 
-            //     render: function (data, type, full, meta) {
-            //         $(".checkAll").prop("checked", false);
-            //         return `<input class="checkVehicle" type="checkbox" vehicleLocation="${full.position ? full.position : ''}" value="${data}">`;
-            //     }
-            // },
+           
             {
                 "data": "vehicleNo", "title": "Vehicle", orderable: true,
                 "render": function (data, type, full, meta) {
@@ -166,15 +157,10 @@ $(function () {
             {
                 "data": "currentStatus", "title": "Status", orderable: false,
                 render: function (data, type, full, meta) {
-                    // if (data && data == 'waitcheck') {
-                    //     data = 'Pending'
-                    // }
-                    // data = _.capitalize(data)
-                    let statusColor = vehicleStatusColor.find(item => item.status == data)
-                    if (!statusColor) {
-                        statusColor = 'orange';
-                    } else {
-                        statusColor = statusColor.color;
+
+                    let statusColor = 'orange'
+                    if(vehicleStatusColor.find(item => item.status == data)){
+                        statusColor = vehicleStatusColor.find(item => item.status == data).color
                     }
                     return `
                         <div class="div-table">
@@ -214,13 +200,13 @@ $(function () {
                             <img alt="" src='../images/Mark Leave.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="markAsUnAvailable(${meta.row},true)" role="button" title='Mark/Cancel/Update Event'/>
                         `    
                     }
-                    // if(Cookies.get('userType').toUpperCase() != 'CUSTOMER'){
-                        if (operationList.includes('deactivate')) {
-                            result += `
-                                <img alt="" src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteVehicle('${data}')" role="button" title='Deactivate'/>
-                            `
-                        }
-                    // } else 
+                    
+                    if (operationList.includes('deactivate')) {
+                        result += `
+                            <img alt="" src='../images/Deactivate.svg' style='width: 22px; height: 22px; margin-left: 5px;' onclick="deleteVehicle('${data}')" role="button" title='Deactivate'/>
+                        `
+                    }
+             
                     if (full.currentStatus == 'Deployable' && full.loanTaskId && operationList.includes('return')) {
                         result += `
                             <img alt="" src='../images/returnResources.svg' style='width: 24px; height: 24px; margin-left: 5px;' onclick="returnResources('${full.vehicleNo}')" role="button" title='Return'/>
@@ -238,17 +224,14 @@ $(function () {
     });
 
     InitFilter();
-    // if(Cookies.get('userType').toUpperCase() == 'CUSTOMER') {
-    //     $('.vehicle-opt-btn').hide()
-    //     table.column(3).visible(false);
-    // } else {
+    
         table.column(1).visible(false);
         table.column(4).visible(false);
-    // }
+  
 })
 
 const goNavPage = function (vehicleNo, currentStatus) {
-    //window.location.href = "/vehicle/vehicleDetail?taskId=" + taskId + "&vehicleNo=" + vehicleNo;
+  
     if (currentStatus != 'Deactivate') {
         window.open("/vehicle/vehicleDetail?vehicleNo=" + vehicleNo);
     }
@@ -285,8 +268,8 @@ const GetFilterParameters = function () {
     let groupId = Cookies.get('selectedGroup')
     return {
         selectGroup, groupId,
-        "unit": unit ? unit : '',
-        "subUnit": subUnit ? subUnit : '',
+        "unit": unit ?? '',
+        "subUnit": subUnit ?? '',
         "vehicleStatus": status,
         "vehicleDataType": vehicleDataType,
         "searchParam": searchParam,
@@ -312,12 +295,7 @@ const InitFilter = async function () {
 
     axios.post("/vehicle/getTOVehicleStatusList").then(async res => {
         let vehicleStatusList = res.data.respMessage;
-        // $("#driverStatus").empty();
-        // let optionHtml = `<option value="">Status: All</option>`;
-        // for (let item in driverStatusList) {
-        //     optionHtml += `<option value="${ driverStatusList[item] }" >Status: ${ driverStatusList[item] }</option>`
-        // }
-        // $("#driverStatus").append(optionHtml);
+        
 
         let data = []
         for (let item in vehicleStatusList) {

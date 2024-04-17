@@ -72,12 +72,10 @@ export async function initNoGoZoneViewPage () {
             { title: 'Hub/Node/Group', data: null, defaultContent: '-', sortable: false, render: function (data, type, row, meta) {
                 if (row.groupName) {
                     return row.groupName
+                } else if (row.node) {
+                    return `${ row.hub }/${ row.node }`
                 } else {
-                    if (row.node) {
-                        return `${ row.hub }/${ row.node }`
-                    } else {
-                        return row.hub
-                    }
+                    return row.hub
                 }
             } },
             { title: 'Edit', data: null, sortable: false, render: function (data, type, row, meta) {
@@ -145,7 +143,7 @@ window.enableZone = function (e, id, enable) {
     if (enable == 1) {
         let currentDate = moment().format('YYYY-MM-DD')
         if (!moment(currentDate, 'YYYY-MM-DD').isBetween(moment(row.startDate, 'YYYY-MM-DD'), moment(row.endDate, 'YYYY-MM-DD'), null, [])) {
-            // alert(`Require to Edit Start and End Date As The Date Has Passed.`);
+            
             $.alert({
                 title: 'Warn',
                 content: `Require to Edit Start and End Date As The Date Has Passed.`,

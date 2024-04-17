@@ -54,7 +54,6 @@ $(function () {
     $('.siteBoxSelect').on('change', function() {
         if ($('.menu-item-keyboxdetail').hasClass('active')) {
             keyBoxDetailTable.ajax.reload(null, true)
-        } else if ($('.menu-item-keyboxdetail').hasClass('active')) {
             keyTransactionsTable.ajax.reload(null, true)
         } else if ($('.menu-item-keyTrans').hasClass('active')) {
             keyTransactionsTable.ajax.reload(null, true)
@@ -462,7 +461,7 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
                     title: "Keypress Location",
                     sortable: false,
                     "render": function (data, type, full, meta) {
-                        return data ? data : '-';
+                        return data ?? '-';
                     }
                 },
                 { 
@@ -546,7 +545,7 @@ const initKeyTransactionsTable = async function(selectedSiteId) {
                             return `
                             <div>
                                 <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showReason(this);" role="button" tabindex="0">
-                                    ${ data ? data : '' }
+                                    ${ data ?? '' }
                                 </span><br>
                             </div>
                             `

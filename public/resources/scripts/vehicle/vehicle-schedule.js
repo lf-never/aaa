@@ -27,8 +27,7 @@ const THEME = {
 let vehicleCalender = null, taskList = [], selectedPurpose = null;
 let currentYear = moment().year(), currentMonth = moment().month();
 $(() => {
-    // initMonthSelectHandler();
-    // initPurposeHandler();
+    
 
     $('.selectedMonth2').on('click', function () {
         $('.selectedMonth').trigger('click')
@@ -149,7 +148,7 @@ const initMonthHandler = async function () {
 
         const getTaskHtml = function (date) {
             let html = ``;
-            let taskCount = 0, space = 0;
+            let taskCount = 0;
             let dateLastTaskMarginTop = 0;
             let tdWidth = $('.week-title td:first').width() + 12 + 2;
             for (let task of taskList) {
@@ -229,12 +228,10 @@ const initMonthHandler = async function () {
                         if (task.indentEndTime) {
                             if (task.isVirtualTask) {
                                 label += `${moment(task.realStartTime).format('MM-DD HH:mm')} - ${ moment(task.realEndTime).format('MM-DD HH:mm') }`
+                            } else if (dateLength >= 1) {
+                                label += `${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
                             } else {
-                                if (dateLength >= 1) {
-                                    label += `${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
-                                } else {
-                                    label += `${moment(task.indentStartTime).format('HH:mm')} - ${ moment(task.indentEndTime).format('HH:mm') }`	
-                                }
+                                label += `${moment(task.indentStartTime).format('HH:mm')} - ${ moment(task.indentEndTime).format('HH:mm') }`	
                             }
                             
                         } else {
@@ -244,9 +241,7 @@ const initMonthHandler = async function () {
                         content += label;
                     }
                     
-                    let startDiffSeconds = moment(task.indentStartTime).diff(moment(moment(task.indentStartTime).format('YYYY-MM-DD') + ' 00:00:00'), 'second');
-                    let startEndDiffSeconds = moment(task.indentStartTime).diff(moment(task.indentEndTime), 'second');
-                    //dateLength = startEndDiffSeconds / (24 * 60 * 60);
+                      
                     let taskDivWidth = tdWidth - 12;
                     if (task.hasVirtualTask) {
                         dateLength = getDateLength(moment(task.indentStartTime).endOf('isoWeek'), task.indentStartTime)
@@ -255,8 +250,7 @@ const initMonthHandler = async function () {
                         taskDivWidth = tdWidth * (dateLength + 1) - 19;
                     }
 
-                    let diffSeconds = moment(task.indentStartTime).diff(moment(moment(task.indentStartTime).format('YYYY-MM-DD') + ' 00:00:00'), 'second')
-                    let marginLeft = 0;//startDiffSeconds / (24 * 60 * 60) * tdWidth
+               
 
                     let currentTaskMarginTop = preThoughTask ? (preThoughTask.marginTop + 35) : 0;
                     html += ` <div class="vehicle-info ${eventTask ? 'vehicle-event-info' : '' } ${ task.activity ? task.activity.toLowerCase() : '' } user-select-none px-2"
@@ -353,55 +347,35 @@ const initMonthHandler = async function () {
                                         } else {
                                             checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].space += 1;
                                         }
-                                    } else {
-                                        // console.log(shouldIncreaseSpaceIndentId)
-                                        // console.log('***************************')
-                                        if (shouldIncreaseSpaceIndentId == task1.taskId) {
-                                            // Only add space for first record
-                                            if (!checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId]) {
-                                                checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId] = { space: 1 }
-                                            } else {
-                                                checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].space += 1;
-                                            }
+                                    } else if (shouldIncreaseSpaceIndentId == task1.taskId) {
+                                        // Only add space for first record
+                                        if (!checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId]) {
+                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId] = { space: 1 }
                                         } else {
-                                            // This is not first record
-                                            // need add virtualCount
-                                            if (task1.virtualCount) {
-                                                task1.virtualCount += 1
-                                            } else {
-                                                task1.virtualCount = 1
-                                            }
+                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].space += 1;
                                         }
+                                    } else if (task1.virtualCount) {
+                                        task1.virtualCount += 1
+                                    } else {
+                                        task1.virtualCount = 1
                                     }
-                                    // if (task1.taskId == 6) {
-                                    // 	console.log(`shouldIncreaseSpaceIndentId => ${ shouldIncreaseSpaceIndentId }`);
-                                    // 	console.log(checkTask[task1.isVirtualTask ? 'v-' : '' + task1.taskId]);
-                                    // 	console.log(checkTask)
-                                    // }
+                                  
 
-                                } else {
-                                    // ...
                                 } 
                             }
                         }
                     }
 
                     for (let task of taskList) {
-                        // if (task.isVirtualTask) {
-                        // 	task.space = checkTask['v-' + task.taskId] ? checkTask['v-' + task.taskId].space : 0 ;
-                        // } else {
-                        // 	task.space = checkTask[task.taskId] ? checkTask[task.taskId].space : 0 ;
-                        // }
+
                         if (task.isVirtualTask) {
                             if (checkTask['v-' + task.taskId] && checkTask['v-' + task.taskId].space) {
                                 if (task.space) task.space += checkTask['v-' + task.taskId].space
                                 else task.space = checkTask['v-' + task.taskId].space;
                             }
-                        } else {
-                            if (checkTask[task.taskId] && checkTask[task.taskId].space) {
-                                if (task.space) task.space += checkTask[task.taskId].space;
-                                else task.space = checkTask[task.taskId].space;
-                            }
+                        } else if (checkTask[task.taskId] && checkTask[task.taskId].space) {
+                            if (task.space) task.space += checkTask[task.taskId].space;
+                            else task.space = checkTask[task.taskId].space;
                         }
                     }
                     // console.log(`CheckTask result => `, JSON.stringify(checkTask, null, 4))
@@ -450,7 +424,7 @@ const initMonthHandler = async function () {
             return resultHtml;
         }
         const getCurrentTdAttr = function (tdDate) {
-            let classStr = '';
+            
             //tdDate has task
             let tdDateTask = false;
             for (let task of taskList) {
@@ -469,19 +443,17 @@ const initMonthHandler = async function () {
                 }
             }
             let isPreDay = tdDate.isBefore(moment(), 'day');
-            let isVehicleLeave = vehicleLeaveDays.indexOf(tdDate.format('YYYY-M-D')) != -1;
+      
             if (isPreDay) {
                 if (tdDateTask) {
                     return ` class=" invalid-date-td " `;
                 } else {
                     return ` class=" invalid-date-td " oncontextmenu="markAsUnAvailable('${currentVehicleNo}', '${tdDate.format('YYYY-MM-DD')}')" `;
                 }
+            } else if (tdDateTask) {
+                return '';
             } else {
-                if (tdDateTask) {
-                    return '';
-                } else {
-                    return ` oncontextmenu="markAsUnAvailable('${currentVehicleNo}', '${tdDate.format('YYYY-MM-DD')}')" `;
-                }
+                return ` oncontextmenu="markAsUnAvailable('${currentVehicleNo}', '${tdDate.format('YYYY-MM-DD')}')" `;
             }
         }
 
@@ -496,8 +468,7 @@ const initMonthHandler = async function () {
     const getVehicleScheduleList = async function (startDate, endDate) {
         let purpose = selectedPurpose;
         let vehicleNo = currentVehicleNo;
-        // let vehicleNo = 'VK100-0';
-        // console.log(currentVehicleNo)
+        
         return await axios.post('/vehicle/getVehicleSchedule', { startDate, endDate, purpose, vehicleNo})
             .then(result => {
                 return result.data.respMessage 
@@ -507,13 +478,7 @@ const initMonthHandler = async function () {
     // Use for check if exist task take more than one,two ... weeks
     // While exist, add virtual task 
     const checkVehicleScheduleList = function () {
-        const weeksBetween = function (date1, date2) {
-            let d1 = new Date(date1);
-            let d2 = new Date(date2);
-            let dt1 = d1.getTime();
-            let dt2 = d2.getTime();
-            return parseInt(Math.abs(dt2 - dt1) / 1000 / 60 / 60 / 24 / 7);
-        }
+        
         // date1 < date2
         const findMondayCount = function (date1, date2) {
             let mondayCount = 0;
@@ -529,7 +494,7 @@ const initMonthHandler = async function () {
         let virtualTaskList = [], addVirtualTaskCount = 0;
         for (let task of taskList) {
             if (!task.indentEndTime) continue;
-            // let daylength = moment(task.indentEndTime).diff(moment(task.indentStartTime), 'd');
+            
             let weekLength = findMondayCount(task.indentStartTime, task.indentEndTime)
 
             // IMPORTANT: weekLength is virtual task count !!!
@@ -581,10 +546,8 @@ const initMonthHandler = async function () {
         taskList = taskList.concat(virtualTaskList);
     }
 
-    //initVehicleLeaveDays();
-    let unit = Cookies.get('selectedUnit');
-    let subUnit = Cookies.get('selectedSubUnit');
-    let currentDate = moment({ year: currentYear, month: currentMonth }).format('YYYY-MM');
+   
+
 
     let startWeekDay = moment({ year: currentYear, month: currentMonth }).startOf('isoWeek');
     let endWeekDay = moment({ year: currentYear, month: currentMonth }).endOf('isoWeek');
@@ -631,9 +594,7 @@ const initMonthHandler = async function () {
         })
     })
     $('.vehicle-info').off('click').on('click', async function() {
-        // if (Cookies.get('userType') == 'CUSTOMER') {
-        // 	return;
-        // }
+        
         let taskId = $(this).data('taskid');
         axios.post('/driver/getDriverTaskByTaskId', { taskId: taskId}).then(res => { 
             let task = res.data.respMessage;

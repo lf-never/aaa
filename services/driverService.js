@@ -123,6 +123,36 @@ const getDriverCategory = async function (driverId) {
         return '-'
     }
 }
+
+const decodeDriverNric = async function (driverList, hasPermision) {
+    if (driverList?.length > 0) {
+        for (let temp of driverList) {
+            if(temp.nric?.length > 9) {
+                temp.nric = utils.decodeAESCode(temp.nric);
+            } 
+            if(!hasPermision) {
+                if(temp.nric) temp.nric = ((temp.nric).toString()).substr(0, 1) + '****' + ((temp.nric).toString()).substr(((temp.nric).toString()).length-4, 4)
+            }
+        }
+    }
+
+    return driverList;
+}
+
+const buildDriverCategoryType = function(oldCategoryType) {
+    if (oldCategoryType == 'Category A Assessment') {
+        return 'A';
+    } else if (oldCategoryType == 'Category B Assessment') {
+        return 'B';
+    } else if (oldCategoryType == 'Category C Assessment') {
+        return 'C';
+    } else if (oldCategoryType == 'Category D Assessment') {
+        return 'D';
+    } else {
+        return '-';
+    }
+}
+
 module.exports.getDriverCategory = getDriverCategory
 
 module.exports.getDriverTaskList = async function (req, res) {
@@ -948,13 +978,6 @@ module.exports.getTODriverList = async function (req, res) {
                 driver.unit = driverGroup.groupName;
             }
 
-            // 2023-08-29 Get decrypted is nric.
-            if(driver.nric){
-                if(driver.nric.length > 9) driver.nric = utils.decodeAESCode(driver.nric);
-            }
-            if(pageList2.length <= 0) {
-                if(driver.nric) driver.nric = ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4)
-            }
             if (driver.permitType) {
                 let permitTypeList = await PermitType.findAll({ where: { permitType: driver.permitType.split(',') } })
                 driver.vehicleTypeList = permitTypeList.map(permitType => permitType.vehicleType)
@@ -988,6 +1011,8 @@ module.exports.getTODriverList = async function (req, res) {
 
             driver.operation = operationList
         }
+
+        driverList = decodeDriverNric(driverList, pageList2.length > 0);
 
         return res.json({ respMessage: driverList, recordsFiltered: totalRecord, recordsTotal: totalRecord });
     } catch(error) {
@@ -1056,6 +1081,7 @@ const getDeactivateDriver = async function(req) {
                 if(item.nric.length > 9) item.nric = utils.decodeAESCode(item.nric);
             } 
         }
+        driverInfoList = await decodeDriverNric(driverInfoList, true);
         return {respMessage: driverInfoList, recordsFiltered: totalRecord, recordsTotal: totalRecord};
     } catch(error) {
         log.error(error);
@@ -1402,19 +1428,8 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             ORDER BY assessmentType ASC LIMIT 1
         `, { type: QueryTypes.SELECT, replacements: [ driverId ] });
 
-        if (driverCategory && driverCategory.length > 0) {
-            currentDriver.category = driverCategory[0].assessmentType
-        }
-        if (currentDriver.category == 'Category A Assessment') {
-            currentDriver.category = 'A';
-        } else if (currentDriver.category == 'Category B Assessment') {
-            currentDriver.category = 'B';
-        } else if (currentDriver.category == 'Category C Assessment') {
-            currentDriver.category = 'C';
-        } else if (currentDriver.category == 'Category D Assessment') {
-            currentDriver.category = 'D';
-        } else {
-            currentDriver.category = '-';
+        if (driverCategory?.length > 0) {
+            currentDriver.category = buildDriverCategoryType(driverCategory[0].assessmentType);
         }
 
         if (currentDriver.unit && currentDriver.role && [ 'dv', 'loa' ].indexOf(currentDriver.role.toLowerCase()) > -1) {
@@ -1429,21 +1444,15 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             WHERE driverId = ? and demeritPoint > 0 and optAt IS NOT NULL and DATE_FORMAT(optAt, '%Y-%m-%d') >= '${oneYearsAgoDateStr}'
         `, { replacements: [driverId], type: QueryTypes.SELECT });
         let driverDemeritPoints = 0;
-        if (driverDemeritPointsObj && driverDemeritPointsObj.length > 0) {
+        if (driverDemeritPointsObj?.length > 0) {
             driverDemeritPoints = driverDemeritPointsObj[0].driverDemeritPoints;
         }
         currentDriver.demeritPoints = driverDemeritPoints;
         // 2023-08-29 Get decrypted is nric.
-        if(currentDriver.nric){
-            if(currentDriver.nric.length > 9) currentDriver.nric = utils.decodeAESCode(currentDriver.nric);
-        }
         let pageList2 = await userService.getUserPageList(req.cookies.userId, 'View Full NRIC')
-        if(pageList2.length <= 0) {
-            if(currentDriver.nric) currentDriver.nric = ((currentDriver.nric).toString()).substr(0, 1) + '****' + ((currentDriver.nric).toString()).substr(((currentDriver.nric).toString()).length-4, 4)
-            currentDriver.nricShow = false
-        } else {
-            currentDriver.nricShow = true
-        }
+        currentDriver.nricShow = pageList2.length > 0;
+        currentDriver = decodeDriverNric([currentDriver], currentDriver.nricShow)[0];
+
         return res.json(utils.response(1, currentDriver)); 
     } catch(error) {
         log.error(error);
@@ -1832,7 +1841,7 @@ module.exports.getUserDriverSummaryList = async function (req, res) {
             `
             let { hubNodeIdList } = await unitService.UnitUtils.getPermitUnitList2(userId);
 
-            if (hubNodeIdList && hubNodeIdList.length > 0) {
+            if (hubNodeIdList?.length > 0) {
                 sql += ` and d.unitId in (${ hubNodeIdList })`
             } else {
                 return res.json(utils.response(1, { driverList: [] }));
@@ -1844,16 +1853,8 @@ module.exports.getUserDriverSummaryList = async function (req, res) {
             type: QueryTypes.SELECT,
         });
         let pageList2 = await userService.getUserPageList(req.cookies.userId, 'View Full NRIC')
-        if (driverList && driverList.length > 0) {
-            for (let temp of driverList) {
-                if(temp.nric && temp.nric.length > 9) {
-                    temp.nric = utils.decodeAESCode(temp.nric);
-                } 
-                if(pageList2.length <= 0) {
-                    if(temp.nric) temp.nric = ((temp.nric).toString()).substr(0, 1) + '****' + ((temp.nric).toString()).substr(((temp.nric).toString()).length-4, 4)
-                }
-            }
-        }
+
+        driverList = await decodeDriverNric(driverList, pageList2.length > 0);
 
         return res.json(utils.response(1, { driverList: driverList }));
     } catch (error) {
@@ -2795,6 +2796,28 @@ module.exports.getVehicleTypeByDriverId = async function (req, res) {
     }
 }
 
+const checkUpdatePlatformConfParams = async function(driverId, confId, vehicleType, assessmentDate) {
+    if (!vehicleType || !assessmentDate) {
+        throw new Error(`Vehicle Type and Assessment Date are required.`);
+    }
+    let driver = await Driver.findOne({where: {driverId: driverId}});
+    if (!driver) {
+        throw new Error(`Driver ${ driverId } does not exist.`);
+    }
+    if (confId) {
+        let oldConf = await DriverPlatformConf.findByPk(confId);
+        if (!oldConf) {
+            throw new Error(`Platform conf is not exist, Vehicle Type: ${vehicleType}.`);
+        }
+    } else {
+        //check exist
+        let existConf = await DriverPlatformConf.findOne({where: {driverId, vehicleType}});
+        if (existConf) {
+            throw new Error(`Platform is exist, Vehicle Type: ${vehicleType}.`);
+        }
+    }
+}
+
 module.exports.updatePlatformConf = async function (req, res) {
     let userId = req.cookies.userId;
     try {
@@ -2810,41 +2833,28 @@ module.exports.updatePlatformConf = async function (req, res) {
         let assessmentDate = req.body.assessmentDate;
         let lastDrivenDate = req.body.lastDrivenDate;
 
-        if (!vehicleType || !assessmentDate) {
-            return res.json(utils.response(0, `Vehicle Type and Assessment Date are required.`));
-        }
-        let driver = await Driver.findOne({where: {driverId: driverId}});
-        if (!driver) {
-            return res.json(utils.response(0, `Driver ${ driverId } does not exist.`));
-        }
-        if (confId) {
-            let oldConf = await DriverPlatformConf.findByPk(confId);
-            if (oldConf) {
-                //if user has approve permisson 
-                let pageList = await userService.getUserPageList(userId, 'License', 'Platforms')
-                let operationList = pageList.map(item => `${ item.action }`).join(',')
-                let approveStatus = 'Edited'
-                if (operationList && operationList.includes('Approve')) {
-                    approveStatus = 'Approved';
-                }
+        checkUpdatePlatformConfParams(driverId, vehicleType, assessmentDate);
 
-                let updateObj = {
-                    permitType,
-                    assessmentDate,
-                    updatedAt: moment(),
-                    approveStatus: approveStatus
-                }
-                if (lastDrivenDate) {
-                    updateObj.lastDrivenDate = lastDrivenDate
-                }
-                await DriverPlatformConf.update(updateObj, { where: {id: confId} })
+        if (confId) {
+            //if user has approve permisson 
+            let pageList = await userService.getUserPageList(userId, 'License', 'Platforms')
+            let operationList = pageList.map(item => `${ item.action }`).join(',')
+            let approveStatus = 'Edited'
+            if (operationList?.includes('Approve')) {
+                approveStatus = 'Approved';
             }
+
+            let updateObj = {
+                permitType,
+                assessmentDate,
+                updatedAt: moment(),
+                approveStatus: approveStatus
+            }
+            if (lastDrivenDate) {
+                updateObj.lastDrivenDate = lastDrivenDate
+            }
+            await DriverPlatformConf.update(updateObj, { where: {id: confId} })
         } else {
-            //check exist
-            let existConf = await DriverPlatformConf.findOne({where: {driverId, vehicleType}});
-            if (existConf) {
-                return res.json(utils.response(0, `Platform is exist, Vehicle Type: ${vehicleType}.`));
-            }
             let createObj = {
                 driverId,
                 permitType,
@@ -2950,38 +2960,7 @@ module.exports.updatePermitTypeDetail = async function (req, res) {
         let score = req.body.score;
         let demeritPoint = req.body.demeritPoint;
 
-        let emptyField = '';
-        if (!permitType) {
-            emptyField = 'Permit Type';
-        }
-        if (!passDate) {
-            emptyField += emptyField ? ', Assessment Date' : 'Assessment Date';
-        }
-
-        if (!attemptNums) {
-            emptyField += emptyField ? ', No of Attempts' : 'No of Attempts';
-        }
-        if (!testerCode) {
-            emptyField += emptyField ? ', Tester Code' : 'Tester Code';
-        }
-
-        let errorMsg = ``;
-        if (emptyField) {
-            errorMsg = emptyField + ' is required;'
-        }
-        if (attemptNums <= 0) {
-            errorMsg += `No of Attempts must more than 0;`;
-        }
-
-        let driver = await Driver.findOne({where: {driverId: driverId}});
-        if (!driver) {
-            errorMsg += `Driver ${ driverId } does not exist;`;
-        }
-
-        let permitTypeConf = await PermitType.findOne({where: {permitType}})
-        if (!permitTypeConf) {
-            errorMsg += `PermitType ${ permitType } does not exist;`;
-        }
+        let errorMsg = await checkUpdatePermitTypeDetailParams(driverId, permitType, passDate, attemptNums, testerCode);
         if (errorMsg) {
             return res.json(utils.response(0, errorMsg));
         }
@@ -3044,6 +3023,42 @@ module.exports.updatePermitTypeDetail = async function (req, res) {
         log.error(error)
         return res.json(utils.response(0, error));
     }
+}
+
+const checkUpdatePermitTypeDetailParams = async function(driverId, permitType, passDate, attemptNums, testerCode) {
+    let errorMsg;
+    let emptyField;
+    if (!permitType) {
+        emptyField = 'Permit Type';
+    }
+    if (!passDate) {
+        emptyField += emptyField ? ', Assessment Date' : 'Assessment Date';
+    }
+
+    if (!attemptNums) {
+        emptyField += emptyField ? ', No of Attempts' : 'No of Attempts';
+    }
+    if (!testerCode) {
+        emptyField += emptyField ? ', Tester Code' : 'Tester Code';
+    }
+    if (emptyField) {
+        errorMsg = emptyField + ' is required;'
+    }
+    if (attemptNums <= 0) {
+        errorMsg += `No of Attempts must more than 0;`;
+    }
+
+    let driver = await Driver.findOne({where: {driverId: driverId}});
+    if (!driver) {
+        errorMsg += `Driver ${ driverId } does not exist;`;
+    }
+
+    let permitTypeConf = await PermitType.findOne({where: {permitType}})
+    if (!permitTypeConf) {
+        errorMsg += `PermitType ${ permitType } does not exist;`;
+    }
+
+    return errorMsg;
 }
 
 module.exports.deletePermitTypeDetail = async function (req, res) {
@@ -3516,13 +3531,41 @@ module.exports.getSystemGroup = async function (req, res) {
     }
 }
 
+const buildDownloadDriverPermitExchangeApplyQueryParams = function(permitType, unit, subUnit, searchCondition) {
+    let limitSQL = []
+    let replacements = [];
+    let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
+    limitSQL.push(` da.status in('Recommended', 'Pending') and ( LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
+    
+    if (unit) {
+        limitSQL.push( ` u.unit = ? `);
+        replacements.push(unit);
+    }
+    if (subUnit) {
+        if(subUnit.toLowerCase() == 'null') {
+            limitSQL.push( ` u.subUnit is null `);
+        } else {
+          limitSQL.push( ` u.subUnit = ? `);
+          replacements.push(subUnit);  
+        }
+    }
+    if (permitType) {
+        limitSQL.push(` da.permitType = ? `);
+        replacements.push(permitType);
+    }
+    if (searchCondition) {
+        limitSQL.push(`d.driverName LIKE ` + sequelizeObj.escape("%" + searchCondition + "%"));
+    }
+    return {limitSQL, replacements};
+}
+
 module.exports.downloadDriverPermitExchangeApply = async function (req, res) {
     let userId = req.cookies.userId;
     let { permitType, unit, subUnit, searchCondition } = req.body;
 
     await checkUser(userId)
     
-    let replacements = [];
+    let {limitSQL, replacements} = buildDownloadDriverPermitExchangeApplyQueryParams(permitType, unit, subUnit, searchCondition);
     let baseSQL = `
         SELECT
             d.driverId,
@@ -3549,36 +3592,13 @@ module.exports.downloadDriverPermitExchangeApply = async function (req, res) {
         LEFT JOIN user us ON us.driverId = d.driverId 
         LEFT JOIN unit u ON u.id = d.unitId
     `;
-    let limitSQL = []
-
-    let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
-    limitSQL.push(` da.status in('Recommended', 'Pending') and ( LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
     
-    if (unit) {
-        limitSQL.push( ` u.unit = ? `);
-        replacements.push(unit);
-    }
-    if (subUnit) {
-        if(subUnit.toLowerCase() == 'null') {
-            limitSQL.push( ` u.subUnit is null `);
-        } else {
-          limitSQL.push( ` u.subUnit = ? `);
-          replacements.push(subUnit);  
-        }
-    }
-    if (permitType) {
-        limitSQL.push(` da.permitType = ? `);
-        replacements.push(permitType);
-    }
-    if (searchCondition) {
-        limitSQL.push(`d.driverName LIKE ` + sequelizeObj.escape("%" + searchCondition + "%"));
-    }
     if (limitSQL.length) {
         baseSQL = baseSQL + ' WHERE d.driverId is not null and ' + limitSQL.join(' AND ');
     }
     baseSQL += ` ORDER BY da.applyDate desc `
     let driverExchangePermitApplyList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
-    if (driverExchangePermitApplyList && driverExchangePermitApplyList.length > 0) {
+    if (driverExchangePermitApplyList?.length > 0) {
         let fileName = moment().format('YYYYMMDDHHmm') + '-DriverLicensing.xlsx';
         let baseFilePath = './public/resources/download/'
         if(!fs.existsSync(baseFilePath)) fs.mkdirSync(baseFilePath);

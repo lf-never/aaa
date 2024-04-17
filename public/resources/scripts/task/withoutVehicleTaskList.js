@@ -36,13 +36,11 @@ const getGroupList = async function() {
                 console.error(res.data.respMessage);
                 return null;
             }
+        } else if (res.respCode === 1) {
+            return res.respMessage;
         } else {
-            if (res.respCode === 1) {
-                return res.respMessage;
-            } else {
-                console.error(res.respMessage);
-                return null;
-            }
+            console.error(res.respMessage);
+            return null;
         }
     });
 }
@@ -105,15 +103,7 @@ const initUnit = async function (hubNodeList) {
 
 const initPage = async function () {
     const initPurpose = async function () {
-        // let purposeList = await axios.get('/mtAdmin/getPurposeModeType')
-        //     .then(function (res) {
-        //         if (res.respCode === 1) {
-        //             return res.respMessage;
-        //         } else {
-        //             console.error(res.respMessage);
-        //             return [];
-        //         }
-        //     });
+
 
         let purposeList = await axios.post('/vehicle/getPurpose').then(result => {
             if (result.respCode == 1) {
@@ -170,8 +160,7 @@ const initPage = async function () {
 }
 
 const initTaskTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
+ 
     table = $('.task-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -234,7 +223,7 @@ const initTaskTable = function () {
                 "title": "Driver Name",
                 sortable: false,
                 render: function (data, type, full, meta) {
-                    return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                    return `${ data ?? '-' } <br/> (${ full.contactNumber ?? '-' })`
                 }
             },
             {
@@ -269,7 +258,7 @@ const initTaskTable = function () {
                     } else {
                         return `
                             <span class="d-inline-block text-truncate" style="max-width: 250px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data ?? '' }
                             </span>
                         `
                     }
@@ -364,11 +353,6 @@ const assignTaskVehicle = function(taskId) {
     });
 
     const InsertFilterOption2 = function (element, filterUnits) {
-        if(filterUnits.length === 0) {
-            start2 = false
-        } else {
-            start2 = true
-        }
         $(element).css("display", "block");
         $(element).empty();
         for (let vehicleList of filterUnits) {

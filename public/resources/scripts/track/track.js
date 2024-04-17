@@ -1,4 +1,4 @@
-import { initMapServerHandler, addMapObject, clearMapObject, deleteMapObject, removeMapObject, setView, drawMarker, drawMarker2, drawPolyLine, bindTooltip } from '../common-map.js'
+import { initMapServerHandler, removeMapObject, setView, drawMarker2, drawPolyLine, bindTooltip } from '../common-map.js'
 
 let tempLineList = [];
 let tempRouteList = [];
@@ -13,13 +13,13 @@ let currentIndex = 0;
 let intervalList = [];
 
 let userNameList = [];
-// let userID = null;
+
 
 let layer = null;
 let myChart = null;
 
 $(() => {
-    // userID = Cookies.get('userId');
+    
     initLayUI();
     initDriverAndDeviceList();
     initMapServerHandler()
@@ -251,13 +251,6 @@ const initDriverAndDeviceList = async function (selectedDate) {
 };
 
 const searchHandler = async function () {
-    const checkSearchTime = function (startTime, endTime) {
-        if (moment(startTime).isAfter(moment(endTime))) {
-            popupInfo('Wrong time, please check!');
-            return false;
-        }
-        return true;
-    };
 
     let driverList = [], deviceList = []
     let type = $("input[type='radio']:checked").attr('data-type');
@@ -276,24 +269,7 @@ const searchHandler = async function () {
         return
     }
 
-    // let dataList = transfer.getData('key-convoy-select');
-    // for (let data of dataList) {
-	// 	if (data.type === 'mobile') {
-	// 		// driverList.push({ driverId: data.value.split('_')[0], driverName: data.driverName, vehicleNo: data.vehicleNo })
-	// 		driverList.push({ driverId: data.value.split('_')[0], driverName: data.driverName })
-	// 	} else if (data.type === 'obd') {
-	// 		deviceList.push({ deviceId: data.deviceId, vehicleNo: data.vehicleNo })
-	// 	}
-    // }
 
-
-
-    // let startDateTime = $('.start-time').html();
-    // let endDateTime = $('.end-time').html();
-
-    // if (!checkSearchTime(startDateTime, endDateTime)) {
-    //     return;
-    // }
 
     // clear marker
     if (tempMarkerList.length) {
@@ -377,7 +353,7 @@ const getUserPositionListHttp = function (driverList, deviceList, selectedDate, 
 
                 initSpeedChart();
             } else {
-                // popupInfo('There is no data about this user!');
+                
                 console.warn('There is no data about this user!');
             }
         })
@@ -426,7 +402,7 @@ const showTracking = function () {
                     __tempPoints.push(p);
                 }
             }
-            // tempLineList.push(drawPolyLine(__tempPoints, { trackColor, weight: 2 }));
+            
             __tempPoints = [];
     
             // let popTitle = data.type !== 'mobile' ? data.username : `${ data.username } (${ data.vehicleNo })`
@@ -502,29 +478,10 @@ const drawTracking = function (popTitle, points) {
         </svg>
       
         `
-        // return `
-        //     <svg t="1705392921029" transform="rotate(${ point[5] - 90 })" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10853" 
-        //     xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32">
-        //     <path d="M512 64C264.58 64 64 264.58 64 512s200.58 448 448 448 448-200.58 448-448S759.42 64 512 64z m70.82 678.23a19.82 19.82 0 0 1-32.21-15.48v-98.93A19.82 19.82 0 0 0 530.79 608H185.12a19.82 19.82 0 0 1-19.82-19.82V435.82A19.82 19.82 0 0 1 185.12 416h345.67a19.82 19.82 0 0 0 19.82-19.82v-98.93a19.82 19.82 0 0 1 32.21-15.48l268.45 214.75a19.83 19.83 0 0 1 0 31z" p-id="10854" fill="#d81e06">
-        //     </path></svg>
-        // `
-        // return `<svg t="1705386441507" 
-        //     transform="rotate(${ 90 + point[5] })" class="icon" viewBox="0 0 1024 1024" version="1.1" 
-        //     xmlns="http://www.w3.org/2000/svg" p-id="12105" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32">
-        //     <path d="M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z" fill="#d81e06" p-id="12106" class="selected">
-        //     </path>
-        //     <path width="32" height="32" d="M186.026667 512a17.92 17.92 0 0 0 5.973333 0l442.88 231.253333a22.186667 22.186667 0 0 0 30.72-30.72 391.68 391.68 0 0 1-60.586667-196.266666A383.146667 383.146667 0 0 1 682.666667 326.826667a22.186667 22.186667 0 0 0 0-28.16 20.48 20.48 0 0 0-24.746667-5.973334L195.413333 472.746667a23.04 23.04 0 0 0-9.386666 39.253333z" fill="#ffffff" p-id="12107" class="">
-        //     </path>
-        // </svg>`;
-
-        // return `<svg t="1705392025485" transform="rotate(${ 90 + point[5] })" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9224" width="32" height="32" 
-        // xmlns:xlink="http://www.w3.org/1999/xlink">
-        // <path d="M69.498667 472.4l853.31199999-341.312a42.666667 42.666667 0 0 1 52.94400001 60.693333l-181.962667 320.234667 181.962667 320.24a42.666667 42.666667 0 0 1-52.944 60.693333L69.493333 551.626667a42.666667 42.666667 0 0 1 0-79.232z" p-id="9225" fill="#d81e06">
-        // </path>
-        // </svg>`;
+       
     }
 
-    // let pointIndex = 0;
+
 
     let drawTrackingInterval = setInterval(function () {
         if (tempMarker) removeMapObject(tempMarker);
@@ -539,7 +496,7 @@ const drawTracking = function (popTitle, points) {
                     console.warn(`${currentPopTitle} had no position record!`);
                     console.warn('****************************************************')
                 } else {
-                    // tempMarker = drawMarker({ lat: point[0], lng: point[1] }, { iconUrl: './icons/icon-car-red2.png', iconSize: [25, 25] })
+                   
                     tempMarker = drawMarker2({ lat: point[0], lng: point[1] }, { iconUrl: drawDirectionMarker(point), iconSize: [55, 55] })
 
                     // Add date(From hong mei at 2022-10-26 20:39)

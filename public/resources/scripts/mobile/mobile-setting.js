@@ -60,8 +60,6 @@ const updateSystemConfHandler = async function () {
     let result = await updateSystemConfRequest(currentSystemConf)
     if (result) {
         $('#view-mobile-setting').modal('hide');
-    } else {
-        
     }
 }
 

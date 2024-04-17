@@ -12,7 +12,7 @@ let sosId = null
 $(function () {
     initDataTable();
     initPage();
-    // InitFilter();
+    
 
     setInterval(() => {
         table.ajax.reload(null, false)
@@ -47,13 +47,11 @@ const getGroupList = async function() {
                 console.error(res.data.respMessage);
                 return null;
             }
+        } else if (res.respCode === 1) {
+            return res.respMessage;
         } else {
-            if (res.respCode === 1) {
-                return res.respMessage;
-            } else {
-                console.error(res.respMessage);
-                return null;
-            }
+            console.error(res.respMessage);
+            return null;
         }
     });
 }
@@ -473,7 +471,7 @@ const initDataTable = function () {
                 title: 'Driver Name',
                 sortable: false,
                 render: function (data, type, full, meta) {
-                    return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                    return `${ data ?? '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
                 }
             },
             {
@@ -486,7 +484,7 @@ const initDataTable = function () {
                 data: 'remarks',
                 sortable: false,
                 render: function (data, type, full, meta) {
-                    return `${ data ? data : '-' }`
+                    return `${ data ?? '-' }`
                 }
             },
             {

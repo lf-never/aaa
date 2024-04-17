@@ -14,16 +14,9 @@ const viewVehicleMap = function(vehicleNo) {
         },
         onOpen: function () {
             let vehicleNoList = []
-            // if ($('.saf-vehicle-table') && $('.saf-vehicle-table').length) {
-            // 	console.log('Current page is vehicle view')
-            // 	$('.saf-vehicle-table').find('.checkVehicle').each(function() {
-            // 		if ($(this).prop('checked')) {
-            // 			vehicleNoList.push($(this).val())
-            // 		}
-            // 	})
-            // } else if (currentVehicleNo) {
-                vehicleNoList.push(vehicleNo);
-            //}
+            
+            vehicleNoList.push(vehicleNo);
+    
 
             if (!vehicleNoList.length) {
                 $.alert({

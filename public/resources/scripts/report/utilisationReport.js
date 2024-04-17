@@ -87,22 +87,7 @@ const initPage = async function () {
             monthStart = monthStart.add(1, 'months');
         }
         $('.selectedMonth').append(monthSelectedHtml);
-        // let maxMonth = moment().add(-1, 'months').format('YYYY-MM');
-        // layui.use('laydate', function() {
-        //     let laydate = layui.laydate;
-        //     laydate.render({
-        //         elem: '.selectedMonth',
-        //         type: 'month',
-        //         lang: 'en',
-        //         trigger: 'click',
-        //         value: maxMonth,
-        //         max: maxMonth,
-        //         btns: ['clear', 'confirm'],
-        //         done: (value) => {
-        //             reloadResourceReport()
-        //         }
-        //     });
-        // })
+        
     };
     initDateSelect();
 
@@ -271,172 +256,170 @@ const reloadResourceReport = async function () {
                 ],
             });
         }
+    } else if (vehicleReportTable) {
+        vehicleReportTable.ajax.reload(null, true);
     } else {
-        if (vehicleReportTable) {
-            vehicleReportTable.ajax.reload(null, true);
-        } else {
-            vehicleReportTable = $('.data-list-vehicleReport').DataTable({
-                "ordering": false,
-                "searching": false,
-                "paging": true,
-                "autoWidth": false,
-                "fixedHeader": true,
-                "scrollX": "auto",
-                "scrollCollapse": true,
-                "language": PageHelper.language(),
-                "lengthMenu": PageHelper.lengthMenu(),
-                "dom": PageHelper.dom(),
-                "pageLength": PageHelper.pageLength(),
-                "processing": false,
-                "serverSide": true,
-                "destroy": true,
-                "sAjaxDataProp": "respMessage",
-                "ajax": {
-                    url: "/resourceMonthUtilisationReport",
-                    type: "POST",
-                    data: function (d) {
-                        let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
-                        let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
-                        let selectedYear = $('.selectedYear').val();
-                        let selectedMonth = $('.selectedMonth').val();
-                        
-                        let selectedVehicleType = $('.vehicleTypeSelect').val();
+        vehicleReportTable = $('.data-list-vehicleReport').DataTable({
+            "ordering": false,
+            "searching": false,
+            "paging": true,
+            "autoWidth": false,
+            "fixedHeader": true,
+            "scrollX": "auto",
+            "scrollCollapse": true,
+            "language": PageHelper.language(),
+            "lengthMenu": PageHelper.lengthMenu(),
+            "dom": PageHelper.dom(),
+            "pageLength": PageHelper.pageLength(),
+            "processing": false,
+            "serverSide": true,
+            "destroy": true,
+            "sAjaxDataProp": "respMessage",
+            "ajax": {
+                url: "/resourceMonthUtilisationReport",
+                type: "POST",
+                data: function (d) {
+                    let hub = $('.unitSelect option:selected').val() ? $('.unitSelect option:selected').val() : '';
+                    let node = $('.subUnitSelect option:selected').val() ? $('.subUnitSelect option:selected').val() : '';
+                    let selectedYear = $('.selectedYear').val();
+                    let selectedMonth = $('.selectedMonth').val();
+                    
+                    let selectedVehicleType = $('.vehicleTypeSelect').val();
 
-                        return {
-                            "pageNum": d.start, 
-                            "pageLength": d.length,
-                            "selectedHub": hub,
-                            "selectedNode": node,
-                            "selectedYear": selectedYear,
-                            "selectedMonth": selectedMonth,
-                            "resourceType": currentResourceType,
-                            "vehicleType": selectedVehicleType
-                        };
+                    return {
+                        "pageNum": d.start, 
+                        "pageLength": d.length,
+                        "selectedHub": hub,
+                        "selectedNode": node,
+                        "selectedYear": selectedYear,
+                        "selectedMonth": selectedMonth,
+                        "resourceType": currentResourceType,
+                        "vehicleType": selectedVehicleType
+                    };
+                }
+            },   
+            "initComplete" : function (settings, json) {
+            },
+            "columns": [
+                { 
+                    data: null, 
+                    title: "S/N",
+                    sortable: false ,
+                    "render": function (data, type, full, meta) {
+                        return full.index ? full.index : '';
                     }
-                },   
-                "initComplete" : function (settings, json) {
                 },
-                "columns": [
-                    { 
-                        data: null, 
-                        title: "S/N",
-                        sortable: false ,
-                        "render": function (data, type, full, meta) {
-                            return full.index ? full.index : '';
-                        }
-                    },
-                    { 
-                        data: 'unitFullName', 
-                        title: "Hub/Node",
-                        sortable: false 
-                    },
-                    { 
-                        data: 'vehicleType', 
-                        title: "Vehicle Type",
-                        sortable: false 
-                    },
-                    { 
-                        title: 'Total Veh', 
-                        data: 'vehicleNumber', 
-                        sortable: false,
-                    },
-                    { 
-                        data: 'taskNumber', 
-                        title: "Tasks",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? '0';
-                        } 
-                    },
-                    { 
-                        data: 'planWorkDaysSelf', 
-                        title: "<div style='line-height: 18px;'>Plan Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Ownership)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? 0;
-                        } 
-                    },
-                    { 
-                        data: 'planWorkDaysOthers', 
-                        title: "<div style='line-height: 18px;'>Plan Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Other Unit)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? 0;
-                        } 
-                    },
-                    { 
-                        data: 'actualWorkDaysSelf', 
-                        title: "<div style='line-height: 18px;'>Actual Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Ownership)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? 0;
-                        } 
-                    },
-                    { 
-                        data: 'actualWorkDaysOthers', 
-                        title: "<div style='line-height: 18px;'>Actual Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Other Unit)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta){
-                            return data ?? 0;
-                        } 
-                    },
-                    { 
-                        data: 'vehicleLeaveDays', 
-                        title: "<div style='line-height: 18px;'>Unusable Days</div><div style='color: grey; font-size: 14px; font-weight: 300; line-height: 18px;'>(On Event)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            return data;
-                        } 
-                    },
-                    { 
-                        data: 'vehicleHotoOutDays', 
-                        title: "<div style='line-height: 18px;'>Unusable Days</div><div style='color: grey; font-size: 14px; font-weight: 300; line-height: 18px;'>(Hoto Out)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            return data;
-                        } 
-                    },
-                    { 
-                        data: 'planWorkDaysSelf', 
-                        title: "<div style='line-height: 18px;'>Plan Usage Rate</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Plan Usage/Available Days)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            let planWorkDays = full.planWorkDaysSelf + full.planWorkDaysOthers;
-                            let monthWorkDays = full.monthWorkDays * full.vehicleNumber;
-                            let leaveDays = full.vehicleLeaveDays;
+                { 
+                    data: 'unitFullName', 
+                    title: "Hub/Node",
+                    sortable: false 
+                },
+                { 
+                    data: 'vehicleType', 
+                    title: "Vehicle Type",
+                    sortable: false 
+                },
+                { 
+                    title: 'Total Veh', 
+                    data: 'vehicleNumber', 
+                    sortable: false,
+                },
+                { 
+                    data: 'taskNumber', 
+                    title: "Tasks",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? '0';
+                    } 
+                },
+                { 
+                    data: 'planWorkDaysSelf', 
+                    title: "<div style='line-height: 18px;'>Plan Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Ownership)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? 0;
+                    } 
+                },
+                { 
+                    data: 'planWorkDaysOthers', 
+                    title: "<div style='line-height: 18px;'>Plan Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Other Unit)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? 0;
+                    } 
+                },
+                { 
+                    data: 'actualWorkDaysSelf', 
+                    title: "<div style='line-height: 18px;'>Actual Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Ownership)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? 0;
+                    } 
+                },
+                { 
+                    data: 'actualWorkDaysOthers', 
+                    title: "<div style='line-height: 18px;'>Actual Usage</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Other Unit)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta){
+                        return data ?? 0;
+                    } 
+                },
+                { 
+                    data: 'vehicleLeaveDays', 
+                    title: "<div style='line-height: 18px;'>Unusable Days</div><div style='color: grey; font-size: 14px; font-weight: 300; line-height: 18px;'>(On Event)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        return data;
+                    } 
+                },
+                { 
+                    data: 'vehicleHotoOutDays', 
+                    title: "<div style='line-height: 18px;'>Unusable Days</div><div style='color: grey; font-size: 14px; font-weight: 300; line-height: 18px;'>(Hoto Out)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        return data;
+                    } 
+                },
+                { 
+                    data: 'planWorkDaysSelf', 
+                    title: "<div style='line-height: 18px;'>Plan Usage Rate</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Plan Usage/Available Days)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        let planWorkDays = full.planWorkDaysSelf + full.planWorkDaysOthers;
+                        let monthWorkDays = full.monthWorkDays * full.vehicleNumber;
+                        let leaveDays = full.vehicleLeaveDays;
 
-                            monthWorkDays = monthWorkDays - leaveDays;
-                            let monthRate = monthWorkDays <= 0 ? 0 : (planWorkDays / monthWorkDays * 100); 
-                            monthRate = parseFloat(monthRate.toFixed(2));
+                        monthWorkDays = monthWorkDays - leaveDays;
+                        let monthRate = monthWorkDays <= 0 ? 0 : (planWorkDays / monthWorkDays * 100); 
+                        monthRate = parseFloat(monthRate.toFixed(2));
 
-                            let rateColor = monthRate > 90 ? 'red' : '#399062';
-                            return `<div style="line-height: 18px;"><span class="vehicleNo-column">${planWorkDays + '/' + monthWorkDays}</span></div>
-                                <div style="line-height: 18px;"><span style="color: ${rateColor}; font-weight: 600;">(${monthRate}%)</span></div>
-                            `;
-                        } 
-                    },
-                    { 
-                        data: 'actualWorkDaysSelf', 
-                        title: "<div style='line-height: 18px;'>Actual Usage Rate</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Actual Usage/Available Days)</div>",
-                        sortable: false,
-                        render: function (data, type, full, meta) {
-                            let actualWorkDays = full.actualWorkDaysSelf + full.actualWorkDaysOthers;
-                            let monthWorkDays = full.monthWorkDays * full.vehicleNumber;
-                            let leaveDays = full.vehicleLeaveDays;
+                        let rateColor = monthRate > 90 ? 'red' : '#399062';
+                        return `<div style="line-height: 18px;"><span class="vehicleNo-column">${planWorkDays + '/' + monthWorkDays}</span></div>
+                            <div style="line-height: 18px;"><span style="color: ${rateColor}; font-weight: 600;">(${monthRate}%)</span></div>
+                        `;
+                    } 
+                },
+                { 
+                    data: 'actualWorkDaysSelf', 
+                    title: "<div style='line-height: 18px;'>Actual Usage Rate</div><div style='color: grey; font-size: 14px; font-weight: 300;line-height: 18px;'>(Actual Usage/Available Days)</div>",
+                    sortable: false,
+                    render: function (data, type, full, meta) {
+                        let actualWorkDays = full.actualWorkDaysSelf + full.actualWorkDaysOthers;
+                        let monthWorkDays = full.monthWorkDays * full.vehicleNumber;
+                        let leaveDays = full.vehicleLeaveDays;
 
-                            monthWorkDays = monthWorkDays - leaveDays;
-                            let monthRate = monthWorkDays <= 0 ? 0 : (actualWorkDays / monthWorkDays * 100);
-                            monthRate = parseFloat(monthRate.toFixed(2));
+                        monthWorkDays = monthWorkDays - leaveDays;
+                        let monthRate = monthWorkDays <= 0 ? 0 : (actualWorkDays / monthWorkDays * 100);
+                        monthRate = parseFloat(monthRate.toFixed(2));
 
-                            let rateColor = monthRate > 90 ? 'red' : '#399062';
-                            return `<div style="line-height: 18px;"><span class="vehicleNo-column">${actualWorkDays + '/' + monthWorkDays}</span></div>
-                                <div style="line-height: 18px;"><span style="color: ${rateColor}; font-weight: 600;">(${monthRate}%)</span></div>
-                            `;
-                        } 
-                    }
-                ],
-            });
-        }
+                        let rateColor = monthRate > 90 ? 'red' : '#399062';
+                        return `<div style="line-height: 18px;"><span class="vehicleNo-column">${actualWorkDays + '/' + monthWorkDays}</span></div>
+                            <div style="line-height: 18px;"><span style="color: ${rateColor}; font-weight: 600;">(${monthRate}%)</span></div>
+                        `;
+                    } 
+                }
+            ],
+        });
     }
 }
 

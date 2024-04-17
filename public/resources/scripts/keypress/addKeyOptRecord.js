@@ -29,7 +29,7 @@ const initPage = function () {
             accept: 'file',
             acceptMime: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             before: function () {
-                //$('#loadingModal').modal('show');
+                
             },
             // multiple: true,
             done: function (res) {
@@ -44,9 +44,7 @@ const initPage = function () {
                         content: res.respMessage,
                     });
                 }
-                // setTimeout(() => {
-                //     $('#loadingModal').modal('hide');
-                // }, 500)
+                
             },
             error: function (error) {
                 console.error(error);
@@ -342,7 +340,7 @@ const showConfirmQRCode = async function () {
             }
         } else {
             simpleAlert(res.data.respMessage);
-            return;
+            
         }
     });
 }
@@ -358,7 +356,7 @@ const confirmSubmit = async function() {
             backToMainPage()
         } else {
             simpleAlert(res.data.respMessage);
-            return;
+            
         }
     });
 }

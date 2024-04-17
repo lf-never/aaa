@@ -242,25 +242,9 @@ const initDetail = async function () {
             });
         }
         
-        const DisabledLayDate = function () {
-            let elem = $(".layui-laydate-content");
-            //let publidHolidays = parent.publidHolidays
-            layui.each(elem.find('tr'), function (trIndex, trElem) {
-                layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                    let tdTemp = $(tdElem);
-                    let driverLeaveDays = []
-                    if (driverLeaveDays?.indexOf(tdTemp.attr("lay-ymd")) > -1) {
-                        tdTemp.addClass('laydate-disabled');
-                        tdTemp.css('color', 'orange');
-                    }
-                });
-            });
-        }
+
         
-        let layer = null;
-        layui.use('layer', function(){
-            layer = layui.layer;
-        });
+ 
         layui.use('laydate', function(){
             let laydate = layui.laydate;
             laydate.render({
@@ -274,12 +258,9 @@ const initDetail = async function () {
                 max: moment(endTime, 'YYYY/MM/DD HH:mm').format('yyyy-MM-DD HH:mm:ss'),
                 ready: () => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 change: (value) => { 
-                    noSecond()
-                    DisabledLayDate();
-                    
+                    noSecond()                   
                 },
                 done: (value) => {
                     if (value) {
@@ -311,11 +292,9 @@ const initDetail = async function () {
                 max: moment(endTime, 'YYYY/MM/DD HH:mm').format('yyyy-MM-DD HH:mm:ss'),
                 ready: () => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 change: (value) => { 
                     noSecond()
-                    DisabledLayDate();
                 },
                 done: (value) => {
                     if ($(`.from-date-input-${ (vehicleNo).replaceAll(" ","_") }`).val() && value) {
@@ -406,8 +385,8 @@ const initDetail = async function () {
                         if(formHub) formHub = formHub.toLowerCase() === 'all' ? null : formHub;
                         if(formNode) formNode = formNode.toLowerCase() === 'all' ? null : formNode;
                         
-                        formHub = formHub ? formHub : null;
-                        formNode = formNode ? formNode : null;
+                        formHub = formHub ?? null;
+                        formNode = formNode ?? null;
                         let params = {};
                         params.pageNum = d.start
                         params.pageLength = d.length
@@ -450,7 +429,8 @@ const initDetail = async function () {
                             if (!full.toHub) {
                                  return `<input class="form-control form-select form-select-sm" readonly="readonly"/>`
                             } else {
-                                return `${ full.toHub } ${ full.toNode ? `/${ full.toNode }` : '' }`
+                                let newnode = full.toNode ? `/${ full.toNode }` : '';
+                                return `${ full.toHub } ${ newnode }`
                             }
                         }
                     },
@@ -524,7 +504,7 @@ const initDetail = async function () {
                             $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.hub)
                             $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
                             $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
-                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ? requestNode : '-' }`)
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
                             $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).trigger('change')
 
                             $(`.from-date-input-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
@@ -542,7 +522,8 @@ const initDetail = async function () {
                             $('td:eq(1)', nRow).prepend(`<select class="form-select form-select-sm" id="request-view-${ (aData.vehicleNo).replaceAll(" ","_") }">${html}</select>`);
                             $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.vehicleNo)
                             $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).on('change', () =>{
-                                let vehicleByReplace = vehicleListByReplace.filter(item => item.vehicleNo == $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val());
+                                let requestVal = $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val()
+                                let vehicleByReplace = vehicleListByReplace.filter(item => item.vehicleNo == requestVal);
                                 $('td:eq(2)', nRow).empty()
                                 $('td:eq(2)', nRow).prepend(`<div>${ vehicleByReplace[0].unit ? vehicleByReplace[0].unit : '' }</div>
                                 <div><span style="color: #6c757d; font-size: 0.75rem;">${ vehicleByReplace[0].subUnit ? vehicleByReplace[0].subUnit : '' }</span></div>`);
@@ -590,8 +571,8 @@ const initDetail = async function () {
                         if(formNode) formNode = formNode.substring(formNode.lastIndexOf(":")+1, formNode.length)
                         if(formHub) formHub = formHub.toLowerCase() === 'all' ? null : formHub;
                         if(formNode) formNode = formNode.toLowerCase() === 'all' ? null : formNode;
-                        formHub = formHub ? formHub : null;
-                        formNode = formNode ? formNode : null;
+                        formHub = formHub ?? null;
+                        formNode = formNode ?? null;
                         let params = {};
                         params.purpose = $('.purpose-view').text() ?? null
                         params.pageNum = d.start
@@ -655,7 +636,8 @@ const initDetail = async function () {
                             if (!full.toHub) {
                                 return `<input class="form-control form-select" readonly="readonly"/>`
                             } else {
-                                return `${ full.toHub } ${ full.toNode ? `/${ full.toNode }` : '' }`
+                                let newNode = full.toNode ? `/${ full.toNode }` : ''
+                                return `${ full.toHub } ${ newNode }`
                             }
                         }
                     },
@@ -737,7 +719,7 @@ const initDetail = async function () {
                             $(`#hub-node-${ (aData.driverId) }`, nRow).val(aData.hub)
                             $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
                             $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
-                            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ? requestNode : '-' }`)
+                            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
                             $(`#hub-node-${ (aData.driverId) }`, nRow).trigger('change')
 
                             $(`.from-date-input-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
@@ -837,7 +819,7 @@ const initDetail = async function () {
                             errorMessage2.push(res.respMessage)
                         }
                         if(errorMessage2.length > 0 && errorMessage2[0]) {
-                            let error = errorMessage2.join('<br\>')
+                            let error = errorMessage2.join(`<br>`)
                             $.alert({
                                 title: 'Warn',
                                 content: error
@@ -1008,7 +990,8 @@ const initDetail = async function () {
                     }
                     if(requestType.toLowerCase() == 'assign' || requestType.toLowerCase() == 'replace') {
                         if(!$(`.from-date-input-${ (option).replaceAll(" ","_") }`)[0]) {
-                            errorMessage.push(`${ data.driverName ? ` ${ data.driverName }` : ` ${ data.vehicleNo }` } Do not repeat operation.`)
+                            let errorname = data.driverName ? ` ${ data.driverName }` : ` ${ data.vehicleNo }`
+                            errorMessage.push(`${ errorname } Do not repeat operation.`)
                             continue
                         }
                         let hostHub = $(`#hub-node-${ (option).replaceAll(" ","_") } option:selected`).data('unit') 
@@ -1024,8 +1007,8 @@ const initDetail = async function () {
                             driverName: newDriverName,
                             fromHub: data.unit,
                             fromNode: data.subUnit,
-                            toHub: hostHub ? hostHub : data.toHub,
-                            toNode: hostNode ? hostNode : data.toNode,
+                            toHub: hostHub ?? data.toHub,
+                            toNode: hostNode ?? data.toNode,
                             hotoDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                             startDateTime: startDate ? moment(startDate).format('YYYY-MM-DD HH:mm') : null,
                             endDateTime: endDate ? moment(endDate).format('YYYY-MM-DD HH:mm') : null,
@@ -1038,7 +1021,7 @@ const initDetail = async function () {
                         if(hoto.fromHub == hoto.toHub) {
                             if(hoto.fromNode == hoto.toNode){
                                 state = false
-                                errorMessage.push(`${ data.driverName ? ` ${ data.driverName }` : ` ${ data.vehicleNo }` } The hub/node of the hoto must be different from the current hub/node.`)
+                                errorMessage.push(`${ opt } The hub/node of the hoto must be different from the current hub/node.`)
                             }
                         }
                         if(state) {
@@ -1080,7 +1063,7 @@ const initDetail = async function () {
                 initDetailPage(requestId)
             }
             if(errorMessage.length > 0 && errorMessage[0]) {
-                let error = errorMessage.join('<br\>')
+                let error = errorMessage.join('<br>')
                 $.confirm({
                     title: 'Warn',
                     content: error,
@@ -1130,8 +1113,8 @@ const initDetail = async function () {
                         if(formNode) formNode = formNode.substring(formNode.lastIndexOf(":")+1, formNode.length)
                         if(formHub) formHub = formHub.toLowerCase() === 'all' ? null : formHub;
                         if(formNode) formNode = formNode.toLowerCase() === 'all' ? null : formNode;
-                        formHub = formHub ? formHub : null;
-                        formNode = formNode ? formNode : null;
+                        formHub = formHub ?? null;
+                        formNode = formNode ?? null;
                         let params = {};
                         params.pageNum = d.start
                         params.pageLength = d.length
@@ -1225,8 +1208,8 @@ const initDetail = async function () {
                         if(formNode) formNode = formNode.substring(formNode.lastIndexOf(":")+1, formNode.length)
                         if(formHub) formHub = formHub.toLowerCase() === 'all' ? null : formHub;
                         if(formNode) formNode = formNode.toLowerCase() === 'all' ? null : formNode;
-                        formHub = formHub ? formHub : null;
-                        formNode = formNode ? formNode : null;
+                        formHub = formHub ?? null;
+                        formNode = formNode ?? null;
                         let params = {};
                         params.pageNum = d.start
                         params.pageLength = d.length

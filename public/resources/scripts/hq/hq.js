@@ -21,7 +21,6 @@ $( async function () {
     initSelectedAndPage();
     clickSelect();
     initDetail();
-    // initDetail2();
 
     setTimeout(() => {
         $('.assign-menu').children().first().trigger('click')
@@ -50,11 +49,6 @@ const initClickPage = function () {
         tableName = 'sys'
         $('.mb-assign-border').css('display', 'none')
         $('.sys-assign-border').css('display', 'block')
-        // $('.mb-task-assign').css('display', 'none')
-        // $('.tripId-div').css('display', 'block')
-        // $('.sys-assign-table').css('display', 'block')
-        // $('.mb-assign-table').css('display', 'none')
-        // $('.taskStatus-div').show()
         if(tableBySys) tableBySys.ajax.reload(null, false) 
     })
 
@@ -62,13 +56,7 @@ const initClickPage = function () {
         // tableName = 'mb'
         tableName = 'atms'
         $('.mb-assign-border').css('display', 'block')
-        $('.sys-assign-border').css('display', 'none')
-        // $('.mb-task-assign').css('display', 'block')
-        // $('.tripId-div').css('display', 'none')
-        // $('.sys-assign-table').css('display', 'none')
-        // $('.mb-assign-table').css('display', 'block')
-        // $('.taskStatus-div').hide()
-        // if(tableByMb) tableByMb.ajax.reload(null, false) 
+        $('.sys-assign-border').css('display', 'none') 
         if(tableBySys) tableBySys.ajax.reload(null, false) 
     })
     $('.sys-assign').trigger('click')
@@ -306,7 +294,8 @@ const getDriverAndVehicle = async function(taskId, dataType, vehicleData, driver
             if(driverTotalObj[0]) {
                 let contactNumber = driverAndVehicle.contactNumber ? driverAndVehicle.contactNumber : null;
                 $('#search-driverName').attr('data-id', searchDriverId)
-                $('#search-driverName').val(`${ driverAndVehicle.name }${ contactNumber ? ` (${ contactNumber })` : '' }`)
+                let _newContactNumber = contactNumber ? ` (${ contactNumber })` : ''
+                $('#search-driverName').val(`${ driverAndVehicle.name }${ _newContactNumber }`)
             }
         }
     } else {
@@ -344,15 +333,13 @@ const getDriverListByTaskId = function (userId, vehicleType, hub, node, noOfVehi
         });
 }
 
-window.showPersonDetailEventHandler = async function (el, userType, userId, vehicleType, taskId, choiceArea, choiceNode, reAssignHub, reAssignNode, dataType, startDate, endDate, purpose, mtAdminId, unitId) {
+window.showPersonDetailEventHandler = async function (el, vehicleType, taskId, choiceArea, choiceNode, reAssignHub, reAssignNode, dataType, startDate, endDate, purpose) {
     startDate = moment(startDate).format('YYYY-MM-DD HH:mm')
     endDate = endDate && endDate != '' && endDate != 'null' ? moment(endDate).format('YYYY-MM-DD HH:mm') : null
     let noOfVehicle = $(el).closest('tr').find('#table-request-div').attr('value') == -1 ? true : null;
     let noOfDriver = $(el).closest('tr').find('#table-request-div').attr('value');
     let dataTypeByVehicle = null
-    // if(tableName == 'mb') {
-    //     taskId = `AT-${ taskId }`
-    // }
+
 
     const clearFormData = function () {
         $('#myModal').modal('hide');
@@ -430,8 +417,8 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
     }
 
     $('#myModal').modal('show');
-    choiceArea = choiceArea ? choiceArea : '';
-    choiceNode = choiceNode ? choiceNode : '';
+    choiceArea = choiceArea ?? '';
+    choiceNode = choiceNode ?? '';
     tableHub = $(el).closest('tr').find('#task-assign-hub').val();
     tableNode = $(el).closest('tr').find('#task-assign-node').val();
     tableHub = tableHub && tableHub == 'undefined' ? null : tableHub
@@ -471,7 +458,9 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                 } 
                 let vehicleData = null
                 if($(el).closest('tr').find('#table-request-div').attr('value') != -1) {
-                    vehicleData = await getVehicleList(purpose, dataTypeByVehicle, vehicleType, tableHub ? tableHub : reAssignHub, tableNode ? tableNode : reAssignNode, startDate, endDate, taskId, noOfDriver);
+                    let vehicleHub = tableHub ? tableHub : reAssignHub
+                    let vehicleNode = tableNode ? tableNode : reAssignNode
+                    vehicleData = await getVehicleList(purpose, dataTypeByVehicle, vehicleType, vehicleHub, vehicleNode, startDate, endDate, taskId, noOfDriver);
                     const initVehicleOption = function () {
                         $("#search-vehicleNumber").off('click').on("click", function () {
                             $('.form-vehicleNumber-select').css("display", "block");
@@ -534,14 +523,9 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                     initVehicleOption()
                 }
                 let driverData = null
-                // let newUnitIdByMbDriver = $(el).closest('tr').find('#task-assign-node option:selected').attr('data-id') ? $(el).closest('tr').find('#task-assign-node option:selected').attr('data-id') : null;
+                
                 if(noOfDriver != 0) {
-                    // if(dataType.toLowerCase() == 'mb') { 
-                    //     //mb type task and mtAdmin task driver the same
-                    //     driverData = await getDriverList(purpose, newUnitIdByMbDriver ? newUnitIdByMbDriver : unitId, vehicleType, startDate, endDate, 'mb');
-                    // } else {
-                        driverData = await getDriverListByTaskId(userId, vehicleType, tableHub ? tableHub : reAssignHub, tableNode ? tableNode : reAssignNode, noOfVehicle, startDate, endDate);
-                    // }
+                    driverData = await getDriverListByTaskId(userId, vehicleType, tableHub ? tableHub : reAssignHub, tableNode ? tableNode : reAssignNode, noOfVehicle, startDate, endDate);
                     const initDriverOption = function () {
                         $("#search-driverName").off('click').on("click", function () {
                             driverNameOnFocus(this)
@@ -575,12 +559,8 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                             $(e).next().find("input").val("");
                             $(e).next().css("display", "block");
                             $(".form-driverName-select").empty()
-                            // if(purpose) {
-                            //     //mb type task and mtAdmin task driver the same
-                            //     driverData = await getDriverList(purpose, newUnitIdByMbDriver ? newUnitIdByMbDriver : unitId, vehicleType, startDate, endDate, 'mb');
-                            // } else {
-                                driverData = await getDriverListByTaskId(userId, vehicleType, tableHub ? tableHub : reAssignHub, tableNode ? tableNode : reAssignNode, noOfVehicle, startDate, endDate);
-                            // }
+
+                            driverData = await getDriverListByTaskId(userId, vehicleType, tableHub ? tableHub : reAssignHub, tableNode ? tableNode : reAssignNode, noOfVehicle, startDate, endDate);
                             if(driverData) {
                                 for (let driverList of driverData) {
                                     $(".form-driverName-select").append(`<li class="li-driverName" data-id="${ driverList.driverId }" data-unitId="${ driverList.unitId }">${ driverList.driverName } (${ driverList.contactNumber ? driverList.contactNumber : '' })</li>`)
@@ -660,18 +640,21 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                         vehicleNumber: $('#search-vehicleNumber').val(),
                         searchDriverId: $('#search-driverName').attr("data-id")
                     }
-                    let vehicleNO = $(el).closest('tr').find('#table-request-div').attr('value') == -1 ? true : false;
-                    let driverNO = $(el).closest('tr').find('#table-request-div').attr('value') == 0 ? true : false;
+                    let vehicleNO = false;
+                    let driverNO = false;
+                    if($(el).closest('tr').find('#table-request-div').attr('value') == -1){
+                        vehicleNO = true
+                    }
+                    if($(el).closest('tr').find('#table-request-div').attr('value') == 0){
+                        driverNO = true
+                    }
                     let state = ValidAssignTask(ValidAssignTaskObj, vehicleNO, driverNO)
                     if(state) {
                         $(this).addClass('btn-taskAssignConfirm')
                         if(dataType.toLowerCase() == 'sys' || dataType.toLowerCase() == 'atms') {
                             assignTask(dataType, tableHub ? tableHub : reAssignHub,  tableNode ? tableNode : reAssignNode, taskId, searchDriverId, vehicleNumber).then((res) => {
                                 if(res.respCode === 1) {
-                                    // if (data.askRoute) {
-                                    //     $('#modal-waiting').modal('show');
-                                    //     checkRouteCreate();
-                                    // }
+
                                     clearFormData()
                                 }  else {
                                     $.alert({ title: 'Warn', content: res.respMessage });
@@ -679,23 +662,8 @@ window.showPersonDetailEventHandler = async function (el, userType, userId, vehi
                                 }
                                 $(this).removeClass('btn-taskAssignConfirm')
                             }); 
-                        } else if(dataType.toLowerCase() == 'mb') {
-                            assignMbTask(tableHub ? tableHub : reAssignHub,  tableNode ? tableNode : reAssignNode, searchDriverId, vehicleNumber, mtAdminId).then((res) => {
-                                if(res.respCode === 1) {
-                                    // if (data.askRoute) {
-                                    //     $('#modal-waiting').modal('show');
-                                    //     checkRouteCreate();
-                                    // }
-                                    clearFormData()
-                                }  else {
-                                    vehicleData = []
-                                    driverData = []
-                                    $.alert({ title: 'Warn', content: res.respMessage });
-                                    clearFormData()
-                                }
-                                $(this).removeClass('btn-taskAssignConfirm')
-                            });
-                        }                                     
+                        } 
+                                                       
                     }  
                 });
             } else {
@@ -879,15 +847,15 @@ window.initDetail = async function () {
                         "userType": userType, 
                         "userId": userId, 
                         "node": currentNode, 
-                        "unit": unit ? unit : "", 
-                        "vehicleType": vehicleType ? vehicleType : "", 
-                        "tripNo": tripNo ? tripNo : "", 
-                        "execution_date": execution_date ? execution_date : "", 
-                        "created_date": created_date ? created_date : "", 
+                        "unit": unit ?? "", 
+                        "vehicleType": vehicleType ?? "", 
+                        "tripNo": tripNo ?? "", 
+                        "execution_date": execution_date ?? "", 
+                        "created_date": created_date ?? "", 
                         "hub": currentArea ,
                         "vehicleNo": $('.screen-vehicleNo').val() ? $('.screen-vehicleNo').val() : null,
                         "driverName": $('.screen-driverName').val() ? $('.screen-driverName').val() : null,
-                        // "taskStatus": tableName == 'sys' ? $('.selected-taskStatus').val() ?? null : null,
+                        
                         "taskStatus": $('.selected-taskStatus').val(),
                         "endDateOrder": endDateOrder,
                         "pageNum": d.start, 
@@ -897,8 +865,7 @@ window.initDetail = async function () {
                 },
             },   
             "initComplete" : function (settings, json) {
-                // row margin-top: fill by div height;
-                // $('.saf-driver-table tbody tr').before('<div style="width: 100%;height: 10px;"/>');
+
                 $(".saf-driver-table thead tr th:first").removeClass('sorting_asc');
             },
             "columns": [
@@ -967,12 +934,10 @@ window.initDetail = async function () {
                                 } else {
                                     return `<div value="0" id='table-request-div'>Pre-Park</div>`
                                 }
+                            } else if(full.noOfDriver >= full.driverNo) {
+                                return `<div value="1" id='table-request-div'>Both</div>`
                             } else {
-                                if(full.noOfDriver >= full.driverNo) {
-                                    return `<div value="1" id='table-request-div'>Both</div>`
-                                } else {
-                                    return `<div value="0" id='table-request-div'>Vehicle Only</div>`
-                                }
+                                return `<div value="0" id='table-request-div'>Vehicle Only</div>`
                             }
                         } else {
                             return `<div value="-1" id='table-request-div'>TO Only</div>`
@@ -1058,7 +1023,7 @@ window.initDetail = async function () {
                     sortable: false ,
                     defaultContent: '',
                     render: function (data, type, full, meta) {
-                        return `<div>${ data ? data : '' }</div>
+                        return `<div>${ data ?? '' }</div>
                             <div>${ full.pocNumber ? full.pocNumber : '' }</div>`
                     } 
                 },
@@ -1073,7 +1038,7 @@ window.initDetail = async function () {
                         if(nric) newNric = nric.slice((nric.length - 4), nric.length);
                         let html = '';
                         if(data){
-                            html += `<div>${ data ? data : '' }(${ newNric ? newNric : nric })</div>
+                            html += `<div>${ data ?? '' }(${ newNric ? newNric : nric })</div>
                             <div>${ full.contactNumber ? full.contactNumber : '' }</div>`
                         }
                         if (full.reassignedDriverName) {
@@ -1090,9 +1055,9 @@ window.initDetail = async function () {
                     defaultContent: '' ,
                     render: function (data, type, full, meta) {
                         if (full.reassignedVehicleNumber) {
-                            return `<div>${ data ? data : '' }</div><div>Pending Approve: ${ full.reassignedVehicleNumber }</div>`
+                            return `<div>${ data ?? '' }</div><div>Pending Approve: ${ full.reassignedVehicleNumber }</div>`
                         } else {
-                            return `<div>${ data ? data : '' }</div>`
+                            return `<div>${ data ?? '' }</div>`
                         }
                     }
                 },
@@ -1102,7 +1067,7 @@ window.initDetail = async function () {
                     sortable: false ,
                     defaultContent: '' ,
                     render: function (data, type, full, meta) {
-                        return `<div>${ data ? data : '' }</div>`
+                        return `<div>${ data ?? '' }</div>`
                     }
                 },
                 { 
@@ -1125,14 +1090,12 @@ window.initDetail = async function () {
                                     }
                                     return '';
                                 } else if (operationList.includes('ASSIGN')) {
-                                    return `<button type="button" class="btn-assigned custom-Reassign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Re-Assign</button>` 
+                                    return `<button type="button" class="btn-assigned custom-Reassign" onclick="showPersonDetailEventHandler(this, '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Re-Assign</button>` 
                                 } 
                                 return ``
                             }
-                        } else {
-                            if (operationList.includes('ASSIGN')) {
-                                return `<button type="button" class="btn-assigned custom-assign" onclick="showPersonDetailEventHandler(this,'${ userType }', '${ userId }', '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Assign</button>`
-                            }
+                        } else if (operationList.includes('ASSIGN')) {
+                            return `<button type="button" class="btn-assigned custom-assign" onclick="showPersonDetailEventHandler(this, '${ data }', '${ full.taskId }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', '${ dataType }', '${ full.startDate }', '${ full.endDate }', '${ full.purposeType }')">Assign</button>`
                         }
                     }
                 }
@@ -1212,8 +1175,9 @@ window.cancalTaskByMb = async function (mtAdminId) {
                 btnClass: 'custom-btn-green', 
                 action: function(){
                     let cancelledCause = null;
-                    if($('#cancelledCause').val() == '') cancelledCause = null
-                    $('#cancelledCause').val() ? cancelledCause = $('#cancelledCause').val() : cancelledCause = null
+                    if($('#cancelledCause').val() && $('#cancelledCause').val() != ''){
+                        cancelledCause = $('#cancelledCause').val()
+                    } 
                     return axios.post('/assign/cancalTaskByMb',{ mtAdminId, cancelledCause: cancelledCause })
                     .then(function (res) {
                         if(res.respMessage === false){
@@ -1229,18 +1193,16 @@ window.cancalTaskByMb = async function (mtAdminId) {
                                     }
                                 }
                             });
+                        } else if (res.respCode === 1) {
+                            tableByMb.ajax.reload(null, false)
+                            return res.respMessage;
                         } else {
-                            if (res.respCode === 1) {
-                                tableByMb.ajax.reload(null, false)
-                                return res.respMessage;
-                            } else {
-                                $.alert({
-                                    title: 'Warn',
-                                    content: res.respMessage
-                                });
-                                tableByMb.ajax.reload(null, false)
-                                return null;
-                            }
+                            $.alert({
+                                title: 'Warn',
+                                content: res.respMessage
+                            });
+                            tableByMb.ajax.reload(null, false)
+                            return null;
                         }
                     });
                 }
@@ -1326,7 +1288,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
             if($('.requestType-select').val()){
                 if($('.requestType-select').val() == 2) {
                     driverNum = 1;
-                    // noOfDriver = 1;
+                    
                     noOfVehicle = false;
                     $('#driver').css('background-color', 'white')
                     $('#driver').removeAttr('disabled', 'disabled')
@@ -1377,13 +1339,13 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 });
             }
             if ($('#periodStartDate').val() && $('#periodEndDate').val() && $('#typeOfVehicle').val()) {
-                // let newVehicleType = await verifyVehicleType($('#periodStartDate').val(), $('#periodEndDate').val(), $('#typeOfVehicle').val(), null, null, unitId);
+                
                 let newStartTime = $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
                 let newEndTime = $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
                 let newVehicleType = await verifyVehicleType(newStartTime, newEndTime, $('#typeOfVehicle').val(), null, null, unitId);
                 if(newVehicleType) {
                     if(onlyStatus == 0 || onlyStatus > 0) {
-                        // let newVehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, $('#periodStartDate').val(), $('#periodEndDate').val(), taskId, driverNum, unitId);
+                        
                         let newVehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, newStartTime, newEndTime, taskId, driverNum, unitId);
                         let result = newVehicleList.some(item=> item.vehicleNo == $('#vehicleNo').val())
                         if(!result) {
@@ -1394,7 +1356,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     }
                    
                     if(onlyStatus == -1 || onlyStatus > 0) {
-                        // let newDriverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, $('#periodStartDate').val(), $('#periodEndDate').val(), unitId);
+                        
                         let newDriverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, newStartTime, newEndTime, unitId);
                         let driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
                         if(!driverResult) {
@@ -1421,19 +1383,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     $(".laydate-time-list>li").css("height", "100%")
                 });
             }
-            const DisabledLayDate = function () {
-                let elem = $(".layui-laydate-content");
-                let driverLeaveDays = []
-                layui.each(elem.find('tr'), function (trIndex, trElem) {
-                    layui.each($(trElem).find('td'), function (tdIndex, tdElem) {
-                        let tdTemp = $(tdElem);
-                        if (driverLeaveDays && driverLeaveDays.indexOf(tdTemp.attr("lay-ymd")) > -1) {
-                            tdTemp.addClass('laydate-disabled');
-                            tdTemp.css('color', 'orange');
-                        }
-                    });
-                });
-            }
             
             layui.use(['laydate'], function () {
                 let laydate = layui.laydate;
@@ -1447,11 +1396,9 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     holidays: [parent.publidHolidays],
                     ready: () => { 
                         noSecond()
-                        DisabledLayDate();
                     },
                     change: (value) => { 
                         noSecond()
-                        DisabledLayDate();
                     },
                     done: (value) => {
                         if (value) {
@@ -1496,11 +1443,9 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     holidays: [parent.publidHolidays],
                     ready: () => { 
                         noSecond()
-                        DisabledLayDate();
                     },
                     change: () => { 
                         noSecond()
-                        DisabledLayDate();
                     },
                     done: (value) => {
                         if ($('#periodStartDate').val() && value) {
@@ -1550,9 +1495,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
             $('#purposeType').empty()
             let html =' <option></option>';
             html+= '<option>Training</option>'
-            // for(let purposeType of purposeTypeList){
-            //     html+= `<option data-id="${ purposeType.id }">${ purposeType.purposeName }</option>`;
-            // }
+
             $('#purposeType').append(html)
 
             $('#purposeType').off('change').on('change', async function() {
@@ -1601,7 +1544,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 $(".node-select").empty();
                 for (let unit of unitList) {
                     if (unit.unit === selectedUnit) {
-                        let html2 = ``;
+                        let html2;
                         if(unit.subUnit){
                             html2 = `<option name="subUnitType" data-unitId="${ unit.id }" value="${ unit.subUnit }">${ unit.subUnit }</option>`
                         }else{
@@ -1683,14 +1626,10 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 $(this).parent().parent().prev().attr("data-secured", secured)
                 $(this).parent().parent().prev().attr("data-id", id)
                 $(this).parent().parent().css("display", "none")
-                if ($(this).parent().parent().prev().attr("id") == "dropoffDestination") {
-                } else {
-                    let attrDisabled = $("#dropoffDestination").attr("disabled")
-                    if (attrDisabled) {
-                        $("#dropoffDestination").val(val)
-                        $("#dropoffDestination").attr("data-secured", secured)
-                        $("#dropoffDestination").attr("data-id", id)
-                    }
+                if ($("#dropoffDestination").attr("disabled")) {
+                    $("#dropoffDestination").val(val)
+                    $("#dropoffDestination").attr("data-secured", secured)
+                    $("#dropoffDestination").attr("data-id", id)
                 }
             })
     
@@ -1745,7 +1684,7 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     $(e).next().find(".form-search-select").empty()
                     let startTime = $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
                     let endTime = $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
-                    // vehicleTypeList = await getVehicleType($('#periodStartDate').val(), $('#periodEndDate').val(), null, null, unitId);
+                    
                     vehicleTypeList = await getVehicleType(startTime, endTime, null, null, unitId);
                     if(vehicleTypeList.length > 0) vehicleTypeList = vehicleTypeList.sort()
                     $('#typeOfVehicle-shadow .form-search-select').empty()
@@ -1811,7 +1750,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                     $(e).next().find(".form-search-select").empty()
                     let startTime = $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
                     let endTime = $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
-                    // vehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, $('#periodStartDate').val(), $('#periodEndDate').val(), taskId, driverNum, unitId);
                     vehicleList = await getVehicleList($('#purposeType').val(), 'mb', $('#typeOfVehicle').val(), null, null, startTime, endTime, taskId, driverNum, unitId);
                     $('#vehicleNo-shadow .form-search-select').empty()
                     for(let vehicle of vehicleList){
@@ -1859,7 +1797,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                 if(!$('#purposeType').val()){ $.alert({ title: 'warn', content: 'Purpose can not be empty.' }); return } 
                 let startTime = $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
                 let endTime = $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null
-                // driverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, $('#periodStartDate').val(), $('#periodEndDate').val(), unitId);
                 driverList = await getDriverListByTaskId(userId, $('#typeOfVehicle').val(), null, null, noOfVehicle, startTime, endTime, unitId);
                 if(driverList.length > 0) driverList = driverList.sort((a, b) => a.driverName.localeCompare(b.driverName));
                 $('#driver-shadow .form-search-select').empty()
@@ -1897,7 +1834,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
         initDriver()
 
         $('#mtAdminCancel').off('click').on('click', function () {
-            // mtAdminId = null;
             clearPageData();
         });
 
@@ -2050,7 +1986,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                         tableByMb.ajax.reload(null, false)
                         mtAdmin = null
                         clearPageData(); 
-                        return
                     } else {
                         $('#mtAdminTaskConfirm').removeClass('btn-disabled')
                         $('#mtAdminTaskModal').modal('hide');
@@ -2060,7 +1995,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
                         });
                         mtAdmin = null
                         clearPageData();
-                        return
                     }
                 });
             }
@@ -2073,340 +2007,6 @@ window.editTaskByMb = async function(mtAdminId, taskId, unitId, driverNum, el) {
         }
     })
 }
-
-// window.initDetail2 = async function () {
-//     const initDataTable = function (unitList) {
-//         // tableByMb = $('.mb-data-list').DataTable({
-//         //     "ordering": true,
-//         //     "searching": false,
-//         //     "paging": true,
-//         //     "autoWidth": false,
-//         //     "fixedHeader": true,
-//         //     "scrollX": "auto",
-//         //     // "scrollY": "700px",
-//         //     "scrollCollapse": true,
-//         //     "language": PageHelper.language(),
-//         //     "lengthMenu": PageHelper.lengthMenu(),
-//         //     "dom": PageHelper.dom(),
-//         //     "pageLength": PageHelper.pageLength(),
-//         //     "processing": false,
-//         //     "serverSide": true,
-//         //     "destroy": true,
-//         //     "sAjaxDataProp": "data",
-//         //     "ajax": {
-//         //         url: "/assign/getAssignableTaskListByMtAdmin",
-//         //         type: "POST",
-//         //         data: function (d) {
-//         //             let vehicleType = $(".selected-vehicleType option:selected").val() ? $(".selected-vehicleType option:selected").val() : '';
-//         //             let execution_date = $(".execution-date").val() ? $(".execution-date").val() : null;
-//         //             if (execution_date) {
-//         //                 if (execution_date.indexOf('~') != -1) {
-//         //                     const dates = execution_date.split(' ~ ')
-//         //                     if(dates.length > 0) {
-//         //                         dates[0] = moment(dates[0], 'DD/MM/YYYY').format('YYYY-MM-DD')
-//         //                         dates[1] = moment(dates[1], 'DD/MM/YYYY').format('YYYY-MM-DD')
-//         //                         execution_date = dates.join(' ~ ')
-//         //                     }
-//         //                 } else {
-//         //                     execution_date = moment(execution_date, 'DD/MM/YYYY').format('YYYY-MM-DD')
-//         //                 }
-//         //             }
-//         //             currentArea = $(".select-hub option:selected").val()
-//         //             currentNode = $(".select-node option:selected").val()
-//         //             let endDateOrder = null
-//         //             let taskIdOrder = null
-//         //             let order = d.order;
-//         //             for (let orderField of order) {
-//         //                 if(orderField.column == 4) {
-//         //                     taskIdOrder = orderField.dir;
-//         //                 } else if(orderField.column == 7){
-//         //                     endDateOrder = orderField.dir;
-//         //                 }
-//         //             }    
-//         //             taskIdOrder = taskIdOrder ? taskIdOrder : order[0].dir;
-//         //             let option = { 
-//         //                 "userId": userId, 
-//         //                 "node": currentNode, 
-//         //                 "vehicleType": vehicleType ? vehicleType : "", 
-//         //                 "execution_date": execution_date ? execution_date : null,
-//         //                 "created_date": $('.created-date').val() ? moment($(".created-date").val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : null,
-//         //                 "hub": currentArea ,
-//         //                 "vehicleNo": $('.screen-vehicleNo').val() ? $('.screen-vehicleNo').val() : null,
-//         //                 "driverName": $('.screen-driverName').val() ? $('.screen-driverName').val() : null,
-//         //                 "endDateOrder": endDateOrder,
-//         //                 "taskIdOrder": taskIdOrder,
-//         //                 "pageNum": d.start, 
-//         //                 "pageLength": d.length
-//         //             }
-
-//         //             return option
-//         //         },
-//         //     },   
-//         //     "columns": [
-//         //         { 
-//         //             data: null, 
-//         //             title: "S/N",
-//         //             sortable: false ,
-//         //             "render": function (data, type, full, meta) {
-//         //                 return meta.row + 1 + meta.settings._iDisplayStart
-//         //             }
-//         //         },
-//         //         { 
-//         //             class: 'task-assign-hub',
-//         //             title: 'Hub', 
-//         //             data: 'hub',
-//         //             sortable: false,
-//         //             defaultContent: ''
-//         //         },
-//         //         {   
-//         //             class: 'task-assign-node',
-//         //             title: 'Node', 
-//         //             data: 'node',
-//         //             sortable: false,
-//         //             defaultContent: '-' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 if(data){
-//         //                     if(data.toLowerCase() == 'null') {
-//         //                         return ''
-//         //                     } else {
-//         //                         return data
-//         //                     }
-//         //                 } else {
-//         //                     return ''
-//         //                 }
-//         //             } 
-//         //         },
-//         //         { 
-//         //             title: 'Task ID', 
-//         //             data: 'taskId', 
-//         //             sortable: false,
-//         //             defaultContent: '' 
-//         //         },
-//         //         { 
-//         //             title: 'AT ID', 
-//         //             data: 'id', 
-//         //             sortable: true,
-//         //             defaultContent: '' 
-//         //         },
-//         //         { 
-//         //             title: 'Request', 
-//         //             data: '', 
-//         //             sortable: false ,
-//         //             defaultContent: '' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 if(full.driverNum > 0 && full.needVehicle > 0){
-//         //                     return `<div value="1" id='table-request-div'>Both</div>`
-//         //                 } else {
-//         //                     if(full.driverNum <= 0){
-//         //                         return `<div value="0" id='table-request-div'>Vehicle Only</div>`
-//         //                     }
-//         //                     if(full.needVehicle <= 0){
-//         //                         return `<div value="-1" id='table-request-div'>TO Only</div>`
-//         //                     }
-//         //                 }
-//         //             } 
-//         //         },
-//         //         { 
-//         //             title: 'Resource', 
-//         //             data: 'vehicleType', 
-//         //             sortable: false ,
-//         //             defaultContent: '' 
-//         //         },
-//         //         { 
-//         //             class: 'dataTable-executionTime',
-//         //             title: 'Execution Time', 
-//         //             data: 'endDate', 
-//         //             sortable: true ,
-//         //             defaultContent: '',
-//         //             render: function (data, type, full, meta) {
-//         //                 if(full.startDate && full.endDate){
-//         //                     return `
-//         //                     <div style="margin:0 auto;text-align: left">
-//         //                         <div>${ full.startDate ? moment(full.startDate).format('DD/MM/YYYY HH:mm') : '' } to</div>
-//         //                         <div>${ full.endDate ? moment(full.endDate).format('DD/MM/YYYY HH:mm') : '' }</div>
-//         //                     </div>
-//         //                     ` 
-//         //                 } else {
-//         //                     if(full.startDate) return `<div>${ full.startDate ? moment(full.startDate).format('DD/MM/YYYY HH:mm') : '' }</div>`
-//         //                     if(full.endDate) return `<div>${ full.endDate ? moment(full.endDate).format('DD/MM/YYYY HH:mm') : '' }</div>`
-//         //                 }
-//         //             } 
-//         //         }, 
-//         //         {
-//         //             title: "Location",
-//         //             data: "reportingLocation", 
-//         //             sortable: false ,
-//         //             defaultContent: '' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 if (!data) {
-//         //                     return "";
-//         //                 }
-//         //                 return `<div>
-//         //                     <div class="color-pickup-destination">${ full.reportingLocation }</div>
-//         //                     <div class="icon-down-div"><span class="iconfont icon-down"></span></div>
-//         //                     <div class="color-dropoff-destination">${ full.destination }</div>
-//         //                 </div>`
-//         //             }
-//         //         },
-//         //         { 
-//         //             title: 'POC Details', 
-//         //             data: 'poc', 
-//         //             sortable: false ,
-//         //             defaultContent: '',
-//         //             render: function (data, type, full, meta) {
-//         //                 return `<div>${ data ? data : '' }</div>
-//         //                     <div>${ full.mobileNumber ? full.mobileNumber : '' }</div>`
-//         //             } 
-//         //         },
-//         //         { 
-//         //             title: 'Driver Details', 
-//         //             data: 'driverName', 
-//         //             sortable: false , 
-//         //             defaultContent: '' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 let nric = full.nric ? full.nric : '';
-//         //                 let newNric;
-//         //                 if(nric) newNric = nric.slice((nric.length - 4), nric.length);
-//         //                 if(data){
-//         //                     return `<div>${ data ? data : '' }(${ newNric ? newNric : nric })</div>
-//         //                     <div>${ full.contactNumber ? full.contactNumber : '' }</div>`
-//         //                 }
-//         //             }
-//         //         },
-//         //         { 
-//         //             title: 'Vehicle Details', 
-//         //             data: 'vehicleNumber', 
-//         //             sortable: false ,
-//         //             defaultContent: '' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 return `<div>${ data ? data : '' }</div>`
-//         //             }
-//         //         },
-//         //         { 
-//         //             title: 'Justification', 	
-//         //             data: 'cancelledCause', 
-//         //             sortable: false ,
-//         //             defaultContent: '-',
-//         //             render: function (data, type, full, meta) {
-//         //                 if (full.cancelledDateTime) {
-//         //                     return `
-//         //                     <div>
-//         //                         <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);">
-//         //                             ${ data ? data : '' }
-//         //                         </span><br>
-//         //                         <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ? full.amendedByUsername : '' }</label><br>
-//         //                         <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
-//         //                     </div>
-//         //                     `
-//         //                 } else {
-//         //                     return '-'
-//         //                 }
-//         //             }
-//         //         },
-//         //         { 
-//         //             title: 'Action', 
-//         //             data: 'vehicleType', 
-//         //             sortable: false,
-//         //             defaultContent: '' ,
-//         //             render: function (data, type, full, meta) {
-//         //                 let operationList = (full.operation).toUpperCase().split(',')
-
-//         //                 if(full.cancelledDateTime) {
-//         //                     // if (operationList.includes('CANCEL')) {
-//         //                         return `<div style="font-weight: bold;">${full.vehicleStatus ?  _.capitalize(full.vehicleStatus) : 'Cancelled' }</div>`
-//         //                     // }
-//         //                 } else {
-//         //                     if(full.driverId || full.vehicleNumber) {
-//         //                         if(full.checkResult) {
-//         //                             return `<div style="font-weight: bold;">${ _.capitalize(full.vehicleStatus) }</div>`
-//         //                         } else {
-//         //                             let html = `` 
-//         //                             if (operationList.includes('ASSIGN')) {
-//         //                                 html += ` <button type="button" class="btn-assigned custom-Reassign" onclick="showPersonDetailEventHandler(this, '${ userType }','${ userId }', '${ data }', '${ full.taskId }', '${ full.driverNum }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', 'mb', '${ full.startDate }', '${ full.endDate }', '${ full.purpose }', ${ full.id }, ${ full.unitId })">Re-Assign</button> `
-//         //                             }
-//         //                             if (operationList.includes('EDIT')) {
-//         //                                 html += ` <button type="button" class="btn-edit-task" onclick="editTaskByMb(${ full.id }, '${ full.taskId }', ${ full.unitId }, ${ full.driverNum }, this)">Edit</button> `
-//         //                             }
-
-//         //                             if (operationList.includes('CANCEL')) {
-//         //                                 html += ` <button type="button" class="btn-cancal" onclick="cancalTaskByMb(${ full.id })">Cancel</button> `
-//         //                             }
-                                    
-//         //                             return html
-//         //                         }
-//         //                     } else {
-//         //                         let html = ``
-//         //                         if (operationList.includes('ASSIGN')) {
-//         //                             html += ` <button type="button" class="btn-assigned custom-assign" onclick="showPersonDetailEventHandler(this, '${ userType }','${ userId }', '${ data }', '${ full.taskId }', '${ full.driverNum }', '${ currentArea }', '${ currentNode }', '${full.hub}', '${full.node}', 'mb', '${ full.startDate }', '${ full.endDate }', '${ full.purpose }', ${ full.id }, ${ full.unitId })">Assign</button> `
-//         //                         }
-//         //                         if (operationList.includes('EDIT')) {
-//         //                             html += ` <button type="button" class="btn-edit-task" onclick="editTaskByMb(${ full.id }, '${ full.taskId }', ${ full.unitId }, ${ full.driverNum }, this)">Edit</button> `
-//         //                         }
-//         //                         if (operationList.includes('CANCEL')) {
-//         //                             html += ` <button type="button" class="btn-cancal" onclick="cancalTaskByMb(${ full.id })">Cancel</button> `
-//         //                         }
-                              
-//         //                         return html                                
-//         //                     }
-//         //                 }
-//         //             }
-//         //         }
-//         //     ],
-//         //     fnCreatedRow: async function(nRow, aData, iDataIndex) {
-//         //         if(!aData.checkResult && !aData.cancelledDateTime) {
-//         //             if(unitList) {
-//         //                 let __unitList = unitList.map(unit => { return unit.unit });
-//         //                 __unitList = Array.from(new Set(__unitList));
-//         //                 let html = '<option></option>'
-//         //                 for (let __unit of __unitList) {
-//         //                     if(__unit) html += `<option name="unitType" value="${ __unit }">${ __unit }</option>`
-//         //                 }
-//         //                 if (aData.checkResult) {
-//         //                     $('td:eq(1)', nRow).empty()
-//         //                     $('td:eq(1)', nRow).prepend(`<label>${aData.hub}</label>`);
-//         //                 } else {
-//         //                     $('td:eq(1)', nRow).empty()
-//         //                     $('td:eq(1)', nRow).prepend(`<select onchange="hubChangeEventHandler(this)" class="form-select" id="task-assign-hub">${html}</select>`);
-//         //                 }
-                        
-//         //                 $('#task-assign-hub', nRow).off('change').on('change' , function () {
-//         //                     let selectedUnit = $('#task-assign-hub', nRow).val();
-//         //                     $("#task-assign-node", nRow).remove();
-//         //                     let html2 = `<option></option>`;
-//         //                     for (let unit of unitList) {
-//         //                         if (unit.unit === selectedUnit) {
-//         //                             html2 += `<option name="subUnitType" id="mtAdmin-subUnitType" data-id="${ unit.id }" value="${ unit.subUnit ? unit.subUnit : '-'}">${ unit.subUnit ? unit.subUnit : '-'}</option>`
-//         //                         }
-//         //                     }
-                            
-//         //                     if (aData.checkResult) {
-//         //                         $('td:eq(2)', nRow).empty()
-//         //                         $('td:eq(2)', nRow).prepend(`<label>${aData.node}</label>`);
-//         //                     } else {
-//         //                         $('td:eq(2)', nRow).empty()
-//         //                         $('td:eq(2)', nRow).prepend(`<select  onchange="nodeChangeEventHandlerByMb(this, '${ aData.id }',${ aData.driverId ? `'${ aData.driverId }'` : null }, ${ aData.vehicleNumber ? `'${ aData.vehicleNumber }'` : null }, '${ $('#task-assign-hub', nRow).val() }')" class="form-select" id="task-assign-node">${html2}</select>`);
-//         //                     }
-//         //                 })
-//         //                 $('#task-assign-hub', nRow).val(aData.hub)
-//         //                 $('#task-assign-hub', nRow).trigger('change')
-//         //                 $('#task-assign-node', nRow).val(aData.node ? aData.node : '-')
-//         //                 if(Cookies.get('userType') == 'UNIT') {
-//         //                     $('td:eq(1)', nRow).empty()
-//         //                     $('td:eq(1)', nRow).prepend(`<label>${aData.hub}</label>`);
-//         //                 }
-//         //                 if(Cookies.get('node')) {
-//         //                     $('td:eq(2)', nRow).empty()
-//         //                     $('td:eq(2)', nRow).prepend(`<label>${aData.node}</label>`);
-//         //                 }
-//         //             }
-//         //         }
-//         //     }
-//         // });
-//     }
-
-//     let globalUnitList = await getHubNode(userType, userId);
-//     initDataTable(globalUnitList)
-// }
 
 window.reassignApproveSystemTask = async function (dataType, taskId, optType) {
     $.confirm({

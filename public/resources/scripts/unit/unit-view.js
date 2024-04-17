@@ -90,8 +90,6 @@ window.initUnitDeleteEventHandler = async function (unitId) {
         let result = await deleteUnit(unitId)
         if (result) {
             initUnitViewPage();
-        } else {
-            
         }
     })
     

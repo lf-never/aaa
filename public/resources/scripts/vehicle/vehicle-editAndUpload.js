@@ -114,7 +114,7 @@ const initVehicleEditPage = async function(action, vehicleNo) {
                 $(".vehicle-node-select").empty();
                 for (let unit of unitList) {
                     if (unit.unit === selectedUnit) {
-                        let html2 = `<option></option>`;
+                        let html2;
                         if(unit.subUnit){
                             html2 = `<option name="subUnitType" value="${ unit.subUnit }">${ unit.subUnit }</option>`
                         }else{
@@ -156,7 +156,7 @@ const initVehicleEditPage = async function(action, vehicleNo) {
 
             let respMessage = res.respMessage ? res.respMessage : res.data.respMessage;
             let vehicleDetail = respMessage.currentVehicle;
-            //$("input[name='vehicleType']").val(vehicleDetail.vehicleType);
+            
 
             $("select[name='vehicleHub']").val(vehicleDetail.unit);
             $('.vehicle-hub-select').trigger('change');
@@ -313,7 +313,7 @@ const confirmUploadFile = async function() {
     let formData = new FormData();
     formData.append("file", currentUploadVehicleFile);
 
-    let file = formData.get('file');
+    
 
     
     axios.post("/upload/uploadVehicle ", formData, { "Content-Type": "multipart/form-data;"}).then(function (response) {

@@ -82,9 +82,7 @@ const initOdd = function() {
                         return data;
                     }
                 } else {
-                    // if (Cookies.get('userType') == 'CUSTOMER') {
-                    //     return '-';
-                    // }
+                    
                     return `<button class="btn btn-sm" style="border: solid 1px grey;" onclick="recfify('${full.id}')" title="Rectify">Rectify</button>`
                 }
                 

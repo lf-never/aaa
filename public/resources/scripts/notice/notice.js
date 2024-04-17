@@ -47,17 +47,7 @@ window.NoticeUtil = {
             } else {
                 backgroundColor = "#FF727B"
             }
-            // if (type == "Info") {
-            //     typeImage = "/images/notice/info.svg"
-            // } else if (type == "Update") {
-            //     typeImage = "/images/notice/update.svg"
-            // } else if (type == "Scheduled") {
-            //     typeImage = "/images/notice/Scheduled.svg"
-            // } else if (type == "Urgent") {
-            //     typeImage = "/images/notice/Urgent.svg"
-            // } else {
-            //     typeImage = "/images/notice/alert.svg"
-            // }
+            
             let datetime = moment(row.startDateTime).format("DD/MM/YYYY HH:mm A")
             return noticeTemp.replaceAll("{{title}}", title)
                 .replace("{{typeImage}}", typeImage)

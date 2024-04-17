@@ -65,18 +65,7 @@ const initSelectedAndPage = async function () {
 }
 
 
-// const filterOnChange = async function () {
-//     let area = Cookies.get('selectedUnit')
-//     let unitId = ''
-//     let node = Cookies.get('selectedSubUnit')
-//     let status = $("#task-status option:selected").val() ? $("#task-status option:selected").val() : '';
-//     let vehicleType = $("#indent-filter select[name='indent-vehicle-type'] option:selected").val() ? $("#indent-filter select[name='indent-vehicle-type'] option:selected").val() : '';
-//     let tripNo =  $("#indent-filter input[name='trip-no']").val() ? $("#indent-filter input[name='trip-no']").val() : '';
-//     let execution_date = $("#indent-filter input[name='execution-date']").val() ? $("#indent-filter input[name='execution-date']").val() : '';
-//     let created_date = $("#indent-filter input[name='created-date']").val() ? $("#indent-filter input[name='created-date']").val() : '';
-    
-//     initDetail(node, unitId, status, vehicleType, tripNo, execution_date, created_date, area);
-// }
+
 
 const clickSelect = function (){
     $("#indent-filter input[name='trip-no']").on("keyup",
@@ -166,7 +155,7 @@ const initDetail = async function () {
                     let created_date = $("#indent-filter input[name='created-date']").val() ? $("#indent-filter input[name='created-date']").val() : '';
 
                     let option = { 
-                        "node": node ? node : '',
+                        "node": node ?? '',
                         "unit": unitId, 
                         "status": status, 
                         "vehicleType": vehicleType, 

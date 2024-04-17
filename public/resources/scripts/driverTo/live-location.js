@@ -3,14 +3,7 @@ let interval_showLiveLocation = null;
 let liveLocationMarkerList = [];
 $(() => {
     $('.view-live-location').off('click').on('click', function () {
-        // let driverIdList = [];
-        // $('.saf-driver-table').find('.show-live-location').each(function() {
-        // 	if ($(this).prop('checked')) {
-        // 		// console.log($(this).data('driverid'))
-        // 		driverIdList.push($(this).data('driverid'))
-        // 	}
-        // })
-        // showLiveLocationHandler(driverIdList);
+
     })
     
 })
@@ -27,7 +20,7 @@ const showLiveLocationHandler = function (driverId) {
         },
         onOpen: function () {
             let driverIdList = []
-            if ($('.saf-driver-table') && $('.saf-driver-table').length) {
+            if ($('.saf-driver-table')?.length) {
                 console.log('Current page is driver view')
                 driverIdList = [ driverId ]
             } else {
@@ -116,10 +109,7 @@ const showLiveLocation = async function (driverIdList) {
 
     
     let driverLiveLocationList = await getVehicleLiveLocationList(driverIdList)
-    // let vehicleLiveLocationList = [ 
-    // 	{ id: 1, name: 'V11111', lat: Number.parseFloat(`1.3${ Math.floor(Math.random() * 100) }`), lng: Number.parseFloat(`103.7${ Math.floor(Math.random() * 100) }`) }, 
-    // 	{ id: 2, name: 'V22222', lat: Number.parseFloat(`1.3${ Math.floor(Math.random() * 100) }`), lng: Number.parseFloat(`103.7${ Math.floor(Math.random() * 100) }`) }
-    // ]
+
     let markerOption = {
         iconUrl: '../scripts/driverTo/icons/driver.svg',
         iconSize: [ 32, 32 ]

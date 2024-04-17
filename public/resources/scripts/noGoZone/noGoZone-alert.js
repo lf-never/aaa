@@ -6,12 +6,11 @@ let noGoZoneInterval = null;
 
 $(function () {
 
-    // MapUtil.initMapServerHandler();
+    
     initNoGoZone();
     noGoZoneInterval = setInterval(initNoGoZone, 10 * 60 * 1000)
 
-    // initAlert();
-    // setInterval(initAlert, 5000)
+    
 
 })
 
@@ -79,9 +78,7 @@ const initNoGoZone = async function () {
             MapUtil.bindPopup(polygon, html, { offset: [ 0, 300 ] })
             noGoZonePolygonList.push(polygon)
         }
-    } else {
-
-    }
+    } 
 }
 
 const clearNoGoZone = function () {
@@ -120,61 +117,3 @@ const checkTime = function (zone, date) {
     return false
 }
 
-// const initAlert = async function () {
-//     const getAlertList = async function () {
-//         return await axios.post('/zone/getNoGoZoneAlertList')
-//             .then(function (res) {
-//                 if (res.respCode === 1) {
-//                     return res.respMessage
-//                 } else {
-//                     console.error(res.respMessage)
-//                     return []
-//                 }
-//             });
-//     }
-//     const generateAlertHtml = function (alert) {
-//         let html = ``
-//         if (alert) {
-//             let action = ``
-//             if (alert.type == 'in') {
-//                 action = `get into`
-//             } else {
-//                 action = `get out from`
-//             }
-
-//             if (alert.driverId) {
-//                 let unitInfo = ``
-//                 if (alert.groupName) {
-//                     unitInfo = alert.groupName
-//                 } else {
-//                     unitInfo = `${ alert.hub }/${ alert.node }`
-//                 }
-
-//                 // Mobile
-//                 html = `
-//                     <div class="alert-item">
-//                         ${ alert.driverName } from ${ unitInfo } with ${ alert.vehicleNo } ${ action } zone ${ alert.zoneName } at ${ moment(alert.occTime).format('HH:mm:ss MM/DD/YYYY') }
-//                     </div>
-//                 `
-//             } else {
-//                 // OBD
-//                 let vehicle = ``
-//                 if (alert.vehicleNo) {
-//                     vehicle = `(${ alert.vehicleNo })`
-//                 } 
-//                 html = `
-//                     <div class="alert-item">
-//                         ${ alert.deviceId } ${ vehicle } ${ action } zone ${ alert.zoneName } at ${ moment(alert.occTime).format('HH:mm:ss MM/DD/YYYY') }
-//                     </div>
-//                 `
-//             }
-//         }
-//         return html
-//     }
-
-//     let noGoZoneAlertList = await getAlertList();
-//     $('.alert-list').empty();
-//     for (let alert of noGoZoneAlertList) {
-//         $('.alert-list').append(generateAlertHtml(alert))
-//     }
-// }

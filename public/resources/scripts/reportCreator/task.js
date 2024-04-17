@@ -104,21 +104,7 @@ const addDataGroupEventHandler = async function (val, name) {
     generateListHtml();
     dragEventHandler();
 
-    // if (name == "hubNode") {
-    //     await initHubNodeFilter()
-    // } else if (name == 'taskStatus') {
-    //     initTaskStatusFilter()
-    // } else if (name == 'executionTime') {
-    //     InitReportDateRange('#executionTimeFilter')
-    // } else if (name == 'actualTime') {
-    //     InitReportDateRange('#actualTimeFilter')
-    // } else if (name == 'purpose') {
-    //     initPurposeFilter()
-    // } else if (name == 'supportedUnit') {
-    //     initSupportedUnit()
-    // } else if (name == 'vehicle') {
-    //     initVehicleTypeFilter()
-    // }
+    
 }
 
 const removeSelectedReportDataGroup = function (val) {
@@ -130,40 +116,19 @@ const removeSelectedReportDataGroup = function (val) {
 }
 const removeReportDataGroup = function (e) {
     let val = $(e).closest('li').attr("data-val")
-    let name = $(e).closest('li').attr("data-name")
+
     $(e).closest('li').remove()
-    // removeReportDataFilter(name)
+
     $('.report-data-group input[type="checkbox"]').each(function () {
         if ($(this).val() == val) {
             $(this).prop('checked', false)
         }
     })
 }
-// const removeReportDataFilter = function (name) {
-//     $('.div-report-data-filter div').each(function () {
-//         if ($(this).attr('data-filter') == name) {
-//             $(this).remove()
-//         }
-//     })
-// }
+
 
 const initHubNodeFilter = async function () {
-    /*await axios.post("/getUnitList").then(res => {
-        //console.log(res)
-        let datas = res.respMessage;
-
-        let data = []
-        for (let item of datas) {
-            data.push({ id: item.id, name: `${item.unit}/${item.subUnit ? item.subUnit : "-"}` })
-        }
-
-        hubNodeFilterSelect = $("#hubNodeFilter").multipleSelect({
-            dataKey: 'id',
-            dataName: 'name',
-            searchable: false,
-            data: data,
-        });
-    })*/
+    
     await axios.post("/unit/getHubNodeList").then(res => {
         //console.log(res)
         hubNodeList = res.data ? res.data.respMessage : res.respMessage;
@@ -263,30 +228,9 @@ const createTaskReport = async function () {
     let reportGroupSelectionTitle = []
     $('.drag-list > li').each(function () {
         let val = $(this).attr("data-val")
-        let name = $(this).attr("data-name")
-        //console.log(name + " -- " + val)
+       
         reportGroupSelectionTitle.push(val)
-        // if (name == "hubNode") {
-        //     //let val = hubNodeFilterSelect.getValue()
-        //     filter['hub'] = $("#hubFilter").val()
-        //     filter['node'] = $("#nodeFilter").val()
-        // } else if (name == 'taskStatus') {
-        //     let val = taskStatusFilterSelect.getValue()
-        //     filter[name] = val
-        // } else if (name == 'driver') {
-        //     filter['driverName'] = $(`#driverNameFilter`).val()
-        //     filter['mobileNumber'] = $(`#mobileNumberFilter`).val()
-        // } else if (name == 'vehicle') {
-        //     filter['vehicleType'] = $(`#vehicleTypeFilter`).val()
-        //     filter['vehicleNumber'] = $(`#vehicleNumberFilter`).val()
-        // }
-        // else if (name == 'odometer') {
-        //     filter['startOdometer'] = $(`#startOdometerFilter`).val()
-        //     filter['endOdometer'] = $(`#endOdometerFilter`).val()
-        // }
-        // else {
-        //     filter[name] = $(`#${name}Filter`).val()
-        // }
+        
     })
 
     

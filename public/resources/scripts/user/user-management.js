@@ -5,9 +5,7 @@ let pwdRegExp = new RegExp(/^(?=.*[A-Z])(?=.*\d)(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,
 
 let currentPageTab = 'Approved';
 let userTable = null;
-let userType = Cookies.get('userType');
-let userHub = Cookies.get('hub');
-let userNode = Cookies.get('node');
+
 
 $(function () {
 
@@ -15,9 +13,6 @@ $(function () {
         $('.resource-menu>div:first .user-select-none').trigger('click')
     }, 10)
     
-    let userType = Cookies.get('userType');
-    let userHub = Cookies.get('hub');
-    let userNode = Cookies.get('node');
 
     if(window.location.pathname == '/user/registerUser' || window.location.pathname == '/login') return
     $('.tab-label').off('click').on('click', function () {
@@ -95,7 +90,7 @@ $(function () {
         } else {
             option.find('.img-noShowNRIC').show()
             option.find('.img-showNRIC').hide()
-            option.find('.view-user-nric').text(nric ? nric : '-')
+            option.find('.view-user-nric').text(nric ?? '-')
         }
     }
     userTable = $('.user-table').on('order.dt', function () {
@@ -159,8 +154,8 @@ $(function () {
                 "data": "cvRoleName", "title": "CV Account", sortable: false,
                 "render": function (data, type, full, meta) {
                     if (data) {
-                        return `<div>${data ? data : '-'}</div>
-                        <div><span style="color: #6c757d; font-size: 0.75rem;">${full.cvGroupName ? full.cvGroupName : '-'}</span></div>`
+                        return `<div>${data ?? '-'}</div>
+                        <div><span style="color: #6c757d; font-size: 0.75rem;">${full.cvGroupName ?? '-'}</span></div>`
                     } else {
                         return '-';
                     }
@@ -170,8 +165,8 @@ $(function () {
                 "data": "mvUserType", "title": "MV Account", sortable: false,
                 "render": function (data, type, full, meta) {
                     if (data) {
-                        return `<div>${data ? data : '-'}</div>
-                        <div><span style="color: #6c757d; font-size: 0.75rem;">${full.mvRoleName ? full.mvRoleName : '-'}</span></div>`
+                        return `<div>${data ?? '-'}</div>
+                        <div><span style="color: #6c757d; font-size: 0.75rem;">${full.mvRoleName ?? '-'}</span></div>`
                     } else {
                         return '-';
                     }
@@ -206,7 +201,7 @@ $(function () {
                 "title": "Request Info",
                 sortable: true,
                 "render": function (data, type, full, meta) {
-                    return `<div>${data ? data : '-'}</div>
+                    return `<div>${data ?? '-'}</div>
                     <div><span style="color: #6c757d; font-size: 0.75rem;">${full.createdAt ? moment(full.createdAt).format("DD/MM/YYYY, HH:mm") : '-'}</span></div>`
                 }
             },
@@ -215,7 +210,7 @@ $(function () {
                 "title": "Approved Info",
                 sortable: false,
                 "render": function (data, type, full, meta) {
-                    return `<div>${data ? data : '-'}</div>
+                    return `<div>${data ?? '-'}</div>
                     <div><span style="color: #6c757d; font-size: 0.75rem;">${full.approveDate ? moment(full.approveDate).format("DD/MM/YYYY, HH:mm") : '-'}</span></div>`;
                 }
             },
@@ -430,8 +425,7 @@ window.approveUserRegistApply = async function(id, userName, optType) {
 };
 
 window.resetUserPasswordByManager = async function(id, userName) {
-    // $("#change-user-password-modal").modal('show');
-    // $("#currentChangePasswordUserBaseId").val(id);
+    
     $.confirm({
         title: 'Info',
         content: `Are you sure to reset user[${userName}] password?`,

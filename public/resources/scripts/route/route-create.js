@@ -31,7 +31,6 @@ export async function initRouteCreatePage (route, type = 1) {
                 routePoints.forEach(function (routePoint) {
                     if (routePoint !== '') {
                         let point = routePoint.split(':');
-                        // line.push([point[0], point[1]]);
                         line.push({ lat: point[0], lng: point[1] });
                     }
                 });
@@ -39,7 +38,7 @@ export async function initRouteCreatePage (route, type = 1) {
             }
             
             if (message.indexOf('-1') >= 0) {
-                // alert('Route cannot be found!');
+               
                 customPopupInfo('Attention', 'Route cannot be found!');
                 return;
             }
@@ -65,7 +64,7 @@ export async function initRouteCreatePage (route, type = 1) {
         
                         // leave \t @2020/11/23 15:26
                         let distance = Number.parseInt(routeInfo.replace(/d\d=/g, ''));
-                        // let baseTimeNeed = distance / (60 / 60 * 1000);
+                        
                         let baseTimeNeed = distance / 1000;
                         if (necessaryWaypoint) {
                             timeList.push(Math.ceil(baseTimeNeed) + 30); // default add 30min
@@ -73,14 +72,7 @@ export async function initRouteCreatePage (route, type = 1) {
                             timeList.push(Math.ceil(baseTimeNeed));
                         }
                     }
-                    else if (routeInfo.startsWith('t')) {
-                        // if (necessaryWP >= 2) {
-                        //     // if have at least two wayPoints that type is 1, add 30 mins
-                        //     timeList.push(Number.parseInt(routeInfo.replace(/t\d=/g, '')) + 30); // default add 30min
-                        // } else {
-                        //     timeList.push(Number.parseInt(routeInfo.replace(/t\d=/g, '')));
-                        // }
-                    }
+                   
                     else if (routeInfo.startsWith('r')) {
                         lineList.push(transStrToLine(routeInfo.replace(/r\d=/g, '').split(';')))
                     }
@@ -184,10 +176,7 @@ export async function initRouteCreatePage (route, type = 1) {
                 $(this).parent().find('.select-point :first-child').html(' -- Select an option -- ');
             });
             $('.drag-area').on('mousemove', function (e) {
-                // let point = $(this).parent().attr('point');
-                // console.log(e.pageY);
-                // console.log($('.way-points li:last').css('top').replace(/px/g, ''));
-                // $('.way-points li:last').css('top', e.pageY + 'px');
+                
             });
     
             $('.div-waypoint-list').scrollTop($('.waypoint-list').height());
@@ -247,7 +236,7 @@ export async function initRouteCreatePage (route, type = 1) {
         const checkInputPoint = function (position) {
             if (position.indexOf(',') > 1) {
                 let positionArray = position.split(',')
-                if (/^[0-9]+.?[0-9]*$/.test(positionArray[0]) && /^[0-9]+.?[0-9]*$/.test(positionArray[1])) {
+                if (/^\d+.?\d*$/.test(positionArray[0]) && /^\d+.?\d*$/.test(positionArray[1])) {
                     return true;
                 }
             }
@@ -295,7 +284,7 @@ export async function initRouteCreatePage (route, type = 1) {
                 $('.position-names').append(html);
                 $('.position-names-item').off('click').on('click', async function () {
                     let selectedPosition = $(this).html();
-                    // console.log('selected position is : %s', selectedPosition);
+                    
                     $(positionEL).val(selectedPosition);
                     $('.position-names').html('').hide();
                     // init position gps
@@ -340,7 +329,7 @@ export async function initRouteCreatePage (route, type = 1) {
 
     // When open UI or update waypoint
     waypointList = await initWaypointList();
-    currentRoute = route ? route : {};
+    currentRoute = route ?? {};
     initSocketEvent(type);
     if (currentRoute.routeNo) {
         await initRouteEditPage(route);
@@ -377,15 +366,15 @@ const askForRouteLine = function () {
     function checkWayPoint(array) {
         let lastUserId;
         let currentUserId;
-        for(let i=0;i<array.length;i++){
+        for(let item of array){
             if(lastUserId){
-                currentUserId = array[i].userId;
+                currentUserId = item.userId;
                 if(currentUserId==0 && lastUserId != 0){
                     return false;
                 }
             }else{
-                lastUserId = array[i].userId;
-                currentUserId = array[i].userId;
+                lastUserId = item.userId;
+                currentUserId = item.userId;
             }
         }
         return true;

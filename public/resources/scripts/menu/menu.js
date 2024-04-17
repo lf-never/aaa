@@ -152,14 +152,12 @@ const initAppMenusEventHandler = function () {
             //     window.open(`/event`);
             //     break; 
             case 'app-dashboard':
-                // window.location = `/hq`;
-                // window.open(`/hq`);
+                
                 $('title').html('Task Assign')
                 $('.iframe-page').attr('src', '/hq')
                 break; 
             case 'app-resources':
-                // window.location = `/resources`;
-                // window.open(`/resources`);
+
                 $('title').html('Resources')
                 $('.iframe-page').attr('src', '/resources')
                 break; 
@@ -178,7 +176,7 @@ const initAppMenusEventHandler = function () {
                 window.open(`/MV-Dashboard`);
                 break;
             case 'app-dashboardCategory':
-                // window.location = `/dashboard`;
+                
                 window.open(`/opsSummary`);
                 // $('.iframe-page').attr('src', '/dashboard')
                 break;
@@ -212,12 +210,12 @@ const initAppMenusEventHandler = function () {
             case 'app-menu-utilisation-report':
                 $('title').html('Utilisation Report')
                 $('.iframe-page').attr('src', '/utilisationReport')
-                //window.open(`/utilisationReport`);
+                
                 break;
             case 'app-menu-licensing-report':
                 $('title').html('Licensing Report')
                 $('.iframe-page').attr('src', '/licensingReport')
-                //window.open(`/utilisationReport`);
+                
                 break;
             case 'app-menu-arb-report':
                 $('title').html('ARB Creator')

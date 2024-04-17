@@ -143,10 +143,7 @@
         topOffset = dragElement.offsetTop - parseInt($dragElement.css('margin-top')) -
           parseInt($dragElement.css('padding-top'));
 
-        if (useHeight > baseHeight) {
-            // let scrollHeight = parseInt($('.way-points').height()) - parseInt($('.div-way-point-list').height());
-            // topOffset -= scrollHeight;
-        }
+        
 
         // put cloned element just above the dragged element
         // and move it instead of original element
@@ -174,7 +171,7 @@
 
         $(dragElement).parent().trigger(dragEndEvent, [$(dragElement)]);
 
-        // dragEndEventHandler();
+       
       }
 
       touchDown = false;

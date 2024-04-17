@@ -29,7 +29,7 @@ window.showDriverNric = function(el, nric, type) {
     } else {
         option.find('.img-noShowNRIC').show()
         option.find('.img-showNRIC').hide()
-        option.find('.view-driver-nric').text(nric ? nric : '-')
+        option.find('.view-driver-nric').text(nric ?? '-')
     }
 }
 
@@ -237,21 +237,21 @@ const initDriverTable = function () {
                 "class": "text-center", 
                 "orderable": false,
                 "render": function (data, type, full, meta) {
-                    // if (data == 'waitcheck') data = 'Pending'
-                    // data = _.capitalize(data)
-                    let statusColor = driverStatusColor.find(item => item.status == data)
-                    if (!statusColor) {
+
+                    let statusColor;
+                    if(!driverStatusColor.find(item => item.status == data)) {
                         statusColor = 'orange';
                     } else {
-                        statusColor = statusColor.color;
+                        statusColor = driverStatusColor.find(item => item.status == data).color;
                     }
+  
                     return `
                         <div class="div-table">
                             <div class="div-table-cell">
                                 <div class="circle-status">
                                     <div class="div-table">
                                         <div class="div-table-cell">
-                                            <div class="div-circle driver-statusColor" style="background-color: ${statusColor};"></div>
+                                            <div class="div-circle driver-statusColor" style="background-color: ${ statusColor };"></div>
                                         </div>
                                         <div class="div-table-cell">
                                             <label class="driver-status">${ data }</label>
@@ -307,12 +307,9 @@ const initDriverTable = function () {
         ]
     });
 
-    // if(Cookies.get('userType').toUpperCase() == 'CUSTOMER') {
-    //     table.column(3).visible(false);
-    // } else {
         table.column(1).visible(false);
         table.column(4).visible(false);
-    // }
+
 }
 
 const GetFilerParameters = function () {
@@ -380,12 +377,7 @@ const InitFilter = async function () {
     const initPermitTypeData = function () {
         axios.post("/driver/getPermitTypeList").then(async res => {
             let permitTypeList = res.data.respMessage;
-            // $("#permitType").empty();
-            // let optionHtml = `<option value="">Permit Type: All</option>`;
-            // for (let item of permitTypeList) {
-            //     optionHtml += `<option value="${item.permitType}" >Permit Type: ${item.permitType}</option>`
-            // }
-            // $("#permitType").append(optionHtml);
+
 
             let data = []
             for (let item of permitTypeList) {
@@ -417,12 +409,7 @@ const InitFilter = async function () {
             }
 
             let driverStatusList = res.data.respMessage;
-            // $("#driverStatus").empty();
-            // let optionHtml = `<option value="">Status: All</option>`;
-            // for (let item in driverStatusList) {
-            //     optionHtml += `<option value="${ driverStatusList[item] }" >Status: ${ driverStatusList[item] }</option>`
-            // }
-            // $("#driverStatus").append(optionHtml);
+
 
             let data = []
             for (let item in driverStatusList) {
@@ -462,20 +449,15 @@ const InitFilter = async function () {
 
 const FilterOnChange = async function () {
     await table.ajax.reload(null, true)
-    // setTimeout(() => {
-    //     $('.saf-driver-table tbody tr').before('<div style="width: 100%;height: 10px;"/>');
-    // }, 1000);
 }
 
 const redirectToDriverInfo = function (driverId, currentStatus) {
     if (currentStatus != 'Deactivate') { 
-        //window.location.href = `../driver/driver-info`;
         window.open("/driver/driver-info?driverId="+driverId);
     }
 }
 
 const viewMileageWarnIndent = function (driverId) {
-    //window.location.href = `../driver/driver-info`;
     window.open("/driver/driver-info?defaultTab=indents&driverId="+driverId);
 }
 
@@ -484,9 +466,6 @@ window.reloadHtml = function () {
 }
 
 const initClickAddDriver = function () {
-    // if(Cookies.get('userType').toUpperCase() == 'CUSTOMER') {
-    //     $('.driver-add-div').hide();
-    // }
     $('.driver-add-btn').on('click', function () {
         $('#view-driver-edit').modal('show');
         $('#view-driver-edit .modal-title').text('New Driver');

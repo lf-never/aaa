@@ -140,8 +140,6 @@ export async function initNoGoZoneCreatePage (zone) {
 
         // draw polygon
         redrawZone()
-    } else {
-        
     }
 }
 

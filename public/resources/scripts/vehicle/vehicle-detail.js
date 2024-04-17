@@ -19,7 +19,6 @@ $(() => {
 
     initBasicProfileHandler();
     layui.use('element', function(){
-        let chatTabElement = layui.element;
         $('.user-select-none').on('click', function(title) {
             let layId = this.getAttribute('lay-id');
             if (layId === 'page-1') {
@@ -36,7 +35,7 @@ $(() => {
         });
     });
 
-    //fixme: layui tab default load tab1;
+    // layui tab default load tab1;
     setTimeout(function () {
         let defaultTab = getParams("defaultTab");
         if (defaultTab && defaultTab == 'indents') {
@@ -120,23 +119,18 @@ const initBasicProfileHandler = async function () {
             if (Cookies.get('userType') == 'HQ') {
                 $('.edit-driver').show();
                 $('.hoto-info').hide()
+            } else if (vehicleDetail.hotoId) {
+                $('.edit-content-btn-div').hide();
+                $('.hoto-info').show()
+                $('.loan-info').hide()
+            } else if (vehicleDetail.loanId) {
+                $('.edit-content-btn-div').hide();
+                $('.hoto-info').hide()
+                $('.loan-info').show()
             } else {
-                if (vehicleDetail.hotoId) {
-                    $('.edit-content-btn-div').hide();
-                    $('.hoto-info').show()
-                    $('.loan-info').hide()
-                } else if (vehicleDetail.loanId) {
-                    $('.edit-content-btn-div').hide();
-                    $('.hoto-info').hide()
-                    $('.loan-info').show()
-                } else {
-                    $('.edit-content-btn-div').show();
-                    $('.loan-info').hide()
-                    $('.hoto-info').hide()
-                }
-                // if(Cookies.get('userType').toLowerCase() == 'customer') { 
-                //     $('.edit-content-btn-div').hide();
-                // }
+                $('.edit-content-btn-div').show();
+                $('.loan-info').hide()
+                $('.hoto-info').hide()
             }
         })
     };

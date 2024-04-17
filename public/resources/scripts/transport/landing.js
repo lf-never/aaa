@@ -1,4 +1,4 @@
-var label1 = {
+let label1 = {
     formatter: '{b}\n{c}',
     position: 'outer',
     alignTo: 'labelLine',
@@ -7,23 +7,23 @@ var label1 = {
     fontSize: 14,
     color: '#000000',
 };
-var label2 = JSON.parse(JSON.stringify(label1));
+let label2 = JSON.parse(JSON.stringify(label1));
 label2.formatter = '{b}\n{d}%';
 
-var labelLine = {
+let labelLine = {
     length: 25,
     smooth: true,
 };
-var labelLayout = {
+let labelLayout = {
     align: 'center',
     verticalAlign: 'middle'
 };
-var itemStyle = {
+let itemStyle = {
     borderColor: '#fff',
     borderWidth: 1
 };
 
-var option1 = {
+let option1 = {
     color: [ '#F0BB6F', '#CFA9DE','#ADD768'],
     title: {
         text: '98%',
@@ -50,7 +50,7 @@ var option1 = {
     ]
 };
 
-var option2 = {
+let option2 = {
     color: ['#BCC6F9','#9CDEC2','#E66E70'],
     tooltip: {
         formatter: '{b} : {c} ({d}%)'
@@ -74,7 +74,7 @@ var option2 = {
 };
 
 const InitContractManagementCharts = function (option, chartsId) {
-    var myChart = echarts.init(document.getElementById(chartsId), null, {height: 200});
+    let myChart = echarts.init(document.getElementById(chartsId), null, {height: 200});
     if (option && typeof option === 'object') {
         myChart.setOption(option);
     }
