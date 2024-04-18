@@ -324,7 +324,7 @@ module.exports = {
             if (httpResult) {
                 if (httpResult.code == 0) {
                     log.info(httpResult.message)
-                    if (httpResult.data && httpResult.data.codeResult == 0) {
+                    if (httpResult.data?.codeResult == 0) {
                         let resultJson = JSON.parse(httpResult.data.codeString);
                         newKeyOptRecord.dataJson = httpResult.data.codeString;
                         
@@ -341,21 +341,7 @@ module.exports = {
                         let pageInfo = resultJson.GetNextInfo;
                         let keyList = resultJson.AvaiKeyList;
                         //check qr code is valid 1 minutes.
-                        if (transactDateTime) {
-                            transactDateTime = moment(transactDateTime, 'YYYY-MM-DD HH:mm:ss');
-                            let tempTime = transactDateTime.add(1, 'minute');
-                            if (currentTime.isAfter(tempTime)) {
-                                return res.json(utils.response(0, 'The QRCode has expired.'));
-                            }
-                        } else {
-                            return res.json(utils.response(0, 'Wrong QRCode: TransactDateTime field is empty!'));
-                        }
-                        if (!pageInfo) {
-                            return res.json(utils.response(0, 'Wrong QRCode: GetNextInfo field is empty!'));
-                        }
-                        if (keyList == undefined) {
-                            return res.json(utils.response(0, 'Wrong QRCode: AvaiKeyList field is empty!'));
-                        }
+                        checkResultData(transactDateTime, pageInfo, keyList);
 
                         newKeyOptRecord.optPage = pageInfo.trim();
                         let siteKeyDetail = [];
@@ -374,12 +360,29 @@ module.exports = {
                     // Failed
                     return res.json(utils.response(0, `Parse QRQRCodecode failed:${httpResult.message}`));
                 }
-            } else {
-                return res.json(utils.response(0, 'Parse QRCode failed, please try again.'));
             }
+            return res.json(utils.response(0, 'Parse QRCode failed, please try again.'));
         } catch (error) {
             log.error('(parseQRCode)', error)
             return res.json(utils.response(0, `Parse QRCode failed: ${error.message ? error.message : 'System error'}`));
+        }
+
+        function checkResultData(transactDateTime, pageInfo, keyList) {
+            if (transactDateTime) {
+                transactDateTime = moment(transactDateTime, 'YYYY-MM-DD HH:mm:ss');
+                let tempTime = transactDateTime.add(1, 'minute');
+                if (currentTime.isAfter(tempTime)) {
+                    throw new Error('The QRCode has expired.');
+                }
+            } else {
+                throw new Error('Wrong QRCode: TransactDateTime field is empty!');
+            }
+            if (!pageInfo) {
+                throw new Error('Wrong QRCode: GetNextInfo field is empty!');
+            }
+            if (keyList == undefined) {
+                throw new Error('Wrong QRCode: AvaiKeyList field is empty!');
+            }
         }
     },
 
@@ -403,22 +406,26 @@ module.exports = {
         try {
             let userId = req.cookies.userId;
             let { driverId, vehicleNo, siteId, slotId, optDatetime, optType, reason } = req.body;
-            if (!siteId) {
-                return res.json(utils.response(0, 'Please select a key press box!'));
+
+            async function checkParams(vehicleNo, siteId) {
+                if (!siteId) {
+                    return res.json(utils.response(0, 'Please select a key press box!'));
+                }
+    
+                
+                if (vehicleNo) {
+                    let vehicle = await Vehicle.findByPk(vehicleNo);
+                    if (vehicle) {
+                        return vehicle.keyTagId;
+                    }
+                    if (!vehicleKeyTagId) {
+                        throw new Error('Vehicle key tag id not config!');
+                    }
+                }
+                throw new Error(`Please select vehicle!`);
             }
 
-            let vehicleKeyTagId = '';
-            if (vehicleNo) {
-                let vehicle = await Vehicle.findByPk(vehicleNo);
-                if (vehicle) {
-                    vehicleKeyTagId = vehicle.keyTagId;
-                }
-                if (!vehicleKeyTagId) {
-                    return res.json(utils.response(0, 'Vehicle key tag id not config!'));
-                }
-            } else {
-                return res.json(utils.response(0, `Please select vehicle!`));
-            }
+            let vehicleKeyTagId = await checkParams(vehicleNo, siteId);
 
             let keyOptRecord = {
                 siteId: siteId,
@@ -457,17 +464,14 @@ module.exports = {
                         await VehicleKeyOptRecord.create(keyOptRecord);
 
                         return res.json(utils.response(1, { codeBase64: httpResult.data.codeBase64, codeString: httpResult.data.codeString, qrdatajson }));
-                    } else {
-                        return res.json(utils.response(0, `Generate Keypress Transaction QRCode failed:${httpResult.codeString}`));
                     }
-                } else {
-                    // Failed
-                    log.warn(httpResult.message)
-                    return res.json(utils.response(0, `Generate Keypress Transaction QRCode failed:${httpResult.message}`));
+                    return res.json(utils.response(0, `Generate Keypress Transaction QRCode failed:${httpResult.codeString}`));
                 }
-            } else {
-                return res.json(utils.response(0, 'Generate Keypress Transaction QRCode failed, please try again later.'));
+                // Failed
+                log.warn(httpResult.message)
+                return res.json(utils.response(0, `Generate Keypress Transaction QRCode failed:${httpResult.message}`));
             }
+            return res.json(utils.response(0, 'Generate Keypress Transaction QRCode failed, please try again later.'));
         } catch (error) {
             log.error('(generateKeypressTransactionQRCode)', error)
             return res.json(utils.response(0, `Generate Keypress Transaction QRCode failed: ${error.message ? error.message : 'System error'}, please try again later.`));
@@ -486,48 +490,49 @@ module.exports = {
                 if (files.constructor !== Array) files.file = [files.file];
 
                 let fileDataList = [];
-                for (let file of files.file) {
-                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                        let list = xlsx.parse(file.path, { cellDates: true });
-                        list = list[0].data; 
-                        let sheetData = await parseKeyOptRecordData(list);
-                        fileDataList = fileDataList.concat(sheetData);
-                    } else {
-                        return res.json(utils.response(0, 'Please Use Excel file!'));
+                async function buildFileData() {
+                    for (let file of files.file) {
+                        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                            let list = xlsx.parse(file.path, { cellDates: true });
+                            list = list[0].data; 
+                            let sheetData = await parseKeyOptRecordData(list);
+                            fileDataList = fileDataList.concat(sheetData);
+                        } else {
+                            return res.json(utils.response(0, 'Please Use Excel file!'));
+                        }
                     }
                 }
+                await buildFileData();
                 if (fileDataList.length > 0) {
                     let keyOptRecordList = await checkKeyOptRecord(fileDataList);
-                    let errorDataList = keyOptRecordList.filter(item => item.errorMsg != null && item.errorMsg !='');
+                    let errorDataList = keyOptRecordList.filter(item => utils.stringNotEmpty(item.errorMsg));
                     let errorMsgHtml = ``;
-                    if (errorDataList && errorDataList.length > 0) {
-                        for (let errorData of errorDataList) {
-                            errorMsgHtml += `Row ${errorData.row}: ${errorData.errorMsg}<br/>`
-                        }
-                        return res.json(utils.response(0, errorMsgHtml));
-                    } else  {
-                        for (let keyOptRecord of keyOptRecordList) {
-                            let errorMsg = await saveKeyOptRecord({ 
-                                driverId: keyOptRecord.driverId, 
-                                vehicleNo: keyOptRecord.vehicleNumber, 
-                                siteId: keyOptRecord.siteId, 
-                                slotId: keyOptRecord.keySlotNo, 
-                                optType: keyOptRecord.optType, 
-                                optDatetime: keyOptRecord.transactDateTime, 
-                                userId: req.cookies.userId,
-                                reason: keyOptRecord.reason
-                            }, 'batch');
-                            if (errorMsg) {
-                                log.warn(`UploadKeyOptRecord: vehicle[${keyOptRecord.vehicleNumber}], box[${keyOptRecord.boxName}] fail: ${errorMsg}`);
-                            }
-                        }
-
-                        return res.json(utils.response(1, 'Success'));
+                    for (let errorData of errorDataList) {
+                        errorMsgHtml += `Row ${errorData.row}: ${errorData.errorMsg}<br/>`
                     }
-                } else {
-                    return res.json(utils.response(0, 'File is empty!'));
-                }
+                    if (errorMsgHtml) {
+                        return res.json(utils.response(0, errorMsgHtml));
+                    }
+                    
+                    for (let keyOptRecord of keyOptRecordList) {
+                        let errorMsg = await saveKeyOptRecord({ 
+                            driverId: keyOptRecord.driverId, 
+                            vehicleNo: keyOptRecord.vehicleNumber, 
+                            siteId: keyOptRecord.siteId, 
+                            slotId: keyOptRecord.keySlotNo, 
+                            optType: keyOptRecord.optType, 
+                            optDatetime: keyOptRecord.transactDateTime, 
+                            userId: req.cookies.userId,
+                            reason: keyOptRecord.reason
+                        }, 'batch');
+                        if (errorMsg) {
+                            log.warn(`UploadKeyOptRecord: vehicle[${keyOptRecord.vehicleNumber}], box[${keyOptRecord.boxName}] fail: ${errorMsg}`);
+                        }
+                    }
 
+                    return res.json(utils.response(1, 'Success'));
+                }
+                return res.json(utils.response(0, 'File is empty!'));
             });
         } catch (error) {
             log.error('(uploadDriver) : ', error);
@@ -647,35 +652,39 @@ module.exports = {
                 where kd.keyTagId IS NOT NULL AND ks.unitId IS NOT NULL
             `;
             let params = [];
-            if (siteId) {
-                baseSQL += ` and kd.siteId = ? `;
-                params.push(siteId);
-            }
-
-            if (selectedHub) {
-                baseSQL += ` and un.unit =? `;
-                params.push(selectedHub);
-            } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-                let hqUnitIds = await unitService.getUnitPermissionIdList(user);
-                if (hqUnitIds && hqUnitIds.length > 0) {
-                    baseSQL += ` and un.id in(${hqUnitIds}) `;
-                } else {
-                    return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
+            async function buildQuerySql() {
+                if (siteId) {
+                    baseSQL += ` and kd.siteId = ? `;
+                    params.push(siteId);
+                }
+    
+                if (selectedHub) {
+                    baseSQL += ` and un.unit =? `;
+                    params.push(selectedHub);
+                } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+                    let hqUnitIds = await unitService.getUnitPermissionIdList(user);
+                    if (hqUnitIds && hqUnitIds.length > 0) {
+                        baseSQL += ` and un.id in(${hqUnitIds}) `;
+                    } else {
+                        return res.json({respMessage: [], recordsFiltered: 0, recordsTotal: 0});
+                    }
+                }
+                if (selectedNode) {
+                    if (selectedNode == '-') {
+                        baseSQL += ` and un.subUnit is null `;
+                    } else {
+                        baseSQL += ` and un.subUnit = ? `;
+                        params.push(selectedNode);
+                    }
+                }
+    
+                if (searchParam) {
+                    let likeParams = sequelizeObj.escape("%" + searchParam + "%");
+                    baseSQL += ` and (ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + `) `;
                 }
             }
-            if (selectedNode) {
-                if (selectedNode == '-') {
-                    baseSQL += ` and un.subUnit is null `;
-                } else {
-                    baseSQL += ` and un.subUnit = ? `;
-                    params.push(selectedNode);
-                }
-            }
 
-            if (searchParam) {
-                let likeParams = sequelizeObj.escape("%" + searchParam + "%");
-                baseSQL += ` and (ks.boxName like `+ likeParams + ` or ks.locationName like `+ likeParams + `) `;
-            }
+            await buildQuerySql();
 
             baseSQL += ` GROUP BY ks.unitId, veh.vehicleType `;
             let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
@@ -716,19 +725,7 @@ const parseKeyOptRecordData = async function(excelDataList) {
         if (rowIndex == 0) {
             continue;
         }
-        let columnIndex = 0;
-        let keyOptRecord = {errorMsg: ''};
-
-        keyOptRecord.row = rowIndex + 1;
-        keyOptRecord.driverNric = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.driverName = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.boxName = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.vehicleNumber = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.keySlotNo = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.optType = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.transactDate = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.transactTime = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
-        keyOptRecord.reason = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        let keyOptRecord = buildData(rowdata);
 
         // is all empty row
         if(!keyOptRecord.driverNric && !keyOptRecord.driverName && !keyOptRecord.boxName && !keyOptRecord.vehicleNumber && !keyOptRecord.keySlotNo
@@ -740,6 +737,23 @@ const parseKeyOptRecordData = async function(excelDataList) {
     }
 
     return resultList;
+
+    function buildData(rowdata) {
+        let columnIndex = 0;
+        let keyOptRecord = { errorMsg: '' };
+
+        keyOptRecord.row = rowIndex + 1;
+        keyOptRecord.driverNric = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.driverName = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.boxName = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.vehicleNumber = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.keySlotNo = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.optType = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.transactDate = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.transactTime = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        keyOptRecord.reason = rowdata[columnIndex] ? (rowdata[columnIndex] + '').trim() : ''; columnIndex++;
+        return keyOptRecord;
+    }
 }
 
 const checkKeyOptRecord = async function (keyOptRecordList) {
@@ -928,39 +942,14 @@ const caclSiteSlotInfo = async function (siteId) {
                             siteKeyData = logDataJson.AvaiKeyList;
 
                             let vaildKeyArray = siteKeyData ? siteKeyData.split(",") : [];
-                            if (vaildKeyArray && vaildKeyArray.length > 0) {
+                            if (vaildKeyArray?.length > 0) {
                                 for (let temp of vaildKeyArray) {
-                                    let keyInfoArray = temp ? temp.split(":") : [];
-                                    if (keyInfoArray && keyInfoArray.length > 1) {
-                                        let slotId = keyInfoArray[0].trim();
-                                        let tagId = keyInfoArray[1].trim();
-                                        
-                                        let boxDetailInfo = {
-                                            siteId: siteId,
-                                            slotId: slotId,
-                                            keyTagId: tagId,
-                                            updatedAt: currentTime,
-                                        }
-                                        //update or save key detail info
-                                        let boxDetailInfoOld = await KeypressBoxDetailInfo.findOne({where : {siteId, slotId}});
-                                        if (boxDetailInfoOld) {
-                                            await KeypressBoxDetailInfo.update({keyTagId: null, status: 'out', updatedAt: currentTime}, {where: {keyTagId: tagId}});
-                                            await KeypressBoxDetailInfo.update({keyTagId: tagId, status: 'in', updatedAt: currentTime}, {where : {siteId, slotId}});
-                                        } else {
-                                            await KeypressBoxDetailInfo.update({keyTagId: null, status: 'out', updatedAt: currentTime}, {where: {keyTagId: tagId}});
-                                            await KeypressBoxDetailInfo.create(boxDetailInfo);
-                                        }
-
-                                        boxDetailInfo.pageNum = pageNum;
-                                        syncSlotDataList.push(boxDetailInfo);
-                                        inSlotIds.push(slotId);
-                                    }
+                                    await processKeyData(temp, pageNum);
                                 }
                             }
 
                             await VehicleKeyOptRecord.update({optStatus: 'Completed'}, {where: {id: temp.id}});
                         }
-
                     }
 
                     //update others site slot to out and clear keyTagId.
@@ -972,6 +961,34 @@ const caclSiteSlotInfo = async function (siteId) {
                         await sequelizeObj.query(`
                             UPDATE keypress_box_detail_info SET status='out', keyTagId = NULL where siteId=?
                         `, { type: QueryTypes.UPDATE, replacements: [siteId]});
+                    }
+
+                    async function processKeyData(temp, pageNum) {
+                        let keyInfoArray = temp ? temp.split(":") : [];
+                        if (keyInfoArray?.length > 1) {
+                            let slotId = keyInfoArray[0].trim();
+                            let tagId = keyInfoArray[1].trim();
+
+                            let boxDetailInfo = {
+                                siteId: siteId,
+                                slotId: slotId,
+                                keyTagId: tagId,
+                                updatedAt: currentTime,
+                            };
+                            //update or save key detail info
+                            let boxDetailInfoOld = await KeypressBoxDetailInfo.findOne({ where: { siteId, slotId } });
+                            if (boxDetailInfoOld) {
+                                await KeypressBoxDetailInfo.update({ keyTagId: null, status: 'out', updatedAt: currentTime }, { where: { keyTagId: tagId } });
+                                await KeypressBoxDetailInfo.update({ keyTagId: tagId, status: 'in', updatedAt: currentTime }, { where: { siteId, slotId } });
+                            } else {
+                                await KeypressBoxDetailInfo.update({ keyTagId: null, status: 'out', updatedAt: currentTime }, { where: { keyTagId: tagId } });
+                                await KeypressBoxDetailInfo.create(boxDetailInfo);
+                            }
+
+                            boxDetailInfo.pageNum = pageNum;
+                            syncSlotDataList.push(boxDetailInfo);
+                            inSlotIds.push(slotId);
+                        }
                     }
                 }).catch(error => {
                     throw error

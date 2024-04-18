@@ -634,10 +634,7 @@ module.exports.login = async function (req, res) {
         })
         let userBase = null;
         if (user) {
-            if (user.userType === CONTENT.USER_TYPE.MOBILE) {
-                log.warn(`Mobile user can not login here!`);
-                return res.json(utils.response(0, 'Mobile user can not login here!'));
-            } else if (!user.enable) {
+            if (user.enable == 0) {
                 log.warn(`User ${ username } is disabled to login now!`);
                 return res.json(utils.response(0, `Account [${ username }] is deactivated, please contact administrator.`));
             }
@@ -1148,21 +1145,13 @@ module.exports.enableUserBase = async function (req, res) {
             }, { transaction: mvTransaction });
         }
 
-        if (cvTransaction) {
-            await cvTransaction.commit();
-        }
-        if (mvTransaction) {
-            await mvTransaction.commit();
-        }
+        await cvTransaction?.commit();
+        await mvTransaction?.commit();
         return res.json(utils.response(1, 'success'));
     } catch (error) {
         log.error(error)
-        if (cvTransaction) {
-            await cvTransaction.rollback();
-        }
-        if (mvTransaction) {
-            await mvTransaction.rollback();
-        }
+        await cvTransaction?.commit();
+        await mvTransaction?.commit();
         return res.json(utils.response(0, `${enable == 'enable' ? 'Enable' : 'Disable'} User fail!`,));
     }
 }
@@ -1211,8 +1200,6 @@ module.exports.approveUserRegistApply = async function (req, res) {
             let unitId = null;
             if (accountUser.mvUserType != CONTENT.USER_TYPE.HQ) {
                 unitId = accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId;
-            } else {
-                //update unit userId
             }
             let mvUser = await User.create({
                 username: accountUser.loginName,
@@ -1490,7 +1477,7 @@ module.exports.deleteUnit = async function (req, res) {
                 businessId: unitId,
                 optType: 'Delete Unit',
                 beforeData: `${ JSON.stringify([oldUnit]) }`,
-                afterData: `${ JSON.stringify([newUnit ? newUnit : '']) }`,
+                afterData: `${ JSON.stringify([newUnit || '']) }`,
                 optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                 remarks: 'delete unit.'
             })
@@ -1595,25 +1582,21 @@ module.exports.getMobileUserList = async function (req, res) {
         let operation = pageList.map(item => item.action).join(',')
 
         let userList = []
+        let option = {};
+        option.enable = 1;
+        if (username) {
+            option.username = { [Op.substring]: username };
+        }
         if (user.userType === CONTENT.USER_TYPE.ADMINISTRATOR) {
-            let option = { enable: 1 }
             option.userType = [ CONTENT.USER_TYPE.MOBILE ];
-            if (username) {
-                option.username = { [Op.substring]: username };
-            }
             userList = await User.findAll({ where: option })
+        } else if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
+            option.groupId = user.unitId;
+            userList = await getMobileUserList(option)
         } else {
             let unitIdList = await unitService.getUnitPermissionIdList(user);
-
-            if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
-                let option = { groupId: user.unitId, enable: 1 }
-                if (username) option.username = username
-                userList = await getMobileUserList(option)
-            } else {
-                let option = { unitId: unitIdList, enable: 1 }
-                if (username) option.username = username
-                userList = await getMobileUserList(option)
-            }
+            option.unitId = unitIdList;
+            userList = await getMobileUserList(option)
         }
 
         for (let user of userList) {
@@ -1626,6 +1609,72 @@ module.exports.getMobileUserList = async function (req, res) {
     }
 };
 
+let buildGetCVMVUserListParams = async function(loginUser, searchCondition, cvRoleId, mvUserType) {
+    let replacements = []
+    let limitCondition = [];
+    if (loginUser.userType == CONTENT.USER_TYPE.CUSTOMER) {
+        limitCondition.push(` ub.mvGroupId='${loginUser.unitId}' `);
+    } else if (loginUser.userType == CONTENT.USER_TYPE.UNIT) {
+        let userUnitId = loginUser.unitId;
+        let userUnit = await Unit.findByPk(userUnitId);
+        if (userUnit) {
+            if (userUnit.unit) {
+                limitCondition.push(` ub.mvHub=? `)
+                replacements.push(userUnit.unit)
+            }
+            if (userUnit.subUnit) {
+                limitCondition.push(` ub.mvNode=? `)
+                replacements.push(userUnit.subUnit)
+            }
+        }
+    }
+    
+    if (cvRoleId) {
+        limitCondition.push(` ub.cvRole = ? `)
+        replacements.push(cvRoleId)
+    }
+    if (mvUserType) {
+        limitCondition.push(` ub.mvUserType = ? `)
+        replacements.push(mvUserType)
+    }
+    if (searchCondition) {
+        limitCondition.push(` (
+            ub.fullName LIKE ?
+            OR ub.mvHub like ?
+            OR ub.mvNode LIKE ?
+            OR ub.cvGroupName LIKE ? 
+            OR ub.mvGroupName LIKE ?
+            OR ub.mvRoleName LIKE ?
+        ) `)
+        replacements.push('%'+ searchCondition +'%')
+        replacements.push('%'+ searchCondition +'%')
+        replacements.push('%'+ searchCondition +'%')
+        replacements.push('%'+ searchCondition +'%')
+        replacements.push('%'+ searchCondition +'%')
+        replacements.push('%'+ searchCondition +'%')
+    }
+
+    return {limitCondition, replacements};
+}
+
+let buildGetCVMVUserListOrderSql = async function(tabPage, orderField, orderType) {
+    if (orderField) {
+        if (orderField == 'unit') {
+            return ` order by ub.mvHub ` + orderType + ', ' + 'ub.mvNode ' + orderType;
+        } else if (orderField == 'createdAt') {
+            return ` order by ub.createdAt ` + orderType;
+        } else if (orderField == 'ord') {
+            return ` order by ub.createdAt ` + orderType;
+        } else {
+            return ` order by ub.fullName ` + orderType;
+        }
+    } else if (tabPage == 'Pending Approval' || tabPage == 'Rejected') {
+        return ` ORDER BY ub.createdAt DESC `
+    } else {
+        return ` ORDER BY ub.approveDate DESC `
+    }
+}
+
 module.exports.getCVMVUserList = async function (req, res) {
     try {
         let userId = req.cookies.userId;
@@ -1634,14 +1683,6 @@ module.exports.getCVMVUserList = async function (req, res) {
         if (!loginUser) {
             throw new Error(`UserId ${ userId } does not exist.`)
         }
-
-        let pageList = await getUserPageList(userId, 'User Management', 'View User')
-        let pageList2 = await userService.getUserPageList(userId, 'View Full NRIC')
-        if(pageList2.length > 0) {
-            pageList2[0].action = 'View Full NRIC'
-            pageList = pageList.concat(pageList2);
-        }
-        let operation = pageList.map(item => item.action).join(',')
 
         let baseSql = `
             select * from (
@@ -1676,211 +1717,61 @@ module.exports.getCVMVUserList = async function (req, res) {
                 where ub.mvUserType is not null
             ) ub where 1=1 
         `;
-        
-        let replacements = []
-        let limitCondition = [];
-        if (loginUser.userType == CONTENT.USER_TYPE.CUSTOMER) {
-            limitCondition.push(` ub.mvGroupId='${loginUser.unitId}' `);
-        } else if (loginUser.userType == CONTENT.USER_TYPE.UNIT) {
-            let userUnitId = loginUser.unitId;
-            let userUnit = await Unit.findByPk(userUnitId);
-            if (userUnit) {
-                if (userUnit.unit) {
-                    limitCondition.push(` ub.mvHub=? `)
-                    replacements.push(userUnit.unit)
-                }
-                if (userUnit.subUnit) {
-                    limitCondition.push(` ub.mvNode=? `)
-                    replacements.push(userUnit.subUnit)
-                }
-            }
-        }
-        
-        if (cvRoleId) {
-            limitCondition.push(` ub.cvRole = ? `)
-            replacements.push(cvRoleId)
-        }
-        if (mvUserType) {
-            limitCondition.push(` ub.mvUserType = ? `)
-            replacements.push(mvUserType)
-        }
-        if (searchCondition) {
-            limitCondition.push(` (
-                ub.fullName LIKE ?
-                OR ub.mvHub like ?
-                OR ub.mvNode LIKE ?
-                OR ub.cvGroupName LIKE ? 
-                OR ub.mvGroupName LIKE ?
-                OR ub.mvRoleName LIKE ?
-            ) `)
-            replacements.push('%'+ searchCondition +'%')
-            replacements.push('%'+ searchCondition +'%')
-            replacements.push('%'+ searchCondition +'%')
-            replacements.push('%'+ searchCondition +'%')
-            replacements.push('%'+ searchCondition +'%')
-            replacements.push('%'+ searchCondition +'%')
-        }
+
+        let paramsObj = await buildGetCVMVUserListParams(loginUser, searchCondition, cvRoleId, mvUserType);
 
         let pendingApproveNumSql = baseCountSql;
-        if (limitCondition.length) {
-            pendingApproveNumSql += ' AND ' +  limitCondition.join(' AND ');
+        if (paramsObj.limitCondition.length) {
+            pendingApproveNumSql += ' AND ' +  paramsObj.limitCondition.join(' AND ');
         }
 
         if (tabPage == 'Approved') {
-            limitCondition.push(` ub.mvUserId is not null `)
-            limitCondition.push(` ub.status != 'Disabled' `)
+            paramsObj.limitCondition.push(` ub.mvUserId is not null `)
+            paramsObj.limitCondition.push(` ub.status != 'Disabled' `)
         } else if (tabPage == 'Pending Approval') {
-            limitCondition.push(` ub.mvUserId is null `)
-            limitCondition.push(` ub.rejectBy is null `)
+            paramsObj.limitCondition.push(` ub.mvUserId is null `)
+            paramsObj.limitCondition.push(` ub.rejectBy is null `)
         } else if (tabPage == 'Rejected') {
-            limitCondition.push(` ub.rejectBy is not null `)
+            paramsObj.limitCondition.push(` ub.rejectBy is not null `)
         } else {
-            limitCondition.push(` ub.status=? `)
-            replacements.push(tabPage)
-        }
-        if (limitCondition.length) {
-            baseSql += ' AND ' + limitCondition.join(' AND ');
-            baseCountSql += ' AND ' +  limitCondition.join(' AND ');
+            paramsObj.limitCondition.push(` ub.status=? `)
+            paramsObj.replacements.push(tabPage)
         }
 
-        let totalList = await sequelizeObj.query(baseCountSql, { type: QueryTypes.SELECT, replacements: replacements });
+        if (paramsObj.limitCondition.length) {
+            baseSql += ' AND ' + paramsObj.limitCondition.join(' AND ');
+            baseCountSql += ' AND ' +  paramsObj.limitCondition.join(' AND ');
+        }
+
+        let totalList = await sequelizeObj.query(baseCountSql, { type: QueryTypes.SELECT, replacements: paramsObj.replacements });
         let pendingApprovalNum = 0;
         if (tabPage == 'Pending Approval') {
             pendingApprovalNum = totalList[0].count;
         } else {
             pendingApproveNumSql += ` and ub.mvUserId is null and ub.rejectBy is null `;
-            let pendingApproveTotalList = await sequelizeObj.query(pendingApproveNumSql, { type: QueryTypes.SELECT, replacements: replacements });
+            let pendingApproveTotalList = await sequelizeObj.query(pendingApproveNumSql, { type: QueryTypes.SELECT, replacements: paramsObj.replacements });
             pendingApprovalNum = pendingApproveTotalList[0].count;
         }
         
-        if (orderField) {
-            if (orderField == 'unit') {
-                baseSql += ` order by ub.mvHub ` + orderType + ', ' + 'ub.mvNode' + orderType;
-            } else if (orderField == 'createdAt') {
-                baseSql += ` order by ub.createdAt` + orderType;
-            } else if (orderField == 'ord') {
-                baseSql += ` order by ub.createdAt ` + orderType;
-            } else {
-                baseSql += ` order by ub.fullName ` + orderType;
-            }
-        } else if (tabPage == 'Pending Approval' || tabPage == 'Rejected') {
-            baseSql += ` ORDER BY ub.createdAt DESC `
-        } else {
-            baseSql += ` ORDER BY ub.approveDate DESC `
-        }
+        baseSql += await buildGetCVMVUserListOrderSql(tabPage, orderField, orderType);
         
         baseSql += ` limit ?, ?`;
-        replacements.push(...[Number(pageNum), Number(pageLength)])
-        let userList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: replacements });
+        paramsObj.replacements.push(...[Number(pageNum), Number(pageLength)])
+        let userList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: paramsObj.replacements });
 
         let sysRoleList = await sequelizeSystemObj.query(`
            select * from role 
         `, { type: QueryTypes.SELECT });
+        let pageList = await getUserPageList(userId, 'User Management', 'View User')
+        let pageList2 = await userService.getUserPageList(userId, 'View Full NRIC')
+        if(pageList2.length > 0) {
+            pageList2[0].action = 'View Full NRIC'
+            pageList = pageList.concat(pageList2);
+        }
+        let operation = pageList.map(item => item.action).join(',')
 
         for (let user of userList) {
-            user.operation = operation
-            let userRoleObj = sysRoleList.find(item => item.id == user.cvRole);
-            if (userRoleObj) {
-                user.cvRoleName = userRoleObj.roleName;
-            }
-
-            user.canApprove = 1;
-            // while role is "God Mode" / "CO" / "B2/S3" only HQ can approve
-            if (JUST_HQ_APPROVE_ROLE && JUST_HQ_APPROVE_ROLE.includes(user.mvRoleName) && loginUser.userType !== CONTENT.USER_TYPE.HQ) {
-                user.canApprove = -1;
-            }
-            if (operation && operation.indexOf('Approval Status') == -1) {
-                user.canApprove = -1;
-            }
-
-            if(user.nric) {
-                user.nric = utils.decodeAESCode(user.nric);
-            }
-            //set lastLoginTime
-            let cvUserId = user.cvUserId;
-            let mvUserId = user.mvUserId;
-            let lastLoginAt = '';
-            let lastLoginTime = '';
-            let cvLastLoginTime = '';
-            let mvLastLoginTime = '';
-            let cvActiveTime = null;
-            let mvActiveTime = null;
-            let cvCreatedAt = null;
-            let mvCreatedAt = null;
-            let cvPwdErrorTimes = 0;
-            let mvPwdErrorTimes = 0;
-            if (cvUserId) {
-                let cvUser = await _SysUser.USER.findByPk(cvUserId);
-                if (cvUser) {
-                    cvLastLoginTime = cvUser.lastLoginTime;
-                    cvActiveTime = cvUser.activeTime;
-                    cvPwdErrorTimes = cvUser.times;
-                    cvCreatedAt = cvUser.createdAt;
-                }
-            }
-            if (mvUserId) {
-                let mvUser = await User.findByPk(mvUserId);
-                if (mvUser) {
-                    mvLastLoginTime = mvUser.lastLoginTime;
-                    mvActiveTime = mvUser.unLockTime;
-                    mvPwdErrorTimes = mvUser.pwdErrorTimes;
-                    mvCreatedAt = mvUser.createdAt;
-                }
-            }
-            if (cvLastLoginTime && mvLastLoginTime) {
-                if (moment(cvLastLoginTime).isBefore(moment(mvLastLoginTime))) {
-                    lastLoginAt = 'MV';
-                    lastLoginTime = mvLastLoginTime;
-                } else {
-                    lastLoginAt = 'CV';
-                    lastLoginTime = cvLastLoginTime;
-                }
-            } else {
-                if (cvLastLoginTime) {
-                    lastLoginAt = 'CV';
-                    lastLoginTime = cvLastLoginTime;
-                }
-                if (mvLastLoginTime) {
-                    lastLoginAt = 'MV';
-                    lastLoginTime = mvLastLoginTime;
-                }
-            }
-            user.lastLoginAt = lastLoginAt;
-            user.lastLoginTime = lastLoginTime;
-
-            if (tabPage == 'Approved') {
-                //calc user status
-                if (cvPwdErrorTimes >= 3 || mvPwdErrorTimes >= 3) {
-                    user.status = 'Lock Out';
-                    user.lockOutDesc = 'Password input error exceeds 3 times.';
-                    continue;
-                } else {
-                    if (cvCreatedAt) {
-                        let userStatus = utils.CheckUserStatus(cvActiveTime, cvLastLoginTime, cvCreatedAt);
-                        if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_90) {
-                            user.status = 'Lock Out';
-                            user.lockOutDesc = 'Last login date passed 90 days';
-                            continue;
-                        } else if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_180) {
-                            user.status = 'Lock Out';
-                            user.lockOutDesc = 'Last login date passed 180 days';
-                            continue;
-                        }
-                    }
-                    if (mvCreatedAt) {
-                        let userStatus = utils.CheckUserStatus(mvActiveTime, mvLastLoginTime, mvCreatedAt);
-                        if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_90) {
-                            user.status = 'Lock Out';
-                            user.lockOutDesc = 'Last login date passed 90 days';
-                            continue;
-                        } else if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_180) {
-                            user.status = 'Lock Out';
-                            user.lockOutDesc = 'Last login date passed 180 days';
-                            continue;
-                        }
-                    }
-                }
-            }
+            await buildUserCVMVInfo(loginUser, user, operation, sysRoleList, tabPage);
         }
         return res.json({ respMessage: userList, recordsFiltered: totalList[0].count, recordsTotal: totalList[0].count, pendingApprovalNum });
     } catch (err) {
@@ -1888,6 +1779,119 @@ module.exports.getCVMVUserList = async function (req, res) {
         return res.json(utils.response(0, 'Server error!'));
     }
 };
+
+const buildUserCVMVInfo = async function(loginUser, user, operation, sysRoleList, tabPage) {
+    user.operation = operation
+    let userRoleObj = sysRoleList.find(item => item.id == user.cvRole);
+    if (userRoleObj) {
+        user.cvRoleName = userRoleObj.roleName;
+    }
+
+    user.canApprove = 1;
+    // while role is "God Mode" / "CO" / "B2/S3" only HQ can approve
+    if (JUST_HQ_APPROVE_ROLE && JUST_HQ_APPROVE_ROLE.includes(user.mvRoleName) && loginUser.userType !== CONTENT.USER_TYPE.HQ) {
+        user.canApprove = -1;
+    }
+    if (operation && operation.indexOf('Approval Status') == -1) {
+        user.canApprove = -1;
+    }
+
+    if(user.nric) {
+        user.nric = utils.decodeAESCode(user.nric);
+    }
+    //set lastLoginTime
+    let cvUserId = user.cvUserId;
+    let mvUserId = user.mvUserId;
+    let lastLoginAt = '';
+    let lastLoginTime = '';
+    let cvLastLoginTime = '';
+    let mvLastLoginTime = '';
+    let cvActiveTime = null;
+    let mvActiveTime = null;
+    let cvCreatedAt = null;
+    let mvCreatedAt = null;
+    let cvPwdErrorTimes = 0;
+    let mvPwdErrorTimes = 0;
+    if (cvUserId) {
+        let cvUser = await _SysUser.USER.findByPk(cvUserId);
+        if (cvUser) {
+            cvLastLoginTime = cvUser.lastLoginTime;
+            cvActiveTime = cvUser.activeTime;
+            cvPwdErrorTimes = cvUser.times;
+            cvCreatedAt = cvUser.createdAt;
+        }
+    }
+    if (mvUserId) {
+        let mvUser = await User.findByPk(mvUserId);
+        if (mvUser) {
+            mvLastLoginTime = mvUser.lastLoginTime;
+            mvActiveTime = mvUser.unLockTime;
+            mvPwdErrorTimes = mvUser.pwdErrorTimes;
+            mvCreatedAt = mvUser.createdAt;
+        }
+    }
+    buildUserLastLoginInfo();
+
+    if (tabPage == 'Approved') {
+        //calc user status
+        buildApprovedUserStatusInfo();
+    }
+
+    function buildUserLastLoginInfo() {
+        if (cvLastLoginTime && mvLastLoginTime) {
+            if (moment(cvLastLoginTime).isBefore(moment(mvLastLoginTime))) {
+                lastLoginAt = 'MV';
+                lastLoginTime = mvLastLoginTime;
+            } else {
+                lastLoginAt = 'CV';
+                lastLoginTime = cvLastLoginTime;
+            }
+        } else {
+            if (cvLastLoginTime) {
+                lastLoginAt = 'CV';
+                lastLoginTime = cvLastLoginTime;
+            }
+            if (mvLastLoginTime) {
+                lastLoginAt = 'MV';
+                lastLoginTime = mvLastLoginTime;
+            }
+        }
+        user.lastLoginAt = lastLoginAt;
+        user.lastLoginTime = lastLoginTime;
+    }
+
+    function buildApprovedUserStatusInfo() {
+        if (cvPwdErrorTimes >= 3 || mvPwdErrorTimes >= 3) {
+            user.status = 'Lock Out';
+            user.lockOutDesc = 'Password input error exceeds 3 times.';
+        } else {
+            if (cvCreatedAt) {
+                let userStatus = utils.CheckUserStatus(cvActiveTime, cvLastLoginTime, cvCreatedAt);
+                if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_90) {
+                    user.status = 'Lock Out';
+                    user.lockOutDesc = 'Last login date passed 90 days';
+                    return;
+                } else if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_180) {
+                    user.status = 'Lock Out';
+                    user.lockOutDesc = 'Last login date passed 180 days';
+                    return;
+                }
+            }
+            if (mvCreatedAt) {
+                let userStatus = utils.CheckUserStatus(mvActiveTime, mvLastLoginTime, mvCreatedAt);
+                if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_90) {
+                    user.status = 'Lock Out';
+                    user.lockOutDesc = 'Last login date passed 90 days';
+                    return;
+                } else if (userStatus == CONTENT.USER_STATUS.LOCK_OUT_180) {
+                    user.status = 'Lock Out';
+                    user.lockOutDesc = 'Last login date passed 180 days';
+                    return;
+                }
+            }
+        }
+    }
+}
 
 module.exports.getMobileUser = async function (req, res) {
     try {
@@ -2642,7 +2646,10 @@ module.exports.getUserOptHistoryList = async function (req, res) {
             return res.json(utils.response(0, 'Login User does not exist.'));
         }
         let userBase = await UserBase.findByPk(userBaseId);
-        if (!userBase || !userBase.mvUserId) {
+        if (!userBase) {
+            return res.json(utils.response(0, 'User data error.'));
+        }
+        if (!userBase.mvUserId) {
             return res.json(utils.response(0, 'User data error.'));
         }
 

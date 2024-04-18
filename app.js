@@ -67,7 +67,6 @@ app.use(session({
 const options = {
     maxAge: 30 * 24 * 3600 * 1000,
 }
-// app.use(express.static(path.join(__dirname, 'node_modules'), options));
 app.use(express.static(path.join(__dirname, 'public', 'resources')));
 app.use(express.static(path.join(__dirname, 'public', 'statics'), options));
 app.use(cors({
@@ -162,7 +161,7 @@ app.use('/user', user);
 app.use('/reportCreator', reportCreator);
 
 app.use(function(req, res, next) {
-    if (req.url && req.url.startsWith('/map/Tiles')) {
+    if (req.url?.startsWith('/map/Tiles')) {
         log.warn(`Local map tile: ${req.url} does not exist!`);
         return res.json(utils.response(0, `Local map tile: ${req.url} does not exist!`)); 
     }

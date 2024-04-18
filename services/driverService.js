@@ -1012,7 +1012,7 @@ module.exports.getTODriverList = async function (req, res) {
             driver.operation = operationList
         }
 
-        driverList = decodeDriverNric(driverList, pageList2.length > 0);
+        driverList = await decodeDriverNric(driverList, pageList2.length > 0);
 
         return res.json({ respMessage: driverList, recordsFiltered: totalRecord, recordsTotal: totalRecord });
     } catch(error) {
@@ -1076,7 +1076,7 @@ const getDeactivateDriver = async function(req) {
         params.push(pageNum);
         params.push(pageLength);
         let driverInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
-        for(let item of driverInfoList){
+        for(let item of driverInfoList) {
             if(item.nric) {
                 if(item.nric.length > 9) item.nric = utils.decodeAESCode(item.nric);
             } 
@@ -1396,7 +1396,7 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
 
 
         let driverList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements: [ driverId ] });
-        let currentDriver = driverList && driverList.length > 0 ? driverList[0] : null;
+        let currentDriver = driverList.length > 0 ? driverList[0] : null;
         if (!currentDriver) {
             return res.json(utils.response(0, `DriverId ${ driverId } is not correct!`));
         }
@@ -1408,8 +1408,8 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
         `;
         let currentAssignedTasks = await sequelizeObj.query(currentAssignedDriverIdBaseSql, { type: QueryTypes.SELECT, replacements: [driverId] })
-        if (currentAssignedTasks && currentAssignedTasks.length > 0) {
-            if (currentDriver && currentDriver.currentStatus == 'Deployable') {
+        if (currentAssignedTasks.length > 0) {
+            if (currentDriver.currentStatus == 'Deployable') {
                 currentDriver.currentStatus = 'Deployed'
             }
         }
@@ -1428,7 +1428,7 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             ORDER BY assessmentType ASC LIMIT 1
         `, { type: QueryTypes.SELECT, replacements: [ driverId ] });
 
-        if (driverCategory?.length > 0) {
+        if (driverCategory.length > 0) {
             currentDriver.category = buildDriverCategoryType(driverCategory[0].assessmentType);
         }
 
@@ -1444,14 +1444,14 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             WHERE driverId = ? and demeritPoint > 0 and optAt IS NOT NULL and DATE_FORMAT(optAt, '%Y-%m-%d') >= '${oneYearsAgoDateStr}'
         `, { replacements: [driverId], type: QueryTypes.SELECT });
         let driverDemeritPoints = 0;
-        if (driverDemeritPointsObj?.length > 0) {
+        if (driverDemeritPointsObj.length > 0) {
             driverDemeritPoints = driverDemeritPointsObj[0].driverDemeritPoints;
         }
         currentDriver.demeritPoints = driverDemeritPoints;
         // 2023-08-29 Get decrypted is nric.
         let pageList2 = await userService.getUserPageList(req.cookies.userId, 'View Full NRIC')
         currentDriver.nricShow = pageList2.length > 0;
-        currentDriver = decodeDriverNric([currentDriver], currentDriver.nricShow)[0];
+        currentDriver = (await decodeDriverNric([currentDriver], currentDriver.nricShow))[0];
 
         return res.json(utils.response(1, currentDriver)); 
     } catch(error) {
@@ -1943,7 +1943,7 @@ module.exports.markAsUnavailable = async function (req, res) {
                     WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') = ?
                 `, { type: QueryTypes.SELECT, replacements: [driverId, startDate] })
                 let recordId = null;
-                if (exitLeaveReocrds && exitLeaveReocrds.length > 0) {
+                if (exitLeaveReocrds.length > 0) {
                     recordId = exitLeaveReocrds[0].id
                 }
 
@@ -1968,7 +1968,7 @@ module.exports.markAsUnavailable = async function (req, res) {
                     let tempEndDateStr = currentDateStr + ' 23:59:59';
                     
                     let recordId = null;
-                    if (exitLeaveReocrds && exitLeaveReocrds.length > 0) {
+                    if (exitLeaveReocrds.length > 0) {
                         let currentDateRecord = exitLeaveReocrds.find(item => item.startTime == currentDateStr);
                         recordId = currentDateRecord ? currentDateRecord.id : null;
                     }
@@ -2111,36 +2111,40 @@ module.exports.getDriverMileageStatInfo = async function (req, res) {
         for (let permitTypeMileage of driverMileageStatList) {
             permitTypes.add(permitTypeMileage.permitType);
         }
-        for (let permitType of permitTypes) {
-            let driverPermitTypeTaskMileage = driverPermitTaskMileageList.find(item => item.permitType == permitType);
-            let driverPermitTypeBaseMileage = driverMileageStatList.find(item => item.permitType == permitType);
-
-            let totalMileage = 0;
-            if (driverPermitTypeTaskMileage) {
-                totalMileage += driverPermitTypeTaskMileage.permitMileage ? driverPermitTypeTaskMileage.permitMileage : 0;
-            }
-            if (driverPermitTypeBaseMileage) {
-                totalMileage += driverPermitTypeBaseMileage.baseMileage ? driverPermitTypeBaseMileage.baseMileage : 0;
-            }
-
-            let permitTypeConf = await PermitType.findOne({ where: { permitType : permitType} });
-            if (permitTypeConf?.parent) {
-                let parentPermitType = permitTypeConf.parent;
-                let parentMileageObj = statResult.find(item => item.permitType == parentPermitType);
-                if (parentMileageObj) {
-                    parentMileageObj.totalMileage += totalMileage;
-                    continue;
-                } else {
-                    permitType = parentPermitType;
-                    permitTypeConf = await PermitType.findOne({ where: { permitType : permitType} });
+        async function buildPermitMileageInfo() {
+            for (let permitType of permitTypes) {
+                let tempPermitType = permitType;
+                let driverPermitTypeTaskMileage = driverPermitTaskMileageList.find(item => item.permitType == tempPermitType);
+                let driverPermitTypeBaseMileage = driverMileageStatList.find(item => item.permitType == tempPermitType);
+    
+                let totalMileage = 0;
+                if (driverPermitTypeTaskMileage) {
+                    totalMileage += driverPermitTypeTaskMileage.permitMileage || 0;
                 }
-            } else {
-                continue;
+                if (driverPermitTypeBaseMileage) {
+                    totalMileage += driverPermitTypeBaseMileage.baseMileage || 0;
+                }
+    
+                let permitTypeConf = await PermitType.findOne({ where: { permitType : tempPermitType} });
+                if (permitTypeConf?.parent) {
+                    let parentPermitType = permitTypeConf.parent;
+                    let parentMileageObj = statResult.find(item => item.permitType == parentPermitType);
+                    if (parentMileageObj) {
+                        parentMileageObj.totalMileage += totalMileage;
+                        continue;
+                    } else {
+                        tempPermitType = parentPermitType;
+                        permitTypeConf = await PermitType.findOne({ where: { permitType : tempPermitType} });
+                    }
+                } else {
+                    continue;
+                }
+    
+                let eligibilityMileage = permitTypeConf.eligibilityMileage || 4000;
+                statResult.push({permitType: tempPermitType, totalMileage: totalMileage, eligibilityMileage});
             }
-
-            let eligibilityMileage = permitTypeConf?.eligibilityMileage ? permitTypeConf.eligibilityMileage : 4000;
-            statResult.push({permitType: permitType, totalMileage: totalMileage, eligibilityMileage});
         }
+        await buildPermitMileageInfo();
 
         if (statResult && statResult.length > 0) {
             for (let temp of statResult) {
@@ -3075,8 +3079,6 @@ module.exports.deletePermitTypeDetail = async function (req, res) {
             await sequelizeObj.transaction(async transaction => {
                 let detail = await DriverPermitTypeDetail.findByPk(detailId);
                 if (detail) {
-                    let detailMileage = detail.baseMileage;
-
                     await DriverPermitTypeDetail.destroy({ where: { id: detailId } });
                     let history = detail.dataValues;
                     history.deleteBy = userId;
@@ -3084,41 +3086,11 @@ module.exports.deletePermitTypeDetail = async function (req, res) {
                     history.deleteReason = deleteReason;
                     await DriverPermitTypeDetailHistory.create(history);
 
-                    let permitTypeConf = await PermitType.findOne({where: {permitType: detail.permitType }})
-                    if (!permitTypeConf) {
-                        return res.json(utils.response(0, `PermitType ${ detail.permitType } does not exist.`));
-                    }
-                    let parentPermitType = permitTypeConf.parent?.trim() ? permitTypeConf.parent : permitTypeConf.permitType;
-                    let childPermitTypes = await sequelizeObj.query(`
-                        select permitType from permittype pt where pt.parent = '${parentPermitType}' or pt.permitType = '${parentPermitType}'
-                    `, { type: QueryTypes.SELECT, replacements: [] });
-                    let childPermitTypeArray = [];
-                    if (childPermitTypes && childPermitTypes.length > 0) {
-                        for (let temp of childPermitTypes) {
-                            childPermitTypeArray.push(temp.permitType);
-                        }
-                        let childPermitTypeDetails = await sequelizeObj.query(`
-                            select permitType from driver_permittype_detail dd where dd.driverId=${detail.driverId} and dd.permitType in('${childPermitTypeArray.join("','")}')
-                        `, { type: QueryTypes.SELECT, replacements: [] });
-                        if (childPermitTypeDetails && childPermitTypeDetails.length > 0) {
-                            let driverPermitMileage = await DriverMileage.findOne({where: {driverId: detail.driverId, permitType: parentPermitType }});
-                            if (driverPermitMileage) {
-                                let newMileage = driverPermitMileage.mileage - detailMileage;
-                                if (newMileage < 0) {
-                                    newMileage = 0;
-                                }
-                                await DriverMileage.update({mileage: newMileage}, {where: {driverId: detail.driverId, permitType: parentPermitType}})
-                            }
-                        } else {
-                            await DriverMileage.destroy({where: {driverId: detail.driverId, permitType: parentPermitType }});
-                        }
-                    }
-
                     let driverPermitTypes = [];
                     let driverPermitTypeDetailList = await DriverPermitTypeDetail.findAll({where: {driverId: detail.driverId }});
-                    if (driverPermitTypeDetailList && driverPermitTypeDetailList.length > 0) {
+                    if (driverPermitTypeDetailList?.length > 0) {
                         for (let permitTypeDetail of driverPermitTypeDetailList) {
-                            if (permitTypeDetail.permitType && permitTypeDetail.permitType.toUpperCase().indexOf('CL') != -1) {
+                            if (permitTypeDetail.permitType?.toUpperCase().indexOf('CL') != -1) {
                                 driverPermitTypes.push(permitTypeDetail.permitType)
                             }
                         }
@@ -3605,30 +3577,32 @@ module.exports.downloadDriverPermitExchangeApply = async function (req, res) {
         let filePath = path.join(baseFilePath, fileName)
         
         let rows = []
-        for (let row of driverExchangePermitApplyList) {
-            let { driverName, nric, hub, node, contactNumber, emailConfirm, birthday, exchangePermitType, driverMileage, driverDemeritPoints, passDate, score, operationallyReadyDate, status } = row
-            // 2023-08-29 Get decrypted is nric.
-            if(nric) {
-                if(nric.length > 9) nric = utils.decodeAESCode(nric);
+        function buildRowData() {
+            for (let row of driverExchangePermitApplyList) {
+                let { driverName, nric, hub, node, contactNumber, emailConfirm, birthday, exchangePermitType, driverMileage, driverDemeritPoints, passDate, score, operationallyReadyDate, status } = row
+                // 2023-08-29 Get decrypted is nric.
+                if(nric) {
+                    if(nric.length > 9) nric = utils.decodeAESCode(nric);
+                }
+                rows.push([
+                    nric,
+                    driverName,
+                    hub,
+                    node,
+                    contactNumber,
+                    emailConfirm,
+                    birthday ? moment(birthday).format('YYYY-MM-DD') : '', 
+                    exchangePermitType,
+                    driverMileage,
+                    driverDemeritPoints || "0",
+                    passDate ? moment(passDate).format('YYYY-MM-DD') : '',
+                    score || '0',
+                    operationallyReadyDate ? moment(operationallyReadyDate).format('YYYY-MM-DD') : '',
+                    status || ''
+                ])
             }
-            rows.push([
-                nric,
-                driverName,
-                hub,
-                node,
-                contactNumber,
-                emailConfirm,
-                birthday ? moment(birthday).format('YYYY-MM-DD') : '', 
-                exchangePermitType,
-                driverMileage,
-                driverDemeritPoints || "0",
-                passDate ? moment(passDate).format('YYYY-MM-DD') : '',
-                score || '0',
-                operationallyReadyDate ? moment(operationallyReadyDate).format('YYYY-MM-DD') : '',
-                status || ''
-            ])
         }
-
+        buildRowData();
         let title = [
             ['Full NRIC', 'Full Name', 'Hub', 'Node', 'Contact Number', 'Email', 'Date Of Birth', 'Test Type', 'Mileage', 'Demerit Points', 'Pass Date', 'Score', 'Operationally Ready Date (ORD)', 'Status']
         ]
@@ -3915,29 +3889,32 @@ module.exports.getDriverAchievementData = async function (req, res) {
 			result.allNodeTaskHoursLeaderBoardTop10 = allNodeTop10;
 
 			//my node top 20   DV/LOA my group
-			let baseSql = `
-				SELECT
-					d.driverName, dm.month, dm.taskPerfectHours
-				FROM driver_month_achievement dm
-				LEFT JOIN driver d on dm.driverId = d.driverId
-				LEFT JOIN unit u on d.unitId = u.id
-				WHERE taskPerfectHours > 0 and dm.month=?
-			`;
-			if (groupId) {
-				baseSql += ` and d.groupId = ${groupId} `;
-			} else {
-				if (hub) {
-					baseSql += ` and u.unit = '${hub}' `;
-				}
-				if (node) {
-					baseSql += ` and u.subUnit = '${node}' `;
-				}
-			}
-			baseSql += ` ORDER BY taskPerfectHours DESC LIMIT 20 `;
+			function buildBaseSql() {
+                let baseSql = `
+                    SELECT
+                        d.driverName, dm.month, dm.taskPerfectHours
+                    FROM driver_month_achievement dm
+                    LEFT JOIN driver d on dm.driverId = d.driverId
+                    LEFT JOIN unit u on d.unitId = u.id
+                    WHERE taskPerfectHours > 0 and dm.month=?
+                `;
+                if (groupId) {
+                    baseSql += ` and d.groupId = ${groupId} `;
+                } else {
+                    if (hub) {
+                        baseSql += ` and u.unit = '${hub}' `;
+                    }
+                    if (node) {
+                        baseSql += ` and u.subUnit = '${node}' `;
+                    }
+                }
+                baseSql += ` ORDER BY taskPerfectHours DESC LIMIT 20 `;
+                return baseSql;
+            }
+            let baseSql = buildBaseSql();
 			let myNodeTop20 = await sequelizeObj.query(baseSql, { replacements: [selectDate], type: QueryTypes.SELECT });
 
 			result.driverNodeTaskHoursLeaderBoardTop20 = myNodeTop20;
-
 
 			return res.json(utils.response(1, result));
 		} else {

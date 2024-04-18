@@ -61,16 +61,17 @@ const generateNotificationList = async function (notice) {
     if (notice.driverHubNodeList) {
         unitIdList = Array.from(new Set(notice.driverHubNodeList.split(',')))
     }
-    if (!unitIdList.length) {
+    if (unitIdList.length > 0) {
+        log.info(`generateSchedule(Notice ID: ${ notice.id }) => unitIdList: ${ JSON.stringify(unitIdList) }`)
+        
+    } else {
         log.warn(`generateSchedule(Notice ID: ${ notice.id }) => driverHubNodeList is null`)
-        if (!notice.groupId) {
+        if (notice.groupId) {
+            log.warn(`generateSchedule(Notice ID: ${ notice.id }) => groupId is ${ notice.groupId }`)
+        } else {
             log.warn(`generateSchedule(Notice ID: ${ notice.id }) => groupId is null`)
             return;
-        } else {
-            log.warn(`generateSchedule(Notice ID: ${ notice.id }) => groupId is ${ notice.groupId }`)
         }
-    } else {
-        log.info(`generateSchedule(Notice ID: ${ notice.id }) => unitIdList: ${ JSON.stringify(unitIdList) }`)
     }
     let notificationList = []
     // get latest driver unitId
@@ -109,11 +110,9 @@ const generateNotificationList = async function (notice) {
             baseSql += ` AND u.id IN ( ? ) `
             replacements.push(unitIdList)
         }
-    } else {
-        if (unitIdList.length) {
-            baseSql += ` AND u.id IN ( ? ) `
-            replacements.push(unitIdList)
-        }
+    } else if (unitIdList.length) {
+        baseSql += ` AND u.id IN ( ? ) `
+        replacements.push(unitIdList)
     }
 
     if (notice.platform) {
@@ -202,7 +201,7 @@ const initSchedule = async function (noticeId) {
         }
         let notificationList =  await sequelizeObj.query(sql, { type: QueryTypes.SELECT, replacements: [ noticeId ] })
 
-        log.warn(`NotificationSchedule${ noticeId ? ` ID => ${ noticeId } ` : '' } => Available NotificationSchedule length ${ notificationList.length }`)
+        log.warn(`NotificationScheduleID => ${ noticeId } => Available NotificationSchedule length ${ notificationList.length }`)
         for (let notice of notificationList) {
             // While notice type is not schedule, only send one time
             if (notice.type.toLowerCase() !== 'scheduled') {

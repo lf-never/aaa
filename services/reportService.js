@@ -479,6 +479,96 @@ const getTOSFeedback = async function (tripNoList) {
     }
 }
 
+const getUserUnitInfos = async function(user, selectedHub, selectedNode) {
+    //user unit info
+    let unitInfoSql = `
+        select un.id, un.unit, un.subUnit from unit un where 1=1 
+    `;
+    let replacements = [];
+    if (selectedHub) {
+        unitInfoSql += ` and un.unit = ? `;
+        replacements.push(selectedHub);
+    } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+        let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+        let hqUserUnitNameList = userUnitList.map(item => item.unit);
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+        }
+        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+            unitInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
+        } else {
+            return resultDataList;
+        }
+    }
+    if (selectedNode) {
+        if (selectedNode == '-') {
+            unitInfoSql += ` and un.subUnit is null `;
+        } else {
+            unitInfoSql += ` and un.subUnit = ? `;
+            replacements.push(selectedNode);
+        }
+    }
+    unitInfoSql += ` ORDER BY un.unit, un.subUnit `;
+    return await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements })
+}
+
+const getUnitTOList = async function(selectedHub, selectedNode, dbForamt, dateStr) {
+    let unitToInfoSql = `
+        SELECT
+            d.driverId,
+            d.unitId
+        FROM driver d
+        LEFT JOIN USER u ON d.driverId = u.driverId
+        LEFT JOIN unit un ON d.unitId = un.id
+        WHERE u.role = 'TO' AND d.unitId IS NOT NULL AND (d.operationallyReadyDate is NULL OR DATE_FORMAT(d.operationallyReadyDate, ?) >= ?) 
+    `;
+    let replacements = [dbForamt, dateStr];
+    if (selectedHub) {
+        unitToInfoSql += ` and un.unit = ? `;
+        replacements.push(selectedHub);
+    }
+    if (selectedNode) {
+        if (selectedNode == '-') {
+            unitToInfoSql += ` and un.subUnit is null `;
+        } else {
+            unitToInfoSql += ` and un.subUnit = ? `;
+            replacements.push(selectedNode);
+        }
+    }
+    return await sequelizeObj.query(unitToInfoSql, { type: QueryTypes.SELECT, replacements })
+}
+
+const getUnitVehicleList = async function(selectedHub, selectedNode, vehicleType) {
+    let unitVehicleInfoSql = `
+        select
+            vv.unitId,
+            vv.vehicleType,
+            vv.vehicleNo
+        from vehicle vv
+        LEFT JOIN unit un ON vv.unitId = un.id
+        WHERE vv.unitId is NOT NULL
+    `;
+    let replacements = [];
+    if (selectedHub) {
+        unitVehicleInfoSql += ` and un.unit = ? `;
+        replacements.push(selectedHub);
+    }
+    if (selectedNode) {
+        if (selectedNode == '-') {
+            unitVehicleInfoSql += ` and un.subUnit is null `;
+        } else {
+            unitVehicleInfoSql += ` and un.subUnit = ? `;
+            replacements.push(selectedNode);
+        }
+    }
+    if (vehicleType) {
+        unitVehicleInfoSql += ` and vv.vehicleType = ? `;
+        replacements.push(vehicleType);
+    }
+
+    return await sequelizeObj.query(unitVehicleInfoSql, { type: QueryTypes.SELECT, replacements })
+}
+
 const getTOUtilisationReport = async function (user, selectedYear, selectedMonth, selectedHub, selectedNode) {
     let resultDataList = {};
     try {
@@ -500,6 +590,7 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
             dbForamt = '%Y';
             dateStr = selectedYear;
         }
+
 
         let monthWorkDayList = [] ;
         if (selectedMonth) {
@@ -537,35 +628,7 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         }
 
         //user unit info
-        let unitInfoSql = `
-            select un.id, un.unit, un.subUnit from unit un where 1=1 
-        `;
-        let replacements = [];
-        if (selectedHub) {
-            unitInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
-            }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                unitInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                return resultDataList;
-            }
-        }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                unitInfoSql += ` and un.subUnit is null `;
-            } else {
-                unitInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
-        }
-        unitInfoSql += ` ORDER BY un.unit, un.subUnit `;
-        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements })
+        let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode);
 
         let resultUnitDataList = [];
         for(let unit of unitInfoResult) {
@@ -593,37 +656,14 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         }
 
         //stat TO driver numbers
-        let unitToInfoSql = `
-            SELECT
-                d.driverId,
-                d.unitId
-            FROM driver d
-            LEFT JOIN USER u ON d.driverId = u.driverId
-            LEFT JOIN unit un ON d.unitId = un.id
-            WHERE u.role = 'TO' AND d.unitId IS NOT NULL AND (d.operationallyReadyDate is NULL OR DATE_FORMAT(d.operationallyReadyDate, ?) >= ?) 
-        `;
-        replacements = [dbForamt, dateStr];
-        if (selectedHub) {
-            unitToInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                unitToInfoSql += ` and un.subUnit is null `;
-            } else {
-                unitToInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
-        }
-        let unitToInfoResult = await sequelizeObj.query(unitToInfoSql, { type: QueryTypes.SELECT, replacements })
-        if (unitToInfoResult.length > 0) {
-            for (let unitInfo of resultUnitDataList) {
-                let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
-                if (unitToInfoList && unitToInfoList.length > 0) {
-                    allUnitToNumber += unitToInfoList.length;
-                    unitInfo.toNumber = unitToInfoList.length;
-                    unitInfo.toIdList = unitToInfoList.map(toInfo => toInfo.driverId);
-                }
+        let unitToInfoResult = await getUnitTOList(selectedHub, selectedNode, dbForamt, dateStr);
+        
+        for (let unitInfo of resultUnitDataList) {
+            let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
+            if (unitToInfoList?.length > 0) {
+                allUnitToNumber += unitToInfoList.length;
+                unitInfo.toNumber = unitToInfoList.length;
+                unitInfo.toIdList = unitToInfoList.map(toInfo => toInfo.driverId);
             }
         }
 
@@ -640,7 +680,7 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         for (let unitInfo of resultUnitDataList) {
             let unitToIdList = unitInfo.toIdList;
             let unitToDataList = [];
-            if (unitToIdList && unitToIdList.length > 0) {
+            if (unitToIdList?.length > 0) {
                 let planWorkDaysSelf = 0;
                 let planWorkDaysOthers = 0;
                 let actualWorkDaysSelf = 0;
@@ -650,21 +690,18 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
                 let unitTaskNumber = 0;
                 for (let toId of unitToIdList) {
                     let toWorkTimeInfoList = toMonthWorkdaysData.filter(item => item.driverId == toId);
+                    for (let toWorkTimeInfo of toWorkTimeInfoList) {
+                        unitToDataList.push(toWorkTimeInfo);
 
-                    if (toWorkTimeInfoList && toWorkTimeInfoList.length > 0) {
-                        for (let toWorkTimeInfo of toWorkTimeInfoList) {
-                            unitToDataList.push(toWorkTimeInfo);
-
-                            unitTaskNumber += toWorkTimeInfo.taskNum;
-                            toLeaveDays += toWorkTimeInfo.leaveDays;
-                            toHotoOutDays += toWorkTimeInfo.hotoOutDays;
-                            if (toWorkTimeInfo.driverUnitId == toWorkTimeInfo.workUnitId) {
-                                planWorkDaysSelf += toWorkTimeInfo.planWorkDays;
-                                actualWorkDaysSelf += toWorkTimeInfo.actualWorkDays;
-                            } else {
-                                planWorkDaysOthers += toWorkTimeInfo.planWorkDays;
-                                actualWorkDaysOthers += toWorkTimeInfo.actualWorkDays;
-                            }
+                        unitTaskNumber += toWorkTimeInfo.taskNum;
+                        toLeaveDays += toWorkTimeInfo.leaveDays;
+                        toHotoOutDays += toWorkTimeInfo.hotoOutDays;
+                        if (toWorkTimeInfo.driverUnitId == toWorkTimeInfo.workUnitId) {
+                            planWorkDaysSelf += toWorkTimeInfo.planWorkDays;
+                            actualWorkDaysSelf += toWorkTimeInfo.actualWorkDays;
+                        } else {
+                            planWorkDaysOthers += toWorkTimeInfo.planWorkDays;
+                            actualWorkDaysOthers += toWorkTimeInfo.actualWorkDays;
                         }
                     }
                 }
@@ -769,38 +806,10 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
             }
         }
         //user unit info
-        let unitInfoSql = `
-            select un.id, un.unit, un.subUnit from unit un where 1=1 
-        `;
-        let replacements = [];
-        if (selectedHub) {
-            unitInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
-            }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                unitInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                return resultDataList;
-            }
-        }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                unitInfoSql += ` and un.subUnit is null `;
-            } else {
-                unitInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
-        }
-        unitInfoSql += ` ORDER BY un.unit, un.subUnit `;
-        let unitInfoResult = await sequelizeObj.query(unitInfoSql, { type: QueryTypes.SELECT, replacements })
+        let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode)
 
         let vehicleTypeSql = `select vehicleName from vehicle_category where 1=1`;
-        replacements = [];
+        let replacements = [];
         if (vehicleType) {
             vehicleTypeSql += ` and vehicleName = ? `
             replacements.push(vehicleType);
@@ -834,48 +843,17 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
             return resultDataList;
         }
 
-        //stat vehicle numbers
-        let unitVehicleInfoSql = `
-            select
-                vv.unitId,
-                vv.vehicleType,
-                vv.vehicleNo
-            from vehicle vv
-            LEFT JOIN unit un ON vv.unitId = un.id
-            WHERE vv.unitId is NOT NULL
-        `;
-        replacements = [];
-        if (selectedHub) {
-            unitVehicleInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                unitVehicleInfoSql += ` and un.subUnit is null `;
-            } else {
-                unitVehicleInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
-        }
-        if (vehicleType) {
-            unitVehicleInfoSql += ` and vv.vehicleType = ? `;
-            replacements.push(vehicleType);
-        }
-
         // filter vehicle number > 0 data.
         let newResultUnitDataList = [];
-        let unitVehicleInfoResult = await sequelizeObj.query(unitVehicleInfoSql, { type: QueryTypes.SELECT, replacements })
-        if (unitVehicleInfoResult.length > 0) {
-            for (let unitInfo of resultUnitDataList) {
-                let unitVehicleInfoList = unitVehicleInfoResult.filter(item => item.unitId == unitInfo.unitId && item.vehicleType == unitInfo.vehicleType);
+        let unitVehicleInfoResult = await getUnitVehicleList(selectedHub, selectedNode, vehicleType);
+        for (let unitInfo of resultUnitDataList) {
+            let unitVehicleInfoList = unitVehicleInfoResult.filter(item => item.unitId == unitInfo.unitId && item.vehicleType == unitInfo.vehicleType);
+            if (unitVehicleInfoList?.length > 0) {
+                allUnitVehicleNumber += unitVehicleInfoList.length;
+                unitInfo.vehicleNumber = unitVehicleInfoList.length;
+                unitInfo.vehicleNoList = unitVehicleInfoList.map(vehicleInfo => vehicleInfo.vehicleNo);
 
-                if (unitVehicleInfoList && unitVehicleInfoList.length > 0) {
-                    allUnitVehicleNumber += unitVehicleInfoList.length;
-                    unitInfo.vehicleNumber = unitVehicleInfoList.length;
-                    unitInfo.vehicleNoList = unitVehicleInfoList.map(vehicleInfo => vehicleInfo.vehicleNo);
-
-                    newResultUnitDataList.push(unitInfo);
-                }
+                newResultUnitDataList.push(unitInfo);
             }
         }
         resultUnitDataList = newResultUnitDataList;
@@ -892,7 +870,7 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         for (let unitInfo of resultUnitDataList) {
             let unitVehicleNoList = unitInfo.vehicleNoList;
             let unitVehicleDataList = [];
-            if (unitVehicleNoList && unitVehicleNoList.length > 0) {
+            if (unitVehicleNoList?.length > 0) {
                 let planWorkDaysSelf = 0;
                 let planWorkDaysOthers = 0;
                 let actualWorkDaysSelf = 0;
@@ -902,21 +880,19 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
                 let unitTaskNumber = 0;
                 for (let vehicleNo of unitVehicleNoList) {
                     let vehicleWorkTimeInfoList = vehicleMonthWorkdaysData.filter(item => item.vehicleNo == vehicleNo);
-                    if (vehicleWorkTimeInfoList && vehicleWorkTimeInfoList.length > 0) {
-                        for (let vehicleWorkTimeInfo of vehicleWorkTimeInfoList) {
-                            unitVehicleDataList.push(vehicleWorkTimeInfo);
+                    for (let vehicleWorkTimeInfo of vehicleWorkTimeInfoList) {
+                        unitVehicleDataList.push(vehicleWorkTimeInfo);
 
-                            unitTaskNumber += vehicleWorkTimeInfo.taskNum;
-                            vehicleLeaveDays += vehicleWorkTimeInfo.eventDays;
-                            vehicleHotoOutDays += vehicleWorkTimeInfo.hotoOutDays;
+                        unitTaskNumber += vehicleWorkTimeInfo.taskNum;
+                        vehicleLeaveDays += vehicleWorkTimeInfo.eventDays;
+                        vehicleHotoOutDays += vehicleWorkTimeInfo.hotoOutDays;
 
-                            if (vehicleWorkTimeInfo.vehicleUnitId == vehicleWorkTimeInfo.workUnitId) {
-                                planWorkDaysSelf += vehicleWorkTimeInfo.planWorkDays;
-                                actualWorkDaysSelf += vehicleWorkTimeInfo.actualWorkDays;
-                            } else {
-                                planWorkDaysOthers += vehicleWorkTimeInfo.planWorkDays;
-                                actualWorkDaysOthers += vehicleWorkTimeInfo.actualWorkDays;
-                            }
+                        if (vehicleWorkTimeInfo.vehicleUnitId == vehicleWorkTimeInfo.workUnitId) {
+                            planWorkDaysSelf += vehicleWorkTimeInfo.planWorkDays;
+                            actualWorkDaysSelf += vehicleWorkTimeInfo.actualWorkDays;
+                        } else {
+                            planWorkDaysOthers += vehicleWorkTimeInfo.planWorkDays;
+                            actualWorkDaysOthers += vehicleWorkTimeInfo.actualWorkDays;
                         }
                     }
                 }

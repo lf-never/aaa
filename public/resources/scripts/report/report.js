@@ -288,9 +288,9 @@ const initSafetyReport = function (data) {
             xAxis: {
                 type: 'category',
                 inverse: false,
-                data: ['Incident', 'Rapid Acc', 'Hard Braking', 'Speeding']
+                data: Object.keys(data)
             },
-            color: ['#EC7D30', '#3EAF4B', '#599AC6'],
+            color: ['#EC7D30', '#3EAF4B', '#599AC6', '#cd8bf0'],
             series: [
                 {
                     name: 'Incident',
@@ -314,7 +314,7 @@ const initSafetyReport = function (data) {
                     name: 'Speeding',
                     type: 'bar',
                     label: seriesLabel,
-                    data: Object.values(data).map(item => item.HardBrakingQty),
+                    data: Object.values(data).map(item => item.SpeedingQty),
                 }
             ]
         };
