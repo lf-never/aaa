@@ -21,6 +21,18 @@ const initCreateEditPage = async function () {
         });
     }
 
+    const getDriverByDriverId = async function () {
+        return axios.post('/driver/getDriverByDriverId', { driverId: currentEditDriverId })
+        .then(function (res) {
+            if (res.data.respCode === 1) {
+                return res.data.respMessage;
+            } else {
+                console.error(res.data.respMessage);
+                return null;
+            }
+        });
+    }
+
     const initUnitTypePage = function (unitList) {
         unitList = unitList.hubNodeList
         $('.driver-hub-select').empty();
@@ -116,46 +128,34 @@ const initCreateEditPage = async function () {
             });
         });
     }
-
     initLayDate();
 
     $('.edit-driver').off('click').on("click", function () {
         $('#view-driver-edit').modal('show');
         $('.opt-btn-div-edit').val('edit')
         const initDriver = async function () {
-            const getDriver = async function () {
-                return axios.post('/driver/getDriverByDriverId', { driverId: currentEditDriverId })
-                .then(function (res) {
-                    if (res.data.respCode === 1) {
-                        return res.data.respMessage;
-                    } else {
-                        console.error(res.data.respMessage);
-                        return null;
-                    }
-                });
+            let driver = await getDriverByDriverId();
+            if (driver) {
+                $('.layui-tab-content').val(driver.driverId)
+                $('.driver-name-input').val(driver.driverName)
+                // $('.rank-input').val(driver.rank)
+                $('.driver-role-select').val(driver.role)
+                $('.driver-role-select').trigger('change')
+                $('.driver-vocation-select').val(driver.vocation)
+                if(driver.unit) $('.driver-unit-select').val(driver.unit)
+                if(driver.hub) {
+                    $('.driver-hub-select').val(driver.hub)
+                    $('.driver-hub-select').trigger('change')
+                    $('.driver-node-select').val(`${ driver.node }`)
+                }
+                $('.enlistment-date-input').val(driver.enlistmentDate ? moment(driver.enlistmentDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
+                $('.ORD-input').val(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
+                $('.NRIC-input').val(driver.nric ? driver.nric : '')
+                $('.birth-date-input').val(driver.birthday ? moment(driver.birthday, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
+                $('.contact-no-input').val(driver.contactNumber)
             }
-           
-            let driver = await getDriver();
-
-            $('.layui-tab-content').val(driver.driverId)
-            $('.driver-name-input').val(driver.driverName)
-            // $('.rank-input').val(driver.rank)
-            $('.driver-role-select').val(driver.role)
-            $('.driver-role-select').trigger('change')
-            $('.driver-vocation-select').val(driver.vocation)
-            if(driver.unit) $('.driver-unit-select').val(driver.unit)
-            if(driver.hub) {
-                $('.driver-hub-select').val(driver.hub)
-                $('.driver-hub-select').trigger('change')
-                $('.driver-node-select').val(`${ driver.node }`)
-            }
-            $('.enlistment-date-input').val(driver.enlistmentDate ? moment(driver.enlistmentDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
-            $('.ORD-input').val(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
-            $('.NRIC-input').val(driver.nric ? driver.nric : '')
-            $('.birth-date-input').val(driver.birthday ? moment(driver.birthday, 'YYYY-MM-DD').format('DD/MM/YYYY') : '')
-            $('.contact-no-input').val(driver.contactNumber)
         }
-        initDriver()
+        initDriver();
     })
 
     const getRoleVocation = async function () {
@@ -264,19 +264,9 @@ const initCreateEditPage = async function () {
 const initClickEditDriver = function () {
     const confirmCreateOrSave = function() {
         $('.opt-btn-div-edit').off('click').on('click', function () {
-                let classList = [];
-                for(let item of $('.driver-class-input')){
-                    if(item.checked) {
-                        if(item.value && (item.value).toUpperCase() != 'NULL') {
-                            classList.push(item.value)
-                        } 
-                    }
-                }
-
                 let driver = {
                     "action": $('.opt-btn-div-edit').val(),
                     "driverId": $('.layui-tab-content').val(),
-                    // 'rank': $('.rank-input').val(),
                     'role': $('.driver-role-select').val(),
                     'vocation': $('.driver-vocation-select').val(),
                     'unit': $('.driver-unit-select').val(),
@@ -288,18 +278,12 @@ const initClickEditDriver = function () {
                     'driverName': $('.driver-name-input').val(),
                     'birthday': $('.birth-date-input').val() ? $('.birth-date-input').val() : null,
                     'contactNumber': $('.contact-no-input').val(),
-                    // 'class': classList.length > 0 ? classList.join(',') : null,
-                    // 'civilianLicence': classList.length > 0 ? classList.join(',') : null,
-                    // 'cardSerialNumber': $('.cardSerialNo-input').val() ? $('.cardSerialNo-input').val() : null,
-                    // 'dateOfIssue': $('.lssue-date-input').val() ? $('.lssue-date-input').val() : null,
                 }
                 let checkResult = checkField(driver);
                 driver.enlistmentDate = driver.enlistmentDate ? moment(driver.enlistmentDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
                 driver.operationallyReadyDate = driver.operationallyReadyDate ? moment(driver.operationallyReadyDate, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
                 driver.birthday = driver.birthday ? moment(driver.birthday, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
                 if (checkResult) {
-                    // driver.nric = ((driver.nric).toString()).substr(0, 1) + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4)
-                    
                     $(this).addClass('btn-disabled')
                     axios.post("/driver/createDriverFromResource", driver).then(async res => {
                         let start = res.respCode != null ? res.respCode : res.data.respCode

@@ -192,7 +192,7 @@ const initCreateVehicleTypePage = async function(optType, id, vehicleName, vehic
         $(".permit-type-select").empty();
         let optionHtml = '';
         for (let item of permitTypeList) {
-            if (item && item.permitType && item.permitType.toUpperCase().startsWith('CL')) {
+            if (item?.permitType?.toUpperCase().startsWith('CL')) {
                 optionHtml += `<option value="${item.permitType}" >${item.permitType}</option>`
             }
         }

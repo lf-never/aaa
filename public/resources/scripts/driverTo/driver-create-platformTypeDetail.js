@@ -75,59 +75,66 @@ $(function () {
 })
 
 const initVehicleClassList = async function() {
+  function buildActionHtml(temp) {
+    let operationList = temp.operation.split(',')
+    let actionHtml = ``;
+    if (temp.approveStatus == 'Deleted') {
+      actionHtml = `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showDeleteInfo('${temp.deleteUser ? temp.deleteUser : '-'}', '${temp.deleteAt ? moment(temp.deleteAt).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${temp.deleteReason ? temp.deleteReason : '-'}')" role="button" tabindex="0">Deleted</div>`
+    } else if (operationList.includes('Edit') || operationList.includes('All')) {
+      actionHtml += `
+        <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-permitTypeDetail custom-btn-blue" onclick="editDriverPermitTypeDetail(${temp.id}, '${temp.permitType}', '${temp.passDate}', '${temp.baseMileage ? temp.baseMileage : 0}', '${temp.attemptNums}', '${temp.testerCode}', '${temp.score}', '${temp.demeritPoint}')" role="button" tabindex="0">
+          Edit
+        </div>
+        <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-permitTypeDetail custom-btn-danger" onclick="deletePermitTypeDetail(${temp.id}, '${temp.permitType}')" role="button" tabindex="0" style="margin-left: 15px;">
+          Delete
+        </div>
+      `;
+    }
+    return actionHtml;
+  }
+
+  function buildDataList(temp, actionHtml) {
+    $('.permitTypeDetailDiv').append(`
+      <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
+        <div style="width: calc(100%/7);">${ temp.permitType.indexOf('CL ') > -1 ? `PRT ${ temp.permitType }` : temp.permitType}</div>
+        <div style="width: calc(100%/7);">${temp.passDate ? moment(temp.passDate).format("DD/MM/YYYY") : ''}</div>
+        <div style="width: calc(100%/7);">${temp.baseMileage ? temp.baseMileage : 0}</div>
+        <div style="width: calc(100%/7);">${temp.attemptNums}</div>
+        <div style="width: calc(100%/7);">${temp.testerCode}</div>
+        <div style="width: calc(100%/7);">${temp.score ?? '-'}</div>
+        <div style="width: calc(100%/7);">${temp.demeritPoint ?? '-'}</div>
+        <div style="width: calc(100%/7);">
+          <div style="display: flex;">
+            ${actionHtml}
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
   axios.post("/driver/getPermitTypeDetailList", {driverId: currentEditDriverId}).then(async res => {
     let code = res.respCode != null ? res.respCode : res.data.respCode
     if (code == 1)  {
-        $('.permitTypeDetailDiv').empty();
-        let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
-        if (dataList?.length > 0) {
+      $('.permitTypeDetailDiv').empty();
+      let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
+      if (dataList?.length > 0) {
         for(let temp of dataList) {
-          let operationList = temp.operation.split(',')
-          let actionHtml = ``;
-          if (temp.approveStatus == 'Deleted') {
-            actionHtml = `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showDeleteInfo('${temp.deleteUser ? temp.deleteUser : '-'}', '${temp.deleteAt ? moment(temp.deleteAt).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${temp.deleteReason ? temp.deleteReason : '-'}')" role="button" tabindex="0">Deleted</div>`
-          } else if (operationList.includes('Edit') || operationList.includes('All')) {
-            actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-permitTypeDetail custom-btn-blue" onclick="editDriverPermitTypeDetail(${temp.id}, '${temp.permitType}', '${temp.passDate}', '${temp.baseMileage ? temp.baseMileage : 0}', '${temp.attemptNums}', '${temp.testerCode}', '${temp.score}', '${temp.demeritPoint}')" role="button" tabindex="0">
-                Edit
-              </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-permitTypeDetail custom-btn-danger" onclick="deletePermitTypeDetail(${temp.id}, '${temp.permitType}')" role="button" tabindex="0" style="margin-left: 15px;">
-                Delete
-              </div>
-            `;
-          }
-
-
-          $('.permitTypeDetailDiv').append(`
-            <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-              <div style="width: calc(100%/7);">${ temp.permitType.indexOf('CL ') > -1 ? `PRT ${ temp.permitType }` : temp.permitType}</div>
-              <div style="width: calc(100%/7);">${temp.passDate ? moment(temp.passDate).format("DD/MM/YYYY") : ''}</div>
-              <div style="width: calc(100%/7);">${temp.baseMileage ? temp.baseMileage : 0}</div>
-              <div style="width: calc(100%/7);">${temp.attemptNums}</div>
-              <div style="width: calc(100%/7);">${temp.testerCode}</div>
-              <div style="width: calc(100%/7);">${temp.score ?? '-'}</div>
-              <div style="width: calc(100%/7);">${temp.demeritPoint ?? '-'}</div>
-              <div style="width: calc(100%/7);">
-                <div style="display: flex;">
-                  ${actionHtml}
-                </div>
-              </div>
-            </div>
-          `);
+          let actionHtml = buildActionHtml(temp);
+          buildDataList(temp, actionHtml);
         }
       }
     } else {
-        $.confirm({
-            title: 'WARN',
-            content: `Data is error, please refresh the page.`,
-            buttons: {
-              ok: {
-                btnClass: 'btn-green',
-                action: function () {
-                }
+      $.confirm({
+          title: 'WARN',
+          content: `Data is error, please refresh the page.`,
+          buttons: {
+            ok: {
+              btnClass: 'btn-green',
+              action: function () {
               }
             }
-        });
+          }
+      });
     }
   });
 }

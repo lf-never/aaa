@@ -1,10 +1,4 @@
-
-$(function () {
-    
-})
-
-let vehicleList = [
-];
+let vehicleList = [];
 let deviceViewDataTable = null;
 
 export async function initVehicleList () {

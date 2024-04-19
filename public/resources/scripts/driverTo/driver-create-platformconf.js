@@ -48,59 +48,68 @@ const initPlatformConfList = async function() {
         $('.platformConfDiv').empty();
         let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
         if (dataList?.length > 0) {
-        for(let temp of dataList) {
-          let diffNow = "-"
-          if (temp.lastDrivenDate) {
-            diffNow = moment().diff(moment(temp.lastDrivenDate), 'days');
-            if (diffNow > 30) {
-              diffNow = Math.floor(diffNow / 30) + ' month ago'
-            } else {
-              diffNow = diffNow + ' days ago';
+          function buildTimeStr(lastDrivenDate) {
+            let diffNow = "-"
+            if (lastDrivenDate) {
+              diffNow = moment().diff(moment(lastDrivenDate), 'days');
+              if (diffNow > 30) {
+                diffNow = Math.floor(diffNow / 30) + ' month ago'
+              } else {
+                diffNow = diffNow + ' days ago';
+              }
+            }
+            return diffNow;
+          }
+
+          function buildListData() {
+            for(let temp of dataList) {
+              let diffNow = buildTimeStr(temp.lastDrivenDate);
+              
+              let operationList = temp.operation.split(',')
+  
+              let actionHtml = ``;
+              if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
+                actionHtml += `
+                  <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverPlatformConf(${temp.id}, '${temp.permitType}', '${temp.vehicleType}', '${temp.assessmentDate}', '${temp.lastDrivenDate ? temp.lastDrivenDate : ''}', ${temp.baseMileage})" role="button" tabindex="0">
+                      Edit
+                  </div>
+                  <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverPlatformConf(${temp.id}, '${temp.vehicleType}')" role="button" tabindex="0" style="margin-left: 15px;">
+                      Delete
+                  </div>
+                `;
+              }
+  
+              if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
+                actionHtml += `
+                  <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Approved')" role="button" tabindex="0">
+                    Approve
+                  </div>
+                  <div style="border: solid 1px #C4A548; background-color: #C4A548;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Rejected')" role="button" tabindex="0">
+                    Reject
+                  </div>
+                `;
+              }
+  
+  
+              $('.platformConfDiv').append(`
+                <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
+                  <div style="width: calc(100%/6);">${temp.vehicleType}</div>
+                  <div style="width: calc(100%/6);">${temp.assessmentDate ? moment(temp.assessmentDate).format("DD/MM/YYYY") : ''}</div>
+                  <div style="width: calc(100%/6);">${diffNow}</div>
+                  <div style="width: calc(100%/6);">${temp.baseMileage}</div>
+                  <div style="width: calc(100%/6);">${temp.approveStatus == 'Edited' ? 'Pending Approval' : temp.approveStatus}</div>
+                  <div style="width: calc(100%/6);">
+                    <div style="display: flex;">
+                      ${actionHtml}
+                    </div>
+                  </div>
+                </div>
+              `);
             }
           }
-          
-          let operationList = temp.operation.split(',')
 
-          let actionHtml = ``;
-          if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
-            actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverPlatformConf(${temp.id}, '${temp.permitType}', '${temp.vehicleType}', '${temp.assessmentDate}', '${temp.lastDrivenDate ? temp.lastDrivenDate : ''}', ${temp.baseMileage})" role="button" tabindex="0">
-                  Edit
-              </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverPlatformConf(${temp.id}, '${temp.vehicleType}')" role="button" tabindex="0" style="margin-left: 15px;">
-                  Delete
-              </div>
-            `;
-          }
-
-          if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
-            actionHtml += `
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Approved')" role="button" tabindex="0">
-                Approve
-              </div>
-              <div style="border: solid 1px #C4A548; background-color: #C4A548;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-platformconf" onclick="approvePlatformConf(${temp.id}, 'Rejected')" role="button" tabindex="0">
-                Reject
-              </div>
-            `;
-          }
-
-
-          $('.platformConfDiv').append(`
-            <div class="py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-              <div style="width: calc(100%/6);">${temp.vehicleType}</div>
-              <div style="width: calc(100%/6);">${temp.assessmentDate ? moment(temp.assessmentDate).format("DD/MM/YYYY") : ''}</div>
-              <div style="width: calc(100%/6);">${diffNow}</div>
-              <div style="width: calc(100%/6);">${temp.baseMileage}</div>
-              <div style="width: calc(100%/6);">${temp.approveStatus == 'Edited' ? 'Pending Approval' : temp.approveStatus}</div>
-              <div style="width: calc(100%/6);">
-                <div style="display: flex;">
-                  ${actionHtml}
-                </div>
-              </div>
-            </div>
-          `);
+          buildListData();
         }
-      }
     } else {
         $.confirm({
             title: 'WARN',

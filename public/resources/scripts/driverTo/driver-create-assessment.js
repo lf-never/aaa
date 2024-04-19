@@ -31,47 +31,51 @@ const initCategoryList = async function() {
       `);
       let dataList = res.respMessage != null ? res.respMessage : res.data.respMessage
       if (dataList?.length > 0) {
-        for(let temp of dataList) {
-          let operationList = temp.operation.split(',')
-
-          let actionHtml = ``;
-          if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
-            actionHtml += `
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverAssessment(${temp.id}, '${temp.assessmentType}', '${temp.issueDate}', '${temp.status}')" role="button" tabindex="0">
-                Edit
+        function initDataList() {
+          for(let temp of dataList) {
+            let operationList = temp.operation.split(',')
+  
+            let actionHtml = ``;
+            if (operationList.includes('Edit') && temp.approveStatus != 'Edited') {
+              actionHtml += `
+                <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="edit-driver-assessment custom-btn-blue" onclick="editDriverAssessment(${temp.id}, '${temp.assessmentType}', '${temp.issueDate}', '${temp.status}')" role="button" tabindex="0">
+                  Edit
+                </div>
+                <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverAssessment(${temp.id}, '${temp.assessmentType}')" role="button" tabindex="0" style="margin-left: 15px;">
+                  Delete
+                </div>
+              `;
+            }
+  
+            if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
+              actionHtml += `
+                <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Approved')" role="button" tabindex="0">
+                  Approve
+                </div>
+                <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Rejected')" role="button" tabindex="0">
+                  Reject
+                </div>
+              `;
+            }
+  
+  
+            $('.driverAssessmentContentDiv').append(`
+              <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
+                <div class="col-2">${temp.issueDate ? moment(temp.issueDate).format("DD/MM/YYYY") : ''}</div>
+                <div class="col-4">${temp.assessmentType}</div>
+                <div class="col-2">
+                  ${temp.status == 'Pass' ? '<div style="text-align: center;width: 80px; height: 22px;font-size: 10px; background-color: #e7f3da; border-radius: 10px; color: #79bd9a;">PASS</div>' : '<div class="col-2"><div style="text-align: center;width: 80px; height: 22px;font-size: 10px; background-color: #fbe7d3; border-radius: 10px; color: #f3912e;">FAIL</div></div>'}
+                </div>
+                <div class="col-2">${temp.approveStatus == 'Edited' ? 'Pending Approval' : temp.approveStatus}</div>
+                <div class="col-2" style="display: flex;">
+                  ${actionHtml}
+                </div>
               </div>
-              <div style="color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="delete-driver-assessment custom-btn-danger" onclick="deleteDriverAssessment(${temp.id}, '${temp.assessmentType}')" role="button" tabindex="0" style="margin-left: 15px;">
-                Delete
-              </div>
-            `;
+            `);
           }
-
-          if (operationList.includes('Approve') && temp.approveStatus == 'Edited') {
-            actionHtml += `
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="approve-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Approved')" role="button" tabindex="0">
-                Approve
-              </div>
-              <div style="border: solid 1px #1B9063; background-color: #1B9063;color: white; margin-right: 10px; padding-left: 5px; padding-right: 5px; border-radius: 5px;" class="cancel-driver-assessment" onclick="approveAssessmentRecord(${temp.id}, 'Rejected')" role="button" tabindex="0">
-                Reject
-              </div>
-            `;
-          }
-
-
-          $('.driverAssessmentContentDiv').append(`
-            <div class="row py-3" style="display: flex; border-bottom: 1px solid #f5f5f5;">
-              <div class="col-2">${temp.issueDate ? moment(temp.issueDate).format("DD/MM/YYYY") : ''}</div>
-              <div class="col-4">${temp.assessmentType}</div>
-              <div class="col-2">
-                ${temp.status == 'Pass' ? '<div style="text-align: center;width: 80px; height: 22px;font-size: 10px; background-color: #e7f3da; border-radius: 10px; color: #79bd9a;">PASS</div>' : '<div class="col-2"><div style="text-align: center;width: 80px; height: 22px;font-size: 10px; background-color: #fbe7d3; border-radius: 10px; color: #f3912e;">FAIL</div></div>'}
-              </div>
-              <div class="col-2">${temp.approveStatus == 'Edited' ? 'Pending Approval' : temp.approveStatus}</div>
-              <div class="col-2" style="display: flex;">
-                ${actionHtml}
-              </div>
-            </div>
-          `);
         }
+        initDataList();
+
         function initCategoryInfo() {
           let currentCategory = '-'
           dataList = dataList.filter(function(item) {return item.status == 'Pass'})

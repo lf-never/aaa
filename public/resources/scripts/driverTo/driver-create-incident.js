@@ -47,7 +47,7 @@ const initDataDetail = async function () {
                     sortable: false ,
                     defaultContent: '-',
                     render: function (data, type, full, meta) {
-                        return `${ data ? data : 0 }`
+                        return data || 0
                     } 
                 },
                 { 

@@ -478,9 +478,14 @@ const deleteDriver = async function (driverId, driverName) {
     await axios.post("/driver/getDriverEffectiveData", { driverId: driverId }).then(async res => {
         if (res.respCode == 1) {
             let effectiveDataList = res.respMessage;
-            let taskList = effectiveDataList ? effectiveDataList.taskList : [];
-            let hotoList = effectiveDataList ? effectiveDataList.hotoList : [];
-            let loanList = effectiveDataList ? effectiveDataList.loanList : [];
+            let taskList = [];
+            let hotoList = [];
+            let loanList = [];
+            if (effectiveDataList) {
+                taskList = effectiveDataList.taskList;
+                hotoList = effectiveDataList.hotoList;
+                loanList = effectiveDataList.loanList;
+            }
             if ((taskList?.length > 0) || (hotoList?.length > 0) || (loanList?.length > 0)) {
                 let startedTask = taskList ? taskList.find(item => item.driverStatus.toLowerCase() == 'started') : null;
                 if (startedTask) {

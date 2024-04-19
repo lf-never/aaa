@@ -17,8 +17,6 @@ $(function() {
         $('#vehicle-markAsUnavailable .reassignReasonDiv').removeClass('active');
         $(this).addClass('active');
     });
-
-    
 });
 
 const initVehicleLeaveDays = async function() {
@@ -127,21 +125,24 @@ const initMarkAsUnAvailablePage = async function(vehicleNo, date, endDate) {
                     $('#vehicle-markAsUnavailable .additional-notes').val(defaultRemarks);
                 }
 
-                if (respMsp.operation) {
-                    if (respMsp.operation.includes('Cancel Event')) {
-                        $(".opt-btn-div-cancel").show();
+                function initPageInfo() {
+                    if (respMsp.operation) {
+                        if (respMsp.operation.includes('Cancel Event')) {
+                            $(".opt-btn-div-cancel").show();
+                        }
+                        if (respMsp.operation.includes('Update Event')) {
+                            $('.vl-opt-btn-div-create .opt-btn-label').text('Update');
+                        } else {
+                            $('.vl-opt-btn-div-create').hide();
+                        }
                     }
-                    if (respMsp.operation.includes('Update Event')) {
-                        $('.vl-opt-btn-div-create .opt-btn-label').text('Update');
-                    } else {
-                        $('.vl-opt-btn-div-create').hide();
-                    }
+                    $('.form-check-input').each(function() {
+                        if ($(this).data('value') == dayType) {
+                            $(this).prop('checked', true);
+                        }
+                    });
                 }
-                $('.form-check-input').each(function() {
-                    if ($(this).data('value') == dayType) {
-                        $(this).prop('checked', true);
-                    }
-                });
+                initPageInfo();
             } else if (!respMsp.operation || !respMsp.operation.includes('Mark Event')) {
                 $('.vl-opt-btn-div-create').hide();
             }

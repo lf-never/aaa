@@ -201,7 +201,10 @@ const initMonthHandler = async function () {
                     let eventTask = false;
                     let eventStartDate = '';
                     let eventEndDate = '';
+                    let divTitle = '';
                     if (task.taskId && (task.taskId+"").startsWith('onEvent')) {//vehicle event
+                        eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
+                        eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
                         if (task.isVirtualTask) {
                             eventStartDate = moment(task.realStartTime).format('YYYY-MM-DD');
                             eventEndDate = moment(task.realEndTime).format('YYYY-MM-DD');
@@ -211,19 +214,18 @@ const initMonthHandler = async function () {
                         } else {
                             divTitle = task.reason + `, ` + moment(task.indentStartTime).format('HH:mm') + '-' + moment(task.indentEndTime).format('HH:mm');
                         }
-
-                        if (task.isVirtualTask) {
-                            eventStartDate = moment(task.realStartTime).format('YYYY-MM-DD');
-                            eventEndDate = moment(task.realEndTime).format('YYYY-MM-DD');
-                        } else {
-                            eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
-                            eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
-                        }
                         eventTask = true;
 
                         content = `${ divTitle }`;
                     } else {
-                        let taskTypeLabel = task.taskId.indexOf('CU-') != -1 ? 'CU-' : task.dataFrom == 'MT-ADMIN' ? 'MT-' : task.dataFrom == 'SYSTEM' ? 'SYS-' : '';
+                        let taskTypeLabel = '';
+                        if (task.taskId.indexOf('CU-') != -1) {
+                            taskTypeLabel = 'CU-';
+                        } else if (task.dataFrom == 'MT-ADMIN') {
+                            taskTypeLabel = 'MT-';
+                        } else if (task.dataFrom == 'SYSTEM') {
+                            taskTypeLabel = 'SYS-';
+                        }
                         let label = `${ taskTypeLabel + task.purpose }, `;
                         if (task.indentEndTime) {
                             if (task.isVirtualTask) {
@@ -277,7 +279,7 @@ const initMonthHandler = async function () {
             if (tdTaskStep >= 2) {
                 setTimeout(() => {
                     $('.week-day').each(function() {
-                        if($(this).data('date') && $(this).data('date').split(',').includes(date.date() + '')) {
+                        if($(this).data('date')?.split(',').includes(date.date() + '')) {
                             let newHeight = 50 * (tdTaskStep + 1);
                             if ($(this).find('td').height() < newHeight) {
                                 $(this).find('td').height(newHeight)

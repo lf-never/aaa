@@ -50,62 +50,62 @@ $(() => {
 })
 
 const initBasicProfileHandler = async function () {
-    const initPageData = function(vehicleNo) {
-        axios.post("/vehicle/getVehicleDetail", {vehicleNo: vehicleNo }).then(async res => {
-            if (res.data.respCode == -100) {
-                window.location = '../login'
-            } else if (res.data.respCode == 0) {
-                $.confirm({
-                    title: 'WARN',
-                    content: `Data is error, please refresh the page.`,
-                    buttons: {
-                        ok: function () {
-                        },
-                    }
-                });
-            }
+    axios.post("/vehicle/getVehicleDetail", {vehicleNo: currentVehicleNo }).then(async res => {
+        if (res.data.respCode == -100) {
+            window.location = '../login'
+        } else if (res.data.respCode == 0) {
+            $.confirm({
+                title: 'WARN',
+                content: `Data is error, please refresh the page.`,
+                buttons: {
+                    ok: function () {
+                    },
+                }
+            });
+        }
 
-            let vehicleDetail = res.data.respMessage.currentVehicle;
+        let vehicleDetail = res.data.respMessage.currentVehicle;
 
-            vehicleWptEndTime = vehicleDetail.nextWpt1Time; 
-            vehicleWptStartTime = vehicleWptEndTime ? moment(vehicleWptEndTime).add(-6, 'd').format("YYYY-MM-DD") : null;
-            vehicleMptEndTime = vehicleDetail.nextMptTime; 
-            vehicleMptStartTime = vehicleMptEndTime ? moment(vehicleMptEndTime).add(-20, 'd').format("YYYY-MM-DD") : null;
-            vehiclePmTime = vehicleDetail.nextPmTime; 
-            vehicleAviTime = vehicleDetail.nextAviTime; 
+        vehicleWptEndTime = vehicleDetail.nextWpt1Time; 
+        vehicleWptStartTime = vehicleWptEndTime ? moment(vehicleWptEndTime).add(-6, 'd').format("YYYY-MM-DD") : null;
+        vehicleMptEndTime = vehicleDetail.nextMptTime; 
+        vehicleMptStartTime = vehicleMptEndTime ? moment(vehicleMptEndTime).add(-20, 'd').format("YYYY-MM-DD") : null;
+        vehiclePmTime = vehicleDetail.nextPmTime; 
+        vehicleAviTime = vehicleDetail.nextAviTime; 
 
-            let maintenanceOperation = vehicleDetail.maintenanceOperation
-            let maintenanceOperationList = maintenanceOperation ? maintenanceOperation.split(',') : []
-            if (vehicleDetail.onhold == 1 && maintenanceOperationList && maintenanceOperationList.includes('Release')) {
-                $(".vehicle-release-btn").show();
-            } else {
-                $(".vehicle-release-btn").hide();
-            }
+        let maintenanceOperation = vehicleDetail.maintenanceOperation
+        let maintenanceOperationList = maintenanceOperation ? maintenanceOperation.split(',') : []
+        if (vehicleDetail.onhold == 1 && maintenanceOperationList?.includes('Release')) {
+            $(".vehicle-release-btn").show();
+        } else {
+            $(".vehicle-release-btn").hide();
+        }
 
-            let assignedTaskNum = res.data.respMessage.assignedTaskNum;
-            let vehicleOddNum = res.data.respMessage.vehicleOddNum;
-            let vehicleSchedule = res.data.respMessage.vehicleSchedule;
-            let scheduleCount = res.data.respMessage.scheduleCount;
+        let assignedTaskNum = res.data.respMessage.assignedTaskNum;
+        let vehicleOddNum = res.data.respMessage.vehicleOddNum;
+        let vehicleSchedule = res.data.respMessage.vehicleSchedule;
+        let scheduleCount = res.data.respMessage.scheduleCount;
+        function initPageInfo() {
             $(".vehicleType-label").text(vehicleDetail.vehicleType);
-            $(".vehicle-subunit").text(vehicleDetail.subUnit ? vehicleDetail.subUnit : '-');
+            $(".vehicle-subunit").text(vehicleDetail.subUnit || '-');
             $(".vehicle-unit").text(vehicleDetail.unit);
             $(".vehicle-mileage").text(vehicleDetail.totalMileage + " km");
             $("#vehicle-status").text(vehicleDetail.currentStatus);
 
             let statusColor = vehicleStatusColor.find(item => item.status == vehicleDetail.currentStatus)
-            if (!statusColor) {
-                statusColor = 'orange';
-            } else {
+            if (statusColor) {
                 statusColor = statusColor.color;
+            } else {
+                statusColor = 'orange';
             }
             $(".status-label").css('background-color', statusColor);
             
             $(".vehicle-no").text(vehicleDetail.vehicleNo);
             $(".vehicle-type").text(vehicleDetail.vehicleType);
-            $(".vehicle-dimensions").text(vehicleDetail.dimensions ? vehicleDetail.dimensions : '-');
+            $(".vehicle-dimensions").text(vehicleDetail.dimensions || '-');
             $(".vehicle-speedlimit").text(vehicleDetail.limitSpeed ? vehicleDetail.limitSpeed + ' KM/hr' : '-');
             $(".avi-date").text(vehicleDetail.nextAviTime ? moment(vehicleDetail.nextAviTime, 'YYYY-MM-DD').format('DD/MM/YYYY') : '-');
-            $(".vehicle-keyTagId").text(vehicleDetail.keyTagId ? vehicleDetail.keyTagId : '-');
+            $(".vehicle-keyTagId").text(vehicleDetail.keyTagId || '-');
             
             $(".maintenance-expire-warning").text(vehicleDetail.maintenanceWarningStr);
 
@@ -115,26 +115,25 @@ const initBasicProfileHandler = async function () {
             $(".vehicleSchedule").text(vehicleSchedule);
 
             $('.vehicleSchedule').text(scheduleCount)
-
-            if (Cookies.get('userType') == 'HQ') {
-                $('.edit-driver').show();
-                $('.hoto-info').hide()
-            } else if (vehicleDetail.hotoId) {
-                $('.edit-content-btn-div').hide();
-                $('.hoto-info').show()
-                $('.loan-info').hide()
-            } else if (vehicleDetail.loanId) {
-                $('.edit-content-btn-div').hide();
-                $('.hoto-info').hide()
-                $('.loan-info').show()
-            } else {
-                $('.edit-content-btn-div').show();
-                $('.loan-info').hide()
-                $('.hoto-info').hide()
-            }
-        })
-    };
-    initPageData(currentVehicleNo);
+        }
+        initPageInfo();
+        if (Cookies.get('userType') == 'HQ') {
+            $('.edit-driver').show();
+            $('.hoto-info').hide()
+        } else if (vehicleDetail.hotoId) {
+            $('.edit-content-btn-div').hide();
+            $('.hoto-info').show()
+            $('.loan-info').hide()
+        } else if (vehicleDetail.loanId) {
+            $('.edit-content-btn-div').hide();
+            $('.hoto-info').hide()
+            $('.loan-info').show()
+        } else {
+            $('.edit-content-btn-div').show();
+            $('.loan-info').hide()
+            $('.hoto-info').hide()
+        }
+    })
 }
 
 const initDrivingRecordHandler = async function () {

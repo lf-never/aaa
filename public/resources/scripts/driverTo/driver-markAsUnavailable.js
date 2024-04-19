@@ -97,33 +97,36 @@ const initMarkAsUnAvailablePage = async function(driverId, driverName, date, end
                 let defaultReason = leaveRecord.reason
                 let defaultRemarks = leaveRecord.remarks
                 let dayType = leaveRecord.dayType;
-                if (defaultReason) {
-                    $('#driver-markAsUnavailable .reassignReasonDiv').removeClass("active");
-                    $('#driver-markAsUnavailable .reassignReasonDiv').each(function() {
-                        let labelText = $(this).find("label").text();
-                        if (labelText == defaultReason) {
-                            $(this).addClass('active');
+                function InitPageInfo() {
+                    if (defaultReason) {
+                        $('#driver-markAsUnavailable .reassignReasonDiv').removeClass("active");
+                        $('#driver-markAsUnavailable .reassignReasonDiv').each(function() {
+                            let labelText = $(this).find("label").text();
+                            if (labelText == defaultReason) {
+                                $(this).addClass('active');
+                            }
+                        });
+                    }
+                    if (defaultRemarks) {
+                        $('#driver-markAsUnavailable .additional-notes').val(defaultRemarks);
+                    }
+                    if (respMsp.operation) {
+                        if (respMsp.operation.includes('Cancel Leave')) {
+                            $(".opt-btn-div-cancel").show();
+                        }
+                        if (respMsp.operation.includes('Update Leave')) {
+                            $('.dl-opt-btn-div-create .opt-btn-label').text('Update');
+                        } else {
+                            $('.dl-opt-btn-div-create').hide();
+                        }
+                    }
+                    $('.form-check-input').each(function() {
+                        if ($(this).data('value') == dayType) {
+                            $(this).prop('checked', true);
                         }
                     });
                 }
-                if (defaultRemarks) {
-                    $('#driver-markAsUnavailable .additional-notes').val(defaultRemarks);
-                }
-                if (respMsp.operation) {
-                    if (respMsp.operation.includes('Cancel Leave')) {
-                        $(".opt-btn-div-cancel").show();
-                    }
-                    if (respMsp.operation.includes('Update Leave')) {
-                        $('.dl-opt-btn-div-create .opt-btn-label').text('Update');
-                    } else {
-                        $('.dl-opt-btn-div-create').hide();
-                    }
-                }
-                $('.form-check-input').each(function() {
-                    if ($(this).data('value') == dayType) {
-                        $(this).prop('checked', true);
-                    }
-                });
+                InitPageInfo();
             } else if (!(respMsp?.operation?.includes('Mark Leave'))) {
                 $('.dl-opt-btn-div-create').hide();
             }

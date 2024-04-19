@@ -45,55 +45,64 @@ const initVehicleTaskList = async function(vehicleNo, effectiveDataList) {
         </div>
     `);
     if (taskList?.length > 0) {
-        for(let temp of taskList) {
-        $('.vehicleTaskContentDiv').append(`
-            <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
-            <div class="col-3" style="text-align: center;">${temp.taskId}</div>
-            <div class="col-5" style="text-align: center;">${temp.indentStartTime ? moment(temp.indentStartTime).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
-            <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
-            </div>
-        `);
+        function buildTaskList() {
+            for(let temp of taskList) {
+                $('.vehicleTaskContentDiv').append(`
+                    <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
+                    <div class="col-3" style="text-align: center;">${temp.taskId}</div>
+                    <div class="col-5" style="text-align: center;">${temp.indentStartTime ? moment(temp.indentStartTime).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
+                    <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+                    </div>
+                `);
+            }
         }
+        buildTaskList();
     }
     if (hotoList?.length > 0) {
         $(".vehicleHotoList").show();
         $('.vehicleHotoContentDiv').empty();
         $('.vehicleHotoContentDiv').append(`
-        <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
-            <div class="col-3" style="text-align: center;">HOTO ID</div>
-            <div class="col-5" style="text-align: center;">Date Time</div>
-            <div class="col-4" style="text-align: center;">Purpose</div>
-        </div>
-        `);
-        for(let temp of hotoList) {
-        $('.vehicleHotoContentDiv').append(`
-            <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
-            <div class="col-3" style="text-align: center;">${temp.id}</div>
-            <div class="col-5" style="text-align: center;">${temp.startDateTime ? moment(temp.startDateTime).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
-            <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+            <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
+                <div class="col-3" style="text-align: center;">HOTO ID</div>
+                <div class="col-5" style="text-align: center;">Date Time</div>
+                <div class="col-4" style="text-align: center;">Purpose</div>
             </div>
         `);
+        function buildHotoList() {
+            for(let temp of hotoList) {
+                $('.vehicleHotoContentDiv').append(`
+                    <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
+                    <div class="col-3" style="text-align: center;">${temp.id}</div>
+                    <div class="col-5" style="text-align: center;">${temp.startDateTime ? moment(temp.startDateTime).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
+                    <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+                    </div>
+                `);
+            }
         }
+        buildHotoList();
     }
 
     if (loanList?.length > 0) {
         $(".vehicleLoanList").show();
         $('.vehicleLoanContentDiv').empty();
         $('.vehicleLoanContentDiv').append(`
-        <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
-            <div class="col-3" style="text-align: center;">LOAN ID</div>
-            <div class="col-5" style="text-align: center;">Date Time</div>
-            <div class="col-4" style="text-align: center;">Purpose</div>
-        </div>
-        `);
-        for(let temp of loanList) {
-        $('.vehicleLoanContentDiv').append(`
-            <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
-            <div class="col-3" style="text-align: center;">${temp.id}</div>
-            <div class="col-5" style="text-align: center;">${temp.startDate ? moment(temp.startDate).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
-            <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+            <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
+                <div class="col-3" style="text-align: center;">LOAN ID</div>
+                <div class="col-5" style="text-align: center;">Date Time</div>
+                <div class="col-4" style="text-align: center;">Purpose</div>
             </div>
         `);
+        for(let temp of loanList) {
+           function buildLoanList() {
+             $('.vehicleLoanContentDiv').append(`
+                 <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
+                 <div class="col-3" style="text-align: center;">${temp.id}</div>
+                 <div class="col-5" style="text-align: center;">${temp.startDate ? moment(temp.startDate).format("YYYY-MM-DD HH:mm:ss") : ''}</div>
+                 <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+                 </div>
+             `);
+             buildLoanList();
+           }
         }
     }
 }

@@ -395,9 +395,12 @@ const checkField = function(data) {
         vehicleNode: 'Node', vehicleHub: 'Hub', vehicleMileage: 'Odometer', vehicleNo: 'Vehicle No', vehicleSpeedlimit: 'Speed Limit',
         vehicleType: 'Vehicle Name', vehicleDimensions: 'Description', permitType: 'Permit Type'
     }
+    let noCheckField = ['vehicleNode', 'vehicleKeyTagId', 'pmType', 'vehiclePmMaxMileage', 'vehiclePmMonths', 'permitTypeInput', 'permitTypeSelect'];
 
     for (let key in data) {
-        if(key == 'vehicleNode' || key == 'vehicleKeyTagId' || key == 'pmType' || key == 'vehiclePmMaxMileage' || key == 'vehiclePmMonths' || key == 'permitTypeInput' || key == 'permitTypeSelect') continue
+        if(noCheckField.indexOf(key) != -1) {
+            continue
+        }
         if (key == 'vehicleHub' || key == 'vehicleGroup') {
             let hub = data['vehicleHub']
             let group = data['vehicleGroup']
