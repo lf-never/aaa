@@ -127,7 +127,6 @@
 	font-weight: bold;
 }
 .driver-statistics{
-	/* position: absolute; */
 	width: 100%;
 	padding: 10px 0;
     border-bottom: solid 2px #e3dfdf;
@@ -198,12 +197,6 @@
     text-align: center;
     font-size: 10px;
 }
-/* #modal-speed-chart .dataTables_wrapper .dataTables_paginate .paginate_button {
-	color: black !important;
-}
-#modal-speed-chart .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-	color: white !important;
-} */
 
 #modal-speed-chart tr:hover {
 	background-color: #dbdada;
@@ -214,8 +207,6 @@
 	background-color: #7489F4 !important;
 	color: white !important;
 	border-width: 0 !important;
-	/* height: 40px;
-	line-height: 40px; */
 }
 
 #modal-speed-chart .echarts-title{

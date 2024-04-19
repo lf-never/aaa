@@ -815,8 +815,10 @@ module.exports.getVehicleTasks = async function (req, res) {
             if (executionDate.indexOf('~') != -1) {
                 const dates = executionDate.split(' ~ ')
 
-                paramList.push(` vv.indentStartTime >= '${dates[0]}' `)
-                paramList.push(` vv.indentStartTime <= '${dates[1]}' `)
+                paramList.push(` vv.indentStartTime >= ? `)
+                paramList.push(` vv.indentStartTime <= ? `)
+                replacements.push(dates[0])
+                replacements.push(dates[1])
             } else {
                 paramList.push(` vv.indentStartTime = ? `)
                 replacements.push(executionDate)
@@ -827,8 +829,10 @@ module.exports.getVehicleTasks = async function (req, res) {
             if (aviDate.indexOf('~') != -1) {
                 const dates = aviDate.split(' ~ ')
 
-                paramList.push(` vv.nextAviTime >= '${dates[0]}' `)
-                paramList.push(` vv.nextAviTime <= '${dates[1]}' `)
+                paramList.push(` vv.nextAviTime >= ? `)
+                paramList.push(` vv.nextAviTime <= ? `)
+                replacements.push(dates[0])
+                replacements.push(dates[1])
             } else {
                 paramList.push(` vv.nextAviTime = ? `);
                 replacements.push(aviDate)
@@ -839,8 +843,10 @@ module.exports.getVehicleTasks = async function (req, res) {
             if (pmDate.indexOf('~') != -1) {
                 const dates = pmDate.split(' ~ ')
 
-                paramList.push(` vv.nextPmTime >= '${dates[0]}' `)
-                paramList.push(` vv.nextPmTime <= '${dates[1]}' `)
+                paramList.push(` vv.nextPmTime >= ? `)
+                paramList.push(` vv.nextPmTime <= ? `)
+                replacements.push(dates[0])
+                replacements.push(dates[1])
             } else {
                 paramList.push(` vv.nextPmTime = ? `)
                 replacements.push(pmDate)
@@ -851,8 +857,10 @@ module.exports.getVehicleTasks = async function (req, res) {
             if (wptDate.indexOf('~') != -1) {
                 const dates = wptDate.split(' ~ ')
 
-                paramList.push(` vv.nextWpt1Time >= '${dates[0]}' `)
-                paramList.push(` vv.nextWpt1Time <= '${dates[1]}' `)
+                paramList.push(` vv.nextWpt1Time >= ? `)
+                paramList.push(` vv.nextWpt1Time <= '? `)
+                replacements.push(dates[0])
+                replacements.push(dates[1])
             } else {
                 paramList.push(` vv.nextWpt1Time = ? `)
                 replacements.push(wptDate)
@@ -951,11 +959,11 @@ module.exports.getVehicleTasks = async function (req, res) {
         let vehicleNoOrder = req.body.vehicleNoOrder;
         let orderList = [];
         if (vehicleNoOrder) {
-            orderList.push(` vv.vehicleNo ` + vehicleNoOrder);
+            orderList.push(` vv.vehicleNo ` + (vehicleNoOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
         }
         let hubOrder = req.body.hubOrder;
         if (hubOrder) {
-            orderList.push(` vv.unit ` + hubOrder);
+            orderList.push(` vv.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
         }
         if (orderList.length) {
             baseSQL += ' ORDER BY ' + orderList.join(' , ')
@@ -966,6 +974,7 @@ module.exports.getVehicleTasks = async function (req, res) {
         baseSQL += ` limit ?, ?`
         replacements.push(pageNum);
         replacements.push(pageLength);
+        console.log(baseSQL)
         let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
 
         // upcoming event
@@ -1077,12 +1086,12 @@ const getDeactivateVehicle = async function(req) {
         let vehicleNoOrder = req.body.vehicleNoOrder;
         let orderList = [];
         if (vehicleNoOrder) {
-            orderList.push(` veh.vehicleNo ` + vehicleNoOrder);
+            orderList.push(` veh.vehicleNo ` + (vehicleNoOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
         }
 
         let hubOrder = req.body.hubOrder;
         if (hubOrder) {
-            orderList.push(` veh.unit ` + hubOrder);
+            orderList.push(` veh.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
         }
         if (orderList.length) {
             baseSQL += ' ORDER BY ' + orderList.join(' , ')

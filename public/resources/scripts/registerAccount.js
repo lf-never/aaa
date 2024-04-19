@@ -315,9 +315,6 @@ const initPage = async function () {
 
     
     const initLayDate = function () {
-        layui.use('layer', function(){
-            layer = layui.layer;
-        });
         layui.use('laydate', function(){
             let laydate = layui.laydate;
             laydate.render({

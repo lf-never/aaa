@@ -6,8 +6,6 @@ html {
 
 body {
     font-size: 0.70vw !important;
-    
-    /* line-height: 1 !important; */
 }
 
 .container-fluid {
@@ -47,8 +45,8 @@ body {
     line-height: 25px;
     color: black;
     background-color: #E1E1E1;
-    /* border: 1px solid #BFBFBF; */
     border: none;
+    font-size: 14px !important;
 }
 
 .active {
@@ -60,18 +58,13 @@ body {
     border: 1px solid #BFBFBF;
     border-radius: 15px;
     text-align: center;
-    /* width: 10vw; */
     line-height: 30px;
     background-color: white;
     color: #003333;
 }
 
 .overview-div button{
-    /* border: 1px solid #BFBFBF; */
-    /* border-radius: 15px; */
     text-align: center;
-    /* width: 10vw; */
-    /* line-height: 30px; */
     background-color: white;
     color: #003333;
     border: none;
@@ -143,7 +136,6 @@ body {
 }
 
 .tpt-number {
-    /* border: 1px solid #A6A6A6; */
     border-top: none;
     border-left: none;
     border-right: none;
@@ -153,7 +145,6 @@ body {
 .indent-color {
     border-radius: 15px;
     width: 150px;
-    /* height: 10rem; */
     border: 1px solid #A6A6A6;
     color: #A6A6A6;
 }
@@ -166,6 +157,7 @@ body {
 .layui-laydate-range {
     border-radius: 15px;
     line-height: normal;
+    width: 650px !important;
 }
 .layui-laydate .layui-this, .layui-laydate .layui-this>div {
     background-color: #198754!important;
@@ -177,19 +169,11 @@ body {
 .layui-laydate-content td > div {
     padding: 8px 0px;
 }
-.layui-select-btn {
-    padding: 3px 10px;
-}
+
 .layui-date-input {
     width: 250px;
 }
 
-.tpt-number {
-    /* border: 1px solid #A6A6A6;
-    border-top: none;
-    border-left: none;
-    border-right: none; */
-}
 
 .vehicle-search-select {
     position: relative;
@@ -200,7 +184,6 @@ body {
     border: 1px solid #e0e0e0;
     display: grid;
     justify-content: center;
-    /* align-items:center; */
 }
 
 .card-header {
@@ -220,7 +203,6 @@ body {
     bottom: 36px;
     right: 3%;
     z-index: 10
-    /* z-index: -1; */
 }
 
 .form-search-select1 li:hover {
@@ -228,21 +210,18 @@ body {
     color: white;
 }
 
-/* .form-search-select2 li:hover {
-    background-color: #1E90FF;
-    color: white;
-} */
+
 .form-search-select {
     width: 100%;
     -moz-padding-start: calc(0.75rem - 3px);
     font-size: 0.8vw;
     font-weight: 400;
-    /* line-height: 1.5; */
+
     color: #212529;
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 16px 12px;
-    /* border: 1px solid #ced4da; */
+  
     border-radius: 0rem;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
     cursor: pointer;
@@ -250,9 +229,7 @@ body {
     overflow-y: auto;
 }
 
-/* .form-search-select li {
-    padding: 0 10px;
-} */
+
 
 .tpt-number::after {
     content: '';
@@ -330,11 +307,8 @@ body {
     width: 100% !important;
 }
 
-.layui-laydate-range {
-    width: 650px !important;
-} 
-
 .layui-select-btn {
+    padding: 3px 10px;
     font-size: 13px !important;
     background-color: #dfdddd !important;
     color: #5b5959 !important;
@@ -351,9 +325,7 @@ body {
 .datepickerContainer {
     background-color: white !important;
 }
-/* .datepickerGoNext {
-    display: none !important;
-} */
+
 
 .datepickerMonth a {
     color: #A6A6A6 !important;
@@ -362,11 +334,7 @@ body {
 div.datepicker tbody th {
     color: #A6A6A6 !important;
 }
-/* 
-.datepickerViewMonths {
-    width: 200px !important;
-    height: 200px !important;
-} */
+
 
 .datepickerMonths {
     height: 220px !important;
@@ -387,7 +355,7 @@ div.datepicker tbody th {
     margin: 8px 10px;
     position: relative;
     bottom: 35px;
-    /* right: 1%; */
+ 
     z-index: 10
 }
 
@@ -408,10 +376,6 @@ div.datepicker tbody th {
 
 .form-control {
     font-size: 13px !important;
-}
-
-.btn-button {
-    font-size: 14px !important;
 }
 
 .div-col-ps {

@@ -197,27 +197,29 @@ const initDriverAssignedIndent = async function (showMileageWarning) {
                             <button class="btn btn-sm custom-btn-danger" style="width: 80px; color: white;font-weight: bold;" 
                                 onclick="updateTaskMileageStatus('${full.taskId}', 'Rejected')">Reject</button> 
                         `
-                        if (!full.status || full.status == 'Cancelled' || full.status == 'Rejected') {
-                            if (operationList.includes('Edit')) {
-                                return editBtn
-                            } else {
-                                return full.status ?? '-'
+                        function buildOptHtml() {
+                            if (!full.status || full.status == 'Cancelled' || full.status == 'Rejected') {
+                                if (operationList.includes('Edit')) {
+                                    return editBtn
+                                } else {
+                                    return full.status || '-'
+                                }
+                            } else if (full.status.toLowerCase() == 'edited') {
+                                if (operationList.includes('Endorse')) {
+                                    return endorseBtn
+                                }
+                                return full.status
+                            } else if (full.status.toLowerCase() == 'endorsed') {
+                                if (operationList.includes('Approve')) {
+                                    return approveBtn
+                                }
+                                return full.status
+                            } else if (full.status.toLowerCase() == 'approved') {
+                                return 'Approved'
                             }
-                        } else if (full.status.toLowerCase() == 'edited') {
-                            if (operationList.includes('Endorse')) {
-                                return endorseBtn
-                            } else {
-                                return full.status ?? '-'
-                            }
-                        } else if (full.status.toLowerCase() == 'endorsed') {
-                            if (operationList.includes('Approve')) {
-                                return approveBtn
-                            } else {
-                                return full.status ?? '-'
-                            } 
-                        } else if (full.status.toLowerCase() == 'approved') {
-                            return 'Approved'
                         }
+
+                        return buildOptHtml();
                     }
                     return "-"
                 }

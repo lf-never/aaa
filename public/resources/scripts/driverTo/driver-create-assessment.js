@@ -72,18 +72,27 @@ const initCategoryList = async function() {
             </div>
           `);
         }
-        let currentCategory = '-'
-        dataList = dataList.filter(function(item) {return item.status == 'Pass'})
-        if (dataList.length > 0) {
-          dataList = dataList.sort(function(item1, item2) {
-            return item1.assessmentType > item2.assessmentType ? 1 : -1;
-          });
-          let maxCateytoryLevel = dataList[0].assessmentType;
-          currentCategory = maxCateytoryLevel == 'Category A Assessment' ? 'A' : maxCateytoryLevel == 'Category B Assessment' ? 'B' : maxCateytoryLevel == 'Category C Assessment' 
-          ? 'C' : maxCateytoryLevel == 'Category D Assessment' ? 'D' : '-';
+        function initCategoryInfo() {
+          let currentCategory = '-'
+          dataList = dataList.filter(function(item) {return item.status == 'Pass'})
+          if (dataList.length > 0) {
+            dataList = dataList.sort(function(item1, item2) {
+              return item1.assessmentType > item2.assessmentType ? 1 : -1;
+            });
+            let maxCateytoryLevel = dataList[0].assessmentType;
+            if (maxCateytoryLevel == 'Category A Assessment') {
+              currentCategory = 'A';
+            } else if (maxCateytoryLevel == 'Category B Assessment') {
+              currentCategory = 'B';
+            } else if (maxCateytoryLevel == 'Category C Assessment') {
+              currentCategory = 'C';
+            } else if (maxCateytoryLevel == 'Category D Assessment') {
+              currentCategory = 'D';
+            }
+          }
+          $('.driver-permitCategory').html(currentCategory);
         }
-        $('.driver-permitCategory').html(currentCategory);
-        
+        initCategoryInfo();
       }
     } else {
       $.confirm({

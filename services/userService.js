@@ -1658,6 +1658,7 @@ let buildGetCVMVUserListParams = async function(loginUser, searchCondition, cvRo
 }
 
 let buildGetCVMVUserListOrderSql = async function(tabPage, orderField, orderType) {
+
     if (orderField) {
         if (orderField == 'unit') {
             return ` order by ub.mvHub ` + orderType + ', ' + 'ub.mvNode ' + orderType;
@@ -1679,6 +1680,7 @@ module.exports.getCVMVUserList = async function (req, res) {
     try {
         let userId = req.cookies.userId;
         let { tabPage, searchCondition, cvRoleId, mvUserType, pageNum, pageLength, orderField, orderType } = req.body;
+        orderType = orderType?.toLowerCase() == 'desc' ? 'DESC' : 'ASC';
         let loginUser = await getUserDetailInfo(userId);
         if (!loginUser) {
             throw new Error(`UserId ${ userId } does not exist.`)

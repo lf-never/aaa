@@ -152,32 +152,38 @@ const initBasicProfileHandler = async function () {
         $('.driver-vocation').html(driver.vocation ? driver.vocation : '-');
         $('.driver-role').html(driver.role ? driver.role : '-');
     
-        $('.driver-unit').html(driver.group ? driver.group : '-');
-        $('.driver-nodeHub').html((driver.node ? driver.node : '-') + ', ' + (driver.hub ? driver.hub : '-'));
-        $('.driver-enlistmentDate').html(driver.enlistmentDate ? moment(driver.enlistmentDate).format('DD/MM/YYYY') : '-');
-        $('.driver-operationallyReadyDate').html(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate).format('DD/MM/YYYY') : '-');
-        $('.driver-nric').html(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
-        $('.driver-birthday').html(driver.birthday ? moment(driver.birthday).format('DD/MM/YYYY') : '-');
-        $('.driver-contactNo').html(driver.contactNumber ? driver.contactNumber : '-');
-   
-        $('.driver-permitType').html(driver.permitType ? driver.permitType : '-');
-        $('.driver-permitNo').html(driver.permitNo ? driver.permitNo : '-');
-        $('.driver-permitDateOfIssue').html(driver.permitIssueDate ? moment(driver.permitIssueDate).format("DD/MM/YYYY") : '-');
-        $('.driver-permitNo-input').val(driver.permitNo ? driver.permitNo : '');
-        $('.driver-permitCategory').html(driver.category ? driver.category : '-');
-        $('.driver-demeritPoints').html(driver.demeritPoints ? driver.demeritPoints : '0');
-
-        $(".driverCurrentPermitStatus").text(driver.permitStatus);
-        if (driver.permitStatus && driver.permitStatus == 'invalid') {
-            $("#driver-permitStatus-select").val('invalid');
-            $("#driver-permitInvalidReason-select").empty();
-            let permitInvalidReason = driver.permitInvalidReason;
-            let optionsHtml = '';
-            for (let temp of permitInvalidReasons) {
-                optionsHtml += `<option value="${temp}" ${temp == permitInvalidReason ? ' selected ' : ''}>${temp}</option>`;
-            }
-            $("#driver-permitInvalidReason-select").append(optionsHtml);
+        function initBaseInfo() {
+            $('.driver-unit').html(driver.group ? driver.group : '-');
+            $('.driver-nodeHub').html((driver.node ? driver.node : '-') + ', ' + (driver.hub ? driver.hub : '-'));
+            $('.driver-enlistmentDate').html(driver.enlistmentDate ? moment(driver.enlistmentDate).format('DD/MM/YYYY') : '-');
+            $('.driver-operationallyReadyDate').html(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate).format('DD/MM/YYYY') : '-');
+            $('.driver-nric').html(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
+            $('.driver-birthday').html(driver.birthday ? moment(driver.birthday).format('DD/MM/YYYY') : '-');
+            $('.driver-contactNo').html(driver.contactNumber ? driver.contactNumber : '-');
         }
+        initBaseInfo();
+   
+        function initPermitInfo() {
+            $('.driver-permitType').html(driver.permitType ? driver.permitType : '-');
+            $('.driver-permitNo').html(driver.permitNo ? driver.permitNo : '-');
+            $('.driver-permitDateOfIssue').html(driver.permitIssueDate ? moment(driver.permitIssueDate).format("DD/MM/YYYY") : '-');
+            $('.driver-permitNo-input').val(driver.permitNo ? driver.permitNo : '');
+            $('.driver-permitCategory').html(driver.category ? driver.category : '-');
+            $('.driver-demeritPoints').html(driver.demeritPoints ? driver.demeritPoints : '0');
+    
+            $(".driverCurrentPermitStatus").text(driver.permitStatus);
+            if (driver.permitStatus && driver.permitStatus == 'invalid') {
+                $("#driver-permitStatus-select").val('invalid');
+                $("#driver-permitInvalidReason-select").empty();
+                let permitInvalidReason = driver.permitInvalidReason;
+                let optionsHtml = '';
+                for (let temp of permitInvalidReasons) {
+                    optionsHtml += `<option value="${temp}" ${temp == permitInvalidReason ? ' selected ' : ''}>${temp}</option>`;
+                }
+                $("#driver-permitInvalidReason-select").append(optionsHtml);
+            }
+        }
+        initPermitInfo();
 
         layui.use('laydate', function(){
             let laydate = layui.laydate;
@@ -415,9 +421,9 @@ const formatNumber = function(str, splitStr = ',') {
 
 const getParams = function(key) {
     let reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
-    let r = window.location.search.substr(1).match(reg);
+    let r = reg.exec(window.location.search.substring(1));
     if (r != null) {
-        return unescape(r[2]);
+        return decodeURI(r[2]);
     }
     return null;
 };

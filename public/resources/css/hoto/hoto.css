@@ -48,7 +48,6 @@ table.dataTable td {
 }
 .status-filter-item {
     width: fit-content;
-    /* padding: 0 3.5em; */
     height: 41px;
     border-radius: 20px;
     color: #5c5959;
@@ -157,27 +156,6 @@ img {
     background-size: 24px;
     background-repeat: no-repeat;
     background-position: center center;
-}
-
-/* .dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 0 !important;
-}
-
-.active>.page-link, .page-link.active {
-    background-color: #549D26;
-    border-color: #549D26;
-}
-
-.page-link {
-    color: #212529;
-} */
-
-/* .jconfirm-type-animated {
-    min-width: 650px;
-} */
-
-.dataTables_scrollHead {
-    /* border-radius: 10px; */
 }
 
 .btn-hotoConfirm {

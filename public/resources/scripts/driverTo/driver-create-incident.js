@@ -148,9 +148,6 @@ const initIncidentPage = async function () {
     }
     initViolationType(violationType)
     const initLayDate = function () {
-        layui.use('layer', function(){
-            layer = layui.layer;
-        });
         layui.use('laydate', function(){
             let laydate = layui.laydate;
     

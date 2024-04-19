@@ -1,9 +1,7 @@
 body {
-    /* font-size: 0.75vw !important; */
     line-height: 1 !important;
 }
 .input-height {
-    /* height: 38px !important; */
     color: black !important;
 }
 #pickupDestination-shadow .form-search-select, #dropoffDestination-shadow .form-search-select {
@@ -22,7 +20,6 @@ input {
 }
 .shadow-top {
     background-color: white;
-    /* height: 80px; */
 }
 
 .top-title {
@@ -42,10 +39,7 @@ input {
 .data-list td {
     border-color: #c3c1c4 !important;
 }
-/* 
-td {
-    color: black !important;
-} */
+
 
 table.indent-table thead th {
     border-bottom: 3px solid #c3c1c4 !important;
@@ -53,7 +47,7 @@ table.indent-table thead th {
 
 .data-list thead th {
     background-color: #F3F3F3;
-    border-bottom: 0px solid #F3F3F3 !important;
+    border-bottom: 0px solid #c3c1c4 !important;
 }
 
 .dataTables_wrapper.no-footer .dataTables_scrollBody {
@@ -92,15 +86,6 @@ table.dataTable>thead .sorting_asc:before, table.dataTable>thead .sorting_asc:af
     border: 0 !important;
 }
 
-/* .jconfirm-content, .jconfirm-title {
-    color: black !important;
-} */
-
 .icon-down {
     line-height: 13px !important;
-}
-
-.data-list thead th {
-    background-color: #F3F3F3;
-    border-bottom: 0px solid #c3c1c4 !important;
 }

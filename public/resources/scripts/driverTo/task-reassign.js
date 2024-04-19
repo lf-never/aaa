@@ -150,7 +150,7 @@ const initVehicleDriverSelect = async function(task) {
     let driverList = VehicleDriver.driverList;
     let vehicleList = VehicleDriver.vehicleList;
 
-    let driverSelect = $('.driver-img-select').imgSelect({
+    $('.driver-img-select').imgSelect({
         searchable: true,
         dataKey: 'driverId',
         dataName: 'driverName',
@@ -158,14 +158,13 @@ const initVehicleDriverSelect = async function(task) {
         data: driverList
     });
 
-    let vehicleNoSelect = $('.vehicleNo-img-select').imgSelect({
+    $('.vehicleNo-img-select').imgSelect({
         searchable: true,
         dataKey: 'vehicleNo',
         dataName: 'vehicleNo',
         defaultValue: task.vehicleNumber ? task.vehicleNumber : '',
         data: vehicleList,
         selectItemCallback: function($vehicleDiv) {
-            //refreshDriver($vehicleDiv, driverSelect);
         }
     });
 }
@@ -175,7 +174,7 @@ const refreshDriver = function($vehicleDiv, driverSelect) {
 
     let $driverSelectEle = driverSelect.getSelectEle();
     $driverSelectEle.find('.img-select-item-div').each(function() {
-        if ($(this).hasClass('premitType-class-' + permitType) == true) {
+        if ($(this).hasClass('premitType-class-' + permitType)) {
             $(this).show();
         } else {
             $(this).hide();

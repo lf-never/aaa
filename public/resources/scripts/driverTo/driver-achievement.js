@@ -96,40 +96,43 @@ const initAchievementContent = async function () {
             let myNodeTop20 = resultData.data.respMessage.driverNodeTaskHoursLeaderBoardTop20;
             if (myNodeTop20?.length > 0) {
                 let myNodeHtml = ``;
-                for (let index = 0; index < myNodeTop20.length; index++) {
-                    let infoColor = leaderBoardColor[index];
-                    let rankingColor = '';
-                    if (index == 0) {
-                        rankingColor = '#e3a826'
-                    } else if (index == 1) {
-                        rankingColor = '#b8b8b8'
-                    } else if (index == 2) {
-                        rankingColor = '#b27e5c'
-                    } else {
-                        rankingColor = leaderBoardColor[index]
-                    }
-                    myNodeHtml += `
-                        <div class="leader-board-item">
-                            <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    `;
-                    if (index < 3) {
-                        myNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
-                    } else {
-                        myNodeHtml += `<div style="width: 16px;"></div>`;
-                    }
-                    myNodeHtml += `
-                                <div style="font-weight: 900; margin-left: 2px; width: 20px; height: 20px;background-color: ${rankingColor}; border-radius: 20px; display: flex; align-items: center; justify-content: center;">${index + 1}</div>
-                            </div>
-                            <div style="width: calc(100% - 40px); height: 24px; background-color: ${infoColor}; display: flex; align-items: center; justify-content: center;">
-                                <div title="${myNodeTop20[index].driverName}" style="width: calc(100% - 60px); height: 24px; display: flex; align-items: center; justify-content: center; padding-left: 5px; padding-right: 5px;">
-                                    <label style="width: 100%; height: fit-content; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${myNodeTop20[index].driverName}</label>
+                function buildTop20Html() {
+                    for (let index = 0; index < myNodeTop20.length; index++) {
+                        let infoColor = leaderBoardColor[index];
+                        let rankingColor = '';
+                        if (index == 0) {
+                            rankingColor = '#e3a826'
+                        } else if (index == 1) {
+                            rankingColor = '#b8b8b8'
+                        } else if (index == 2) {
+                            rankingColor = '#b27e5c'
+                        } else {
+                            rankingColor = leaderBoardColor[index]
+                        }
+                        myNodeHtml += `
+                            <div class="leader-board-item">
+                                <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        `;
+                        if (index < 3) {
+                            myNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
+                        } else {
+                            myNodeHtml += `<div style="width: 16px;"></div>`;
+                        }
+                        myNodeHtml += `
+                                    <div style="font-weight: 900; margin-left: 2px; width: 20px; height: 20px;background-color: ${rankingColor}; border-radius: 20px; display: flex; align-items: center; justify-content: center;">${index + 1}</div>
                                 </div>
-                                <div style="width: 60px; height: 24px; display: flex; align-items: center; justify-content: flex-start;">${myNodeTop20[index].taskPerfectHours}</div>
+                                <div style="width: calc(100% - 40px); height: 24px; background-color: ${infoColor}; display: flex; align-items: center; justify-content: center;">
+                                    <div title="${myNodeTop20[index].driverName}" style="width: calc(100% - 60px); height: 24px; display: flex; align-items: center; justify-content: center; padding-left: 5px; padding-right: 5px;">
+                                        <label style="width: 100%; height: fit-content; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${myNodeTop20[index].driverName}</label>
+                                    </div>
+                                    <div style="width: 60px; height: 24px; display: flex; align-items: center; justify-content: flex-start;">${myNodeTop20[index].taskPerfectHours}</div>
+                                </div>
+                                <div class="default_theme"></div>
                             </div>
-                            <div class="default_theme"></div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
+                buildTop20Html();
 
                 $('.mynode-leader-board').append(myNodeHtml);
             }
@@ -137,41 +140,43 @@ const initAchievementContent = async function () {
             let allNodeTop10 = resultData.data.respMessage.allNodeTaskHoursLeaderBoardTop10;
             if (allNodeTop10?.length > 0) {
                 let allNodeHtml = ``;
-                for (let index = 0; index < allNodeTop10.length; index++) {
-                    let infoColor = leaderBoardColor[index];
-                    let rankingColor = '';
-                    if (index == 0) {
-                        rankingColor = '#e3a826'
-                    } else if (index == 1) {
-                        rankingColor = '#b8b8b8'
-                    } else if (index == 2) {
-                        rankingColor = '#b27e5c'
-                    } else {
-                        rankingColor = leaderBoardColor[index]
-                    }
-                    allNodeHtml += `
-                        <div class="leader-board-item">
-                            <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    `;
-                    if (index < 3) {
-                        allNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
-                    } else {
-                        allNodeHtml += `<div style="width: 16px;"></div>`;
-                    }
-                    allNodeHtml += `
-                                <div style="font-weight: 900; margin-left: 5px; width: 20px; height: 20px;background-color: ${rankingColor};border-radius: 20px; display: flex; align-items: center; justify-content: center;">${index + 1}</div>
-                            </div>
-                            <div style="width: calc(100% - 40px); height: 24px; background-color: ${infoColor}; display: flex; align-items: center; justify-content: center;">
-                                <div title="${allNodeTop10[index].driverName}" style="width: calc(100% - 60px); height: 24px; display: flex; align-items: center; justify-content: center;padding-left: 5px; padding-right: 5px;">
-                                    <label style="width: 100%; height: fit-content; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${allNodeTop10[index].driverName}</label>
+                function buildTop10Html() {
+                    for (let index = 0; index < allNodeTop10.length; index++) {
+                        let infoColor = leaderBoardColor[index];
+                        let rankingColor = '';
+                        if (index == 0) {
+                            rankingColor = '#e3a826'
+                        } else if (index == 1) {
+                            rankingColor = '#b8b8b8'
+                        } else if (index == 2) {
+                            rankingColor = '#b27e5c'
+                        } else {
+                            rankingColor = leaderBoardColor[index]
+                        }
+                        allNodeHtml += `
+                            <div class="leader-board-item">
+                                <div style="width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        `;
+                        if (index < 3) {
+                            allNodeHtml += `<img alt="" style="height: 20px;" src="../images/achievement/trophy${index+1}.png">`;
+                        } else {
+                            allNodeHtml += `<div style="width: 16px;"></div>`;
+                        }
+                        allNodeHtml += `
+                                    <div style="font-weight: 900; margin-left: 5px; width: 20px; height: 20px;background-color: ${rankingColor};border-radius: 20px; display: flex; align-items: center; justify-content: center;">${index + 1}</div>
                                 </div>
-                                <div style="width: 60px; height: 24px; display: flex; align-items: center; justify-content: flex-start;">${allNodeTop10[index].taskPerfectHours}</div>
+                                <div style="width: calc(100% - 40px); height: 24px; background-color: ${infoColor}; display: flex; align-items: center; justify-content: center;">
+                                    <div title="${allNodeTop10[index].driverName}" style="width: calc(100% - 60px); height: 24px; display: flex; align-items: center; justify-content: center;padding-left: 5px; padding-right: 5px;">
+                                        <label style="width: 100%; height: fit-content; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${allNodeTop10[index].driverName}</label>
+                                    </div>
+                                    <div style="width: 60px; height: 24px; display: flex; align-items: center; justify-content: flex-start;">${allNodeTop10[index].taskPerfectHours}</div>
+                                </div>
+                                <div class="default_theme"></div>
                             </div>
-                            <div class="default_theme"></div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
-
+                buildTop10Html();
                 $('.allnode-leader-board').append(allNodeHtml);
             } 
         } 

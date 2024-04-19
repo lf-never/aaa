@@ -163,9 +163,9 @@ const initVehicleScheduleHandler = async function () {
 
 const getParams = function(key) {
     let reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
-    let r = window.location.search.substr(1).match(reg);
+    let r = reg.exec(window.location.search.substring(1));
     if (r != null) {
-        return unescape(r[2]);
+        return decodeURI(r[2]);
     }
     return null;
 };

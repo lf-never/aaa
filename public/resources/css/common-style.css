@@ -51,7 +51,6 @@ iframe {
 ::-webkit-scrollbar-track {
     background: transparent;
     border: none;
-    /* box-shadow: 0px 0px 3px #dfdfdf inset; */
     border-radius: 10px;
 }
 
@@ -68,7 +67,7 @@ iframe {
 .btn-mobius {
     background-color: #E0B325;
     border-color: #E0B325;
-    /* box-shadow: #5a5a5a 0 0 1px; */
+    
 }
 
 .btn-mobius:hover {
@@ -77,7 +76,7 @@ iframe {
 }
 
 .custom-btn {
-    /* background-color: #337ab7; */
+ 
     border-color: #1B9063;
     color: white;
     border: 1px solid transparent;
@@ -98,23 +97,7 @@ iframe {
     color: white;
 }
 
-.custom-select {
-    /* min-width: 120px;
-    padding: 5px;
-    font-size: 9pt;
-    line-height: 9pt;
-    border: solid 1px rgb(163, 163, 163);
-    border-radius: 5px;
-    height: 31px;
-    color: #fff;    
-    background: url(/images/select-down-arrow-yellow.png) no-repeat right #333;
-    -webkit-appearance: none;
-    background-position-x: 95%;
-    text-transform: uppercase;
-    background-size: 12px;
-    padding-left: 10px;
-    outline: none; */
-}
+
 
 
 .position-names {
@@ -246,9 +229,7 @@ iframe {
     color: white !important
 }
 
-/* .jconfirm .jconfirm-box div.jconfirm-title-c {
-    background-color: #1B9063 !important;
-} */
+
 
 .div-table {
     display: table; 
@@ -290,13 +271,8 @@ iframe {
     text-align: left;
 }
 
-.layui-layer {
-    border-radius: 10px !important;
-}
-
 .layui-layer-page, .layui-layer-dialog {
     border-radius: 11px !important;
-    /* background-color: rgba(0, 0, 0, 0.7) !important; */
 }
 
 .search-input {
@@ -436,9 +412,6 @@ input.form-control:focus, select.form-select:focus, textarea.form-control:focus 
     box-shadow: 0 0 5px #0a8d5b !important;
 }
 
-/* input[type=checkbox]:after {
-    background-color: #1B9063 !important;
-} */
 
 .list-group-item.user-select-none {
     border-width: 0;

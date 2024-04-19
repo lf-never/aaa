@@ -150,7 +150,8 @@ $(function () {
             </div>
         `)
       
-        
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
         $('.left-view-container .view-indent').on('click', viewIndentHandler)
         $('.left-view-container .view-offence').on('click', viewOffenceEventHandler)

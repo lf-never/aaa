@@ -495,6 +495,99 @@ module.exports.createDriver = async function (req, res) {
     }
 };
 
+module.exports.editDriverFromResource = async function (req, res) {
+    try {
+        let { driverId, driverName, vocation, role, unit, vehicleType, rank, enlistmentDate, operationallyReadyDate, nric, birthday, contactNumber } = req.body;
+        let newNric = ((nric).toString()).substr(0, 1)+((nric).toString()).substr(((nric).toString()).length-4, 4);
+        let loginName = newNric + ((driverName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
+        const action = req.body.action;
+        let userId = req.cookies.userId;
+        let user = await userService.getUserDetailInfo(req.cookies.userId)
+        if (!user) {
+            log.warn(`User ${ userId } does not exist.`);
+            return res.json(utils.response(0, `User ${ userId } does not exist.`));
+        }
+        let password
+        let hub = req.body.hub && req.body.hub != '' ? req.body.hub : null;
+        let node = req.body.node ? req.body.node : null;
+        // 2023-08-31 Determine whether there is a task when changing the hub/node or unit.
+        if(driverId) {
+            let validTask = await TaskUtils.getTaskByDriverId(driverId, hub, node, unit);
+            if(validTask.length > 0){
+                return res.json(utils.response(0, `TO still has pending tasks, please re-assign before shifting TO unit.`));
+            }    
+        }
+        let oldDriver = await Driver.findByPk(driverId);
+        
+        //2023-11-23 password nric+contactNumber
+        password = utils.generateMD5Code((nric.substr((nric.length)-4, 4)) + contactNumber.substr(0, 4)).toUpperCase();
+        // 2023-08-29 Encrypt the nric.
+        nric = utils.generateAESCode(nric).toUpperCase();
+
+        //opt log
+        let operationRecord = {
+            operatorId: req.cookies.userId,
+            businessType: 'driver',
+            businessId: driverId,
+            optType: 'create',
+            beforeData: '',
+            afterData: '',
+            optTime: moment().format('yyyy-MM-DD HH:mm:ss'),
+            remarks: 'Server user update driver.'
+        }
+
+        if (action.toLowerCase() == 'edit') {
+            operationRecord.optType = 'update';
+            operationRecord.beforeData = oldDriver ? JSON.stringify(oldDriver) : '';
+            operationRecord.afterData = oldDriver ? JSON.stringify(oldDriver) : '';
+            log.info(`Edit driver info ...`)
+            await sequelizeObj.transaction(async transaction => {
+                // create hub/node
+                let unitId = null
+                if(hub) unitId = await unitService.UnitUtils.checkOrCreateHubNode(hub, node)
+                let updateDriverInfo = { loginName: loginName, driverName, nric, vehicleType: vehicleType, contactNumber, unit, unitId, groupId: !unitId ? unit : null, enlistmentDate, operationallyReadyDate, birthday, vocation, rank, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') };
+                operationRecord.afterData = JSON.stringify(updateDriverInfo);
+
+                await checkDriver({ driverId, loginName })
+                await Driver.update(updateDriverInfo, {
+                    where: { driverId }
+                })
+                
+                await User.update({ username: loginName, nric, unitId: unit && unit != '' ? unit : unitId, userType: CONTENT.USER_TYPE.MOBILE, role, password: password, fullName: driverName, contactNumber }, { where: { driverId } })
+                await OperationRecord.create(operationRecord);
+            }).catch(error => {
+                throw error
+            })
+            
+        } else if (action.toLowerCase() == 'create') {
+            log.info(`Create driver info ...`)
+            await sequelizeObj.transaction(async transaction => {
+                // create hub/node
+                let unitId = null
+                if(hub) unitId = await unitService.UnitUtils.checkOrCreateHubNode(hub, node)
+                // create driver
+                let newDriverInfo = { loginName: loginName, driverName, vehicleType: vehicleType, nric, contactNumber, unit, unitId, groupId: !unitId ? unit : null, enlistmentDate, operationallyReadyDate, birthday, vocation, rank, updatedAt: moment().format('YYYY-MM-DD HH:mm:ss') };
+                operationRecord.afterData = JSON.stringify(newDriverInfo);
+               
+                let newDriverId = await createDriver2(newDriverInfo, userId)
+                // create user
+                if (newDriverId) {
+                    await User.create({ username: loginName, nric, unitId: unit && unit != '' ? unit : unitId, userType: CONTENT.USER_TYPE.MOBILE, driverId: newDriverId, role, password: password, fullName: driverName, contactNumber })
+                }
+                operationRecord.businessId = newDriverId;
+                await OperationRecord.create(operationRecord);
+            }).catch(error => {
+                throw error
+            })
+        }
+        
+        return res.json(utils.response(1, 'success')); 
+    } catch (err) {
+        log.error(err)
+        return res.json(utils.response(0, err)); 
+    }
+}
+
 module.exports.deleteDriver = async function (req, res) {
     try {
         let driverId = req.body.driverId;
@@ -853,7 +946,8 @@ module.exports.getTODriverList = async function (req, res) {
             let list = permitType.split(',')
             let permitTypeSql = []
             for (let item of list) {
-                permitTypeSql.push(` FIND_IN_SET('${ item }', dd.permitType) `)
+                permitTypeSql.push(` FIND_IN_SET(?, dd.permitType) `)
+                replacements.push(item);
             }
             limitSQL.push(` ( ${ permitTypeSql.join(' OR ') } ) `)
         }
@@ -886,11 +980,11 @@ module.exports.getTODriverList = async function (req, res) {
         let driverNameOrder = req.body.driverNameOrder;
         let orderList = [];
         if (driverNameOrder) {
-            orderList.push(` dd.driverName ` + driverNameOrder);
+            orderList.push(` dd.driverName ` + (driverNameOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
         }
         let hubOrder = req.body.hubOrder;
         if (hubOrder) {
-            orderList.push(` dd.unit ` + hubOrder);
+            orderList.push(` dd.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
         }
         if (orderList.length) {
             baseSQL += ' ORDER BY ' + orderList.join(' , ')
@@ -1057,20 +1151,23 @@ const getDeactivateDriver = async function(req) {
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements: params })
         let totalRecord = countResult.length
 
-        let driverNameOrder = req.body.driverNameOrder;
-        let orderList = [];
-        if (driverNameOrder) {
-            orderList.push(` d.driverName ` + driverNameOrder);
+        function buildSqlOrder() {
+            let driverNameOrder = req.body.driverNameOrder;
+            let orderList = [];
+            if (driverNameOrder) {
+                orderList.push(` d.driverName ` + (driverNameOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
+            }
+            let hubOrder = req.body.hubOrder;
+            if (hubOrder) {
+                orderList.push(` u.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
+            }
+            if (orderList.length) {
+                baseSQL += ' ORDER BY ' + orderList.join(' , ')
+            } else {
+                baseSQL += ' ORDER BY d.updatedAt desc'
+            }
         }
-        let hubOrder = req.body.hubOrder;
-        if (hubOrder) {
-            orderList.push(` u.unit ` + hubOrder);
-        }
-        if (orderList.length) {
-            baseSQL += ' ORDER BY ' + orderList.join(' , ')
-        } else {
-            baseSQL += ' ORDER BY d.updatedAt desc'
-        }
+        buildSqlOrder();
 
         baseSQL += ` limit ?, ?`
         params.push(pageNum);

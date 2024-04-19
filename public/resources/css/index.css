@@ -8,11 +8,7 @@
     */
 .tab-top {
     text-align: center;
-    /* position: absolute; */
     margin: auto;
-    /* top: 10px;
-    left: 0;
-    right: 0; */
     width: 200px;
     height: 32px;
     border-radius: 20px;
@@ -45,10 +41,7 @@
 
 .tab-top-right {
     text-align: right;
-    /* position: absolute;
-    margin: auto;
-    top: 20px;
-    right: 0; */
+
     width: 250px;
     z-index: 1;
 }

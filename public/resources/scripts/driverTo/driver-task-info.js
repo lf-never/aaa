@@ -44,37 +44,44 @@ const initDriverTaskList = async function(driverId, driverName, effectiveDataLis
       <div class="col-4" style="text-align: center;">Purpose</div>
     </div>
   `);
-  if (taskList?.length > 0) {
-    for(let temp of taskList) {
-      $('.driverTaskContentDiv').append(`
-        <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
-          <div class="col-3" style="text-align: center;">${temp.taskId}</div>
-          <div class="col-5" style="text-align: center;">${temp.indentStartTime ? moment(temp.indentStartTime).format("DD/MM/YYYY HH:mm:ss") : ''}</div>
-          <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
-        </div>
-      `);
+  function buildTaskList() {
+    if (taskList?.length > 0) {
+      for(let temp of taskList) {
+        $('.driverTaskContentDiv').append(`
+          <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
+            <div class="col-3" style="text-align: center;">${temp.taskId}</div>
+            <div class="col-5" style="text-align: center;">${temp.indentStartTime ? moment(temp.indentStartTime).format("DD/MM/YYYY HH:mm:ss") : ''}</div>
+            <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+          </div>
+        `);
+      }
     }
   }
-  if (hotoList?.length > 0) {
-    $(".driverHotoList").show();
-    $('.driverHotoContentDiv').empty();
-    $('.driverHotoContentDiv').append(`
-      <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
-        <div class="col-3" style="text-align: center;">HOTO ID</div>
-        <div class="col-5" style="text-align: center;">Date Time</div>
-        <div class="col-4" style="text-align: center;">Purpose</div>
-      </div>
-    `);
-    for(let temp of hotoList) {
+  buildTaskList();
+
+  function buildHotoList() {
+    if (hotoList?.length > 0) {
+      $(".driverHotoList").show();
+      $('.driverHotoContentDiv').empty();
       $('.driverHotoContentDiv').append(`
-        <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
-          <div class="col-3" style="text-align: center;">${temp.id}</div>
-          <div class="col-5" style="text-align: center;">${temp.startDateTime ? moment(temp.startDateTime).format("DD/MM/YYYY HH:mm:ss") : ''}</div>
-          <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+        <div class="row pt-2" style="display: flex; border-bottom: 1px solid #f5f5f5; ">
+          <div class="col-3" style="text-align: center;">HOTO ID</div>
+          <div class="col-5" style="text-align: center;">Date Time</div>
+          <div class="col-4" style="text-align: center;">Purpose</div>
         </div>
       `);
+      for(let temp of hotoList) {
+        $('.driverHotoContentDiv').append(`
+          <div class="row py-1" style="display: flex; border-bottom: 1px solid #f5f5f5; font-size: 14px;">
+            <div class="col-3" style="text-align: center;">${temp.id}</div>
+            <div class="col-5" style="text-align: center;">${temp.startDateTime ? moment(temp.startDateTime).format("DD/MM/YYYY HH:mm:ss") : ''}</div>
+            <div class="col-4" style="text-align: center;">${temp.purpose ?? '-'}</div>
+          </div>
+        `);
+      }
     }
   }
+  buildHotoList();
 
   if (loanList?.length > 0) {
     $(".driverLoanList").show();

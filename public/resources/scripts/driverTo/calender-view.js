@@ -258,7 +258,15 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 						} else {
 							// for show while task need more than one day
 							let label = ''
-							let taskTypeLabel = task.taskId.indexOf('CU-') != -1 ? 'CU-' : (task.dataFrom == 'MT-ADMIN' ? 'MT-' : (task.dataFrom == 'SYSTEM' ? 'SYS-' : ''));
+							let taskTypeLabel = '';
+							if (task.taskId.indexOf('CU-') > -1) {
+								taskTypeLabel = 'CU-';
+							} else if (task.dataFrom == 'MT-ADMIN') {
+								taskTypeLabel = 'MT-';
+							} else if (task.dataFrom == 'SYSTEM') {
+								taskTypeLabel = 'SYS-';
+							}
+
 							if (realDateLength > 1) {
 								label = `${taskTypeLabel + task.purpose }, ${ moment(task.indentStartTime).format('MM-DD HH:mm') } - ${ moment(task.indentEndTime).format('MM-DD HH:mm')}`
 							} else {
@@ -351,14 +359,14 @@ const editDriverTask = function(taskId, indentStartTime) {
 const markAsUnAvailable = function(driverId, driverName, date) {
 	
 	$('#driver-markAsUnavailable').modal('show');
-	event.returnValue=false;
+	event.preventDefault();
+	event.stopPropagation();
 
 	initMarkAsUnAvailablePage(driverId, driverName, date, date);
 	return false;
 }
 
 const markAsUnAvailable1 = function(driverId, driverName, date, endDate) {
-	event.returnValue=false;
 	event.preventDefault();
 	event.stopPropagation();
 

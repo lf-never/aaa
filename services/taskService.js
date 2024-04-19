@@ -8,7 +8,7 @@ const jsonfile = require('jsonfile')
 const moment = require('moment');
 let axios = require('axios');
 
-const { Sequelize, Op, QueryTypes } = require('sequelize');
+const { Sequelize, Op, QueryTypes, NUMBER } = require('sequelize');
 const { sequelizeObj } = require('../db/dbConf')
 const { sequelizeSystemObj } = require('../db/dbConf_system')
 
@@ -1147,7 +1147,8 @@ module.exports = {
                 }
             } else if ([ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.LICENSING_OFFICER ].includes(user.userType)) {
                 if (hub) {
-                    deviceSql += ` AND tt.hub = '${ hub }' `
+                    deviceSql += ` AND tt.hub = ? `
+                    replacements.push(hub)
                 }
                 if (hub == null) {
                     deviceSql += ` AND tt.groupId IS NOT NULL `
@@ -2504,7 +2505,9 @@ module.exports = {
 
             let totalList = await sequelizeObj.query(taskSql2, { type: QueryTypes.SELECT, replacements });
 
-            taskSql += ` limit ${ pageNum }, ${ pageLength }`
+            taskSql += ` limit ?, ?`
+            replacements.push(NUMBER(pageNum));
+            replacements.push(NUMBER(pageLength));
             console.log(taskSql)
             let taskList = await sequelizeObj.query(taskSql, { type: QueryTypes.SELECT, replacements });
             
@@ -2624,7 +2627,9 @@ module.exports = {
 
             let totalList = await sequelizeObj.query(taskSql2, { type: QueryTypes.SELECT, replacements });
 
-            taskSql += ` limit ${ pageNum }, ${ pageLength }`
+            taskSql += ` limit ?, ?`
+            replacements.push(NUMBER(pageNum));
+            replacements.push(NUMBER(pageLength));
             let taskList = await sequelizeObj.query(taskSql, { type: QueryTypes.SELECT, replacements });
             
             return res.json({ respMessage: taskList, recordsFiltered: totalList[0].count, recordsTotal: totalList[0].count });
@@ -3007,7 +3012,7 @@ module.exports = {
             }
 
             let totalList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements });
-            baseSql += ` limit ${ pageNum }, ${ pageLength }`
+            baseSql += ` limit ?, ?`
             replacements.push(Number(pageNum))
             replacements.push(Number(pageLength))
             let incidentList = await sequelizeObj.query(baseSql, { type: QueryTypes.SELECT, replacements });
@@ -3247,10 +3252,10 @@ module.exports = {
                 LEFT JOIN loan_record ll2 ON ll2.driverId = d.driverId AND d.lastSOSDateTime BETWEEN ll2.startDate AND ll2.returnDate
                 
                 WHERE d.state LIKE '%sos%'
-                AND (d.lastSOSDateTime IS NOT NULL AND '${ timeSelected }' = DATE_FORMAT(d.lastSOSDateTime, '%Y-%m-%d'))
+                AND (d.lastSOSDateTime IS NOT NULL AND ? = DATE_FORMAT(d.lastSOSDateTime, '%Y-%m-%d'))
             `
             let sosSql = ` SELECT * FROM ( ${ baseSql } ) ss WHERE 1=1 `
-            let replacements = []
+            let replacements = [timeSelected]
             if (user.userType.toLowerCase() == 'customer') {
                 sosSql += ` AND ss.groupId = ? `
                 replacements.push(user.unitId)
@@ -3526,7 +3531,7 @@ module.exports = {
 
             if (sortBy && sort) {
                 if (sortBy == 'driverName') {
-                    sql += ` ORDER BY l.driverName ${ sort } `
+                    sql += ` ORDER BY l.driverName ${ sort.toLowerCase() == 'desc' ? 'DESC' : 'ASC' } `
                 }
             } else {
                 sql += ` ORDER BY l.startDate desc `
@@ -3727,7 +3732,7 @@ module.exports = {
 
             if (sortBy && sort) {
                 if (sortBy == 'driverName') {
-                    sql += ` ORDER BY l.driverName ${ sort } `
+                    sql += ` ORDER BY l.driverName ${ sort.toLowerCase() == 'desc' ? 'DESC' : 'ASC' } `
                 }
             } else {
                 sql += ` ORDER BY l.startDate desc `
