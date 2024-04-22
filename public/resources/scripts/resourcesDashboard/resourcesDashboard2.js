@@ -5,8 +5,7 @@ let CONTENT_NODE_COLOR = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#8CC1E3',
 let scrollLeft = 0;
 let hubActive
 let nodeActive
-let driverTotal = []
-let vehicleTotal = []
+
 $(() => {
     initDate()
     initHubListHtml();
@@ -97,6 +96,14 @@ const initStatusInvalidByDriver = async function (hub, node) {
     });
 }
 
+const initTotalAndAssignedTotal = function (num, total) {
+    if(num <= 0 || total <= 0) return 0
+    let percent = num / total * 100
+    percent = parseInt(percent);
+    if(percent < 1) percent = 0
+    return percent
+}
+
 const initHubListHtml = async function () {
     const getDriverAndVehicleDeployableTotalByHub = async function(){
         return await axios.post('/resourcesDashboard/getDriverAndVehicleDeployableTotalByHub', { pageType: 'Resources Dashboard2', userId: Cookies.get('userId') })
@@ -104,14 +111,7 @@ const initHubListHtml = async function () {
             return res.respMessage ? res.respMessage : res.data.respMessage;
         });
     }
-    
-    const initTotalAndAssignedTotal = function (num, total) {
-        if(num <= 0 || total <= 0) return 0
-        let percent = num / total * 100
-        percent = parseInt(percent);
-        if(percent < 1) percent = 0
-        return percent
-    }
+
     
     const initTopHub = async function (data) {
         $('.hubList').empty();
@@ -223,14 +223,6 @@ const initNodeListHtml = async function (hub) {
         });
     }
     
-    const initTotalAndAssignedTotal = function (num, total) {
-        if(num <= 0 || total <= 0) return 0
-        let percent = num / total * 100
-        percent = parseInt(percent);
-        if(percent < 1) percent = 0
-        return percent
-    }
-    
     const initNode = async function (data) {
         $('.nodeList').empty();
         let html = ``;
@@ -288,12 +280,6 @@ const initNodeListHtml = async function (hub) {
         nodeActive = node
         $('.node-div').removeClass('active2')
         $(this).addClass('active2')
-        let indexNode = 0
-        for (let index = 0; index < nodeData.length; index++) {
-            if($(nodeData[index]).attr('data-node') == node) {
-                indexNode = index
-            }
-        }
         
         let totalDriverAndVehicle = await initDriverAndVehicleAvailabilityWeeklyChart(hubActive, node, $('.current-date').val())
         initDriverAndVehicleDeployedTotalWeeklyChart(hubActive, node, $('.current-date').val(), totalDriverAndVehicle)
@@ -334,16 +320,18 @@ const initDriverTotalChart = async function (timeNeeded, hub, node) {
 
     let dataObj
     for(let item of driverByNodeData){
-        if(node) {
-            if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
-                if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.driverRoleData
-            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+        const initDataObj = function (){
+            if(node) {
+                if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
+                    if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.driverRoleData
+                } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                    dataObj = item.driverRoleData
+                } 
+            } else {
                 dataObj = item.driverRoleData
-            } 
-        } else {
-            dataObj = item.driverRoleData
+            }
         }
-        
+        initDataObj()
     }
     let data = [{ value: 0, name: 'total' }];
     let data2 = [];
@@ -443,7 +431,6 @@ const initIndentTotalChart = async function (timeNeeded, hub, node) {
         }
         taskByNodeData = await getTaskTotalByPurposeByNode(timeNeeded, hubActive, node)
     } else {
-        
         const getTaskTotalByPurposeByHub = async function(timeNeeded, hub){
             return await axios.post('/resourcesDashboard/getTaskTotalByPurposeByHub', { pageType: 'Resources Dashboard2', timeNeeded, hub: Cookies.get('node') ? null : hub })
             .then(function (res) {
@@ -454,15 +441,18 @@ const initIndentTotalChart = async function (timeNeeded, hub, node) {
     }
     let dataObj = null
     for(let item of taskByNodeData){
-        if(node) {
-            if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
-                if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.taskPurposeData
-            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+        const initDataObj2 = function (){
+            if(node) {
+                if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
+                    if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj = item.taskPurposeData
+                } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                    dataObj = item.taskPurposeData
+                } 
+            } else {
                 dataObj = item.taskPurposeData
-            } 
-        } else {
-            dataObj = item.taskPurposeData
+            }
         }
+        initDataObj2()
     }
     let data = [{ value: 0, name: 'total' }];
     let data2 = [];
@@ -585,19 +575,21 @@ const initDriverAndVehicleAvailabilityWeeklyChart = async function (hub, node, c
     }
     
     let dataObj = []
-    if(driverAndVehicle) {
+    const initDataObj3 = function (){
         for(let item of driverAndVehicle){
             if(node) {
-            if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
-                if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj.push(item)
-            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
+                    if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj.push(item)
+                } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
+                    dataObj.push(item)
+                } 
+            } else {
                 dataObj.push(item)
-            } 
-        } else {
-            dataObj.push(item)
-        }
+            }
         }
     }
+    if(driverAndVehicle) initDataObj3()
+
     let vehicleLeave = []
     let vehicleDeployed = []
     let vehicleDeployable = []
@@ -606,8 +598,7 @@ const initDriverAndVehicleAvailabilityWeeklyChart = async function (hub, node, c
     let driverDeployed = []
     let driverDeployable = []
    
-    driverTotal = []
-    vehicleTotal = []
+ 
     let driverTotal2 = 0
     let vehicleTotal2 = 0
     for(let item of dataObj){
@@ -615,8 +606,7 @@ const initDriverAndVehicleAvailabilityWeeklyChart = async function (hub, node, c
             driverTotal2 = item.driverTotal
             vehicleTotal2 = item.vehicleTotal
         }
-        driverTotal.push({ weekDate: item.weekDate, driverTotal: item.driverTotal })
-        vehicleTotal.push({ weekDate: item.weekDate, vehicleTotal: item.vehicleTotal })
+
         vehicleLeave.push(item.todayVehicleOnleave)
         vehicleDeployed.push(item.todayVehicleDeployed)
         vehicleDeployable.push(item.todayVehicleDeployable)
@@ -804,17 +794,20 @@ const initDriverAndVehicleDeployedTotalWeeklyChart = async function (hub, node, 
     
     let dataObj = []
     if(driverAndVehicle) {
-        for(let item of driverAndVehicle){
-            if(node) {
-            if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
-                if((item.subunit).toLowerCase() == 'other' || (item.subunit).toLowerCase() == 'dv_loa') dataObj.push(item)
-            } else if((item.subunit).toLowerCase() == (node).toLowerCase()) {
-                dataObj.push(item)
-            } 
-        } else {
-            dataObj.push(item)
+        const initDataObj4 = function (){
+            for(let items of driverAndVehicle){
+                if(node) {
+                    if((node).toLowerCase() == 'dv_loa' || (node).toLowerCase() == 'other') {
+                        if((items.subunit).toLowerCase() == 'other' || (items.subunit).toLowerCase() == 'dv_loa') dataObj.push(items)
+                    } else if((items.subunit).toLowerCase() == (node).toLowerCase()) {
+                        dataObj.push(items)
+                    } 
+                } else {
+                    dataObj.push(items)
+                }
+            }
         }
-        }
+        initDataObj4()
     }
     let seriesData = []
     let data = []

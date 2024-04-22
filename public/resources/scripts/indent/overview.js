@@ -34,7 +34,7 @@ const initOverview = async function (hub, node) {
         initData('#tsOperatorEnded', tsOperatorData.tsOperatorTodayCompleted, tsOperatorData.tsOperatorTodayAssigned, '#tsOperatorEndedPercentage');
         initData('#tsOperatorCancelled', tsOperatorData.tsOperatorTodayCancelled, tsOperatorData.tsOperatorTodayAssigned, '#tsOperatorCancelledPercentage');
         initData('#tsOperatorTodayAssigned', tsOperatorData.tsOperatorTodayAssigned + " / " + tsOperatorData.tsOperatorTodayAssignedEffective + " / " + tsOperatorData.tsOperatoreDeployed);
-        initData('#tsOperatorPermitInvalid', tsOperatorData.tsOperatorInvalid ? tsOperatorData.tsOperatorInvalid : 0, tsOperatorData.tsOperatorOwned, '#tsOperatorPermitInvalidPercentage');
+        initData('#tsOperatorPermitInvalid', tsOperatorData.tsOperatorInvalid || 0, tsOperatorData.tsOperatorOwned, '#tsOperatorPermitInvalidPercentage');
 
         initData('#tsOperatorOwned', tsOperatorData.tsOperatorOwned);
         initData('#tsOperatorAssigned', tsOperatorData.tsOperatoreDeployed, tsOperatorData.tsOperatorOwned, '#tsOperatorAssignedPercentage');
@@ -43,15 +43,15 @@ const initOverview = async function (hub, node) {
         initData('#tsOperatorDeployable', tsOperatorData.tsOperatorDeployable);
         initData('#tsOperatorOnleave', tsOperatorData.tsOperatorOnleave);
         initData('#tsOperatorDeployed', tsOperatorData.tsOperatoreDeployed);
-        initData('#tsOperatorInvalid', tsOperatorData.tsOperatorInvalid ? tsOperatorData.tsOperatorInvalid : 0);
+        initData('#tsOperatorInvalid', tsOperatorData.tsOperatorInvalid || 0);
 
         if (Cookies.get('userType') != 'CUSTOMER') {
             $(".loanOutDiv").show();
-            initData('#vehicleLoanOut', vehicleData.vehicleLoanout ? vehicleData.vehicleLoanout : 0);
-            initData('#vehicleLoanOut1', vehicleData.vehicleLoanout ? vehicleData.vehicleLoanout : 0, vehicleData.vehicleOwned, '#vehicleLoanOutPercentage');
+            initData('#vehicleLoanOut', vehicleData.vehicleLoanout || 0);
+            initData('#vehicleLoanOut1', vehicleData.vehicleLoanout || 0, vehicleData.vehicleOwned, '#vehicleLoanOutPercentage');
 
-            initData('#driverLoanOut', tsOperatorData.tsOperatoreLoanOut ? tsOperatorData.tsOperatoreLoanOut : 0);
-            initData('#tsOperatorLoanOut', tsOperatorData.tsOperatoreLoanOut ? tsOperatorData.tsOperatoreLoanOut : 0, tsOperatorData.tsOperatorOwned, '#tsOperatorLoanOutPercentage');
+            initData('#driverLoanOut', tsOperatorData.tsOperatoreLoanOut || 0);
+            initData('#tsOperatorLoanOut', tsOperatorData.tsOperatoreLoanOut || 0, tsOperatorData.tsOperatorOwned, '#tsOperatorLoanOutPercentage');
         }
     } 
 }

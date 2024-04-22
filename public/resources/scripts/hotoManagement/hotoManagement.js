@@ -589,6 +589,121 @@ window.buttonRequest = async function(requestType, requestId){
     window.location.href = "/hoto/viewManagement";
 }
 
+
+const initTableBtnBySubmitted = function(optionObj){
+    if((optionObj.status).toLowerCase() == 'submitted') {
+        let html = `
+            ${ optionObj.operationList.includes('EDIT') ? optionObj.buttonListObj.EDIT : '' }
+            ${ optionObj.operationList.includes('ENDORSE') ? optionObj.buttonListObj.ENDORSE : '' }
+            ${ optionObj.operationList.includes('REJECT') && optionObj.cancelBanStatus ? optionObj.buttonListObj.REJECT : '' }
+            ${ optionObj.operationList.includes('CANCEL') ? optionObj.buttonListObj.CANCEL : '' }
+        `
+        return html.trim() ? html : optionObj.status
+    }
+}
+
+const initTableBtnByEndorsed = function(optionObj){
+    if((optionObj.status).toLowerCase() == 'endorsed') {
+        let html = `
+            ${ optionObj.operationList.includes('VIEW') ? optionObj.buttonListObj.VIEW : '' }
+            ${ optionObj.operationList.includes('ASSIGN') ? optionObj.buttonListObj.ASSIGN : '' }
+            ${ optionObj.operationList.includes('CANCEL') ? optionObj.buttonListObj.CANCEL : '' }
+        `
+        return html.trim() ? html : optionObj.status
+    }
+}
+
+const initBtnByUnfinishedAssign = function(status, replaceStatus, operationList, buttonListObj){
+    let html = `
+        ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
+        ${ operationList.includes('ASSIGN') ? buttonListObj.ASSIGN : '' }
+        ${ operationList.includes('REPLACE') && replaceStatus ? buttonListObj.REPLACE : '' }
+        ${ operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' }
+    `
+    return html.trim() ? html : status
+}
+const initBtnByCompleteAssign = function(status, replaceStatus, cancelBanStatus, operationList, buttonListObj){
+    let html = `
+        ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
+        ${ operationList.includes('REPLACE') && replaceStatus ? buttonListObj.REPLACE : '' }
+        ${ operationList.includes('APPROVE') ? buttonListObj.APPROVE : '' }
+        ${ operationList.includes('REJECT') && cancelBanStatus ? buttonListObj.REJECT : '' }
+    `
+    return html.trim() ? html : status
+}
+const initTableBtnByAssigned = function(optionObj){
+    if((optionObj.status).toLowerCase() == 'assigned') {
+        if(optionObj.assignQtyStatus){
+            let html = initBtnByUnfinishedAssign(optionObj.status, optionObj.replaceStatus, optionObj.operationList, optionObj.buttonListObj);
+            return html
+        } else {
+            let html = initBtnByCompleteAssign(optionObj.status, optionObj.replaceStatus, optionObj.cancelBanStatus, optionObj.operationList, optionObj.buttonListObj);
+            return html
+        }
+    }
+}
+
+const initBtnByTaskApprove = function(taskAppObj){
+    let html = `
+        ${ taskAppObj.operationList.includes('VIEW') ? taskAppObj.buttonListObj.VIEW : '' }
+        ${ taskAppObj.operationList.includes('REPLACE') && taskAppObj.replaceStatus && !taskAppObj.newStatus ? taskAppObj.buttonListObj.REPLACE : '' }
+        ${ taskAppObj.approverExist && taskAppObj.operationList.includes('APPROVE') ? taskAppObj.buttonListObj.APPROVE : '' }
+        ${ taskAppObj.hotoExist == 1 && taskAppObj.operationList.includes('RETURN') ? taskAppObj.buttonListObj.RETURN : '' }
+    `
+    return html.trim() ? html : taskAppObj.status
+}
+const initBtnByApprove = function(btnAppObj){
+    let html = `
+        ${ btnAppObj.operationList.includes('VIEW') ? btnAppObj.buttonListObj.VIEW : '' }
+        ${ btnAppObj.operationList.includes('REPLACE') && btnAppObj.replaceStatus && !btnAppObj.newStatus ? btnAppObj.buttonListObj.REPLACE : '' }
+        ${ btnAppObj.approverExist && btnAppObj.operationList.includes('APPROVE') ? btnAppObj.buttonListObj.APPROVE : '' }
+        ${ btnAppObj.hotoExist == 1 && btnAppObj.operationList.includes('RETURN') ? btnAppObj.buttonListObj.RETURN : '' }
+        ${ btnAppObj.cancelBanStatus && btnAppObj.operationList.includes('CANCEL') ? btnAppObj.buttonListObj.CANCEL : '' }
+    `
+    return html.trim() ? html : btnAppObj.status
+}
+const initTableBtnByApproved = function(approvedObj){
+    if(approvedObj.taskStatus) {
+        if((approvedObj.status).toLowerCase() == 'approved') {
+            let taskAppObj = { 
+                status: approvedObj.status, replaceStatus: approvedObj.replaceStatus, newStatus: approvedObj.newStatus, 
+                approverExist: approvedObj.approverExist, hotoExist: approvedObj.hotoExist, 
+                operationList: approvedObj.operationList, buttonListObj: approvedObj.buttonListObj 
+            }
+            
+            let html = initBtnByTaskApprove(taskAppObj)
+            return html
+        }
+    } else if((approvedObj.status).toLowerCase() == 'approved') {
+        let btnAppObj = { 
+            status: approvedObj.status, replaceStatus: approvedObj.replaceStatus, newStatus: approvedObj.newStatus, 
+            approverExist: approvedObj.approverExist, hotoExist: approvedObj.hotoExist, 
+            cancelBanStatus: approvedObj.cancelBanStatus, operationList: approvedObj.operationList, buttonListObj: approvedObj.buttonListObj 
+        }
+        let html = initBtnByApprove(btnAppObj)
+        return html
+    }
+}
+
+const initTableBtnByRejected = function(optionObj){
+    if((optionObj.status).toLowerCase() == 'rejected') {
+        let html = `
+            ${ optionObj.operationList.includes('VIEW') ? optionObj.buttonListObj.VIEW : '' }
+            ${ optionObj.cancelBanStatus && optionObj.operationList.includes('CANCEL') ? optionObj.buttonListObj.CANCEL : '' }
+        `
+        return html.trim() ? html : optionObj.status
+    }
+}
+
+const initTableBtnByCancelled = function (optionObj){
+    if((optionObj.status).toLowerCase() == 'cancelled') {
+        let html = `
+        ${ optionObj.operationList.includes('VIEW') ? optionObj.buttonListObj.VIEW : '' }
+        `
+        return html.trim() ? html : optionObj.status
+    }
+}
+
 const initTable = async function() {
     dataTable = $('.data-list').DataTable({
         "ordering": true,
@@ -783,80 +898,25 @@ const initTable = async function() {
                     }
 
                     let operationList = (full.operation).toUpperCase().split(',')
-
-                    if(full.status) {
-                        if((full.status).toLowerCase() == 'submitted') {
-                            let html = `
-                                ${ operationList.includes('EDIT') ? buttonListObj.EDIT : '' }
-                                ${ operationList.includes('ENDORSE') ? buttonListObj.ENDORSE : '' }
-                                ${ operationList.includes('REJECT') && full.cancelBanStatus ? buttonListObj.REJECT : '' }
-                                ${ operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' }
-                            `
-                            return html.trim() ? html : full.status
-                        }
-                        if((full.status).toLowerCase() == 'endorsed') {
-                            let html = `
-                                ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                ${ operationList.includes('ASSIGN') ? buttonListObj.ASSIGN : '' }
-                                ${ operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' }
-                            `
-                            return html.trim() ? html : full.status
-                        }
-                        if((full.status).toLowerCase() == 'assigned') {
-                            if(full.assignQtyStatus){
-                                let html = `
-                                    ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                    ${ operationList.includes('ASSIGN') ? buttonListObj.ASSIGN : '' }
-                                    ${ operationList.includes('REPLACE') && full.replaceStatus ? buttonListObj.REPLACE : '' }
-                                    ${ operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' }
-                                `
-                                return html.trim() ? html : full.status
-                            } else {
-                                let html = `
-                                    ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                    ${ operationList.includes('REPLACE') && full.replaceStatus ? buttonListObj.REPLACE : '' }
-                                    ${ operationList.includes('APPROVE') ? buttonListObj.APPROVE : '' }
-                                    ${ operationList.includes('REJECT') && full.cancelBanStatus ? buttonListObj.REJECT : '' }
-                                `
-                                return html.trim() ? html : full.status
-                            }
-                        }
-                        if(full.taskStatus) {
-                            if((full.status).toLowerCase() == 'approved') {
-                                let html = `
-                                    ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                    ${ operationList.includes('REPLACE') && full.replaceStatus && !full.newStatus ? buttonListObj.REPLACE : '' }
-                                    ${ full.approverExist ? operationList.includes('APPROVE') ? buttonListObj.APPROVE : '' : '' }
-                                    ${ full.hotoExist == 1 ? operationList.includes('RETURN') ? buttonListObj.RETURN : '' : '' }
-                                `
-                                return html.trim() ? html : full.status
-                            }
-                        } else {
-                            if((full.status).toLowerCase() == 'approved') {
-                                let html = `
-                                    ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                    ${ operationList.includes('REPLACE') && full.replaceStatus && !full.newStatus ? buttonListObj.REPLACE : '' }
-                                    ${ full.approverExist ? operationList.includes('APPROVE') ? buttonListObj.APPROVE : '' : '' }
-                                    ${ full.hotoExist == 1 ? operationList.includes('RETURN') ? buttonListObj.RETURN : '' : '' }
-                                    ${ full.cancelBanStatus ? operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' : '' }
-                                `
-                                return html.trim() ? html : full.status
-                            }
-                        }
-                        if((full.status).toLowerCase() == 'rejected') {
-                            let html = `
-                                ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                                ${ full.cancelBanStatus ? operationList.includes('CANCEL') ? buttonListObj.CANCEL : '' : '' }
-                            `
-                            return html.trim() ? html : full.status
-                        }
-                        if((full.status).toLowerCase() == 'cancelled') {
-                            let html = `
-                            ${ operationList.includes('VIEW') ? buttonListObj.VIEW : '' }
-                            `
-                            return html.trim() ? html : full.status
-                        }
+                    if(!full.status) return ``
+                    let optionObj = {
+                        taskStatus: full.taskStatus, status: full.status, operationList: operationList, buttonListObj: buttonListObj,
+                        replaceStatus: full.replaceStatus, newStatus: full.newStatus, approverExist: full.approverExist, 
+                        hotoExist: full.hotoExist, cancelBanStatus: full.cancelBanStatus, assignQtyStatus: full.assignQtyStatus
                     }
+                    let htmlBySub = initTableBtnBySubmitted(optionObj);
+                    if(htmlBySub) return htmlBySub
+                    let htmlByEnd = initTableBtnByEndorsed(optionObj);
+                    if(htmlByEnd) return htmlByEnd
+                    let htmlByAss = initTableBtnByAssigned(optionObj)
+                    if(htmlByAss) return htmlByAss
+                    let htmlByApp = initTableBtnByApproved(optionObj)
+                    if(htmlByApp) return htmlByApp
+                    let htmlByRej = initTableBtnByRejected(optionObj)
+                    if(htmlByRej) return htmlByRej
+                    let htmlByCan = initTableBtnByCancelled(optionObj)
+                    if(htmlByCan) return htmlByCan
+                    return `${ full.status }`
                 }
             },
         ],

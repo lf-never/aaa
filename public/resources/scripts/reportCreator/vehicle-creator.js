@@ -32,7 +32,7 @@ $(function () {
     })
 })
 
-const initPage = function(){
+const initPage = async function(){
     const initCategory = function () {
         axios.post("/vehicle/getTypeOfVehicle").then(async res => {
             let vehicleTypeArray = res.data;
@@ -161,29 +161,33 @@ const initPage = function(){
     const initHubNodeFilter = async function () {
         await axios.post("/unit/getHubNodeList").then(res => {
             let hubNodeList = res.respMessage ?? res.data.respMessage ;
-
-            let list = hubNodeList.map(o => {
-                return `<option value="${o.hub}">${o.hub}</option>`
-            }).join('')
-            $("#hubFilter").append(list)
-            $("#hubFilter").off('change').on('change', function(){
-                let hub = $("#hubFilter").val()
-                if(!hub){
-                    $("#nodeFilter").empty()
-                    $("#nodeFilter").append(`<option value="">All</option>`)
-                    return
-                } 
-                let item = hubNodeList.find(o => o.hub == hub)
-                let nodeList = item.nodeList
-                let list = nodeList.split(',').map(o => {
-                    return `<option value="${o}">${o}</option>`
-                }).join('')
-                $("#nodeFilter").empty()
-                $("#nodeFilter").append(`<option value="">All</option>` + list)
-            })
+            return hubNodeList
         })
     }
-    initHubNodeFilter()
+    const initHubNode = function (hubNodeList){
+        let list = hubNodeList.map(o => {
+            return `<option value="${o.hub}">${o.hub}</option>`
+        }).join('')
+        $("#hubFilter").append(list)
+        $("#hubFilter").off('change').on('change', function(){
+            let hub = $("#hubFilter").val()
+            if(!hub){
+                $("#nodeFilter").empty()
+                $("#nodeFilter").append(`<option value="">All</option>`)
+                return
+            } 
+            let item = hubNodeList.find(o => o.hub == hub)
+            let nodeList = item.nodeList
+            let list = nodeList.split(',').map(o => {
+                return `<option value="${o}">${o}</option>`
+            }).join('')
+            $("#nodeFilter").empty()
+            $("#nodeFilter").append(`<option value="">All</option>` + list)
+        })
+    }
+    let hubNodeList = await initHubNodeFilter()
+    initHubNode(hubNodeList)
+
     const initSupportedUnit = async function () {
         await axios.post("/getGroupList").then(res => {
             //console.log(res)

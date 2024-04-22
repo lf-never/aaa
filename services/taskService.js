@@ -290,26 +290,14 @@ module.exports = {
                 LEFT JOIN driver d ON d.driverId = t.driverId
                 where t.driverId is not null and t.driverStatus != 'Cancelled' and d.permitStatus != 'invalid' and
                 ((? between (DATE_FORMAT(t.indentStartTime,'%Y-%m-%d')) and DATE_FORMAT(t.indentEndTime,'%Y-%m-%d'))
-                OR t.driverStatus = 'started')
+                OR t.driverStatus = 'started') ${ req.cookies.userType != 'ADMINISTRATOR' ? ` and t.hub != '-' ` : '' }
                 GROUP BY t.hub, t.purpose 
             `, { 
                 type: QueryTypes.SELECT,
                 replacements: [ moment(timeSelected).format('YYYY-MM-DD') ] 
             })
 
-            let startedTaskList = await sequelizeObj.query(`
-                select count(t.taskId) as taskNum, t.hub, t.purpose from task t
-                LEFT JOIN driver d ON d.driverId = t.driverId
-                where t.driverId is not null and d.permitStatus != 'invalid' and
-                ? between (DATE_FORMAT(t.indentStartTime,'%Y-%m-%d')) and DATE_FORMAT(t.indentEndTime,'%Y-%m-%d')
-                and t.mobileStartTime is not null GROUP BY t.hub, t.purpose 
-            `, { 
-                type: QueryTypes.SELECT,
-                replacements: [ moment(timeSelected).format('YYYY-MM-DD') ] 
-            })
-
             let taskListByGroup = null
-            let startedTaskListByGroup = null
             if(userUnit.groupIdList){
                 if(userUnit.groupIdList.length > 0){
                     taskListByGroup = await sequelizeObj.query(`
@@ -323,18 +311,6 @@ module.exports = {
                     `, { 
                         type: QueryTypes.SELECT,
                         replacements: [ moment(timeSelected).format('YYYY-MM-DD'), userUnit.groupIdList ] 
-                    })
-
-                    startedTaskListByGroup = await sequelizeObj.query(`
-                        select count(t.taskId) as taskNum, t.hub, t.purpose from task t
-                        LEFT JOIN driver d ON d.driverId = t.driverId
-                        where t.driverId is not null and d.permitStatus != 'invalid' and
-                        ? between (DATE_FORMAT(t.indentStartTime,'%Y-%m-%d')) and DATE_FORMAT(t.indentEndTime,'%Y-%m-%d')
-                        and t.groupId in ( ? )
-                        and t.mobileStartTime is not null GROUP BY t.hub, t.purpose 
-                    `, { 
-                        type: QueryTypes.SELECT,
-                        replacements: [ moment(timeSelected).format('YYYY-MM-DD'), userUnit.groupIdList ]
                     })
                 }
             }
@@ -407,81 +383,27 @@ module.exports = {
                      }
                  }
      
-                 // started task
-                 let startedTaskListStartedDataArray
-                 if(hub){
-                    startedTaskListStartedDataArray = startedTaskList.filter(item => item.hub == hub);
-                 } else if(startedTaskListByGroup){
-                    startedTaskListStartedDataArray = startedTaskListByGroup.filter(item => item);
-                 } else {
-                    startedTaskListStartedDataArray = startedTaskList.filter(item => !item.hub);
-                 }
-                 let opsStartedCount = 0;
-                 let trainingStartedCount = 0;
-                 let adminStartedCount = 0;
-                 let exerciseStartedCount = 0;
-                 let dutyStartedCount = 0;
-                 let drivingTrainingStartedCount = 0;
-                 let maintenanceStartedCount = 0;
-                 let othersStartedCount = 0;
-                 let familiarisationStartedCount = 0;
-                 let wptStartedCount = 0;
-                 let mptStartedCount = 0;
-                 let aviStartedCount = 0;
-                 let pmStartedCount = 0;
-                 if(startedTaskListStartedDataArray && startedTaskListStartedDataArray.length > 0) {
-                     for (let temp of startedTaskListStartedDataArray) {
-                        if (temp.purpose) {
-                            if (temp.purpose.toLowerCase().startsWith('ops')) {
-                                opsStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('training')) {
-                                trainingStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('admin')) {
-                                adminStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('exercise')) {
-                                exerciseStartedCount += temp.taskNum
-                            }   else if (temp.purpose.toLowerCase().startsWith('duty')) {
-                               dutyStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('driving training')) {
-                               drivingTrainingStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('maintenance')) {
-                               maintenanceStartedCount += temp.taskNum
-                            } else if (temp.purpose.toLowerCase().startsWith('others')) {
-                               othersStartedCount += temp.taskNum
-                            }  else if (temp.purpose.toLowerCase().startsWith('familiarisation')) {
-                               familiarisationStartedCount += temp.taskNum
-                            }  else if (temp.purpose.toLowerCase().startsWith('wpt')) {
-                               wptStartedCount += temp.taskNum
-                            }  else if (temp.purpose.toLowerCase().startsWith('mpt')) {
-                               mptStartedCount += temp.taskNum
-                            }  else if (temp.purpose.toLowerCase().startsWith('avi')) {
-                               aviStartedCount += temp.taskNum
-                            }  else if (temp.purpose.toLowerCase().startsWith('pm')) {
-                               pmStartedCount += temp.taskNum
-                            }   
-                        }
-                     }
-                 }
+                 
                  if((hubData.hub).toUpperCase() == 'DV_LOA') {
-                    hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount, startedTaskCount: opsStartedCount})
-                    hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount, startedTaskCount: trainingStartedCount})
-                    hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount, startedTaskCount: adminStartedCount})   
-                    hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount, startedTaskCount: wptStartedCount})
-                    hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount, startedTaskCount: mptStartedCount})   
+                    hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount})
+                    hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount})
+                    hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount})   
+                    hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount})
+                    hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount})   
                  } else {
-                    hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount, startedTaskCount: opsStartedCount})
-                    hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount, startedTaskCount: trainingStartedCount})
-                    hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount, startedTaskCount: adminStartedCount})   
-                    hubData.purposeData.push({purpose: 'Exercise', taskCount: exerciseCount, startedTaskCount: exerciseStartedCount})
-                    hubData.purposeData.push({purpose: 'Duty', taskCount: dutyCount, startedTaskCount: dutyStartedCount})
-                    hubData.purposeData.push({purpose: 'Driving Training', taskCount: drivingTrainingCount, startedTaskCount: drivingTrainingStartedCount})
-                    hubData.purposeData.push({purpose: 'Maintenance', taskCount: maintenanceCount, startedTaskCount: maintenanceStartedCount})
-                    hubData.purposeData.push({purpose: 'Others', taskCount: othersCount, startedTaskCount: othersStartedCount})
-                    hubData.purposeData.push({purpose: 'Familiarisation', taskCount: familiarisationCount, startedTaskCount: familiarisationStartedCount})
-                    hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount, startedTaskCount: wptStartedCount})
-                    hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount, startedTaskCount: mptStartedCount})   
-                    hubData.purposeData.push({purpose: 'AVI', taskCount: aviCount, startedTaskCount: aviStartedCount})
-                    hubData.purposeData.push({purpose: 'PM', taskCount: pmCount, startedTaskCount: pmStartedCount})   
+                    hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount})
+                    hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount})
+                    hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount})   
+                    hubData.purposeData.push({purpose: 'Exercise', taskCount: exerciseCount})
+                    hubData.purposeData.push({purpose: 'Duty', taskCount: dutyCount})
+                    hubData.purposeData.push({purpose: 'Driving Training', taskCount: drivingTrainingCount})
+                    hubData.purposeData.push({purpose: 'Maintenance', taskCount: maintenanceCount})
+                    hubData.purposeData.push({purpose: 'Others', taskCount: othersCount})
+                    hubData.purposeData.push({purpose: 'Familiarisation', taskCount: familiarisationCount})
+                    hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount})
+                    hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount})   
+                    hubData.purposeData.push({purpose: 'AVI', taskCount: aviCount})
+                    hubData.purposeData.push({purpose: 'PM', taskCount: pmCount})   
    
                  }
             
@@ -1036,7 +958,7 @@ module.exports = {
                     AND tt.taskId is not null 
             `
 
-            let replacements = [ timeSelected, timeSelected, timeSelected]
+            let replacements = [ timeSelected, timeSelected, timeSelected + '%']
             if (CONTENT.USER_TYPE.CUSTOMER == user.userType) {
                 driverSql += ` AND tt.groupId = ? `
                 replacements.push(user.unitId)
@@ -1115,7 +1037,7 @@ module.exports = {
                     AND th.dataFrom = 'obd'
                     AND tt.taskId is not null 
             `
-            replacements = [ timeSelected, timeSelected, timeSelected ]
+            replacements = [ timeSelected, timeSelected, timeSelected + '%' ]
 
             if (CONTENT.USER_TYPE.CUSTOMER == user.userType) {
                 deviceSql += ` AND tt.groupId = ${ user.unitId } `

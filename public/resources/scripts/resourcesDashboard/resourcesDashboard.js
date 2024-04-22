@@ -394,15 +394,19 @@ const generateDriverCardHtml = function (data) {
 
 
 const initDriverClassAndVehicleClass = function(driverClass, vehicleClass){
-    if(($('.peopleTotal-div').css('display') == 'block') || ($('.busTotal-div').css('display') == 'block')) {
-        let newDriverData = []
-        driverByNodeData = newDriverData.length > 0 ? newDriverData : driverByNodeData;
-        if(unitByHub){
-            initBusOrPersonnelPageNode(driverByNodeData)
-        } else {
-            initBusOrPersonnelPageHub(driverByHubData)
-        }
-    } 
+    const initbusOrPersonHtml = function (){
+        if(($('.peopleTotal-div').css('display') == 'block') || ($('.busTotal-div').css('display') == 'block')) {
+            let newDriverData = []
+            driverByNodeData = newDriverData.length > 0 ? newDriverData : driverByNodeData;
+            if(unitByHub){
+                initBusOrPersonnelPageNode(driverByNodeData)
+            } else {
+                initBusOrPersonnelPageHub(driverByHubData)
+            }
+        } 
+    }
+    initbusOrPersonHtml()
+
     if(driverClass?.length > 0){
         driverClass = driverClass.map(driver => { return driver });
         driverClass = Array.from(new Set(driverClass));
@@ -412,16 +416,18 @@ const initDriverClassAndVehicleClass = function(driverClass, vehicleClass){
                 return
             }
 
-            if(driverClass[i]) {
-                if((driverClass[i].unit)){
-                    if(unitByHub){
-                        clickPeople(`char-people-node-${ ((driverClass[i].unit).toString()).replaceAll(" ","_") }-${ ((driverClass[i].subunit).toString()).replaceAll(" ","_") }`, driverClass[i].subunit, true, driverClass[i].unit)
-                    } else {
-                        clickPeople(`char-people-hub-${ ((driverClass[i].unit).toString()).replaceAll(" ","_") }`, null, true, driverClass[i].unit)
-                    }
-                   
-                }  
+            const initPeopCh = function () {
+                if(driverClass[i]) {
+                    if((driverClass[i].unit)){
+                        if(unitByHub){
+                            clickPeople(`char-people-node-${ ((driverClass[i].unit).toString()).replaceAll(" ","_") }-${ ((driverClass[i].subunit).toString()).replaceAll(" ","_") }`, driverClass[i].subunit, true, driverClass[i].unit)
+                        } else {
+                            clickPeople(`char-people-hub-${ ((driverClass[i].unit).toString()).replaceAll(" ","_") }`, null, true, driverClass[i].unit)
+                        }
+                    }  
+                }
             }
+            initPeopCh()
         }
     }
 
@@ -433,16 +439,18 @@ const initDriverClassAndVehicleClass = function(driverClass, vehicleClass){
             if(i > num){
                 return
             }
-            if(vehicleClass[i]) {
-                if((vehicleClass[i].unit)){
-                    if(unitByHub){
-                        clickBus(`char-node-bus-${ ((vehicleClass[i].unit).toString()).replaceAll(" ","_") }-${ ((vehicleClass[i].subunit).toString()).replaceAll(" ","_") }`, vehicleClass[i].subunit, true, vehicleClass[i].unit)
-                    } else {
-                        clickBus(`char-hub-bus-${ ((vehicleClass[i].unit).toString()).replaceAll(" ","_") }`, null, true, vehicleClass[i].unit) 
+            const initBusCh = function (){
+                if(vehicleClass[i]) {
+                    if((vehicleClass[i].unit)){
+                        if(unitByHub){
+                            clickBus(`char-node-bus-${ ((vehicleClass[i].unit).toString()).replaceAll(" ","_") }-${ ((vehicleClass[i].subunit).toString()).replaceAll(" ","_") }`, vehicleClass[i].subunit, true, vehicleClass[i].unit)
+                        } else {
+                            clickBus(`char-hub-bus-${ ((vehicleClass[i].unit).toString()).replaceAll(" ","_") }`, null, true, vehicleClass[i].unit) 
+                        }
                     }
-                    
                 }
             }
+            initBusCh()
         }
     }
 }
@@ -518,29 +526,32 @@ const clickPeople = function (optionClass, subunit, record, unit) {
         newUnit = 'Other'
         dvLoa = true
     } 
-    let dataList;
+
     let dataObj = []
     if(unitByHub){
-        dataList = driverByNodeData
-        for(let item of driverByNodeData){
-            if(item.subunit == newSubUnit) {
-                dataObj = item.driverPurposeData
+        const showPeopleNodeDiv = function(){
+            for(let item of driverByNodeData){
+                if(item.subunit == newSubUnit) {
+                    dataObj = item.driverPurposeData
+                }
             }
+            if(record) driverClass.push({ "unit": unit, "subunit": subunit })
+            $(`.div-people-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'block')
+            $(`.div-all-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'none')
         }
-        if(record) driverClass.push({ "unit": unit, "subunit": subunit })
-        $(`.div-people-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'block')
-        $(`.div-all-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'none')
-    } else {
-        dataList = driverByHubData
-        
-        for(let item of dataList){
-            if(item.unit == newUnit) {
-                dataObj = item.driverPurposeData
+        showPeopleNodeDiv()
+    } else {     
+        const showPeopleHubDiv = function (){
+            for(let item of driverByHubData){
+                if(item.unit == newUnit) {
+                    dataObj = item.driverPurposeData
+                }
             }
-        }
-        if(record) driverClass.push({ "unit": unit, "subunit": null })
-        $(`.div-people-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'block')
-        $(`.div-all-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'none')
+            if(record) driverClass.push({ "unit": unit, "subunit": null })
+            $(`.div-people-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'block')
+            $(`.div-all-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'none')
+        }   
+        showPeopleHubDiv()
     }
     let data = [{ value: 0, name: 'total' }];
     let data2 = [];
@@ -571,8 +582,10 @@ const clickBus = function (optionClass, subunit, record, unit) {
         newUnit = 'Other'
         dvLoa = true
     } 
-        let dataObj = []
-        if(unitByHub){
+
+    let dataObj = []
+    if(unitByHub){
+        const showBusNodeDiv = function (){
             for(let item of vehicleByNodeData){
                 if(item.subunit == newSubUnit) {
                     dataObj = item.vehiclePurposeData
@@ -581,7 +594,10 @@ const clickBus = function (optionClass, subunit, record, unit) {
             if(record) vehicleClass.push({ "unit": unit, "subunit": subunit })
             $(`.div-bus-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'block')
             $(`.div-all-node-${ (unit.toString()).replaceAll(" ","_") }-${ (subunit.toString()).replaceAll(" ","_") }`).css('display', 'none')
-        } else {
+        }
+        showBusNodeDiv()
+    } else {
+        const showBusHubDiv = function (){
             for(let item of vehicleByHubData){
                 if(item.unit == newUnit) {
                     dataObj = item.vehiclePurposeData
@@ -591,24 +607,25 @@ const clickBus = function (optionClass, subunit, record, unit) {
             $(`.div-bus-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'block')
             $(`.div-all-hub-${ (unit.toString()).replaceAll(" ","_") }`).css('display', 'none')
         }
+        showBusHubDiv()
+    }
 
-        let data = [{ value: 0, name: 'total' }];
-        let data2 = [];
-        let color = ['#DDDDDD']
-        let total = 0;
+    let data = [{ value: 0, name: 'total' }];
+    let data2 = [];
+    let color = ['#DDDDDD']
+    let total = 0;
 
-        let startedTaskCountTotal = 0;
-        for(let i=0;i < dataObj.length;i++){
-            total += dataObj[i].taskCount;
-            
-            startedTaskCountTotal += dataObj[i].startedTaskCount;
-            data2.push({ name: dataObj[i].purpose, value: dataObj[i].startedTaskCount })
-            data.push({ value: dataObj[i].startedTaskCount > 0 ? dataObj[i].startedTaskCount : null, name: dataObj[i].purpose })
-            color.push(CONTENT_NODE_COLOR[i])
-        }
- 
+    let startedTaskCountTotal = 0;
+    for(let i=0;i < dataObj.length;i++){
+        total += dataObj[i].taskCount;
         
-        initVehicleChar('Started / MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
+        startedTaskCountTotal += dataObj[i].startedTaskCount;
+        data2.push({ name: dataObj[i].purpose, value: dataObj[i].startedTaskCount })
+        data.push({ value: dataObj[i].startedTaskCount > 0 ? dataObj[i].startedTaskCount : null, name: dataObj[i].purpose })
+        color.push(CONTENT_NODE_COLOR[i])
+    }
+
+    initVehicleChar('Started / MV Assigned', `${ optionClass }`, data, data2, color, startedTaskCountTotal)
 } 
 
 const clickSubUnit = function (subunit, record, unit) {

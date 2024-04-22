@@ -1,7 +1,7 @@
 import { initUserViewPage } from '../user/user-view.js'
 import { customPopupInfo } from '../common-script.js'
 import { getRoleList } from '../role/role.js'
-let groupList
+let groupList = []
 $(function () {
     $('#edit-user').on('hide.bs.modal', function () {
         $('#edit-user .unit,#edit-user .subUnit').hide();  
@@ -216,35 +216,45 @@ const generateUser = function () {
 }
 
 const clearEditUserPage = function () {
-    $('#edit-user .username').val(currentUser.fullName ? currentUser.fullName : null);
-    if(currentUser.nric) currentUser.nric = ((currentUser.nric).toString()).substr(0, 1) + ((currentUser.nric).toString()).substr(((currentUser.nric).toString()).length-4, 4)
-    $('#edit-user .nric').val(currentUser.nric ? currentUser.nric : null);
-    
-    $(`#edit-user #userType`).val(currentUser.userType ? currentUser.userType : Cookies.get('userType'));
-    $(`#edit-user #userType`).trigger('change')
+    $('#edit-user .username').val(currentUser.fullName || null);
+    if(currentUser.nric) {
+        currentUser.nric = ((currentUser.nric).toString()).substr(0, 1) + ((currentUser.nric).toString()).substr(((currentUser.nric).toString()).length-4, 4)
+        $('#edit-user .nric').val(currentUser.nric);
+    } 
+
     if (currentUser.userType) {
+        $(`#edit-user #userType`).val(currentUser.userType);
+        $(`#edit-user #userType`).trigger('change')
         if((currentUser.userType).toUpperCase() == 'UNIT' || (currentUser.userType).toUpperCase() == 'LICENSING OFFICER') {
-            $('#edit-user #unitType').val(currentUser.unit ? currentUser.unit : null)
-            $('#edit-user #unitType').trigger('change')
-            $('#edit-user #subUnitType').val(currentUser.unitId ? currentUser.unitId : null);
-        } else if((currentUser.userType).toUpperCase() == 'CUSTOMER') {
-            if(currentUser.unitId) {
-                $('#edit-user #unitGroup-input').data('id', currentUser.unitId)
-                if(groupList && groupList.length) {
-                    let filterDestination = groupList.filter(item => item.id == currentUser.unitId)
-                    $('#unitGroup-input').val(filterDestination[0].groupName)
-                    $('#unitGroup-input').data('id', filterDestination[0].id)
-                }
-            } else {
-                $('#edit-user #unitGroup-input').val(null)
-                $('#edit-user #unitGroup-input').data('id', null)
+            const initUserUnit = function (){
+                $('#edit-user #unitType').val(currentUser.unit ? currentUser.unit : null)
+                $('#edit-user #unitType').trigger('change')
+                $('#edit-user #subUnitType').val(currentUser.unitId ? currentUser.unitId : null);
             }
-            
+            initUserUnit()
+        } else if((currentUser.userType).toUpperCase() == 'CUSTOMER') {
+            const initUserGroup = function (){
+                if(currentUser.unitId) {
+                    $('#edit-user #unitGroup-input').data('id', currentUser.unitId)
+                    if(groupList.length > 0) {
+                        let filterDestination = groupList.filter(item => item.id == currentUser.unitId)
+                        $('#unitGroup-input').val(filterDestination[0].groupName)
+                        $('#unitGroup-input').data('id', filterDestination[0].id)
+                    }
+                } else {
+                    $('#edit-user #unitGroup-input').val(null)
+                    $('#edit-user #unitGroup-input').data('id', null)
+                }
+            }
+            initUserGroup()
         }
         $(`#edit-user .modal-title`).text('Edit User');
         $(`#userType`).trigger('click');
         $(`#userType`).attr("disabled", "disabled");
         $(`#userType`).attr("style", "background-color: #EEEEEE;");
+    } else {
+        $(`#edit-user #userType`).val(Cookies.get('userType'));
+        $(`#edit-user #userType`).trigger('change')
     }
 }
 

@@ -239,47 +239,56 @@ export async function initIncidentPage(sosId, permitType) {
         $('#view-incident-new .modal-title').attr('data-id', data.id)
         $('.textarea-description').val(data.description);
         $('.textarea-action').val(data.followUpActions);
-        if(data.negligence == 1){
-            $('#Negligence').attr('checked', 'checked')
-            $('#Negligence').prop('checked', true)
-            if($('#Non-Negligence').attr('checked')){
-                $('#Non-Negligence').removeAttr('checked')
-            }
-        } else if($('#Negligence').attr('checked')){
-            $('#Negligence').removeAttr('checked')
-        } else {
-            $('#Non-Negligence').attr('checked', 'checked')
-            $('#Non-Negligence').prop('checked', true)
-        } 
+        const initNegligence = function (){
+            if(data.negligence == 1){
+                $('#Negligence').attr('checked', 'checked')
+                $('#Negligence').prop('checked', true)
+                if($('#Non-Negligence').attr('checked')){
+                    $('#Non-Negligence').removeAttr('checked')
+                }
+            } else if($('#Negligence').attr('checked')){
+                $('#Negligence').removeAttr('checked')
+            } else {
+                $('#Non-Negligence').attr('checked', 'checked')
+                $('#Non-Negligence').prop('checked', true)
+            } 
+        }
+        initNegligence()
         $('.textarea-closed-on').val(data.closedOn);
         $('.textarea-location-incident').val(data.locationOfIncident);
         $('.select-location-type').val(data.locationType);
-        if(data.local == 1){
-            $('#Local').attr('checked', 'checked') 
-            $('#Local').prop('checked', true)
-            if($('#Overseas').attr('checked')){
-                $('#Overseas').removeAttr('checked')
+        const initLocal = function (){
+            if(data.local == 1){
+                $('#Local').attr('checked', 'checked') 
+                $('#Local').prop('checked', true)
+                if($('#Overseas').attr('checked')){
+                    $('#Overseas').removeAttr('checked')
+                }
+            } else if($('#Local').attr('checked')) {
+                $('#Local').removeAttr('checked')
+            } else {
+                $('#Overseas').attr('checked', 'checked')
+                $('#Overseas').prop('checked', true)
             }
-        } else if($('#Local').attr('checked')) {
-            $('#Local').removeAttr('checked')
-        } else {
-            $('#Overseas').attr('checked', 'checked')
-            $('#Overseas').prop('checked', true)
         }
+        initLocal()
 
         let weekRange_data = data.weekRange;
-        if (weekRange_data) {
-            if (weekRange_data.indexOf('-') != -1) {
-                const dates = weekRange_data.split(' - ')
-                if(dates.length > 0) {
-                    dates[0] = moment(dates[0], 'YYYY-MM-DD').format('DD/MM/YYYY')
-                    dates[1] = moment(dates[1], 'YYYY-MM-DD').format('DD/MM/YYYY')
-                    weekRange_data = dates.join(' - ')
+        const initWeekDatas = function (){
+            if (weekRange_data) {
+                if (weekRange_data.indexOf('-') != -1) {
+                    const dates = weekRange_data.split(' - ')
+                    if(dates.length > 0) {
+                        dates[0] = moment(dates[0], 'YYYY-MM-DD').format('DD/MM/YYYY')
+                        dates[1] = moment(dates[1], 'YYYY-MM-DD').format('DD/MM/YYYY')
+                        weekRange_data = dates.join(' - ')
+                    }
+                } else {
+                    weekRange_data = moment(weekRange_data, 'YYYY-MM-DD').format('DD/MM/YYYY')
                 }
-            } else {
-                weekRange_data = moment(weekRange_data, 'YYYY-MM-DD').format('DD/MM/YYYY')
             }
         }
+        initWeekDatas()
         $('.enlistment-date-input').val(weekRange_data ?? null);
         $('.enlistment-time-input').val(moment(`${ moment().format('YYYY-MM-DD') } ${ data.detailTime }`).format('HH:mm'));
         $('.week-number-input').val(data.weekNumber);
@@ -367,8 +376,7 @@ const addOrEditIncidet = async function(el) {
             suspensionPeriod: 'Suspension Period'
         }
         for (let key in data) {
-            if(key == 'negligence' || key == 'local') continue
-            if(key == 'lssueDemeritPoints' || key == 'suspensionPeriod') continue
+            if(key == 'negligence' || key == 'local' || key == 'lssueDemeritPoints' || key == 'suspensionPeriod') continue
             if(userType.toUpperCase() != 'UNIT' && userType.toUpperCase() != 'HQ') {
                 if(key == 'description' || key == 'followUpActions') continue
             }
@@ -383,18 +391,22 @@ const addOrEditIncidet = async function(el) {
         return true
     }
     let suspensionPeriod_input = $('.suspension-period-input').val();
-    if (suspensionPeriod_input) {
-        if (suspensionPeriod_input.indexOf('-') != -1) {
-            const dates = suspensionPeriod_input.split(' - ')
-            if(dates.length > 0) {
-                dates[0] = moment(dates[0], 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
-                dates[1] = moment(dates[1], 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
-                suspensionPeriod_input = dates.join(' - ')
+    const initPeriodInput = function (){
+        if (suspensionPeriod_input) {
+            if (suspensionPeriod_input.indexOf('-') != -1) {
+                const dates = suspensionPeriod_input.split(' - ')
+                if(dates.length > 0) {
+                    dates[0] = moment(dates[0], 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
+                    dates[1] = moment(dates[1], 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
+                    suspensionPeriod_input = dates.join(' - ')
+                }
+            } else {
+                suspensionPeriod_input = moment(suspensionPeriod_input, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
             }
-        } else {
-            suspensionPeriod_input = moment(suspensionPeriod_input, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
         }
     }
+    initPeriodInput()
+
     let weekRange_input = $('.enlistment-date-input').val();
     if (weekRange_input) {
         if (weekRange_input.indexOf('-') != -1) {
@@ -408,6 +420,7 @@ const addOrEditIncidet = async function(el) {
             weekRange_input = moment(weekRange_input, 'DD/MM/YYYY').format('YYYY-MM-DD')
         }
     }
+    
     let incidentObj = {
         sosId: newSosId,
         description: $('.textarea-description').val(),

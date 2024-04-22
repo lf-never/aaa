@@ -480,7 +480,17 @@ module.exports = {
 
     uploadKeyOptRecord: function (req, res) {
         try {
-            const form = formidable({ multiples: true });
+            let dirPath = conf.uploadFilePath + "\\keyOptRecord"
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, {recursive: true});
+            }
+            const form = formidable({ 
+                multiples: true, 
+                maxFileSize: 10 * 1024 * 1024, 
+                keepExtensions: false, 
+                uploadDir: dirPath,
+                fileExt: /\.xlsx$|\.xls$/i
+            });
             form.parse(req, async (error, fields, files) => {
                 if (error) {
                     log.error(error)

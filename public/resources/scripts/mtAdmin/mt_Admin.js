@@ -115,6 +115,24 @@ window.showActivity = function (e) {
 }
 
 const initDetail = function () {
+    const initDateSel = function (option){
+        if (option.execution_date) {
+            if (option.execution_date.indexOf('~') != -1) {
+                const dates = option.execution_date.split(' ~ ')
+                if(dates.length > 0) {
+                    dates[0] = moment(dates[0], 'DD/MM/YYYY').format('YYYY-MM-DD')
+                    dates[1] = moment(dates[1], 'DD/MM/YYYY').format('YYYY-MM-DD')
+                    option.execution_date = dates.join(' ~ ')
+                }
+            } else {
+                option.execution_date = moment(option.execution_date, 'DD/MM/YYYY').format('YYYY-MM-DD')
+            }
+        }
+        if(option.created_date) {
+            option.created_date = moment(option.created_date, 'DD/MM/YYYY').format('YYYY-MM-DD')
+        }
+        return option
+    }
     dataTable = $('.data-list').DataTable({
         "ordering": true,
         "searching": false,
@@ -140,48 +158,39 @@ const initDetail = function () {
                 if(node) node = node.substring(node.lastIndexOf(":")+1, node.length)
                 if(hub) hub = hub.toLowerCase() === 'all' ? null : hub;
                 if(node) node = node.toLowerCase() === 'all' ? null : node;
-                hub = hub ?? null;
-                node = node ?? null;
+                hub = hub || null;
+                node = node || null;
                 let taskIdDateOrder
                 let endDateOrder
-                for (let orderField of d.order) {
-                    if(orderField.column == 0) {
-                        taskIdDateOrder = orderField.dir;
-                    } else if(orderField.column == 11) {
-                        endDateOrder = orderField.dir;
-                    }
-                }    
+                const initOrder = function (){
+                    for (let orderField of d.order) {
+                        if(orderField.column == 0) {
+                            taskIdDateOrder = orderField.dir;
+                        } else if(orderField.column == 11) {
+                            endDateOrder = orderField.dir;
+                        }
+                    }    
+                }
+                initOrder()
+
                 let option = { 
                     'purpose': $('.selected-Purpose').val(),
-                    'execution_date': $('.execution-date').val() ? $('.execution-date').val() : null,
-                    'created_date': $('.created-date').val() ? $('.created-date').val() : null,
+                    'execution_date': $('.execution-date').val() || null,
+                    'created_date': $('.created-date').val() || null,
                     'hub': hub,
                     'node': node,
                     "userId": userId, 
-                    "taskId": $('.screen-taskId').val() ? $('.screen-taskId').val() : null,
-                    "vehicleNo": $('.screen-vehicleNo').val() ? $('.screen-vehicleNo').val() : null,
-                    "driverName": $('.screen-driverName').val() ? $('.screen-driverName').val() : null,
+                    "taskId": $('.screen-taskId').val() || null,
+                    "vehicleNo": $('.screen-vehicleNo').val() || null,
+                    "driverName": $('.screen-driverName').val() || null,
                     "endDateOrder": endDateOrder,
                     "taskIdDateOrder": taskIdDateOrder,
-                    "groupId": $('.select-group').val() ? $('.select-group').val() : null,
+                    "groupId": $('.select-group').val() || null,
                     "pageNum": d.start, 
                     "pageLength": d.length
                 }
-                if (option.execution_date) {
-                    if (option.execution_date.indexOf('~') != -1) {
-                        const dates = option.execution_date.split(' ~ ')
-                        if(dates.length > 0) {
-                            dates[0] = moment(dates[0], 'DD/MM/YYYY').format('YYYY-MM-DD')
-                            dates[1] = moment(dates[1], 'DD/MM/YYYY').format('YYYY-MM-DD')
-                            option.execution_date = dates.join(' ~ ')
-                        }
-                    } else {
-                        option.execution_date = moment(option.execution_date, 'DD/MM/YYYY').format('YYYY-MM-DD')
-                    }
-                }
-                if(option.created_date) {
-                    option.created_date = moment(option.created_date, 'DD/MM/YYYY').format('YYYY-MM-DD')
-                }
+                option = initDateSel(option)
+                console.log(option)
                 return option
             }
         },   
@@ -796,7 +805,7 @@ const initVehicleDriverPage = async function () {
                 $(e).next().css("display", "block")
                 $(e).next().find(".form-search-select").empty();
                 let user = await getUnitIdByUserId(userId);
-                let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId
+                let unitId = $('.node-select option:selected').attr('data-unitId') || user.unitId
                 let startTime = $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null;
                 let endTime = $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null;
                 let __driverUnit = mtUnitId
@@ -920,31 +929,32 @@ const verifyVehicleTypeAndVehicleAndDriver = async function () {
         let newVehicleType = await verifyVehicleType($('#purposeType').val(), startTime, endTime, $('.hub-select option:selected').val(), $('.node-select option:selected').val(), $('#typeOfVehicle').val());
         if(newVehicleType) {
             let user = await getUnitIdByUserId(userId);
-            let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId
-            let __newVehicleUnitId = mtUnitId
-            if(!mtUnitId) __newVehicleUnitId = unitId
+            let unitId = $('.node-select option:selected').attr('data-unitId') || user.unitId
+            let __newVehicleUnitId = mtUnitId || unitId
             let newVehicleList = await getVehicleList($('#purposeType').val(), __newVehicleUnitId, $('#typeOfVehicle').val(), startTime, endTime, $('.hub-select').val(), $('.node-select').val());
             let result = newVehicleList.some(item=> item.vehicleNo == $('#vehicleNo').val())
-            if(result){
-                let newDriverList = null;
-                let user = await getUnitIdByUserId(userId);
-                let unitId = $('.node-select option:selected').attr('data-unitId') ? $('.node-select option:selected').attr('data-unitId') : user.unitId
-                let __newDriverUnitId = mtUnitId
-                if(!mtUnitId) __newDriverUnitId = unitId
-                newDriverList = await getDriverList($('#purposeType').val(), __newDriverUnitId, $('#typeOfVehicle').val(), startTime, endTime);
-                let driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
-                if(!driverResult) {
-                    $('#driver').val('');
-                    $('#driver').attr('data-unitId', null)
-                    $('#driver').attr('data-id', null)
-                    $('#driver').attr('data-value', null)
-                    $('#driver-shadow .form-search-select').empty()   
+            const initDriverOrVehicleDiv = async function (){
+                if(result){
+                    let newDriverList = null;
+                    let user = await getUnitIdByUserId(userId);
+                    let unitId = $('.node-select option:selected').attr('data-unitId') || user.unitId
+                    let __newDriverUnitId = mtUnitId || unitId
+                    newDriverList = await getDriverList($('#purposeType').val(), __newDriverUnitId, $('#typeOfVehicle').val(), startTime, endTime);
+                    let driverResult = newDriverList.some(item=> item.driverId == $('#driver').attr('data-id'))
+                    if(!driverResult) {
+                        $('#driver').val('');
+                        $('#driver').attr('data-unitId', null)
+                        $('#driver').attr('data-id', null)
+                        $('#driver').attr('data-value', null)
+                        $('#driver-shadow .form-search-select').empty()   
+                    }
+                } else {
+                    $('#vehicleNo').val('');
+                    $('#vehicleNo').attr('data-unitId', null)
+                    $('#vehicleNo-shadow .form-search-select').empty()          
                 }
-            } else {
-                $('#vehicleNo').val('');
-                $('#vehicleNo').attr('data-unitId', null)
-                $('#vehicleNo-shadow .form-search-select').empty()          
             }
+            initDriverOrVehicleDiv()
         } else {
             clearDriverAndVehicleAndType()
         }
@@ -1179,63 +1189,60 @@ window.updateMtAdminById = async function (mtAdminId, taskId) {
         });
     }
     data = await getMtAdminByMtAdminId(mtAdminId);
-    if(data){
-        await initPurpose(data.creator)
-        editCreator = data.creator
-        $('#mtAdminModal').modal("show");
-        $('.modal-title').text('Edit ' + titleText);
-        $('#purposeType').val(data.purpose);
-        $('#purposeType').trigger('change')
-        $('#additionalRemarks').val(data.activityName);
-        $('#remarks').val(data.remarks);
-        $('#serviceMode').val(data.serviceMode);
-        if(data.hub){
-            if(data.hub != '-') {
-                $('.hub-select').val(data.hub);
-                $('.hub-select').trigger('change')
-                $('.node-select').val(data.node ? data.node : 'null');
-            }
-        } 
-        $('#periodStartDate').val(moment(data.startDate).format('DD/MM/YYYY HH:mm'));
-        $('#periodEndDate').val(moment(data.endDate).format('DD/MM/YYYY HH:mm'));
-        if(data.endDate) $('#periodEndDate').trigger('change')
-        if (data.endDate && data.startDate) {
-            resourceOnFocus(this)
-        }
-        $('#typeOfVehicle').val(data.vehicleType);
-        initVehicleDriverPage()
-        mtUnitId = data.unitId
+    if(!data) return
+    await initPurpose(data.creator)
+    editCreator = data.creator
+    $('#mtAdminModal').modal("show");
+    $('.modal-title').text('Edit ' + titleText);
+    $('#purposeType').val(data.purpose);
+    $('#purposeType').trigger('change')
+    $('#additionalRemarks').val(data.activityName);
+    $('#remarks').val(data.remarks);
+    $('#serviceMode').val(data.serviceMode);
+    if(data.hub && data.hub != '-'){
+        $('.hub-select').val(data.hub);
+        $('.hub-select').trigger('change')
+        $('.node-select').val(data.node ? data.node : 'null');
+    } 
+    $('#periodStartDate').val(moment(data.startDate).format('DD/MM/YYYY HH:mm'));
+    $('#periodEndDate').val(moment(data.endDate).format('DD/MM/YYYY HH:mm'));
+    if(data.endDate) $('#periodEndDate').trigger('change')
+    if (data.endDate && data.startDate) {
+        resourceOnFocus(this)
+    }
+    $('#typeOfVehicle').val(data.vehicleType);
+    initVehicleDriverPage()
+    mtUnitId = data.unitId
 
-        verifyVehicleTypeAndVehicleAndDriver()
-        if(data.vehicleNumber) $('#vehicleNo').val(data.vehicleNumber);
-        $('#vehicleNo').attr("data-unitid", data.unitId)
-        if(data.driverId){
-            driverObj = {
-                driverName: data.driverName,
-                unitId: data.unitId,
-                driverId: data.driverId,
-                contactNumber: data.contactNumber
-            }
-    
-            $('#driver').attr('data-value', data.driverName)
-            $('#driver').val(`${ data.driverName }(${ data.contactNumber ? data.contactNumber : '-' })`)
-            $('#driver').attr("data-unitid", data.unitId)
-            $('#driver').attr("data-id", data.driverId)
+    verifyVehicleTypeAndVehicleAndDriver()
+    if(data.vehicleNumber) $('#vehicleNo').val(data.vehicleNumber);
+    $('#vehicleNo').attr("data-unitid", data.unitId)
+    if(data.driverId){
+        driverObj = {
+            driverName: data.driverName,
+            unitId: data.unitId,
+            driverId: data.driverId,
+            contactNumber: data.contactNumber
         }
-        
-        $('#pickupDestination').val(data.reportingLocation);
-        $('#dropoffDestination').val(data.destination);
-        if(mtAdminId){;
-            confirmMtAdmin(mtAdminId, taskId)
-        }
+
+        $('#driver').attr('data-value', data.driverName)
+        $('#driver').val(`${ data.driverName }(${ data.contactNumber || '-' })`)
+        $('#driver').attr("data-unitid", data.unitId)
+        $('#driver').attr("data-id", data.driverId)
+    }
     
-        $('#mtAdminCancel').off('click').on('click', function () {
-            mtAdminId = null;
-            clearPageData();
-        });
-        $('.hub-select-row').hide()
-        $('.node-select-row').hide()
-    }  
+    $('#pickupDestination').val(data.reportingLocation);
+    $('#dropoffDestination').val(data.destination);
+    if(mtAdminId){;
+        confirmMtAdmin(mtAdminId, taskId)
+    }
+
+    $('#mtAdminCancel').off('click').on('click', function () {
+        mtAdminId = null;
+        clearPageData();
+    });
+    $('.hub-select-row').hide()
+    $('.node-select-row').hide()
 }
 
 window.deleteMtAdminById = async function (mtAdminId, taskId) {
@@ -1396,12 +1403,19 @@ const confirmMtAdmin = function (mtAdminId, taskId) {
                     return
                 }
             }
-            if(endDateTime >= nowDateTime){
+            if(endDateTime < nowDateTime) {
+                $.alert({
+                    title: 'Warn',
+                    content: `The task time has expired. Please select a new one.`,
+                });
+                return
+            }
+            const verifyMtAdminData = function (){
                 let ValidAssignTaskObj = {
                     purpose: $('#purposeType').val(),
                     activityName: $('#additionalRemarks').val(),
                     vehicleNumber: $('#vehicleNo').val(),
-                    vehicleType: $('#typeOfVehicle').val() ? $('#typeOfVehicle').val() : '',
+                    vehicleType: $('#typeOfVehicle').val() || '',
                     driverName: $('#driver').attr('data-value'),
                     remarks: $('#remarks').val(),
                     category: 'MV',
@@ -1413,98 +1427,95 @@ const confirmMtAdmin = function (mtAdminId, taskId) {
                 }
                 if(!userNode && !mtAdminId && userType.toUpperCase() != 'CUSTOMER') ValidAssignTaskObj.unitId = $('.hub-select option:selected').val()
                 let state = ValidAssignTask(ValidAssignTaskObj, mtAdminId)
-                if(state){
-                    $(this).addClass('btn-mtAdminConfirm')
-                    let mtAdmin = {
-                        id: mtAdminId,
-                        activityName: $('#additionalRemarks').val(),
-                        purpose: $('#purposeType').val(),
-                        unitId: null,
-                        startDate: $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null,
-                        endDate: $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null,
-                        vehicleNumber: $('#vehicleNo').val(),
-                        vehicleType: $('#typeOfVehicle').val() ? $('#typeOfVehicle').val() : '',
-                        driverName: $('#driver').attr('data-value'),
-                        driverId:  $('#driver').attr('data-id'),
-                        remarks: $('#remarks').val() ? $('#remarks').val() : '',
-                        category: $("input[name='category']:checked").val() ? 'MV' : null,
-                        serviceMode: $('#serviceMode').val(),
-                        reportingLocation: $('#pickupDestination').val(),
-                        destination: $('#dropoffDestination').val(),
-                        dataType: 'mt'
-                    }
-                    if(userType.toUpperCase() != 'CUSTOMER') {
-                        if(mtAdminId) {
-                            mtAdmin.unitId = mtUnitId
-                        } else if(mtAdmin.id === null)  {
-                            let unitObj = await getUnitId($('.hub-select option:selected').val(), $('.node-select option:selected').val())
-                            mtAdmin.unitId = unitObj.id
-                        }
-                    }
-                    $('#modal-waiting').modal('show');
+                if(!state) dataTable.ajax.reload(null, false) 
+            }
+            verifyMtAdminData()
+            
+            $(this).addClass('btn-mtAdminConfirm')
+            const initMtAdminData = async function (){
+                let mtAdmin = {
+                    id: mtAdminId,
+                    activityName: $('#additionalRemarks').val(),
+                    purpose: $('#purposeType').val(),
+                    unitId: null,
+                    startDate: $('#periodStartDate').val() ? moment($('#periodStartDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null,
+                    endDate: $('#periodEndDate').val() ? moment($('#periodEndDate').val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null,
+                    vehicleNumber: $('#vehicleNo').val(),
+                    vehicleType: $('#typeOfVehicle').val() || '',
+                    driverName: $('#driver').attr('data-value'),
+                    driverId:  $('#driver').attr('data-id'),
+                    remarks: $('#remarks').val() || '',
+                    category: $("input[name='category']:checked").val() ? 'MV' : null,
+                    serviceMode: $('#serviceMode').val(),
+                    reportingLocation: $('#pickupDestination').val(),
+                    destination: $('#dropoffDestination').val(),
+                    dataType: 'mt'
+                }
+                if(userType.toUpperCase() != 'CUSTOMER') {
                     if(mtAdminId) {
-                        await updateMtAdminByMtAdminId(mtAdmin, taskId).then((res) => {
-                            if (res.respCode === 1) {
-                                $('#mtAdminModal').modal('hide');
-                                dataTable.ajax.reload(null, false)
-                                mtAdmin = null
-                                clearPageData(); 
-                            } else if (!res.respMessage){
-                                $('#mtAdminModal').modal('hide');
-                                $.alert({
-                                    title: 'Warn',
-                                    content: 'Fail to modify.',
-                                });
-                                mtAdmin = null
-                                clearPageData();
-                                return
-                            } else {
-                                $.alert({
-                                    title: 'Warn',
-                                    content: res.respMessage,
-                                });
-                                return
-                            }
-                           
-                            
-                        });
-                        $(this).removeClass('btn-mtAdminConfirm')
-                        $('#modal-waiting').modal('hide');
-                    } 
-                    else if(mtAdmin.id === null) {
-                        await createMtAdmin(mtAdmin).then((res) => {
-                            if (res.respCode === 1) {
-                                $('#mtAdminModal').modal('hide');
-                                dataTable.ajax.reload(null, false)
-                                mtAdmin = null
-                                clearPageData();
-                            } else if (res.respMessage === false){
-                                $('#mtAdminModal').modal('hide');
-                                $.alert({
-                                    title: 'Warn',
-                                    content: 'Creation failure.',
-                                });
-                                mtAdmin = null
-                                clearPageData();
-                            } else {
-                                $.alert({
-                                    title: 'Warn',
-                                    content: res.respMessage,
-                                });
-                                return
-                            }
-                        });
-                        $(this).removeClass('btn-mtAdminConfirm')
-                        $('#modal-waiting').modal('hide');
+                        mtAdmin.unitId = mtUnitId
+                    } else if(mtAdmin.id === null)  {
+                        let unitObj = await getUnitId($('.hub-select option:selected').val(), $('.node-select option:selected').val())
+                        mtAdmin.unitId = unitObj.id
                     }
                 }
-                dataTable.ajax.reload(null, false) 
-            } else {
-                $.alert({
-                    title: 'Warn',
-                    content: `The task time has expired. Please select a new one.`,
-                });
+                return mtAdmin
             }
+            let mtAdmin = await initMtAdminData()
+            $('#modal-waiting').modal('show');
+            if(mtAdminId) {
+                await updateMtAdminByMtAdminId(mtAdmin, taskId).then((res) => {
+                    if (res.respCode === 1) {
+                        $('#mtAdminModal').modal('hide');
+                        dataTable.ajax.reload(null, false)
+                        mtAdmin = null
+                        clearPageData(); 
+                    } else if (!res.respMessage){
+                        $('#mtAdminModal').modal('hide');
+                        $.alert({
+                            title: 'Warn',
+                            content: 'Fail to modify.',
+                        });
+                        mtAdmin = null
+                        clearPageData();
+                        return
+                    } else {
+                        $.alert({
+                            title: 'Warn',
+                            content: res.respMessage,
+                        });
+                        return
+                    }
+                });
+                $(this).removeClass('btn-mtAdminConfirm')
+                $('#modal-waiting').modal('hide');
+            } else if(mtAdmin.id === null) {
+                await createMtAdmin(mtAdmin).then((res) => {
+                    if (res.respCode === 1) {
+                        $('#mtAdminModal').modal('hide');
+                        dataTable.ajax.reload(null, false)
+                        mtAdmin = null
+                        clearPageData();
+                    } else if (res.respMessage === false){
+                        $('#mtAdminModal').modal('hide');
+                        $.alert({
+                            title: 'Warn',
+                            content: 'Creation failure.',
+                        });
+                        mtAdmin = null
+                        clearPageData();
+                    } else {
+                        $.alert({
+                            title: 'Warn',
+                            content: res.respMessage,
+                        });
+                        return
+                    }
+                });
+                $(this).removeClass('btn-mtAdminConfirm')
+                $('#modal-waiting').modal('hide');
+            }
+            dataTable.ajax.reload(null, false) 
         }
     })
 }

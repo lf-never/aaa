@@ -30,7 +30,17 @@ const { OperationRecord } = require('../model/operationRecord.js');
  */
 
 module.exports.uploadVehicle = async function (req, res) {
-	const form = formidable({ multiples: true, maxFileSize: 10 * 1024 * 1024, keepExtensions: true });
+	let dirPath = conf.uploadFilePath + "\\vehicle"
+	if (!fs.existsSync(dirPath)) {
+		fs.mkdirSync(dirPath, {recursive: true});
+	}
+	const form = formidable({ 
+		multiples: true, 
+		maxFileSize: 10 * 1024 * 1024, 
+		keepExtensions: false, 
+		uploadDir: dirPath,
+		fileExt: /\.xlsx$|\.xls$/i
+	 });
 	form.parse(req, async (error, fields, files) => {
 		if (error) {
 			log.error(error)
@@ -275,7 +285,16 @@ module.exports.uploadVehicle = async function (req, res) {
 
 module.exports.uploadWaypoint = async function (req, res) {
     try {
-        const form = formidable({ multiples: true, maxFileSize: 10 * 1024 * 1024, keepExtensions: true });
+		let dirPath = conf.uploadFilePath + "\\waypoint"
+		if (!fs.existsSync(dirPath)) {
+			fs.mkdirSync(dirPath, {recursive: true});
+		}
+		const form = formidable({ 
+			multiples: true, 
+			maxFileSize: 10 * 1024 * 1024, 
+			keepExtensions: false, 
+			uploadDir: dirPath
+		});
 		form.parse(req, async (error, fields, files) => {
 			if (error) {
 				log.error(error)

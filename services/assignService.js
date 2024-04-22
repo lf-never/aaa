@@ -254,11 +254,7 @@ let TaskUtils = {
                 }
             // }
 
-            // if (!hubNodeList.length) {
-            //     hubNodeList = await sequelizeObj.query(` SELECT id, unit AS hub, subUnit AS node, \`group\` FROM unit `, { type: QueryTypes.SELECT })
-            //     log.info(`Find out hub/node failed, will use all hub/node`)
-            //     log.info(JSON.stringify(hubNodeList, null, 4))
-            // }
+            
             
             log.info(`getClosestHubNodeListByLocation => ${ JSON.stringify(hubNodeList, null, 4) }`)
             return hubNodeList
@@ -271,47 +267,55 @@ let TaskUtils = {
         startDate = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
         endDate = endDate && endDate != '' ? moment(endDate).format('YYYY-MM-DD HH:mm:ss') : null;
         // leave vehicle
-        let leaveVehicleSql = `
-            select ifnull(vl.vehicleNo, -1) as vehicleNo from vehicle_leave_record vl 
-            where vl.status = 1 
-        `
-        let replacements1 = [];
-        if(endDate) {
-            leaveVehicleSql += `
-                and ((? >= vl.startTime AND ? <= vl.endTime) 
-                OR (? >= vl.startTime AND ? <= vl.endTime) 
-                OR (? < vl.startTime AND ? > vl.endTime))
+        const initLeaveVehicle = async function (){
+            let leaveVehicleSql = `
+                select ifnull(vl.vehicleNo, -1) as vehicleNo from vehicle_leave_record vl 
+                where vl.status = 1 
             `
-            replacements1.push(startDate, startDate, endDate, endDate, startDate, endDate)
-        } else {
-            leaveVehicleSql += `
-                and ((? >= vl.startTime AND ? <= vl.endTime) or (? <= vl.startTime))
-            `
-            replacements1.push(startDate, startDate, startDate)
+            let replacements1 = [];
+            if(endDate) {
+                leaveVehicleSql += `
+                    and ((? >= vl.startTime AND ? <= vl.endTime) 
+                    OR (? >= vl.startTime AND ? <= vl.endTime) 
+                    OR (? < vl.startTime AND ? > vl.endTime))
+                `
+                replacements1.push(startDate, startDate, endDate, endDate, startDate, endDate)
+            } else {
+                leaveVehicleSql += `
+                    and ((? >= vl.startTime AND ? <= vl.endTime) or (? <= vl.startTime))
+                `
+                replacements1.push(startDate, startDate, startDate)
+            }
+            leaveVehicleSql += ` GROUP BY vl.vehicleNo`
+            let leaveVehicle = await sequelizeObj.query(leaveVehicleSql, { type: QueryTypes.SELECT, replacements: replacements1 })
+            leaveVehicle = leaveVehicle.map(item => item.vehicleNo)
+            log.warn(`leave vehicleList ${ JSON.stringify(leaveVehicle) }`)
+            return leaveVehicle
         }
-        leaveVehicleSql += ` GROUP BY vl.vehicleNo`
-        let leaveVehicle = await sequelizeObj.query(leaveVehicleSql, { type: QueryTypes.SELECT, replacements: replacements1 })
-        leaveVehicle = leaveVehicle.map(item => item.vehicleNo)
-        log.warn(`leave vehicleList ${ JSON.stringify(leaveVehicle) }`)
+        let leaveVehicle = await initLeaveVehicle()
 
-        let loanOutVehicleSql = `
-            SELECT ifnull(vehicleNo, -1) as vehicleNo FROM loan 
-            WHERE vehicleNo is not null
-        `
-        let replacements2 = [];
-        if(startDate && endDate){
-            loanOutVehicleSql += `
-                and ((? >= startDate AND ? <= endDate) 
-                OR (? >= startDate AND ? <= endDate) 
-                OR (? < startDate AND ? > endDate))
+        const initLoanOutVehicle = async function (){
+            let loanOutVehicleSql = `
+                SELECT ifnull(vehicleNo, -1) as vehicleNo FROM loan 
+                WHERE vehicleNo is not null
             `
-            replacements2.push(startDate, startDate, endDate, endDate, startDate, endDate)
+            let replacements2 = [];
+            if(startDate && endDate){
+                loanOutVehicleSql += `
+                    and ((? >= startDate AND ? <= endDate) 
+                    OR (? >= startDate AND ? <= endDate) 
+                    OR (? < startDate AND ? > endDate))
+                `
+                replacements2.push(startDate, startDate, endDate, endDate, startDate, endDate)
+            }
+            loanOutVehicleSql += `  group by vehicleNo`
+            //2023-07-13 exclude loan out vehicle
+            let loanOutVehicle = await sequelizeObj.query(loanOutVehicleSql, { replacements: replacements2, type: QueryTypes.SELECT })
+            loanOutVehicle = loanOutVehicle.map(item => item.vehicleNo)
+            log.warn(`loan out vehicleList ${ JSON.stringify(loanOutVehicle) }`)
+            return loanOutVehicle
         }
-        loanOutVehicleSql += `  group by vehicleNo`
-        //2023-07-13 exclude loan out vehicle
-        let loanOutVehicle = await sequelizeObj.query(loanOutVehicleSql, { replacements: replacements2, type: QueryTypes.SELECT })
-        loanOutVehicle = loanOutVehicle.map(item => item.vehicleNo)
-        log.warn(`loan out vehicleList ${ JSON.stringify(loanOutVehicle) }`)
+        let loanOutVehicle = await initLoanOutVehicle()
 
         // Not within the specified range hoto vehicle
         let hotoVehicleListByNotScopeSql = `
@@ -613,8 +617,9 @@ let TaskUtils = {
         `, { type: QueryTypes.SELECT, replacements: [tripId] })
         return cvTask
     }, 
-    assignTaskByTaskId: async function(job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId){
+    assignTaskByTaskId: async function(assignTaskOption){
         try {
+            let { job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId } = assignTaskOption;
             if(!serverTaskId) serverTaskId = job_taskId
             let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: serverTaskId } })
             if(loan2ByTaskId) throw new Error('The operation failed because the current data status has changed.');
@@ -625,8 +630,8 @@ let TaskUtils = {
             if(node == '-') node = null
             let driver = null;
             let vehicle = null;
-            let taskObj = await this.getDriverIdAndVehicleNoByTaskId(serverTaskId);
-            let loanObj = await this.getLoanByTaskId(serverTaskId);
+            let taskObj = await TaskUtils.getDriverIdAndVehicleNoByTaskId(serverTaskId);
+            let loanObj = await TaskUtils.getLoanByTaskId(serverTaskId);
 
             let systemTask = await sequelizeSystemObj.query(`
                 SELECT jt.*, CONCAT(l.lat, ',', l.lng) AS pickupGPS, CONCAT(l2.lat, ',', l2.lng) AS dropoffGPS, j.tripNo,
@@ -645,15 +650,15 @@ let TaskUtils = {
             log.warn(`task startDate: ${ systemTask.periodStartDate }, endDate: ${ systemTask.periodEndDate } `)
             //if driver/vehicle leave
             // if(driverId){
-            //     let driverState = await this.verifyDriverLeave(driverId, systemTask.periodStartDate, systemTask.periodEndDate ? systemTask.periodEndDate : null);
+            //     let driverState = await TaskUtils.verifyDriverLeave(driverId, systemTask.periodStartDate, systemTask.periodEndDate ? systemTask.periodEndDate : null);
             //     if(!driverState) throw 'The creation failed. The driver is in the leave state.';
             // }
             // if(vehicleNo) {
-            //     let vehicleState = await this.verifyVehicleLeave(vehicleNo, systemTask.periodStartDate, systemTask.periodEndDate ? systemTask.periodEndDate : null);
+            //     let vehicleState = await TaskUtils.verifyVehicleLeave(vehicleNo, systemTask.periodStartDate, systemTask.periodEndDate ? systemTask.periodEndDate : null);
             //     if(!vehicleState) throw 'The creation failed. The vehicle is in the leave state.';
             // }
             //if location 
-            let state = await this.verifyLocation(systemTask.pickupDestination, systemTask.dropoffDestination);
+            let state = await TaskUtils.verifyLocation(systemTask.pickupDestination, systemTask.dropoffDestination);
             if(!state) throw new Error(`Location does not exist, allocation failed.`);
             let systemRequest = await _SystemRequest.Request.findByPk(systemTask.requestId);
 
@@ -665,104 +670,120 @@ let TaskUtils = {
                throw error
             })
            
-            if (driverId){
-                driver = await Driver.findByPk(driverId)
-                if(driver.nric) {
-                    if(driver.nric.length > 9) driver.nric = utils.decodeAESCode(driver.nric);
+            const systemJobTask = async function (){
+                if (driverId){
+                    driver = await Driver.findByPk(driverId)
+                    if(driver.nric) {
+                        if(driver.nric.length > 9) driver.nric = utils.decodeAESCode(driver.nric);
+                    } 
                 } 
-            } 
-            if(vehicleNo) vehicle = await Vehicle.findByPk(vehicleNo)
-            let option = { taskId: job_taskId, driver, vehicle, status: false, systemStatus: systemStatus ?? null }
-            let result = await this.assignTaskBySystem(option)
-            if (result.code != 1)  throw result.message;
-            if(taskObj?.driverId != driverId) {
-                await FirebaseService.createFirebaseNotification2([{
-                    taskId: serverTaskId,
-                    token: '',
-                    driverId: taskObj.driverId,
-                    vehicleNo: taskObj.vehicleNumber
-                }], 'INFO', 'Task cancelled.')
+                if(vehicleNo) vehicle = await Vehicle.findByPk(vehicleNo)
+                let option = { taskId: job_taskId, driver, vehicle, status: false, systemStatus: systemStatus ?? null }
+                let result = await TaskUtils.assignTaskBySystem(option)
+                if (result.code != 1)  throw result.message;
+                if(taskObj?.driverId != driverId) {
+                    await FirebaseService.createFirebaseNotification2([{
+                        taskId: serverTaskId,
+                        token: '',
+                        driverId: taskObj.driverId,
+                        vehicleNo: taskObj.vehicleNumber
+                    }], 'INFO', 'Task cancelled.')
+                }
             }
+            await systemJobTask()
+
             await sequelizeObj.transaction(async transaction => {
                 let checkTask2 = await Task.findOne({ where: { taskId: serverTaskId } })
                 if((systemTask.noOfDriver >= systemTask.driverNo && systemTask.vehicleType != '-') || checkTask2){
-                    let task = { 
-                        taskId: serverTaskId, 
-                        driverId: driverId || null, 
-                        vehicleNumber: vehicleNo || null, 
-                        indentId: systemTask.tripNo, 
-                        indentStartTime: systemTask.periodStartDate, 
-                        indentEndTime: systemTask.periodEndDate ? systemTask.periodEndDate : '', 
-                        purpose: (systemRequest ? systemRequest.purposeType : '' ),
-                        activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
-                        pickupDestination: systemTask.pickupDestination, 
-                        dropoffDestination: systemTask.dropoffDestination, 
-                        pickupGPS: systemTask.pickupGPS ? systemTask.pickupGPS : '', 
-                        dropoffGPS: systemTask.dropoffGPS ? systemTask.dropoffGPS : '',
-                        hub: hub, 
-                        node: node
+                    const initTask = async function (){
+                        let task = { 
+                            taskId: serverTaskId, 
+                            driverId: driverId || null, 
+                            vehicleNumber: vehicleNo || null, 
+                            indentId: systemTask.tripNo, 
+                            indentStartTime: systemTask.periodStartDate, 
+                            indentEndTime: systemTask.periodEndDate || '', 
+                            purpose: (systemRequest ? systemRequest.purposeType : '' ),
+                            activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
+                            pickupDestination: systemTask.pickupDestination, 
+                            dropoffDestination: systemTask.dropoffDestination, 
+                            pickupGPS: systemTask.pickupGPS || '', 
+                            dropoffGPS: systemTask.dropoffGPS || '',
+                            hub: hub, 
+                            node: node
+                        }
+                        if(!taskObj) {
+                            task.driverStatus = 'waitcheck';
+                            task.vehicleStatus = 'waitcheck';
+                            task.creator = userId
+                        }
+                        await Task.upsert(task)
                     }
-                    if(!taskObj) {
-                        task.driverStatus = 'waitcheck';
-                        task.vehicleStatus = 'waitcheck';
-                        task.creator = userId
-                    }
-                    await Task.upsert(task)
+                    await initTask()
                 } else if(driverId || vehicleNo){
-                    let loanByTaskId = await loan.findOne({ where: { taskId: serverTaskId } })
-                    if(loanByTaskId) {
-                        if(loanByTaskId.driverId && !driverId) {
-                            await loan.destroy({ where: { taskId: serverTaskId } });
-                        }
-                        if(loanByTaskId.vehicleNo && !vehicleNo) {
-                            await loan.destroy({ where: { taskId: serverTaskId } });
+                    const checkLoan = async function (){
+                        let loanByTaskId = await loan.findOne({ where: { taskId: serverTaskId } })
+                        if(loanByTaskId) {
+                            if(loanByTaskId.driverId && !driverId) {
+                                await loan.destroy({ where: { taskId: serverTaskId } });
+                            }
+                            if(loanByTaskId.vehicleNo && !vehicleNo) {
+                                await loan.destroy({ where: { taskId: serverTaskId } });
+                            }
                         }
                     }
-                    let loanByTaskId2 = await loan.findOne({ where: { taskId: serverTaskId } })
-                    if(loanByTaskId2) {
-                        await loan.update({  
-                            taskId: serverTaskId,
-                            indentId: systemTask.tripNo, 
-                            driverId: driverId || null,
-                            vehicleNo: vehicleNo || null, 
-                            startDate: systemTask.periodStartDate, 
-                            endDate: systemTask.periodEndDate, 
-                            groupId: systemTask.groupId,
-                            unitId: unitId,
-                            purpose: (systemRequest ? systemRequest.purposeType : '' ),
-                            activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
-                        }, { where: { taskId: serverTaskId } })
-                    } else {
-                        await loan.create({  
-                            taskId: serverTaskId,
-                            indentId: systemTask.tripNo, 
-                            driverId: driverId || null,
-                            vehicleNo: vehicleNo || null, 
-                            startDate: systemTask.periodStartDate, 
-                            endDate: systemTask.periodEndDate, 
-                            groupId: systemTask.groupId,
-                            unitId: unitId,
-                            purpose: (systemRequest ? systemRequest.purposeType : '' ),
-                            activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
-                            creator: userId
-                        })
+                    await checkLoan()
+                    const initLoan = async function (){
+                        let loanByTaskId2 = await loan.findOne({ where: { taskId: serverTaskId } })
+                        if(loanByTaskId2) {
+                            await loan.update({  
+                                taskId: serverTaskId,
+                                indentId: systemTask.tripNo, 
+                                driverId: driverId || null,
+                                vehicleNo: vehicleNo || null, 
+                                startDate: systemTask.periodStartDate, 
+                                endDate: systemTask.periodEndDate, 
+                                groupId: systemTask.groupId,
+                                unitId: unitId,
+                                purpose: (systemRequest ? systemRequest.purposeType : '' ),
+                                activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
+                            }, { where: { taskId: serverTaskId } })
+                        } else {
+                            await loan.create({  
+                                taskId: serverTaskId,
+                                indentId: systemTask.tripNo, 
+                                driverId: driverId || null,
+                                vehicleNo: vehicleNo || null, 
+                                startDate: systemTask.periodStartDate, 
+                                endDate: systemTask.periodEndDate, 
+                                groupId: systemTask.groupId,
+                                unitId: unitId,
+                                purpose: (systemRequest ? systemRequest.purposeType : '' ),
+                                activity: (systemRequest ? systemRequest.additionalRemarks : '' ),
+                                creator: userId
+                            })
+                        }
                     }
+                    await initLoan()
                 }
                 
-                if(taskObj || loanObj){
-                    if(taskObj){
-                        if(taskObj.driverId != driverId || taskObj.vehicleNumber != vehicleNo){
-                            await this.initOperationRecord(userId, serverTaskId, taskObj.driverId, driverId, taskObj.vehicleNumber, vehicleNo, 'sys task assign')
-                        } 
+                const initTaskRecord = async function (){
+                    if(taskObj || loanObj){
+                        if(taskObj){
+                            if(taskObj.driverId != driverId || taskObj.vehicleNumber != vehicleNo){
+                                await TaskUtils.initOperationRecord(userId, serverTaskId, taskObj.driverId, driverId, taskObj.vehicleNumber, vehicleNo, 'sys task assign')
+                            } 
+                        }
+                        if(loanObj){
+                            if(loanObj.driverId != driverId || loanObj.vehicleNo != vehicleNo){
+                                await TaskUtils.initOperationRecord(userId, serverTaskId, loanObj.driverId, driverId, loanObj.vehicleNo, vehicleNo, 'sys task assign')
+                            } 
+                        }
+                    } else {
+                        await TaskUtils.initOperationRecord(userId, serverTaskId, '', driverId, '', vehicleNo, 'sys task assign')
                     }
-                    if(loanObj){
-                        if(loanObj.driverId != driverId || loanObj.vehicleNo != vehicleNo){
-                            await this.initOperationRecord(userId, serverTaskId, loanObj.driverId, driverId, loanObj.vehicleNo, vehicleNo, 'sys task assign')
-                        } 
-                    }
-                } else {
-                    await this.initOperationRecord(userId, serverTaskId, '', driverId, '', vehicleNo, 'sys task assign')
                 }
+                await initTaskRecord()
                 // MQ for create route
                 if (systemTask.pickupDestination.toLowerCase() == systemTask.dropoffDestination.toLowerCase()) {
                     log.warn(`TaskId (${ serverTaskId }) pickupDestination = dropoffDestination, no need ask for route`)
@@ -823,7 +844,8 @@ let TaskUtils = {
                 ) jj where jj.atmsTaskId = ?
             `, { type: QueryTypes.SELECT, replacements: [ taskId ] })
             log.warn('ATMS INDENT ===> '+JSON.stringify(atmsIndent))
-            let respStatus = atmsIndent ? atmsIndent.length > 0 ? true : false : false;
+            let respStatus = false;
+            if(atmsIndent && atmsIndent.length > 0) respStatus = true
             if(respStatus) {
                 atmsIndent = atmsIndent[0]
                 let ngtsRespObj = {
@@ -923,24 +945,7 @@ module.exports = {
                 LEFT JOIN driver d ON d.driverId = t.driverId
                 WHERE t.taskId = ?
             `, { type: QueryTypes.SELECT, replacements: [newTaskId] })
-            // if(dataType.toLowerCase() == 'sys'){
-            //     data = await sequelizeSystemObj.query(`
-            //         SELECT
-            //         b.id, c.driverId, c.name, c.contactNumber, d.vehicleNumber
-            //         FROM
-            //             job_task b 
-            //         LEFT JOIN driver c ON b.id = c.taskId
-            //         LEFT JOIN vehicle d ON b.id = d.taskId
-            //         WHERE b.id = ?
-            //     `, { type: QueryTypes.SELECT, replacements: [ taskId ] })
-            // } else {
-                // data = await sequelizeObj.query(`
-                //     SELECT t.taskId, t.driverId, d.driverName AS name, d.contactNumber, t.vehicleNumber
-                //     FROM task t 
-                //     LEFT JOIN driver d ON d.driverId = t.driverId
-                //     WHERE t.taskId = '${ taskId }'
-                // `, { type: QueryTypes.SELECT })
-            // }
+            
             return res.json(utils.response(1, data[0]));
         } catch (error) {
             log.error(error)
@@ -1060,7 +1065,8 @@ module.exports = {
                 unit = await Unit.findOne({where: { unit: hub, subUnit: { [Op.is]: null } }})
             }
             if(!unit) throw new Error(`The hub/node does not exist.`);
-            let result = await TaskUtils.assignTaskByTaskId(taskId, driverId, vehicleNo, hub, node, unit.id, req.cookies.userId);
+            //job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId
+            let result = await TaskUtils.assignTaskByTaskId({ job_taskId: taskId, driverId, vehicleNo, hub, node, unitId: unit.id, userId: req.cookies.userId });
             if (result.code == 0)  return res.json(utils.response(0, result.message));
             return res.json(utils.response(1, true));
         } catch (error) {
@@ -1068,223 +1074,40 @@ module.exports = {
             return res.json(utils.response(0, error));
         }
     },
-    // assignMbTask: async function (req, res) {
-    //     try {
-    //         let { driverId, vehicleNo, hub, node, mtAdminId } = req.body;
-    //         if(node == '-') node = null
-    //         let driver = null;
-    //         let vehicle = null;
-    //         let taskId = 'AT-'+mtAdminId
-    //         let checkTask = await Task.findOne({ where: { taskId: `MT-${ mtAdminId }` } })
-    //         if(!checkTask) checkTask = await Task.findOne({ where: { taskId: `AT-${ mtAdminId }` } })
-    //         if(checkTask) {
-    //             if(checkTask.mobileStartTime) return res.json(utils.response(0, 'The task has started disabling operations.'));
-    //             taskId = checkTask.taskId
-    //         }
-    //         let taskObj = await TaskUtils.getDriverIdAndVehicleNoByTaskId(`${ taskId }`);
-    //         let loanObj = await TaskUtils.getLoanByTaskId(`${ taskId }`);
-    //         let loanObjStatus = await loan.findOne({ where: { [Op.or]: [
-    //             { taskId: `AT-${ mtAdminId }` },
-    //             { taskId: `MT-${ mtAdminId }` }
-    //           ] } })
-    //         let loanObj2Status = await loanRecord.findOne({ where: { [Op.or]: [
-    //             { taskId: `AT-${ mtAdminId }` },
-    //             { taskId: `MT-${ mtAdminId }` }
-    //           ] } })
-    //         if(loanObjStatus || loanObj2Status) {
-    //             if(loanObjStatus) {
-    //                 if(loanObjStatus.actualStartTime || loanObjStatus.actualEndTime) {
-    //                     return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
-    //                 }
-    //             }
-    //             if(loanObj2Status) {
-    //                 return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
-    //             }
-    //         }
-            
-    //         let mt_admin = await MtAdmin.findOne({ where: { id: mtAdminId } })
-    //         let state = await TaskUtils.verifyLocation(mt_admin.destination, mt_admin.reportingLocation);
-    //         if(!state) return res.json(utils.response(0, `Location does not exist, allocation failed.`));
-    //         if(taskObj){
-    //             if(driverId){
-    //                 let driverState = await TaskUtils.verifyDriverLeave(driverId, taskObj.indentStartTime, taskObj.indentEndTime);
-    //                 if(!driverState) return res.json(utils.response(0, 'The creation failed. The driver is in the leave state.')); 
-    //             }
-    //             let vehicleState = await TaskUtils.verifyVehicleLeave(vehicleNo, taskObj.indentStartTime, taskObj.indentEndTime);
-    //             if(!vehicleState) return res.json(utils.response(0, 'The creation failed. The vehicle is in the leave state.')); 
-    //             if(taskObj.driverId){
-    //                 if(taskObj.driverId != driverId) {
-    //                     await FirebaseService.createFirebaseNotification2([{
-    //                         taskId,
-    //                         token: '',
-    //                         driverId: taskObj.driverId,
-    //                         vehicleNo: taskObj.vehicleNumber
-    //                     }], 'INFO', 'Task cancelled!')
-    //                 }
-
-    //             }
-    //         }
-    //         await sequelizeObj.transaction(async transaction => {
-    //             let unit = null
-    //             if(node) {
-    //                 unit = await Unit.findOne({where: { unit: hub, subUnit: node }})
-    //             } else {
-    //                 unit = await Unit.findOne({where: { unit: hub, subUnit: { [Op.is]: null } }})
-    //             }
-    //             if(!unit) throw `The hub/node does not exist.`
-                
-    //             await MtAdmin.update({ unitId: unit.id, vehicleNumber: vehicleNo, driverId: driverId }, { where: { id: mtAdminId } });
-    //             if(driverId) driver = await Driver.findByPk(driverId)
-    //             if(vehicleNo) vehicle = await Vehicle.findByPk(vehicleNo)
-    //             let checkTask2 = await Task.findOne({ where: { [Op.or]: [
-    //                 { taskId: `AT-${ mtAdminId }` },
-    //                 { taskId: `MT-${ mtAdminId }` }
-    //               ] } })
-    //             if((mt_admin.driverNum > 0 && mt_admin.needVehicle > 0) || checkTask2) {
-    //                 let task = { 
-    //                     taskId: taskId, 
-    //                     driverId: driverId ? driverId : null, 
-    //                     vehicleNumber: vehicleNo ? vehicleNo : null, 
-    //                     dataFrom: 'MT-ADMIN',
-    //                     indentStartTime: mt_admin.startDate, 
-    //                     indentEndTime: mt_admin.endDate, 
-    //                     creator: req.cookies.userId,
-    //                     purpose: (mt_admin.purpose ? mt_admin.purpose : '' ),
-    //                     activity: (mt_admin.activityName ? mt_admin.activityName : '' ),
-    //                     pickupDestination: mt_admin.reportingLocation,
-    //                     dropoffDestination: mt_admin.destination,
-    //                     pickupGPS: `${mt_admin.reportingLocationLat ? mt_admin.reportingLocationLat : '0.0'},${mt_admin.reportingLocationLng ? mt_admin.reportingLocationLng : '0.0'}`,
-    //                     dropoffGPS: `${mt_admin.destinationLat ? mt_admin.destinationLat : '0.0'},${mt_admin.destinationLng ? mt_admin.destinationLng : '0.0'}`,
-    //                     hub: hub, 
-    //                     node: node,
-    //                     indentId: mtAdminId
-    //                 }
-    //                 if(!taskObj) {
-    //                     task.driverStatus = driverId ? 'waitcheck' : null;
-    //                     task.vehicleStatus = 'waitcheck';
-    //                 }
-    //                 await Task.upsert(task)
-    //             } else {
-    //                 if(driverId || vehicleNo) {
-    //                     let loanByTaskId = await loan.findOne({ where: { [Op.or]: [
-    //                         { taskId: `AT-${ mtAdminId }` },
-    //                         { taskId: `MT-${ mtAdminId }` }
-    //                       ] } })
-    //                     if(loanByTaskId) {
-    //                         if(loanByTaskId.driverId && !driverId) {
-    //                             await loan.destroy({ where: { [Op.or]: [
-    //                                 { taskId: `AT-${ mtAdminId }` },
-    //                                 { taskId: `MT-${ mtAdminId }` }
-    //                               ] } });
-    //                         }
-    //                         if(loanByTaskId.vehicleNo && !vehicleNo) {
-    //                             await loan.destroy({ where: { [Op.or]: [
-    //                                 { taskId: `AT-${ mtAdminId }` },
-    //                                 { taskId: `MT-${ mtAdminId }` }
-    //                               ] } });
-    //                         }
-    //                     }
-    //                     let loanByTaskId2 = await loan.findOne({ where: { [Op.or]: [
-    //                         { taskId: `AT-${ mtAdminId }` },
-    //                         { taskId: `MT-${ mtAdminId }` }
-    //                       ] } })
-    //                     if(loanByTaskId2) {
-    //                         await loan.update({  
-    //                             taskId: `AT-${ mtAdminId }`,
-    //                             indentId: mt_admin.indentId, 
-    //                             driverId: driverId ? driverId : null,
-    //                             vehicleNo: vehicleNo ? vehicleNo : null, 
-    //                             startDate: mt_admin.startDate, 
-    //                             endDate: mt_admin.endDate, 
-    //                             groupId: -1,
-    //                             unitId: unit.id,
-    //                             purpose: (mt_admin.purpose ? mt_admin.purpose : '' ),
-    //                             activity: (mt_admin.activityName ? mt_admin.activityName : '' ),
-    //                             creator: req.cookies.userId
-    //                         }, { where: { taskId } })
-    //                     } else {
-    //                         await loan.create({  
-    //                             taskId: `AT-${ mtAdminId }`,
-    //                             indentId: mt_admin.indentId, 
-    //                             driverId: driverId ? driverId : null,
-    //                             vehicleNo: vehicleNo ? vehicleNo : null, 
-    //                             startDate: mt_admin.startDate, 
-    //                             endDate: mt_admin.endDate, 
-    //                             groupId: -1,
-    //                             purpose: (mt_admin.purpose ? mt_admin.purpose : '' ),
-    //                             activity: (mt_admin.activityName ? mt_admin.activityName : '' ),
-    //                             unitId: unit.id,
-    //                             creator: req.cookies.userId
-    //                         })
-    //                     }
-    //                 }
-    //             }
-    //             if(taskObj || loanObjStatus){
-    //                 if(taskObj){
-    //                     if(taskObj.driverId != driverId || taskObj.vehicleNumber != vehicleNo){
-    //                         await TaskUtils.initOperationRecord(req.cookies.userId, taskId, taskObj.driverId, driverId, taskObj.vehicleNumber, vehicleNo, 'atms task assign')
-    //                     } 
-    //                 }
-    //                 if(loanObjStatus){
-    //                     if(loanObjStatus.driverId != driverId || loanObjStatus.vehicleNo != vehicleNo){
-    //                         await TaskUtils.initOperationRecord(req.cookies.userId, taskId, loanObjStatus.driverId, driverId, loanObjStatus.vehicleNo, vehicleNo, 'atms task assign')
-    //                     } 
-    //                 }
-    //             } else {
-    //                 await TaskUtils.initOperationRecord(req.cookies.userId, taskId, '', driverId, '', vehicleNo, 'atms task assign')
-    //             }
-    //             // MQ for create route
-    //             if (mt_admin.reportingLocation.toLowerCase() == mt_admin.destination.toLowerCase()) {
-    //                 log.warn(`TaskId (${ taskId }) pickupDestination = dropoffDestination, no need ask for route`)
-    //             }
-    //             // Update vehicle-relation db
-    //             if(vehicleNo) await vehicleService.createVehicleRelation(driverId, vehicleNo)
-    //         }).catch(error => {
-    //             throw error
-    //         })
-    //         if(taskObj) {
-    //             if(taskObj.driverId != driverId) {
-    //                 await FirebaseService.createFirebaseNotification2([{
-    //                     taskId,
-    //                     token: '',
-    //                     driverId: driverId,
-    //                     vehicleNo: vehicleNo
-    //                 }], 'INFO', 'New task assigned!')
-    //             }
-    //         }
-    //         return res.json(utils.response(1, true)); 
-    //     } catch (error) {
-    //         log.error(error)
-    //         return res.json(utils.response(0, error));
-    //     }
-    // },
     reassignMvTask: async function(req, res) {
         let { dataType, taskId, driverId, vehicleNo, hub, node } = req.body;
         if(node == '-') node = null
         let preTaskId = taskId;
         if(dataType.toLowerCase() == 'atms') preTaskId = 'AT-'+preTaskId;
-        let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: preTaskId } })
-        if(loan2ByTaskId) return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
-        let checkTask = await Task.findOne({ where: { taskId: preTaskId } })
-        if(checkTask) {
-            if(checkTask.mobileStartTime) return res.json(utils.response(0, 'The task has started disabling operations.'));
-        }        
-        
+        const checkTaskLoan = async function (){
+            let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: preTaskId } })
+            if(loan2ByTaskId) return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
+            let checkTask = await Task.findOne({ where: { taskId: preTaskId } })
+            if(checkTask) {
+                if(checkTask.mobileStartTime) return res.json(utils.response(0, 'The task has started disabling operations.'));
+            }      
+        }
+        await checkTaskLoan()
+  
+         
         // just auto match resource task need approve when reassign
         let needApprove = false;
         let taskObj = await TaskUtils.getDriverIdAndVehicleNoByTaskId(preTaskId);
         let loanObj = await TaskUtils.getLoanByTaskId(preTaskId);
         let oldData = { driverId: "", vehicleNo: "" };
         let newData = { driverId: driverId, vehicleNo: vehicleNo, hub, node };
-        if (taskObj && taskObj.creator == 0) {
-            needApprove = true;
-            oldData.driverId = taskObj.driverId;
-            oldData.vehicleNo = taskObj.vehicleNumber;
-        } else if (loanObj && loanObj.creator == 0) {
-            needApprove = true;
-            oldData.driverId = loanObj.driverId;
-            oldData.vehicleNo = loanObj.vehicleNo;
+        const initOldDriverVehicle = function (){
+            if (taskObj && taskObj.creator == 0) {
+                needApprove = true;
+                oldData.driverId = taskObj.driverId;
+                oldData.vehicleNo = taskObj.vehicleNumber;
+            } else if (loanObj && loanObj.creator == 0) {
+                needApprove = true;
+                oldData.driverId = loanObj.driverId;
+                oldData.vehicleNo = loanObj.vehicleNo;
+            }
         }
+        initOldDriverVehicle()
 
         // assign and approve 
         let pageType = dataType.toLowerCase() == 'atms' ? 'ATMS Task Assign' : 'Sys Task Assign';
@@ -1318,7 +1141,8 @@ module.exports = {
             if(!unit) {
                 return res.json(utils.response(0, 'The hub/node does not exist.'));
             }
-            let result = await TaskUtils.assignTaskByTaskId(taskId, driverId, vehicleNo, hub, node, unit.id, req.cookies.userId, null, preTaskId);
+             //job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId
+            let result = await TaskUtils.assignTaskByTaskId({ job_taskId: taskId, driverId, vehicleNo, hub, node, unitId: unit.id, userId: req.cookies.userId, systemStatus: null, serverTaskId: preTaskId });
             if (result.code == 0) {
                 return res.json(utils.response(0, result.message));
             }
@@ -1331,12 +1155,15 @@ module.exports = {
         let { dataType, taskId, optType } = req.body;
         let preTaskId = taskId;
         if(dataType.toLowerCase() == 'atms') preTaskId = 'AT-'+preTaskId;
-        let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: preTaskId } })
-        if(loan2ByTaskId) return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
-        let checkTask = await Task.findOne({ where: { taskId: preTaskId } })
-        if(checkTask?.mobileStartTime) {
-            return res.json(utils.response(0, 'The task has started disabling operations.'));
-        }        
+        const checkLoanTask = async function (){
+            let loan2ByTaskId = await loanRecord.findOne({ where: { taskId: preTaskId } })
+            if(loan2ByTaskId) return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
+            let checkTask = await Task.findOne({ where: { taskId: preTaskId } })
+            if(checkTask?.mobileStartTime) {
+                return res.json(utils.response(0, 'The task has started disabling operations.'));
+            }   
+        }
+        await checkLoanTask()
         
         // just auto match resource task need approve when reassign
         let reassignApplyData = await sequelizeObj.query(`
@@ -1362,32 +1189,35 @@ module.exports = {
                     remarks: 'auto match resource task approve.'
                 }
                 if (optType == 'pass') {
-                    reassignApproveOpt.optType = 'approve pass';
-
-                    let reassignData = reassignApplyData[0].afterData ? JSON.parse(reassignApplyData[0].afterData) : null;
-                    if (reassignData) {
-                        let hub = reassignData.hub;
-                        let node = reassignData.node;
-                        if (node == '-') {
-                            node = null;
+                    const passTask = async function (){
+                        reassignApproveOpt.optType = 'approve pass';
+                        let reassignData = reassignApplyData[0].afterData ? JSON.parse(reassignApplyData[0].afterData) : null;
+                        if (reassignData) {
+                            let hub = reassignData.hub;
+                            let node = reassignData.node;
+                            if (node == '-') {
+                                node = null;
+                            }
+                            //confirm reasign task.
+                            let unit = null
+                            if(node) {
+                                unit = await Unit.findOne({where: { unit: hub, subUnit: node }})
+                            } else {
+                                unit = await Unit.findOne({where: { unit: hub, subUnit: { [Op.is]: null } }})
+                            }
+                            if(!unit) {
+                                return res.json(utils.response(0, 'The hub/node does not exist.'));
+                            }
+                             //job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId
+                            let result = await TaskUtils.assignTaskByTaskId({ job_taskId: taskId, driverId: reassignData.driverId, vehicleNo: reassignData.vehicleNo, hub: reassignData.hub, node: reassignData.node, unitId: unit.id, userId: req.cookies.userId, systemStatus: null, serverTaskId: preTaskId });
+                            if (result.code == 0) {
+                                return res.json(utils.response(0, result.message));
+                            }
+                            // 2024-02-20 atms indent resp
+                            await TaskUtils.initAtmsIndentResp(preTaskId, req.cookies.userId)
                         }
-                        //confirm reasign task.
-                        let unit = null
-                        if(node) {
-                            unit = await Unit.findOne({where: { unit: hub, subUnit: node }})
-                        } else {
-                            unit = await Unit.findOne({where: { unit: hub, subUnit: { [Op.is]: null } }})
-                        }
-                        if(!unit) {
-                            return res.json(utils.response(0, 'The hub/node does not exist.'));
-                        }
-                        let result = await TaskUtils.assignTaskByTaskId(taskId, reassignData.driverId, reassignData.vehicleNo, reassignData.hub, reassignData.node, unit.id, req.cookies.userId, null, preTaskId);
-                        if (result.code == 0) {
-                            return res.json(utils.response(0, result.message));
-                        }
-                        // 2024-02-20 atms indent resp
-                        await TaskUtils.initAtmsIndentResp(preTaskId, req.cookies.userId)
                     }
+                    await passTask()
                 } else {
                     reassignApproveOpt.optType = 'reject';
                 }
@@ -1412,29 +1242,32 @@ module.exports = {
             let mvTransaction = await sequelizeObj.transaction();
             try {
                 let dataFrom = task.dataFrom;
-                if (dataFrom == 'SYSTEM') {
-                    cvTransaction = await sequelizeSystemObj.transaction();
-                    // update system vehicle.vehicleNumber
-                    let systemTaskId = taskId;
-                    if(taskId.includes('AT-')) systemTaskId = taskId.slice(3)
-                    await _SystemVehicle.Vehicle.update({ vehicleNumber: newVehicleNo }, {where: {taskId: systemTaskId}, transaction: cvTransaction });
-                } else if (dataFrom == 'MT-ADMIN') {
-                    await MtAdmin.update({ vehicleNumber: newVehicleNo }, { where: { id: task.indentId }, transaction: mvTransaction });
-                } else if (dataFrom == 'MOBILE') {
-                    await MobileTrip.update({ vehicleNumber: newVehicleNo }, { where: { id: task.indentId }, transaction: mvTransaction });
+                const updateTaskByVehicle = async function (){
+                    if (dataFrom == 'SYSTEM') {
+                        cvTransaction = await sequelizeSystemObj.transaction();
+                        // update system vehicle.vehicleNumber
+                        let systemTaskId = taskId;
+                        if(taskId.includes('AT-')) systemTaskId = taskId.slice(3)
+                        await _SystemVehicle.Vehicle.update({ vehicleNumber: newVehicleNo }, {where: {taskId: systemTaskId}, transaction: cvTransaction });
+                    } else if (dataFrom == 'MT-ADMIN') {
+                        await MtAdmin.update({ vehicleNumber: newVehicleNo }, { where: { id: task.indentId }, transaction: mvTransaction });
+                    } else if (dataFrom == 'MOBILE') {
+                        await MobileTrip.update({ vehicleNumber: newVehicleNo }, { where: { id: task.indentId }, transaction: mvTransaction });
+                    }
+                    await Task.update({ vehicleNumber: newVehicleNo }, { where: { taskId: taskId }, transaction: mvTransaction });
+                    await OperationRecord.create({
+                        id: null,
+                        operatorId: userId,
+                        businessType: 'task',
+                        businessId: taskId,
+                        optType: 'assign vehicle',
+                        beforeData: '',
+                        afterData: newVehicleNo,
+                        optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                        remarks: `reassign without vehicle task.`,
+                    }, { transaction: mvTransaction });
                 }
-                await Task.update({ vehicleNumber: newVehicleNo }, { where: { taskId: taskId }, transaction: mvTransaction });
-                await OperationRecord.create({
-                    id: null,
-                    operatorId: userId,
-                    businessType: 'task',
-                    businessId: taskId,
-                    optType: 'assign vehicle',
-                    beforeData: '',
-                    afterData: newVehicleNo,
-                    optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                    remarks: `reassign without vehicle task.`,
-                }, { transaction: mvTransaction });
+                await updateTaskByVehicle()
 
                 if (cvTransaction) {
                     await cvTransaction.commit();
@@ -1538,69 +1371,80 @@ module.exports = {
                     return res.json(utils.response(0, 'The operation failed because the current data status has changed.'));
                 }
             }
-            if(taskObj) {
-                if(taskObj.driverId){
-                    await FirebaseService.createFirebaseNotification2([{
-                        taskId: taskId,
-                        token: '',
-                        driverId: taskObj.driverId,
-                        vehicleNo: taskObj.vehicleNumber
-                    }], 'INFO', 'Task cancelled!')
+
+            const adddFirebse = async function (){
+                if(taskObj) {
+                    if(taskObj.driverId){
+                        await FirebaseService.createFirebaseNotification2([{
+                            taskId: taskId,
+                            token: '',
+                            driverId: taskObj.driverId,
+                            vehicleNo: taskObj.vehicleNumber
+                        }], 'INFO', 'Task cancelled!')
+                    }
                 }
             }
+            await adddFirebse()
             await sequelizeObj.transaction(async transaction => {
                 let mtAdminObj = await MtAdmin.findOne({ where: { id: mtAdminID } })
-                await MtAdmin.update({ cancelledDateTime: moment().format('YYYY-MM-DD HH:mm:ss'), cancelledCause: cancelledCause, amendedBy: req.cookies.userId }, { where: { id: mtAdminID  } });
-                if(taskObj) {
-                    await Task.update({ vehicleStatus: 'Cancelled', driverStatus: 'Cancelled' }, { where: { indentId: (mtAdminID).toString() } });
-                    await OperationRecord.create({
-                        id: null,
-                        operatorId: req.cookies.userId,
-                        businessType: 'atms task assign',
-                        businessId: taskId,
-                        optType: 'Cancel',
-                        beforeData: `${ JSON.stringify([{driverStatus: taskObj.driverStatus, vehicleStatus: taskObj.vehicleStatus},{cancelledDateTime: mtAdminObj.cancelledDateTime, cancelledCause: mtAdminObj.cancelledCause, amendedBy: mtAdminObj.amendedBy}]) }`,
-                        afterData: `${ JSON.stringify([{driverStatus: 'Cancelled', vehicleStatus: 'Cancelled'},{cancelledDateTime: moment().format('YYYY-MM-DD HH:mm:ss'), cancelledCause: cancelledCause, amendedBy: req.cookies.userId}]) }`,
-                        optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                        remarks: 'cancel atms task'
-                    })
-                }
-                if(mtAdminObj.needVehicle == 0 || mtAdminObj.driverNum == 0){
-                    let loanOut = await loan.findOne({ where: { taskId: 'AT-'+mtAdminID } })
-                    if(loanOut) {
-                        await loanRecord.create({
-                            driverId: loanOut.driverId,
-                            vehicleNo: loanOut.vehicleNo,
-                            indentId: loanOut.indentId, 
-                            taskId: loanOut.taskId,
-                            startDate: loanOut.startDate,
-                            endDate: loanOut.endDate, 
-                            groupId: loanOut.groupId,
-                            returnDate: moment().format('YYYY-MM-DD HH:mm:ss'),
-                            returnBy: req.cookies.userId,
-                            creator: loanOut.creator,
-                            returnRemark: cancelledCause,
-                            actualStartTime: loanOut.actualStartTime,
-                            actualEndTime: loanOut.actualEndTime,
-                            unitId: loanOut.unitId,
-                            activity: loanOut.activity,
-                            purpose: loanOut.purpose,
-                            createdAt: loanOut.createdAt
-                        });
-                        await loan.destroy({ where: { taskId: 'AT-'+mtAdminID } });
+                const updateTaskByCancel = async function (){
+                    await MtAdmin.update({ cancelledDateTime: moment().format('YYYY-MM-DD HH:mm:ss'), cancelledCause: cancelledCause, amendedBy: req.cookies.userId }, { where: { id: mtAdminID  } });
+                    if(taskObj) {
+                        await Task.update({ vehicleStatus: 'Cancelled', driverStatus: 'Cancelled' }, { where: { indentId: (mtAdminID).toString() } });
                         await OperationRecord.create({
                             id: null,
                             operatorId: req.cookies.userId,
                             businessType: 'atms task assign',
-                            businessId: 'AT-'+mtAdminID,
-                            optType: 'cancel loan',
-                            beforeData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
-                            afterData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
+                            businessId: taskId,
+                            optType: 'Cancel',
+                            beforeData: `${ JSON.stringify([{driverStatus: taskObj.driverStatus, vehicleStatus: taskObj.vehicleStatus},{cancelledDateTime: mtAdminObj.cancelledDateTime, cancelledCause: mtAdminObj.cancelledCause, amendedBy: mtAdminObj.amendedBy}]) }`,
+                            afterData: `${ JSON.stringify([{driverStatus: 'Cancelled', vehicleStatus: 'Cancelled'},{cancelledDateTime: moment().format('YYYY-MM-DD HH:mm:ss'), cancelledCause: cancelledCause, amendedBy: req.cookies.userId}]) }`,
                             optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                            remarks: `cancel loan ${ loanOut.driverId ? 'driver' : '' }${ loanOut.vehicleNo ? 'vehicle' : '' }` 
+                            remarks: 'cancel atms task'
                         })
                     }
-                } 
+                }
+                await updateTaskByCancel()
+
+                const addLoan = async function (){
+                    if(mtAdminObj.needVehicle == 0 || mtAdminObj.driverNum == 0){
+                        let loanOut = await loan.findOne({ where: { taskId: 'AT-'+mtAdminID } })
+                        if(loanOut) {
+                            await loanRecord.create({
+                                driverId: loanOut.driverId,
+                                vehicleNo: loanOut.vehicleNo,
+                                indentId: loanOut.indentId, 
+                                taskId: loanOut.taskId,
+                                startDate: loanOut.startDate,
+                                endDate: loanOut.endDate, 
+                                groupId: loanOut.groupId,
+                                returnDate: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                returnBy: req.cookies.userId,
+                                creator: loanOut.creator,
+                                returnRemark: cancelledCause,
+                                actualStartTime: loanOut.actualStartTime,
+                                actualEndTime: loanOut.actualEndTime,
+                                unitId: loanOut.unitId,
+                                activity: loanOut.activity,
+                                purpose: loanOut.purpose,
+                                createdAt: loanOut.createdAt
+                            });
+                            await loan.destroy({ where: { taskId: 'AT-'+mtAdminID } });
+                            await OperationRecord.create({
+                                id: null,
+                                operatorId: req.cookies.userId,
+                                businessType: 'atms task assign',
+                                businessId: 'AT-'+mtAdminID,
+                                optType: 'cancel loan',
+                                beforeData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
+                                afterData: `driverId:${ loanOut.driverId }, vehicleNo:${ loanOut.vehicleNo }`,
+                                optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                remarks: `cancel loan ${ loanOut.driverId ? 'driver' : '' }${ loanOut.vehicleNo ? 'vehicle' : '' }` 
+                            })
+                        }
+                    } 
+                }
+                await addLoan()
             }).catch(error => {
                 throw error
             })
@@ -1641,36 +1485,40 @@ module.exports = {
             // let userId = req.cookies.userId
             let { tripId } = req.body;
             let taskData = await TaskUtils.getSystemTaskByTripId(tripId);
+            if(taskData.length <= 0) return res.json(utils.response(1, `trip does not exist.`));
             let bothTaskList = taskData.filter(itemObj => itemObj.taskType.toLowerCase() == 'both')
             let toOnlyTaskList = taskData.filter(itemObj => itemObj.taskType.toLowerCase() == 'toonly')
             let vehicleOnlyTaskList = taskData.filter(itemObj => itemObj.taskType.toLowerCase() == 'vehicleonly')
             let bothNum = bothTaskList.length;
             let toOnlyNum = toOnlyTaskList.length;
             let vehicleOnlyNum = vehicleOnlyTaskList.length;
-            if(taskData.length <= 0) return res.json(utils.response(1, `trip does not exist.`));
             let hubNodeList = await TaskUtils.getClosestHubNodeListByLocation(taskData[0].pickupDestination, taskData[0].groupName)
             if(hubNodeList.length <= 0) return res.json(utils.response(1, `No hub, node available.`));
             log.warn(`hubnodeList =>${ JSON.stringify(hubNodeList) }`)
             let unitIdList = hubNodeList.map(item => item.id);
             let vehicleList = []
             let driverList = []
-            if(bothTaskList.length > 0 || vehicleOnlyTaskList.length > 0) vehicleList = await TaskUtils.getVehicleList(unitIdList, taskData[0].purposeType, taskData[0].vehicleType == '-' ? null : taskData[0].vehicleType, '0', taskData[0].periodStartDate, taskData[0].periodEndDate)
-            if(bothTaskList.length > 0 || toOnlyTaskList.length > 0) driverList = await TaskUtils.getDriverList(unitIdList, taskData[0].vehicleType == '-' ? null : taskData[0].vehicleType, '0', taskData[0].periodStartDate, taskData[0].periodEndDate, 'system')
-            if(vehicleList.length <= 0 && driverList.length <= 0) return res.json(utils.response(1, `No driver or vehicle is available.`));
-            log.warn(`vehicleList =>${ JSON.stringify(vehicleList) }`)
-            log.warn(`driverList =>${ JSON.stringify(driverList) }`)
+            const initVehicleDriverList = async function (){
+                if(bothTaskList.length > 0 || vehicleOnlyTaskList.length > 0) vehicleList = await TaskUtils.getVehicleList(unitIdList, taskData[0].purposeType, taskData[0].vehicleType == '-' ? null : taskData[0].vehicleType, '0', taskData[0].periodStartDate, taskData[0].periodEndDate)
+                if(bothTaskList.length > 0 || toOnlyTaskList.length > 0) driverList = await TaskUtils.getDriverList(unitIdList, taskData[0].vehicleType == '-' ? null : taskData[0].vehicleType, '0', taskData[0].periodStartDate, taskData[0].periodEndDate, 'system')
+                if(vehicleList.length <= 0 && driverList.length <= 0) return res.json(utils.response(1, `No driver or vehicle is available.`));
+                log.warn(`vehicleList =>${ JSON.stringify(vehicleList) }`)
+                log.warn(`driverList =>${ JSON.stringify(driverList) }`)
+            }
+            await initVehicleDriverList()
+            
             let newRequestList = []
-            if(vehicleList.length > 0 || driverList.length > 0){
-                if(bothNum > 0) {
-                    let requestList = []
-                    for(let item of unitIdList){
-                        let newVehicleList = vehicleList.filter(itemObj => itemObj.unitId == item)
-                        let newDriverList = driverList.filter(itemObj => itemObj.unitId == item)
-                        if(newVehicleList.length <= 0 || newDriverList.length <= 0){
-                            continue;
-                        }
-                        let maxList = null;
-                        let minList = null;
+            if(bothNum > 0) {
+                let requestList = []
+                for(let item of unitIdList){
+                    let newVehicleList = vehicleList.filter(itemObj => itemObj.unitId == item)
+                    let newDriverList = driverList.filter(itemObj => itemObj.unitId == item)
+                    if(newVehicleList.length <= 0 || newDriverList.length <= 0){
+                        continue;
+                    }
+                    let maxList = null;
+                    let minList = null;
+                    const initMaxMinList = function (){
                         if(newVehicleList.length >=  newDriverList.length){
                             maxList = newVehicleList.slice(0, newDriverList.length)
                             minList = newDriverList;
@@ -1678,6 +1526,10 @@ module.exports = {
                             maxList = newDriverList.slice(0, newVehicleList.length)
                             minList = newVehicleList;
                         }
+                    }
+                    initMaxMinList()
+
+                    const initRequestList = function (){
                         // Take the arrays corresponding to driver and vehicle
                         for (let index = 0; index < maxList.length; index++) {
                             for(let index2 = 0; index2 < minList.length; index2++){
@@ -1696,6 +1548,9 @@ module.exports = {
                             }
                         }
                     }
+                    initRequestList()
+                }
+                const initNewRequestList = function(){
                     let __NewRequestList = requestList.slice(0, bothNum)
                     if(__NewRequestList.length <= 0) __NewRequestList = requestList
                     //The indent of both requires a different number of drivers and vehicles
@@ -1707,7 +1562,10 @@ module.exports = {
                     } else {
                         newRequestList = __NewRequestList
                     }
-                } else {
+                }
+                initNewRequestList()
+            } else {
+                const initRequest = async function (){
                     //Intercept a specified number of cars and drivers
                     if(toOnlyNum > 0){
                         newRequestList = driverList.slice(0, toOnlyNum)
@@ -1718,50 +1576,54 @@ module.exports = {
                         if(newRequestList.length <= 0) newRequestList = vehicleList
                     }
                 }
+                await initRequest()
             }
             log.warn(`newRequestList =>${ JSON.stringify(newRequestList) }`)
-            if(newRequestList.length > 0){
-                for (let index = 0; index < taskData.length; index++) {
-                    // id and vehicle/driver corresponding to do assign operation
-                    // creator 0 to indicate that the system matches by default
-                   for (let index2 = 0; index2 < newRequestList.length; index2++) {
-                        if(index == index2){
-                            let preMvTaskId = taskData[index].id;
-                            if(taskData[index].referenceId) {
-                                preMvTaskId = `AT-${ taskData[index].id }`
-                            }
-                            if(taskData[index].taskType == 'both'){
-                                if(newRequestList[index2].driverId && newRequestList[index2].vehicleNo){
-                                    let result = await TaskUtils.assignTaskByTaskId(taskData[index].id, 
-                                        newRequestList[index2].driverId, 
-                                        newRequestList[index2].vehicleNo, 
-                                        newRequestList[index2].hub, 
-                                        newRequestList[index2].node,
-                                        newRequestList[index2].unitId,
-                                        0, 'Assigned (System)', preMvTaskId
-                                        );
-                                    if (result.code == 0)  return res.json(utils.response(0, result.message));
-                                    // 2024-02-20 atms indent resp
-                                    await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
-                                }
-                            } else if(newRequestList[index2].driverId || newRequestList[index2].vehicleNo){
-                                let result = await TaskUtils.assignTaskByTaskId(taskData[index].id, 
-                                    newRequestList[index2].driverId ?? null, 
-                                    newRequestList[index2].vehicleNo ?? null, 
-                                    newRequestList[index2].hub, 
-                                    newRequestList[index2].node,
-                                    newRequestList[index2].unitId,
-                                    0, 'Assigned (System)', preMvTaskId
+            if(newRequestList.length < 1) return res.json(utils.response(1, true));
+            for (let index = 0; index < taskData.length; index++) {
+                // id and vehicle/driver corresponding to do assign operation
+                // creator 0 to indicate that the system matches by default
+               for (let index2 = 0; index2 < newRequestList.length; index2++) {
+                    if(index != index2) continue
+                    const initAssignTask = async function (){
+                        let preMvTaskId = taskData[index].id;
+                        if(taskData[index].referenceId) {
+                            preMvTaskId = `AT-${ taskData[index].id }`
+                        }
+                        if(taskData[index].taskType == 'both'){
+                            if(newRequestList[index2].driverId && newRequestList[index2].vehicleNo){
+                                //job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId
+                                let result = await TaskUtils.assignTaskByTaskId({
+                                    job_taskId: taskData[index].id, 
+                                    driverId: newRequestList[index2].driverId, 
+                                    vehicleNo: newRequestList[index2].vehicleNo, 
+                                    hub: newRequestList[index2].hub, 
+                                    node: newRequestList[index2].node,
+                                    unitId: newRequestList[index2].unitId,
+                                    userId: 0, systemStatus: 'Assigned (System)', serverTaskId: preMvTaskId }
                                     );
                                 if (result.code == 0)  return res.json(utils.response(0, result.message));
                                 // 2024-02-20 atms indent resp
                                 await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
                             }
-                        } else {
-                            continue;
+                        } else if(newRequestList[index2].driverId || newRequestList[index2].vehicleNo){
+                            //job_taskId, driverId, vehicleNo, hub, node, unitId, userId, systemStatus, serverTaskId
+                            let result = await TaskUtils.assignTaskByTaskId({
+                                job_taskId: taskData[index].id, 
+                                driverId: newRequestList[index2].driverId || null, 
+                                vehicleNo: newRequestList[index2].vehicleNo || null, 
+                                hub: newRequestList[index2].hub, 
+                                node: newRequestList[index2].node,
+                                unitId: newRequestList[index2].unitId,
+                                userId: 0, systemStatus: 'Assigned (System)', serverTaskId: preMvTaskId
+                            });
+                            if (result.code == 0)  return res.json(utils.response(0, result.message));
+                            // 2024-02-20 atms indent resp
+                            await TaskUtils.initAtmsIndentResp(taskData[index].id, req.cookies ? req.cookies.userId : null)
                         }
-                   }
-                }
+                    }
+                    await initAssignTask()
+               }
             }
             return res.json(utils.response(1, true));
         } catch(error){

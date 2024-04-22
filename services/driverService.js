@@ -799,7 +799,7 @@ module.exports.getTODriverList = async function (req, res) {
         let operationList = newPageList.map(item => `${ item.action }`).join(',')
 
         let permissionPageList = await userService.getUserPageList(userId, 'TO', 'Indent')
-        if (permissionPageList && permissionPageList.length > 0) {
+        if (permissionPageList.length > 0) {
             operationList += ',ViewIndent';
         }
 
@@ -819,20 +819,16 @@ module.exports.getTODriverList = async function (req, res) {
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
         `, { type: QueryTypes.SELECT , replacements: []})
         let currentDriverIdStr = '';
-        if (currentTaskList && currentTaskList.length > 0) {
-            for (let temp of currentTaskList) {
-                currentDriverIdStr += temp.driverId + ','
-            }
+        for (let temp of currentTaskList) {
+            currentDriverIdStr += temp.driverId + ','
         }
         //loan out driver
         let currentLoanOutDriverList = await sequelizeObj.query(`
             select l.driverId from loan l where l.driverId IS NOT NULL and now() BETWEEN l.startDate and l.endDate
         `, { type: QueryTypes.SELECT , replacements: []})
         let currentLoanOutDriverIds = '';
-        if (currentLoanOutDriverList && currentLoanOutDriverList.length > 0) {
-            for (let temp of currentLoanOutDriverList) {
-                currentLoanOutDriverIds += temp.driverId + ','
-            }
+        for (let temp of currentLoanOutDriverList) {
+            currentLoanOutDriverIds += temp.driverId + ','
         }
 
         let baseSQL = `
@@ -884,166 +880,173 @@ module.exports.getTODriverList = async function (req, res) {
             subUnit = null;
             baseSQL += ` and dd.groupId = ${user.unitId} `
         } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            if (selectGroup == '1') {
-                unit = null;
-                subUnit = null;
-                if (groupId) {
-                    baseSQL += ` and dd.groupId = ? `;
-                    replacements.push(groupId);
-                } else {
-                    let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
-                    let hqUserGroupIds = groupList.map(item => item.id);
-                    if (hqUserGroupIds && hqUserGroupIds.length > 0) {
-                        baseSQL += ` and dd.groupId in(${hqUserGroupIds}) `;
+            async function buildHQParams() {
+                if (selectGroup == '1') {
+                    unit = null;
+                    subUnit = null;
+                    if (groupId) {
+                        baseSQL += ` and dd.groupId = ? `;
+                        replacements.push(groupId);
                     } else {
-                        return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+                        let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
+                        let hqUserGroupIds = groupList.map(item => item.id);
+                        if (hqUserGroupIds && hqUserGroupIds.length > 0) {
+                            baseSQL += ` and dd.groupId in(${hqUserGroupIds}) `;
+                        } else {
+                            return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+                        }
                     }
+                } else if (selectGroup == '0') {
+                    baseSQL += ` and dd.groupId is null `;
                 }
-            } else if (selectGroup == '0') {
-                baseSQL += ` and dd.groupId is null `;
             }
+            await buildHQParams();
         } else if (user.userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
-            if (selectGroup == '1') {
-                unit = null;
-                subUnit = null;
-                if (groupId) {
-                    baseSQL += ` and dd.groupId = ? `;
-                    replacements.push(groupId);
-                } else {
-                    baseSQL += ` and dd.groupId is not null `
+            function buildAdminParams() {
+                if (selectGroup == '1') {
+                    unit = null;
+                    subUnit = null;
+                    if (groupId) {
+                        baseSQL += ` and dd.groupId = ? `;
+                        replacements.push(groupId);
+                    } else {
+                        baseSQL += ` and dd.groupId is not null `
+                    }
+                } else if (selectGroup == '0') {
+                    baseSQL += ` and dd.groupId is null `
                 }
-            } else if (selectGroup == '0') {
-                baseSQL += ` and dd.groupId is null `
+            }
+            buildAdminParams();
+        }
+        async function buildCommonUnitParams() {
+            if (unit) {
+                baseSQL += ` and (dd.currentUnit =? or dd.unit = ?) `;
+                replacements.push(unit);
+                replacements.push(unit);
+            } else if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                let hqUserUnitNameList = userUnitList.map(item => item.unit);
+                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                    hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                }
+                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                    baseSQL += ` and dd.currentUnit in('${hqUserUnitNameList.join("','")}') `;
+                } else {
+                    return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+                }
+            }
+            if (subUnit) {
+                if (subUnit == 'null') {
+                    baseSQL += ` and (dd.currentSubUnit is null or dd.subUnit is null) `
+                } else {
+                    baseSQL += ` and (dd.currentSubUnit =? or dd.subUnit =?) `
+                    replacements.push(subUnit);
+                    replacements.push(subUnit);
+                }
             }
         }
-        if (unit) {
-            baseSQL += ` and (dd.currentUnit =? or dd.unit = ?) `;
-            replacements.push(unit);
-            replacements.push(unit);
-        } else if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
-            }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                baseSQL += ` and dd.currentUnit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
-            }
-        }
-        if (subUnit) {
-            if (subUnit == 'null') {
-                baseSQL += ` and (dd.currentSubUnit is null or dd.subUnit is null) `
-            } else {
-                baseSQL += ` and (dd.currentSubUnit =? or dd.subUnit =?) `
-                replacements.push(subUnit);
-                replacements.push(subUnit);
-            }
-        }
+        await buildCommonUnitParams();
        
-        if (permitType) {
-            let list = permitType.split(',')
-            let permitTypeSql = []
-            for (let item of list) {
-                permitTypeSql.push(` FIND_IN_SET(?, dd.permitType) `)
-                replacements.push(item);
+        async function buildCommonOtherParams() {
+            if (permitType) {
+                let list = permitType.split(',')
+                let permitTypeSql = []
+                for (let item of list) {
+                    permitTypeSql.push(` FIND_IN_SET(?, dd.permitType) `)
+                    replacements.push(item);
+                }
+                limitSQL.push(` ( ${ permitTypeSql.join(' OR ') } ) `)
             }
-            limitSQL.push(` ( ${ permitTypeSql.join(' OR ') } ) `)
-        }
-        if (driverStatus) {
-            limitSQL.push(` FIND_IN_SET(dd.currentStatus, ?) `);
-            replacements.push(driverStatus);
-        }
-        if (driverORDStatus) {
-            if (driverORDStatus.toLowerCase() == 'effective') {
-                limitSQL.push(` (dd.operationallyReadyDate is null OR dd.operationallyReadyDate > DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
-            } else {
-                limitSQL.push(` (dd.operationallyReadyDate is not null and dd.operationallyReadyDate <= DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
+            if (driverStatus) {
+                limitSQL.push(` FIND_IN_SET(dd.currentStatus, ?) `);
+                replacements.push(driverStatus);
+            }
+            if (driverORDStatus) {
+                if (driverORDStatus.toLowerCase() == 'effective') {
+                    limitSQL.push(` (dd.operationallyReadyDate is null OR dd.operationallyReadyDate > DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
+                } else {
+                    limitSQL.push(` (dd.operationallyReadyDate is not null and dd.operationallyReadyDate <= DATE_FORMAT(NOW(), '%Y-%m-%d'))`);
+                }
+            }
+            if (searchCondition) {
+                let likeCondition = sequelizeObj.escape("%" +searchCondition+ "%");
+                limitSQL.push(` ( 
+                    dd.driverName LIKE `+likeCondition+` OR dd.currentUnit LIKE `+likeCondition+` OR dd.currentSubUnit LIKE `+likeCondition
+                    +` OR dd.permitType LIKE `+likeCondition+` OR dd.status LIKE `+likeCondition
+                    +` OR dd.nric = '${ utils.generateAESCode(searchCondition) }' 
+                ) `);
+            }
+            if (limitSQL.length) {
+                baseSQL += ' and ' + limitSQL.join(' AND ') ;
             }
         }
-        if (searchCondition) {
-            let likeCondition = sequelizeObj.escape("%" +searchCondition+ "%");
-            limitSQL.push(` ( 
-                dd.driverName LIKE `+likeCondition+` OR dd.currentUnit LIKE `+likeCondition+` OR dd.currentSubUnit LIKE `+likeCondition
-                +` OR dd.permitType LIKE `+likeCondition+` OR dd.status LIKE `+likeCondition
-                +` OR dd.nric = '${ utils.generateAESCode(searchCondition) }' 
-            ) `);
-        }
-        if (limitSQL.length) {
-            baseSQL += ' and ' + limitSQL.join(' AND ') ;
-        }
+        await buildCommonOtherParams();
 
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
         let driverNameOrder = req.body.driverNameOrder;
         let orderList = [];
-        if (driverNameOrder) {
-            orderList.push(` dd.driverName ` + (driverNameOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
+        function buildOrderSql() {
+            if (driverNameOrder) {
+                orderList.push(` dd.driverName ` + (driverNameOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
+            }
+            let hubOrder = req.body.hubOrder;
+            if (hubOrder) {
+                orderList.push(` dd.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
+            }
+            if (orderList.length) {
+                baseSQL += ' ORDER BY ' + orderList.join(' , ')
+            } else {
+                baseSQL += ' ORDER BY dd.updatedAt desc'
+            }
         }
-        let hubOrder = req.body.hubOrder;
-        if (hubOrder) {
-            orderList.push(` dd.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : ''));
-        }
-        if (orderList.length) {
-            baseSQL += ' ORDER BY ' + orderList.join(' , ')
-        } else {
-            baseSQL += ' ORDER BY dd.updatedAt desc'
-        }
+        buildOrderSql();
 
         baseSQL += ` limit ?, ?`
         replacements.push(pageNum);
         replacements.push(pageLength);
         let driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
+        if (driverList.length == 0) {
+            return res.json({ respMessage: driverList, recordsFiltered: 0, recordsTotal: 0 });
+        }
 
         // upcoming leave
-        let driverLeaveRecords = []
         let driverIdList = driverList.map(a=>a.driverId)
-        if(driverList.length > 0){
-            driverLeaveRecords = await sequelizeObj.query(`
-                select a.*, b.startTime as nextTime from 
-                (
-                    select driverId, startTime, date_add(endTime, interval 1 second ) as endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?)
-                ) a 
-                LEFT JOIN 
-                (
-                    select driverId, startTime, date_add(endTime, interval 1 second ) as endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?) 
-                ) b on a.endTime = b.startTime and a.driverId = b.driverId
-                ORDER BY a.driverId, a.startTime
-            `, { type: QueryTypes.SELECT, replacements: [driverIdList, driverIdList] })
-        }
+        let driverLeaveRecords = await sequelizeObj.query(`
+            select a.*, b.startTime as nextTime from 
+            (
+                select driverId, startTime, date_add(endTime, interval 1 second ) as endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?)
+            ) a 
+            LEFT JOIN 
+            (
+                select driverId, startTime, date_add(endTime, interval 1 second ) as endTime from driver_leave_record where status = 1 and DATE_FORMAT(startTime, '%Y-%m-%d') >= DATE_FORMAT(NOW(), '%Y-%m-%d') and driverId in (?) 
+            ) b on a.endTime = b.startTime and a.driverId = b.driverId
+            ORDER BY a.driverId, a.startTime
+        `, { type: QueryTypes.SELECT, replacements: [driverIdList, driverIdList] })
 
         //stat driver totalMileage
-        let driverTaskMileageList = [];
-        let driverBaseMileageList = [];
-        if(driverIdList && driverIdList.length > 0){
-            driverTaskMileageList = await sequelizeObj.query(`
-                SELECT m.driverId, sum(m.mileageTraveled) as taskMileage
-                FROM mileage m
-                LEFT JOIN vehicle veh ON m.vehicleNo = veh.vehicleNo
-                WHERE m.driverId in(?) AND mileageTraveled is NOT NULL and mileageTraveled > 0 and veh.permitType in(select permitType from driver_permittype_detail where driverId=m.driverId)
-                GROUP BY m.driverId
-            `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
+        let driverTaskMileageList = await sequelizeObj.query(`
+            SELECT m.driverId, sum(m.mileageTraveled) as taskMileage
+            FROM mileage m
+            LEFT JOIN vehicle veh ON m.vehicleNo = veh.vehicleNo
+            WHERE m.driverId in(?) AND mileageTraveled is NOT NULL and mileageTraveled > 0 and veh.permitType in(select permitType from driver_permittype_detail where driverId=m.driverId)
+            GROUP BY m.driverId
+        `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
 
-            driverBaseMileageList = await sequelizeObj.query(`
-                select driverId, SUM(baseMileage) as baseMileage from driver_permittype_detail where driverId in(?) GROUP BY driverId
-            `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
-        }
+        let driverBaseMileageList = await sequelizeObj.query(`
+            select driverId, SUM(baseMileage) as baseMileage from driver_permittype_detail where driverId in(?) GROUP BY driverId
+        `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
 
         //driver has mileage warning task
-        let driverMileageWaringTaskNums = [];
-        if(driverIdList && driverIdList.length > 0){
-            driverMileageWaringTaskNums = await sequelizeObj.query(`
-                select driverId, COUNT(*) as taskNum from mileage m where m.mileageTraveled>100 and m.driverId in(?) GROUP BY driverId
-            `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
-        }
+        let driverMileageWaringTaskNums = await sequelizeObj.query(`
+            select driverId, COUNT(*) as taskNum from mileage m where m.mileageTraveled>100 and m.driverId in(?) GROUP BY driverId
+        `, { type: QueryTypes.SELECT, replacements: [driverIdList] })
 
         // set customer driver group name
         let systemGroupList = await sequelizeSystemObj.query(` select * from \`group\` `, { type: QueryTypes.SELECT });
 
-        // Update vehicleTypeList, update position
-        for (let driver of driverList) {
+        function buildDriverMileageInfo(driver, driverTaskMileageList, driverBaseMileageList, driverMileageWaringTaskNums) {
             let taskTotalMileage = 0;
             if (driverTaskMileageList) {
                 let driverTaskMileage = driverTaskMileageList.find(item => item.driverId == driver.driverId);
@@ -1059,52 +1062,56 @@ module.exports.getTODriverList = async function (req, res) {
             }
 
             driver.totalMileage = taskTotalMileage;
-
             if (driverMileageWaringTaskNums) {
                 let driverMileageWaringTaskNum = driverMileageWaringTaskNums.find(item => item.driverId == driver.driverId);
                 if (driverMileageWaringTaskNum) {
                     driver.driverMileageWaringTaskNum = driverMileageWaringTaskNum.taskNum
                 }
             }
-
-            let driverGroup = systemGroupList.find(item => item.id == driver.groupId);
-            if (driverGroup && !driver.hub) {
-                driver.unit = driverGroup.groupName;
-            }
-
-            if (driver.permitType) {
-                let permitTypeList = await PermitType.findAll({ where: { permitType: driver.permitType.split(',') } })
-                driver.vehicleTypeList = permitTypeList.map(permitType => permitType.vehicleType)
-            } else {
+        }
+        // Update vehicleTypeList, update position
+        async function buildDriverOtherInfo() {
+            for (let driver of driverList) {
+                buildDriverMileageInfo(driver, driverTaskMileageList, driverBaseMileageList, driverMileageWaringTaskNums)
+    
+                let driverGroup = systemGroupList.find(item => item.id == driver.groupId);
+                if (driverGroup && !driver.hub) {
+                    driver.unit = driverGroup.groupName;
+                }
+    
                 driver.vehicleTypeList = ''
-            }
-
-            //find out upcoming task
-            let latestTask = await sequelizeObj.query(`
-                SELECT * FROM task t
-                WHERE t.driverId = ? AND t.driverStatus != 'Cancelled' and t.driverStatus != 'completed'
-                and DATE_FORMAT(NOW(), '%Y-%m-%d') BETWEEN DATE_FORMAT(t.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(t.indentEndTime, '%Y-%m-%d')
-                order by t.indentEndTime desc
-                LIMIT 1
-            `, { type: QueryTypes.SELECT , replacements: [ driver.driverId ]})
-            if (latestTask.length > 0) {
-                driver.taskId = latestTask[0].taskId
-                driver.indentId = latestTask[0].indentId
-                driver.indentStartTime = latestTask[0].indentEndTime
-                driver.purpose = latestTask[0].purpose
-            } else {
+                if (driver.permitType) {
+                    let permitTypeList = await PermitType.findAll({ where: { permitType: driver.permitType.split(',') } })
+                    driver.vehicleTypeList = permitTypeList.map(permitType => permitType.vehicleType)
+                }
+    
+                //find out upcoming task
+                let latestTask = await sequelizeObj.query(`
+                    SELECT * FROM task t
+                    WHERE t.driverId = ? AND t.driverStatus != 'Cancelled' and t.driverStatus != 'completed'
+                    and DATE_FORMAT(NOW(), '%Y-%m-%d') BETWEEN DATE_FORMAT(t.indentStartTime, '%Y-%m-%d') and DATE_FORMAT(t.indentEndTime, '%Y-%m-%d')
+                    order by t.indentEndTime desc
+                    LIMIT 1
+                `, { type: QueryTypes.SELECT , replacements: [ driver.driverId ]})
                 driver.taskId = ''
                 driver.indentId = ''
                 driver.indentStartTime = ''
                 driver.purpose = ''
+                if (latestTask.length > 0) {
+                    driver.taskId = latestTask[0].taskId
+                    driver.indentId = latestTask[0].indentId
+                    driver.indentStartTime = latestTask[0].indentEndTime
+                    driver.purpose = latestTask[0].purpose
+                }
+    
+                // upcoming leave
+                let records = driverLeaveRecords.filter(a=>a.driverId == driver.driverId)
+                driver.upcomingLeave = getUpcomingLeave(records)
+    
+                driver.operation = operationList
             }
-
-            // upcoming leave
-            let records = driverLeaveRecords.filter(a=>a.driverId == driver.driverId)
-            driver.upcomingLeave = getUpcomingLeave(records)
-
-            driver.operation = operationList
         }
+        await buildDriverOtherInfo();
 
         driverList = await decodeDriverNric(driverList, pageList2.length > 0);
 
@@ -1331,10 +1338,10 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
     let allDriverLeaveList = [];
     let leaveDriverIds = tempLeaveList.map(item => item.driverId);
     leaveDriverIds = Array.from(new Set(leaveDriverIds));
-    for (let tempDriverId of leaveDriverIds) {
-        let driverLeaveRecords = tempLeaveList.filter(item => item.driverId == tempDriverId);
-        let newDriverLeaveRecords = [];
-        if (driverLeaveRecords && driverLeaveRecords.length > 0) {
+    function buildDriverLeaveData() {
+        for (let tempDriverId of leaveDriverIds) {
+            let driverLeaveRecords = tempLeaveList.filter(item => item.driverId == tempDriverId);
+            let newDriverLeaveRecords = [];
             for (let temp of driverLeaveRecords) {
                 temp.indentStartTime = moment(temp.indentStartTime).format('YYYY-MM-DD HH:mm:ss')
                 temp.indentEndTime = moment(temp.indentEndTime).format('YYYY-MM-DD HH:mm:ss')
@@ -1342,33 +1349,34 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
                     let preLeave = newDriverLeaveRecords[newDriverLeaveRecords.length - 1];
                     if (preLeave.indentEndTime == temp.indentStartTime) {
                         preLeave.indentEndTime = temp.indentEndTime;
-                    } else {
-                        newDriverLeaveRecords.push(temp);
-                    }
-                } else {
+                        continue
+                    } 
                     newDriverLeaveRecords.push(temp);
+                    continue
                 }
+                newDriverLeaveRecords.push(temp);
             }
-        }
-        let onLeaveIndex = 1;
-        for (let temp of newDriverLeaveRecords) {
-            temp.taskId='onLeave-' +  onLeaveIndex;
-            let entTimeStr = moment(temp.indentEndTime).format('HH:mm:ss');
-            if (entTimeStr == '00:00:00') {
-                let endDateTime = moment(temp.indentEndTime).add(-1, 'minute');
-                temp.indentEndTime = endDateTime.format('YYYY-MM-DD HH:mm:ss');
+            let onLeaveIndex = 1;
+            for (let temp of newDriverLeaveRecords) {
+                temp.taskId='onLeave-' +  onLeaveIndex;
+                let entTimeStr = moment(temp.indentEndTime).format('HH:mm:ss');
+                if (entTimeStr == '00:00:00') {
+                    let endDateTime = moment(temp.indentEndTime).add(-1, 'minute');
+                    temp.indentEndTime = endDateTime.format('YYYY-MM-DD HH:mm:ss');
+                }
+                onLeaveIndex++;
             }
-            onLeaveIndex++;
+    
+            allDriverLeaveList = allDriverLeaveList.concat(newDriverLeaveRecords);
         }
-
-        allDriverLeaveList = allDriverLeaveList.concat(newDriverLeaveRecords);
     }
+    buildDriverLeaveData();
     
     let resultList = allTaskList.concat(allDriverLeaveList);
     let driverIds = resultList.map(item => item.driverId);
     driverIds = Array.from(new Set(driverIds));
     log.info(`driverService.getTOCalenderDriverList ${startDate} - ${endDate} ${driverIds ? driverIds.length : 0} driver has task!`)
-    if (!driverIds || driverIds.length == 0) {
+    if (driverIds.length == 0) {
         return res.json(utils.response(1, []));
     }
     let baseSQL = `
@@ -1386,46 +1394,47 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
     `;
     let limitSQL = []
     let replacements = [driverIds];
-    if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
-        baseSQL += ` and dd.groupId = ${user.unitId} `
-    }
-
-    if (unit) {
-        limitSQL.push(` dd.unit =? `);
-        replacements.push(unit);
-    } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-        let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-        let hqUserUnitNameList = userUnitList.map(item => item.unit);
-        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-            hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+    async function buildSqlAndParams() {
+        if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
+            baseSQL += ` and dd.groupId = ${user.unitId} `
         }
-        if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-            limitSQL.push(` dd.currentUnit in('${hqUserUnitNameList.join("','")}') `);
-        } else {
-            return res.json(utils.response(1, []));
+    
+        if (unit) {
+            limitSQL.push(` dd.unit =? `);
+            replacements.push(unit);
+        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+            let hqUserUnitNameList = userUnitList.map(item => item.unit);
+            if (hqUserUnitNameList.length > 0) {
+                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                limitSQL.push(` dd.currentUnit in('${hqUserUnitNameList.join("','")}') `);
+            } else {
+                return res.json(utils.response(1, []));
+            }
         }
-    }
-    if (subUnit) {
-        if (subUnit == 'null') {
-            limitSQL.push(` dd.currentSubUnit is null `);
-        } else {
-            limitSQL.push(` dd.currentSubUnit =? `);
-            replacements.push(subUnit);
+        if (subUnit) {
+            if (subUnit == 'null') {
+                limitSQL.push(` dd.currentSubUnit is null `);
+            } else {
+                limitSQL.push(` dd.currentSubUnit =? `);
+                replacements.push(subUnit);
+            }
+            
         }
-        
+        if (driverName) {
+            limitSQL.push(` dd.driverName LIKE `+ sequelizeObj.escape("%" + driverName + "%"));
+        }
+        if (limitSQL.length) {
+            baseSQL += ' and ' + limitSQL.join(' AND ') ;
+        }
+        baseSQL += ` GROUP BY dd.driverId `
     }
-    if (driverName) {
-        limitSQL.push(` dd.driverName LIKE `+ sequelizeObj.escape("%" + driverName + "%"));
-    }
-    if (limitSQL.length) {
-        baseSQL += ' and ' + limitSQL.join(' AND ') ;
-    }
-    baseSQL += ` GROUP BY dd.driverId `
+    buildSqlAndParams();
 
     let driverList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
     for (let driver of driverList) {
         let driverTaskOrLeaves = resultList.filter(item => item.driverId == driver.driverId);
-        if (driverTaskOrLeaves && driverTaskOrLeaves.length > 0) {
+        if (driverTaskOrLeaves?.length > 0) {
             driverTaskOrLeaves = driverTaskOrLeaves.sort(function(item1, item2) {
                 if (moment(item1.indentStartTime).isBefore(moment(item2.indentStartTime))) {
                     return -1;
@@ -1511,9 +1520,6 @@ module.exports.getTODriverDetailInfo = async function (req, res) {
             }
         }
 
-        // Init emergency
-        let emergencyList = await Emergency.findByPk(driverId);
-        currentDriver.emergencyList = emergencyList;
         let driverUser = await User.findOne({ where: { driverId } })
         currentDriver.role = driverUser ? driverUser.role : '';
 
@@ -2570,7 +2576,6 @@ module.exports.createDriverIncident = async function (req, res) {
 
 module.exports.getLicensingDriverList = async function (req, res) {
     let userId = req.cookies.userId;
-    let userType = req.cookies.userType;
     let pageNum = Number(req.body.start);
     let pageLength = Number(req.body.length);
     let { permitType, applyStatus, unit, subUnit, searchCondition } = req.body;
@@ -2629,7 +2634,7 @@ module.exports.getLicensingDriverList = async function (req, res) {
             where d.driverId is not null
         `;
         let limitSQL = []
-        if (userType && userType.toUpperCase() == CONTENT.USER_TYPE.LICENSING_OFFICER) {
+        if (user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
             limitSQL.push(` (LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
         }
@@ -2685,7 +2690,7 @@ module.exports.getLicensingDriverList = async function (req, res) {
         replacements.push(pageNum);
         replacements.push(pageLength);
         let driverExchangePermitApplyList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
-        if (driverExchangePermitApplyList) {
+        function buildApplyData() {
             for (let apply of driverExchangePermitApplyList) {
                 let driverMileageInfo = apply.driverMileageInfo;
                 if (driverMileageInfo && driverMileageInfo.toLowerCase().indexOf('km') == -1) {
@@ -2724,6 +2729,7 @@ module.exports.getLicensingDriverList = async function (req, res) {
                 }
             }
         }
+        buildApplyData();
 
         // 2023-08-29 Get decrypted is nric.
         for(let driver of driverExchangePermitApplyList){
@@ -3433,19 +3439,20 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
 
         if (driverId) {
             let driver = await Driver.findByPk(driverId);
-            let driverEmail = driver?.email ? driver.email : null;
+            let driverEmail = driver.email || null;
             let permitTypeApply = await DriverLicenseExchangeApply.findOne({where: {driverId, permitType}});
 
             updateJson.emailConfirm = driverEmail;
             if (permitTypeApply) {
-                if (permitTypeApply.status == 'fail' || permitTypeApply.status == 'rejected' || permitTypeApply.status == 'success') {
+                function isEndStatus() {
+                    return permitTypeApply.status == 'fail' || permitTypeApply.status == 'rejected' || permitTypeApply.status == 'success';
+                }
+                if (isEndStatus()) {
                     return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
                 }
                 let pageList = await userService.getUserPageList(userId, 'Resources', 'Licensing')
-                let actionList = [];
-                if (pageList) {
-                    actionList = pageList.map(item => {return item.action});
-                }
+                let actionList = pageList.map(item => {return item.action});
+
                 if (optType == 'reject') {
                     if (!actionList.includes('Reject')) {
                         return res.json(utils.response(0, 'No permission!'));
@@ -3463,31 +3470,65 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
                     updateJson.pendingDate = moment();
                     updateJson.pendingBy = userId;
                 } else if (optType == 'success' || optType == 'fail') {
-                    if (!actionList.includes('Approval Status')) {
-                        return res.json(utils.response(0, 'No permission!'));
+                    function buildSuccessOrFailData() {
+                        if (!actionList.includes('Approval Status')) {
+                            return res.json(utils.response(0, 'No permission!'));
+                        }
+                        updateJson.approveDate = moment();
+                        updateJson.approveBy = userId;
+                        updateJson.status = optType == 'success' ? 'Success' : 'Failed';
+                        if (optType == 'fail') {
+                            updateJson.failReason = reason;
+                            updateJson.failDate = moment();
+                            updateJson.failBy = userId;
+                        } else {
+                            updateJson.successDate = moment();
+                            updateJson.successBy = userId;
+                        }
                     }
-                    updateJson.approveDate = moment();
-                    updateJson.approveBy = userId;
-                    updateJson.status = optType == 'success' ? 'Success' : 'Failed';
-                    if (optType == 'fail') {
-                        updateJson.failReason = reason;
-                        updateJson.failDate = moment();
-                        updateJson.failBy = userId;
-                    } else {
-                        updateJson.successDate = moment();
-                        updateJson.successBy = userId;
-                    }
+                    buildSuccessOrFailData();
                 }else if (optType == 'submit') {
-                    if (!actionList.includes('Submit')) {
-                        return res.json(utils.response(0, 'No permission!'));
+                    function checkSubmitData() {
+                        if (!actionList.includes('Submit')) {
+                            throw new Error('No permission!');
+                        }
+                        if (permitTypeApply.status != 'Pending Approval') {
+                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                        }
                     }
-                    if (permitTypeApply.status != 'Pending Approval') {
-                        return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
+                    checkSubmitData();
+                    function buildSubmitData() {
+                        updateJson.submitDate = moment();
+                        updateJson.submitBy = userId;
+                        updateJson.status = 'Submitted'
+                        if (actionList.includes('Endorse')) {
+                            updateJson.status = 'Endorsed'
+                            updateJson.endorseDate = moment();
+                            updateJson.endorseBy = userId;
+                            if (actionList.includes('Verify')) {
+                                updateJson.status = 'Verified'
+                                updateJson.verifyDate = moment();
+                                updateJson.verifyBy = userId;
+                                if (actionList.includes('Recommend')) {
+                                    updateJson.status = 'Recommended'
+                                    updateJson.recommendDate = moment();
+                                    updateJson.recommendBy = userId;
+                                }
+                            }
+                        }
                     }
-                    updateJson.submitDate = moment();
-                    updateJson.submitBy = userId;
-                    updateJson.status = 'Submitted'
-                    if (actionList.includes('Endorse')) {
+                    buildSubmitData();
+                } else if (optType == 'endorse') {
+                    function checkEndorseData() {
+                        if (!actionList.includes('Endorse')) {
+                            throw new Error('No permission!');
+                        }
+                        if (permitTypeApply.status != 'Submitted') {
+                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                        }
+                    }
+                    checkEndorseData();
+                    function buildEndorseData() {
                         updateJson.status = 'Endorsed'
                         updateJson.endorseDate = moment();
                         updateJson.endorseBy = userId;
@@ -3502,33 +3543,18 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
                             }
                         }
                     }
-                } else if (optType == 'endorse') {
-                    if (!actionList.includes('Endorse')) {
-                        return res.json(utils.response(0, 'No permission!'));
-                    }
-                    if (permitTypeApply.status != 'Submitted') {
-                        return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
-                    }
-                    updateJson.status = 'Endorsed'
-                    updateJson.endorseDate = moment();
-                    updateJson.endorseBy = userId;
-                    if (actionList.includes('Verify')) {
-                        updateJson.status = 'Verified'
-                        updateJson.verifyDate = moment();
-                        updateJson.verifyBy = userId;
-                        if (actionList.includes('Recommend')) {
-                            updateJson.status = 'Recommended'
-                            updateJson.recommendDate = moment();
-                            updateJson.recommendBy = userId;
+                    buildEndorseData();
+                } else if (optType == 'verify') {
+                    function checkVerifyData() {
+                        if (!actionList.includes('Verify')) {
+                            throw new Error('No permission!');
+                        }
+                        if (permitTypeApply.status != 'Endorsed') {
+                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
                         }
                     }
-                } else if (optType == 'verify') {
-                    if (!actionList.includes('Verify')) {
-                        return res.json(utils.response(0, 'No permission!'));
-                    }
-                    if (permitTypeApply.status != 'Endorsed') {
-                        return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
-                    }
+                    checkVerifyData();
+                    
                     updateJson.status = 'Verified'
                     updateJson.verifyDate = moment();
                     updateJson.verifyBy = userId;
@@ -3538,12 +3564,15 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
                         updateJson.recommendBy = userId;
                     }
                 } else if (optType == 'recommend') {
-                    if (!actionList.includes('Recommend')) {
-                        return res.json(utils.response(0, 'No permission!'));
+                    function checkRecommendData() {
+                        if (!actionList.includes('Recommend')) {
+                            throw new Error('No permission!');
+                        }
+                        if (permitTypeApply.status != 'Verified') {
+                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                        }
                     }
-                    if (permitTypeApply.status != 'Verified') {
-                        return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
-                    }
+                    checkRecommendData();
                     updateJson.status = 'Recommended'
                     updateJson.recommendDate = moment();
                     updateJson.recommendBy = userId;

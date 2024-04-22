@@ -1,19 +1,9 @@
-import * as MapUtil from './common-map.js'
-
 $(function () {
     initAxiosHandler();
-
-    // Select
-    // initSocketClientHandler();
-    // if ($('#map').length && !$('#map').html()) {
-    //     MapUtil.initMapServerHandler();
-    //     console.log('Init Map Success!')
-    // }
 });
 
 // Use for add css to console.log !
 export const __CONSOLE_GREEN = 'color: #43bb88;font-size: 16px;font-weight: bold';
-
 
 export function initCustomModal (option) {
     $('#customModal').find('.modal-body').html(option.body ? option.body : 'Something information should be here!');
@@ -72,8 +62,11 @@ export function initCustomToast (information) {
 
 export function getUrlParam (name) {
     let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-    let r = window.location.search.substr(1).match(reg);
-    if (r != null) return unescape(r[2]); return null;
+    let r = reg.exec(window.location.search.substring(1));
+    if (r != null) {
+        return decodeURI(r[2]);
+    }
+    return null;
 }
 
 export function storeInBrowser (key, val) {
@@ -86,10 +79,6 @@ export function getFromBrowser (key) {
 }
 export function deleteFromBrowser (key) {
     localStorage.removeItem(key);
-}
-
-export function clearLocalStorage () {
-
 }
 
 export function getSessionStorage (key) {
@@ -136,15 +125,6 @@ export function initAxiosHandler () {
     });
     window.axios = axios;
 }
-
-// export function customPopupInfo (title, body) {
-//     let targetModal = $('.modal.show');
-//     $(targetModal).modal('hide')
-//     initCustomModal({ title, body, callBackFunction: function () {
-//         $(targetModal).modal('show')
-//     }})
-// }
-
 
 export function customPopupInfo (title, body) {
     layer.open({

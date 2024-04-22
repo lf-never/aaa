@@ -5,8 +5,11 @@ $(function () {
 
 export function getUrlParam (name) {
     let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-    let r = window.location.search.substr(1).match(reg);
-    if (r != null) return unescape(r[2]); return null;
+    let r = reg.exec(window.location.search.substring(1));
+    if (r != null) {
+        return decodeURI(r[2]);
+    }
+    return null;
 }
 
 export function initAxiosHandler () {

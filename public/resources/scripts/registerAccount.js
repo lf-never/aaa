@@ -10,54 +10,75 @@ let registerUserBaseId = null;
 $(async function () {
     if(window.location.pathname == '/login') return
     initPage()  
-    if(window.location.pathname == '/user/registerUser') {
-        let url = window.location.href;
-        let fromValue = url.indexOf('dataFrom=') != '-1' ? decodeURI(url.split("dataFrom=")[1]) : null;
-        let dataList = null;
-        if(!fromValue){
-            dataList = await urlParameterDecode(url.split("registerFrom=")[1])
-            registerUserId = dataList ? dataList.userId : null;
-            if(dataList) fromValue = dataList.dataFrom ? dataList.dataFrom : null;
-        }
-       
-        if(registerUserId) {
-            $('.returnLogin').text('Return to Home menu')
-        }
-        setTimeout(() => {
-            let dataType = dataList ? dataList.dataFrom == 'server' ? 'mv' : 'cv' : null;
-            if(registerUserId) initPageByUserBase(null, registerUserId, dataType)
-        }, 60) 
-        dataFrom = fromValue ? fromValue: 'server';
-        $('#registerAccount-modal').modal('show')
-        $('#registerAccount-modal .modal-title').text('Register Account')
-        document.addEventListener('keydown', function(event) {
-            setTimeout(() => {
-                if(event.key){
-                    if ((event.key).toLowerCase() == 'escape') {
-                        let url = null;
-                        if(registerUserId) {
-                            url = dataFrom == 'system' ? systemUrl + "/" : "/";
-                        } else {
-                            url = dataFrom == 'system' ? systemUrl + "/login" : "/login";
-                        }
-                        window.location.href = url; 
-                    }
-                }
-            }, 30) 
-        });
-    }
 
-    $('.create-registerAccountUser').off('click').on('click',  function(){
-        initUser()
-    })
-    $('.cancel-create-user').off('click').on('click',  function(){
-        clearData()
-        if(!dataFrom) refreshTable()
-    })
-    $('.close-create-user').off('click').on('click',  function(){
-        clearData()
-        if(!dataFrom) refreshTable()
-    })
+    const showPage = async function (){
+        if(window.location.pathname == '/user/registerUser') {
+            let url = window.location.href;
+            let fromValue = url.indexOf('dataFrom=') != '-1' ? decodeURI(url.split("dataFrom=")[1]) : null;
+            let dataList = null;
+            const initDataList = async function (){
+                if(!fromValue){
+                    dataList = await urlParameterDecode(url.split("registerFrom=")[1])
+                    registerUserId = dataList ? dataList.userId : null;
+                    if(dataList) fromValue = dataList.dataFrom ? dataList.dataFrom : null;
+                }
+            }
+            initDataList()
+           
+            if(registerUserId) {
+                $('.returnLogin').text('Return to Home menu')
+            }
+            const initUserPage = function (){
+                setTimeout(() => {
+                    let dataType = null;
+                    if(dataList){
+                        if(dataList.dataFrom == 'server'){
+                            dataType = 'mv'
+                        } else {
+                            dataType = 'cv'
+                        }
+                    }
+                    if(registerUserId) initPageByUserBase(null, registerUserId, dataType)
+                }, 60) 
+            }
+            initUserPage()
+
+            dataFrom = fromValue || 'server';
+            $('#registerAccount-modal').modal('show')
+            $('#registerAccount-modal .modal-title').text('Register Account')
+            document.addEventListener('keydown', function(event) {
+                setTimeout(() => {
+                    if(event.key){
+                        if ((event.key).toLowerCase() == 'escape') {
+                            let url = null;
+                            if(registerUserId) {
+                                url = dataFrom == 'system' ? systemUrl + "/" : "/";
+                            } else {
+                                url = dataFrom == 'system' ? systemUrl + "/login" : "/login";
+                            }
+                            window.location.href = url; 
+                        }
+                    }
+                }, 30) 
+            });
+        }
+    }
+    await showPage()
+
+    const initAccountBtn = function (){
+        $('.create-registerAccountUser').off('click').on('click',  function(){
+            initUser()
+        })
+        $('.cancel-create-user').off('click').on('click',  function(){
+            clearData()
+            if(!dataFrom) refreshTable()
+        })
+        $('.close-create-user').off('click').on('click',  function(){
+            clearData()
+            if(!dataFrom) refreshTable()
+        })
+    }
+    initAccountBtn()
 });
 
 const urlParameterDecode = async function (str) {
@@ -69,19 +90,9 @@ const urlParameterDecode = async function (str) {
 const initHqUnit = function (userUsableId){
     let userStatus = true
     if(window.location.pathname == '/user/registerUser' && !registerUserId) userStatus = false
-    userUsableId = userUsableId ? userUsableId : registerUserBaseId
+    if(!userUsableId) userUsableId = registerUserBaseId
     axios.post('/user/getHqTypeList', { userStatus, userUsableId }).then(function (res) {
         let hqTypeList = res.respMessage ? res.respMessage : res.data.respMessage;
-        // let data = []
-        // for(let item of hqTypeList){
-        //     data.push({ id: item, name: item }) 
-        // }
-        // hubTypeSelect = $("#hubType").multipleSelect({
-        //     dataKey: 'id',
-        //     dataName: 'name',
-        //     searchable: false,
-        //     data: data
-        // });
         $("#hubType").empty()
         let html =' <option></option>';
         for(let item of hqTypeList){
@@ -106,7 +117,7 @@ const initPage = async function () {
         }
         $('.cv-accountType').append(html)
     }
-    ininSysRole()
+    await ininSysRole()
 
     const getAccountUserData = async function () {
         let userStatus = true
@@ -130,7 +141,7 @@ const initPage = async function () {
         }
         $('.mv-unit').append(html2)
     }
-    initGroup(accountData.groupList)
+    await initGroup(accountData.groupList)
 
     const initUnitTypePage = async function (unitList) {
         $('#unitType').empty();
@@ -145,10 +156,11 @@ const initPage = async function () {
         $("#unitType").off('change').on('change' , function () {
             let selectedUnit = $(this).val();
             if(selectedUnit) {
-                $("#subUnitType").empty();
-                let userType = $('#userType').val()
-                for (let unit of unitList) {
-                    if (unit.unit === selectedUnit) {
+                const initSubUnit = function (){
+                    $("#subUnitType").empty();
+                    let userType = $('#userType').val()
+                    for (let unit of unitList) {
+                        if(unit.unit != selectedUnit) continue
                         let html ;
                         if (userType == 'HUB' && unit.subUnit !== null) continue;
                         if (userType == 'NODE' && unit.subUnit == null) continue;
@@ -159,10 +171,9 @@ const initPage = async function () {
                             html = `<option name="subUnitType" value="${ unit.id }">${ unit.subUnit }</option>`
                         }
                         $(" #subUnitType").append(html);
-                    } else {
-                        continue;
                     }
                 }
+                initSubUnit()
             } else {
                 $("#subUnitType").empty();
             }            
@@ -366,43 +377,43 @@ export async function initPageByUserBase (id, registerUserId, dataType) {
     }
     if(!userBase) return
     
-    $('.ORD-Date').val(userBase.ord ? moment(userBase.ord).format('DD/MM/YYYY') : '')
-    $("#user-nric").val(userBase.nric)
-    $('#user-userName').val(userBase.fullName)
-    $('.mobileNumber').val(userBase.contactNumber)
-    $('.email').val(userBase.email)
-    $(`.cv-accountType option[data-id='${ userBase.cvRole }']`).prop("selected", "selected").trigger("change")
-    // $(`.cv-unit option[data-id='${ userBase.cvGroupId }']`).prop("selected", "selected").trigger("change")
-    $('#userType').val(userBase.mvUserType)
-    $('#userType').trigger('change')
-    if($('#userType').val()){
-        $(`.mv-unit option[data-id='${ userBase.mvGroupId }']`).prop("selected", "selected")
-        if(mvUnit) {
-            $('#unitType').val(mvUnit.hub)
-            $("#unitType").trigger('change')
-            $(`#subUnitType option[value='${ userBase.mvUnitId }']`).attr("selected", "selected")
+    const initDivOpt = function () {
+        $('.ORD-Date').val(userBase.ord ? moment(userBase.ord).format('DD/MM/YYYY') : '')
+        $("#user-nric").val(userBase.nric)
+        $('#user-userName').val(userBase.fullName)
+        $('.mobileNumber').val(userBase.contactNumber)
+        $('.email').val(userBase.email)
+        $(`.cv-accountType option[data-id='${ userBase.cvRole }']`).prop("selected", "selected").trigger("change")
+        // $(`.cv-unit option[data-id='${ userBase.cvGroupId }']`).prop("selected", "selected").trigger("change")
+        $('#userType').val(userBase.mvUserType)
+        $('#userType').trigger('change')
+        if($('#userType').val()){
+            $(`.mv-unit option[data-id='${ userBase.mvGroupId }']`).prop("selected", "selected")
+            if(mvUnit) {
+                $('#unitType').val(mvUnit.hub)
+                $("#unitType").trigger('change')
+                $(`#subUnitType option[value='${ userBase.mvUnitId }']`).attr("selected", "selected")
+            }
+    
+            if($('#userType').val().toLowerCase() == 'hq' && userBase.hq){
+                setTimeout(function(){
+                    $('#hubType').val(userBase.hq)
+                }, 300)
+            }
+            $('#userRole').val(userBase.mvRoleName)
         }
-        // if($('#userType').val().toLowerCase() == 'hq' && userBase.mvUnitId) {
-        //     setTimeout(function(){
-        //         hubTypeSelect.setValue(userBase.mvUnitId)
-        //     }, 400)
-        // }
-        if($('#userType').val().toLowerCase() == 'hq' && userBase.hq){
-            setTimeout(function(){
-                $('#hubType').val(userBase.hq)
-            }, 300)
-        }
-        $('#userRole').val(userBase.mvRoleName)
-    }
-    if(userBase.cvServiceProviderId) {
-        if(userBase.cvServiceProviderId != ''){
-            $('.cv-serviceProvider-div').show();
-            let cvServiceProviderIdList = (userBase.cvServiceProviderId).split(',')
-            for(let item of cvServiceProviderIdList){
-                $(`.form-check-inline2 input[type='checkbox'][data-value='${ item }']`).prop("checked", true)
+        if(userBase.cvServiceProviderId) {
+            if(userBase.cvServiceProviderId != ''){
+                $('.cv-serviceProvider-div').show();
+                let cvServiceProviderIdList = (userBase.cvServiceProviderId).split(',')
+                for(let item of cvServiceProviderIdList){
+                    $(`.form-check-inline2 input[type='checkbox'][data-value='${ item }']`).prop("checked", true)
+                }
             }
         }
     }
+    initDivOpt()
+
     setTimeout(function(){
         if(userBase.cvGroupId) $(`.cv-unit option[data-id='${ userBase.cvGroupId }']`).prop("selected", "selected").trigger("change")
     }, 150)
@@ -418,54 +429,62 @@ export async function initPageByUserBase (id, registerUserId, dataType) {
         }
     }, 500)
 
-    if(registerUserId){
-        let mvUserState = userBase ? userBase.mvUserId ? true : false : false;
-        let cvUserState = userBase ? userBase.cvUserId ? true : false : false;
-        
-        if(mvUserState) {
-            $('#user-userName').prop('disabled', 'disabled')
-            $('#user-userName').css('background-color', '#e9ecef')
-
-            $('#userType').prop('disabled', 'disabled')
-            $('#userType').css('background-color', '#e9ecef')
-    
-            $('#userRole').prop('disabled', 'disabled')
-            $('#userRole').css('background-color', '#e9ecef')
-    
-            $('.mv-unit').prop('disabled', 'disabled')
-            $('.mv-unit').css('background-color', '#e9ecef')
-    
-            $('#unitType').prop('disabled', 'disabled')
-            $('#unitType').css('background-color', '#e9ecef')
-    
-            $('#subUnitType').prop('disabled', 'disabled')
-            $('#subUnitType').css('background-color', '#e9ecef')
-
-            $('#hubType').prop('disabled', 'disabled')
-            $('#hubType').css('background-color', '#e9ecef')
-        }   
-        if(cvUserState) {
-            $('#user-userName').prop('disabled', 'disabled')
-            $('#user-userName').css('background-color', '#e9ecef')
-
-            $('.cv-accountType').prop('disabled', 'disabled')
-            $('.cv-accountType').css('background-color', '#e9ecef')
-    
-            $('.cv-unit').prop('disabled', 'disabled')
-            $('.cv-unit').css('background-color', '#e9ecef')
-
-            setTimeout(function(){
-                for(let item of $('.form-check-inline2 input[type="checkbox"]')){
-                    $(item).prop('disabled', 'disabled')
+    const showDiv = function (){
+        if(registerUserId){
+            let mvUserState = false;
+            let cvUserState = false;
+            if(userBase){
+                if(userBase.mvUserId) {
+                    mvUserState = true
+                    cvUserState = true
                 }
-                for(let item of $('.form-check-inline input[type="checkbox"]')){
-                    $(item).prop('disabled', 'disabled')
-                }
-                $('.cv-platformType').css('background-color', '#e9ecef')
-            }, 500)
+            }
+            if(mvUserState) {
+                $('#user-userName').prop('disabled', 'disabled')
+                $('#user-userName').css('background-color', '#e9ecef')
+    
+                $('#userType').prop('disabled', 'disabled')
+                $('#userType').css('background-color', '#e9ecef')
         
-        } 
+                $('#userRole').prop('disabled', 'disabled')
+                $('#userRole').css('background-color', '#e9ecef')
+        
+                $('.mv-unit').prop('disabled', 'disabled')
+                $('.mv-unit').css('background-color', '#e9ecef')
+        
+                $('#unitType').prop('disabled', 'disabled')
+                $('#unitType').css('background-color', '#e9ecef')
+        
+                $('#subUnitType').prop('disabled', 'disabled')
+                $('#subUnitType').css('background-color', '#e9ecef')
+    
+                $('#hubType').prop('disabled', 'disabled')
+                $('#hubType').css('background-color', '#e9ecef')
+            }   
+            if(cvUserState) {
+                $('#user-userName').prop('disabled', 'disabled')
+                $('#user-userName').css('background-color', '#e9ecef')
+    
+                $('.cv-accountType').prop('disabled', 'disabled')
+                $('.cv-accountType').css('background-color', '#e9ecef')
+        
+                $('.cv-unit').prop('disabled', 'disabled')
+                $('.cv-unit').css('background-color', '#e9ecef')
+    
+                setTimeout(function(){
+                    for(let item of $('.form-check-inline2 input[type="checkbox"]')){
+                        $(item).prop('disabled', 'disabled')
+                    }
+                    for(let item of $('.form-check-inline input[type="checkbox"]')){
+                        $(item).prop('disabled', 'disabled')
+                    }
+                    $('.cv-platformType').css('background-color', '#e9ecef')
+                }, 500)
+            
+            } 
+        }
     }
+    showDiv()
 }
 
 const initUser = async function () {
@@ -481,58 +500,42 @@ const initUser = async function () {
         serviceProviderArray.push($(this).data("value"))
     })
     if(serviceProviderArray.length > 0) serviceProviderId = serviceProviderArray.join(",")
-    let accountUserByValid = {
-        fullName: $('#user-userName').val(),
-        nric: $("#user-nric").val(),
-        contactNumber: $('.mobileNumber').val(),
-        email: $('.email').val(),
-        ord: $('.ORD-Date').val() ? moment($('.ORD-Date').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : null
+
+    const initAccountDataOj = function (){
+        let accountUserByValid = {
+            fullName: $('#user-userName').val(),
+            nric: $("#user-nric").val(),
+            contactNumber: $('.mobileNumber').val(),
+            email: $('.email').val(),
+            ord: $('.ORD-Date').val()
+        }
+        let __newDataFrom = 'SERVER-USER'
+        if(dataFrom != 'server') __newDataFrom = 'SYSTEM-REG'
+        let accountUser = {
+            nric: $("#user-nric").val(),
+            fullName: $('#user-userName').val(),
+            contactNumber: $('.mobileNumber').val(),
+            email: $('.email').val(),
+            ord: $('.ORD-Date').val() ? moment($('.ORD-Date').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : null,
+            status: 'Pending Approval',
+            cvRole: $('.cv-accountType option:selected').data('id') || null,
+            cvGroupId: $('.cv-unit option:selected').data('id') || null,
+            cvGroupName: $('.cv-unit option:selected').data('id') ? $('.cv-unit option:selected').val() : null,
+            cvServiceProviderId: serviceProviderId,
+            cvServiceTypeId: serviceTypeId,
+            mvUserType: $('#userType').val() && $('#userType').val() != '' ? $('#userType').val() : null,
+            mvGroupId: $('.mv-unit option:selected').data('id') || null,
+            mvGroupName: $('.mv-unit option:selected').data('id') ? $('.mv-unit option:selected').val() : null,
+            mvRoleName: $('#userRole').val() && $('#userRole').val() != '' ?  $('#userRole').val() : null,
+            dataFrom: __newDataFrom,
+            hq: $('#hubType').val() || null,
+            mvUnitId: $('#subUnitType option:selected').val() || null
+        }
+        return { accountUserByValid, accountUser }
     }
-    let accountUser = {
-        nric: $("#user-nric").val(),
-        fullName: $('#user-userName').val(),
-        contactNumber: $('.mobileNumber').val(),
-        email: $('.email').val(),
-        ord: $('.ORD-Date').val() ? moment($('.ORD-Date').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : null,
-        status: 'Pending Approval',
-        cvRole: $('.cv-accountType option:selected').data('id') ?? null,
-        cvGroupId: $('.cv-unit option:selected').data('id') ?? null,
-        cvGroupName: $('.cv-unit option:selected').data('id') ? $('.cv-unit option:selected').val() : null,
-        cvServiceProviderId: serviceProviderId,
-        cvServiceTypeId: serviceTypeId,
-        mvUserType: $('#userType').val() ? $('#userType').val() != '' ? $('#userType').val() : null : null,
-        mvGroupId: $('.mv-unit option:selected').data('id') ?? null,
-        mvGroupName: $('.mv-unit option:selected').data('id') ? $('.mv-unit option:selected').val() : null,
-        mvRoleName: $('#userRole').val() && $('#userRole').val() != '' ?  $('#userRole').val() : null,
-        dataFrom: dataFrom ? dataFrom == 'server' ? 'SERVER-REG' : 'SYSTEM-REG' : 'SERVER-USER',
-        hq: $('#hubType').val() ?? null,
-        mvUnitId: $('#subUnitType option:selected').val() ?? null
-    }
-    // let userTypeState = $('#userType').val() ? $('#userType').val() != '' ? $('#userType').val().toLowerCase() == 'hq' : true : false;
-    // if(userTypeState) {
-    //     accountUser.mvUnitId = hubTypeSelect ? hubTypeSelect.getValue() : null;
-    // } else {
-    //     accountUser.mvUnitId = $('#subUnitType option:selected').val() ? $('#subUnitType option:selected').val() : null;
-    // }
-    const ValidAssignTask = function (data, accountUser) {
-        // let errorLabel = {
-        //     nric: 'Nric',
-        //     fullName: 'Name',
-        //     contactNumber: 'Mobile Number',
-        //     email: 'ddd@gmail.com',
-        //     status: 'status',
-        //     cvRole: 'CV Account Type Request',
-        //     cvGroupId: 'CV Unit',
-        //     cvGroupName: 'CV Unit',
-        //     cvServiceProviderId: 'CV Service Provider',
-        //     cvServiceTypeId: 'CV Platform Type',
-        //     mvUserType: 'MV Account Type Request',
-        //     mvUnitId: 'HUB / NODE',
-        //     mvGroupId: 'Unit',
-        //     mvGroupName: 'Unit',
-        //     mvRoleName: 'Role',
-        //     dataFrom: 'dataFrom',
-        // }
+    let { accountUserByValid, accountUser } = initAccountDataOj();
+
+    const ValidAssignTask = function (data) {
         let errorLabel = {
             fullName: 'Name',
             nric: 'Nric',
@@ -541,35 +544,31 @@ const initUser = async function () {
             ord: 'Operationally Ready Date (ORD)'
         }
         for (let key in data) {
-            if(key == 'contactNumber') {
-                let firstNumber = ($('.mobileNumber').val()).substring(0, 1)
-                if (!(($('.mobileNumber').val()).length == 8 && (firstNumber == "8" || firstNumber == "9"))) {
-                    $.alert({
-                        title: 'Warn',
-                        content: 'Mobile Number must be 8 number and start with 8 or 9.'
-                    })
-                    return false
-                } 
-            }
-            if(key == 'nric') {   
-                let regular = /^[S,T]\d{7}[A-Z]$/ ;     
-                if ((regular).test($("#user-nric").val()) == false) {
-                    $.alert({
-                        title: 'Warn',
-                        content: 'The nric format is incorrect.'
-                    })
-                    return false
-                } 
-            }
-            if(key == 'email') {
-                let regular = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;     
-                if ((regular).test($(".email").val()) == false) {
-                    $.alert({
-                        title: 'Warn',
-                        content: 'The E-Mail format is incorrect.'
-                    })
-                    return false
-                } 
+            let firstNumber = ($('.mobileNumber').val()).substring(0, 1)
+            if (key == 'contactNumber' && !(($('.mobileNumber').val()).length == 8 && (firstNumber == "8" || firstNumber == "9"))) {
+                $.alert({
+                    title: 'Warn',
+                    content: 'Mobile Number must be 8 number and start with 8 or 9.'
+                })
+                return false
+            } 
+
+            let regular = /^[S,T]\d{7}[A-Z]$/ ;     
+            if (key == 'nric' && !(regular).test($("#user-nric").val())) {
+                $.alert({
+                    title: 'Warn',
+                    content: 'The nric format is incorrect.'
+                })
+                return false
+            } 
+
+            let regular2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;     
+            if(key == 'email' && !(regular2).test($(".email").val())) {
+                $.alert({
+                    title: 'Warn',
+                    content: 'The E-Mail format is incorrect.'
+                })
+                return false
             }
             if(!data[key]) {
                 $.alert({
@@ -579,34 +578,34 @@ const initUser = async function () {
                 return false;
             }
         }
-        if(accountUser.mvUserType){
-            if(accountUser.mvUserType.toLowerCase() == 'hq') {
-                if(!accountUser.hq) {
+        return true
+    }
+    const validMvCVOption = function (accountUser){
+        const vaMvUser = function (){
+            if(accountUser.mvUserType){
+                if(accountUser.mvUserType.toLowerCase() == 'hq' && !accountUser.hq) {
                     $.alert({
                         title: 'Warn',
                         content: `HQ Unit is required.`,
                     });
                     return false
                 }
-            }
-            if(!accountUser.mvRoleName){
-                $.alert({
-                    title: 'Warn',
-                    content: `Role is required.`,
-                });
-                return false
-            }
-            if(accountUser.mvUserType.toLowerCase() == 'hub' || accountUser.mvUserType.toLowerCase() == 'node'){
-                if(!accountUser.mvUnitId){
+                if(!accountUser.mvRoleName){
+                    $.alert({
+                        title: 'Warn',
+                        content: `Role is required.`,
+                    });
+                    return false
+                }
+                if((accountUser.mvUserType.toLowerCase() == 'hub' || accountUser.mvUserType.toLowerCase() == 'node')
+                && !accountUser.mvUnitId){
                     $.alert({
                         title: 'Warn',
                         content: `Hub is required.`,
                     });
                     return false
                 }
-            }
-            if(accountUser.mvUserType.toLowerCase() == 'customer'){
-                if(!accountUser.mvGroupId){
+                if(accountUser.mvUserType.toLowerCase() == 'customer' && !accountUser.mvGroupId){
                     $.alert({
                         title: 'Warn',
                         content: `Unit is required.`,
@@ -615,18 +614,18 @@ const initUser = async function () {
                 }
             }
         }
-        if(accountUser.cvRole){
-            if($('.cv-accountType option:selected').val().toLowerCase() != 'tsp') {
-                if(!accountUser.cvGroupId){
+        let state2 = vaMvUser()
+        if(!state2) return state2
+        const vaCVUser = function (){
+            if(accountUser.cvRole){
+                if($('.cv-accountType option:selected').val().toLowerCase() != 'tsp' && !accountUser.cvGroupId) {
                     $.alert({
                         title: 'Warn',
                         content: `CV Unit is required.`,
                     });
                     return false
                 }
-            }
-        } else {
-            if(accountUser.cvGroupId){
+            } else if(accountUser.cvGroupId){
                 $.alert({
                     title: 'Warn',
                     content: `CV Account Type Request is required.`,
@@ -634,6 +633,8 @@ const initUser = async function () {
                 return false
             }
         }
+        let state = vaCVUser()
+        if(!state) return state
         
         if(!accountUser.mvUserType && !accountUser.cvRole) {
             $.alert({
@@ -651,24 +652,21 @@ const initUser = async function () {
                     });
                     return false
                 }
-            } else {
-                if(dataFrom == 'system') {
-                    if(!accountUser.mvUserType){
-                       $.alert({
-                            title: 'Warn',
-                            content: `MV Account Type Request is required.`,
-                        });
-                        return false
-                    }
-                } 
-            }
+            } else if(dataFrom == 'system' && !accountUser.mvUserType) {
+                $.alert({
+                    title: 'Warn',
+                    content: `MV Account Type Request is required.`,
+                });
+                return false
+            } 
         }
         return true
     }
-    let state = ValidAssignTask(accountUserByValid, accountUser)
-    if(!state) return
+    let state = ValidAssignTask(accountUserByValid)
+    let state2 = validMvCVOption(accountUser)
+    if(!state || !state2) return
     if(userBaseId || registerUserBaseId) {
-        userBaseId = registerUserBaseId ? registerUserBaseId : userBaseId
+        if(registerUserBaseId) userBaseId = registerUserBaseId
         let dataUserType = null;
         if(registerUserBaseId) dataUserType = 'HomeRegistration'
         axios.post('/user/editAccountUser',{ accountUser, userBaseId, dataUserType })
@@ -680,9 +678,7 @@ const initUser = async function () {
                         title: 'Info',
                         content: 'Account Registration Succesful! Please wait for account to be approved by your system administrator.',
                         buttons: {
-                            // no: function(){
-                            //     clearData()
-                            // },
+
                             Ok: {
 								btnClass: 'btn-green',
 								action: function () {
@@ -716,9 +712,7 @@ const initUser = async function () {
                         title: 'Info',
                         content: 'Account Registration Succesful! Please wait for account to be approved by your system administrator.',
                         buttons: {
-                            // no: function(){
-                            //     clearData()
-                            // },
+   
                             Ok: {
 								btnClass: 'btn-green',
 								action: function () {
@@ -773,7 +767,6 @@ const clearData = function() {
     $('.cv-platformType-div').hide();
     $('.cv-serviceProvider-div').hide();
     $('.ORD-Date').val('')
-    // if(hubTypeSelect) hubTypeSelect.clearAll()
     $("#hubType").val('')
 
     $('#user-userName').removeAttr('disabled')

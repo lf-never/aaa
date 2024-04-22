@@ -147,13 +147,11 @@ window.updateUrgentDutyById = async function (id) {
         $('#urgentDutyModal').modal("show");
         $('.modal-title').text('Edit Urgent Duty');
         $('#purposeType').val(data.purpose);
-        if(data.hub){
-            if(data.hub != '-') {
-                $('.hub-select').val(data.hub);
-                $('.hub-select').trigger('change')
-                $('.node-select').val(data.node ? data.node : 'null');
-                $('.node-select').trigger('change')
-            }
+        if(data.hub && data.hub != '-'){
+            $('.hub-select').val(data.hub);
+            $('.hub-select').trigger('change')
+            $('.node-select').val(data.node || 'null');
+            $('.node-select').trigger('change')
         } 
         $('.hub-select').css('background-color', 'rgb(233, 236, 239)')
         $('.hub-select').prop('disabled', 'disabled')
@@ -163,7 +161,7 @@ window.updateUrgentDutyById = async function (id) {
         $('#periodEndDate').val(moment(data.indentEndDate).format('DD/MM/YYYY'));
         if(data.endDate) $('#periodEndDate').trigger('change')
         initVehicleDriverPage()
-        // data.vehicleType == 'Ford Everest OUV' ? $("input[name='resource-type'][value='Ford Everest OUV']").prop('checked', true) : $("input[name='resource-type'][value='5 Ton GS (Auto)']").prop('checked', true)
+
         $('.resourceType').val(data.vehicleType)
         urgentDutyRequect = data.vehicleType
         verifyVehicleTypeAndVehicleAndDriver()
@@ -178,16 +176,15 @@ window.updateUrgentDutyById = async function (id) {
             }
     
             $('#driver').attr('data-value', data.driverName)
-            $('#driver').val(`${ data.driverName }(${ data.contactNumber ? data.contactNumber : '-' })`)
+            $('#driver').val(`${ data.driverName }(${ data.contactNumber || '-' })`)
             $('#driver').attr("data-unitid", data.unitId)
             $('#driver').attr("data-id", data.driverId)
         }
-        if(id){;
+        if(id){
             confirmUrgentDuty(id)
         }
     
         $('#urgentDutyCancel').off('click').on('click', function () {
-            mtAdminId = null;
             clearPageData();
         });
         // $('.hub-select-row').hide()
@@ -273,25 +270,28 @@ const initDetail = function () {
                 if(node) node = node.substring(node.lastIndexOf(":")+1, node.length)
                 if(hub) hub = hub.toLowerCase() === 'all' ? null : hub;
                 if(node) node = node.toLowerCase() === 'all' ? null : node;
-                hub = hub ?? null;
-                node = node ?? null;
+                hub = hub || null;
+                node = node || null;
                 let idDateOrder
                 let endDateOrder
-                for (let orderField of d.order) {
-                    if(orderField.column == 0) {
-                        idDateOrder = orderField.dir;
-                    } else if(orderField.column == 5) {
-                        endDateOrder = orderField.dir;
-                    }
-                }    
+                const initOrder = function (){
+                    for (let orderField of d.order) {
+                        if(orderField.column == 0) {
+                            idDateOrder = orderField.dir;
+                        } else if(orderField.column == 5) {
+                            endDateOrder = orderField.dir;
+                        }
+                    }   
+                }
+                initOrder()
                 let option = { 
                     'resource': $('.selected-request').val(),
-                    'createDate': $('.created-date').val() ? $('.created-date').val() : null,
+                    'createDate': $('.created-date').val() || null,
                     'hub': hub,
                     'node': node,
-                    "groupId": $('.select-group').val() ? $('.select-group').val() : null,
-                    "vehicleNo": $('.screen-vehicleNo').val() ? $('.screen-vehicleNo').val() : null,
-                    "driverName": $('.screen-driverName').val() ? $('.screen-driverName').val() : null,
+                    "groupId": $('.select-group').val() || null,
+                    "vehicleNo": $('.screen-vehicleNo').val() || null,
+                    "driverName": $('.screen-driverName').val() || null,
                     "endDateOrder": endDateOrder,
                     "idDateOrder": idDateOrder,
                     "pageNum": d.start, 
@@ -763,7 +763,13 @@ const initDateTime = async function(){
     const getForbiddenDate = async function(){
         return axios.get('/urgent/getForbiddenDate')
             .then(function (res) {
-                return res.respMessage ? res.respMessage : res.data ? res.data.respMessage : [];
+                if(res.respMessage){
+                    return res.respMessage
+                } else if(res.data){
+                    return res.data.respMessage
+                } else {
+                    return []
+                }
         });
     }
     let dateList = await getForbiddenDate();

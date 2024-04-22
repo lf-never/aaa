@@ -99,26 +99,29 @@ const generateNotificationList = async function (notice) {
         ${ notice.toCategory ? ` AND dar.id IS NOT NULL ` : '' }
     `;
     let replacements = []
-    if (notice.toType) {
-        baseSql += ` AND us.role = ? `
-        replacements.push(notice.toType)
-
-        if (['DV', 'LOA'].includes(notice.toType)) {
-            baseSql += ` AND t.groupId = ? `
-            replacements.push(notice.groupId)
+    async function buildSqlAndParams() {
+        if (notice.toType) {
+            baseSql += ` AND us.role = ? `
+            replacements.push(notice.toType)
+    
+            if (['DV', 'LOA'].includes(notice.toType)) {
+                baseSql += ` AND t.groupId = ? `
+                replacements.push(notice.groupId)
+            } else if (unitIdList.length) {
+                baseSql += ` AND u.id IN ( ? ) `
+                replacements.push(unitIdList)
+            }
         } else if (unitIdList.length) {
             baseSql += ` AND u.id IN ( ? ) `
             replacements.push(unitIdList)
         }
-    } else if (unitIdList.length) {
-        baseSql += ` AND u.id IN ( ? ) `
-        replacements.push(unitIdList)
+    
+        if (notice.platform) {
+            baseSql += ` AND v.vehicleType = ? `
+            replacements.push(notice.platform)
+        }
     }
-
-    if (notice.platform) {
-        baseSql += ` AND v.vehicleType = ? `
-        replacements.push(notice.platform)
-    }
+    await buildSqlAndParams();
     
     baseSql += ` GROUP BY t.driverId `
     console.log(baseSql)
@@ -303,9 +306,9 @@ module.exports = {
             // timeZone: [ '0930-1130', '1230-1430', '1500-1700' ],
             let timeZone = UrgentUtil.timeZone;
             if (timeZone.length) {
-                for (let index = 0; index < timeZone.length; index++) {
+                for (let tmpeTimeZone of timeZone) {
                     // 0930
-                    let startTime = timeZone[index].split('-')
+                    let startTime = tmpeTimeZone.split('-')
                     // moment 0930
                     let formatStartTime = moment(startTime, 'HHmm')
                     schedule.scheduleJob(`Urgent ${ startTime }`, `${ formatStartTime.format('mm') } ${ formatStartTime.format('HH') } * * *`, async () => {

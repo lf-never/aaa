@@ -164,6 +164,13 @@ const initPage = async function () {
         $(this).addClass('active')
         let item = $(this).data('item')
 
+        $('.customer-button').show();
+        if ($('.customer-button input').prop('checked')) {
+            $('.hub-node-btn').hide();
+        } else {
+            $('.hub-node-btn').show();
+        }
+
         $('.select-taskStatus').parent().hide()
         if (item == 'task') {
             $('.table-common.active').hide().removeClass('active')
@@ -177,12 +184,6 @@ const initPage = async function () {
 
             $('.select-taskPurpose').parent().show()
             $('.taskActivity').parent().show()
-
-            $('.customer-button').show();
-          
-            if(!$('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').show();
-            }
             $('.taskId').show();
         } else if(item == 'urgent-duty') {
             $('.table-common.active').hide().removeClass('active')
@@ -212,13 +213,6 @@ const initPage = async function () {
             $('.select-taskPurpose').parent().hide()
             $('.taskActivity').parent().hide();
             $('.select-riskLevel').parent().hide()
-
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
-        
         } else if (item == 'driver-task') {
             $('.table-common.active').hide().removeClass('active')
             $('.driver-task-table-container').show().addClass('active')
@@ -243,13 +237,6 @@ const initPage = async function () {
             $('.taskId').show();
             $('.select-taskPurpose').parent().hide()
             $('.taskActivity').parent().hide()
-            
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         } else if (item == 'odd') {
             $('.table-common.active').hide().removeClass('active')
             $('.odd-table-container').show().addClass('active')
@@ -261,13 +248,6 @@ const initPage = async function () {
             $('.taskId').show();
             $('.select-taskPurpose').parent().hide()
             $('.taskActivity').parent().hide()
-            
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         } else if (item == 'survey') {
             $('.table-common.active').hide().removeClass('active')
             $('.survey-table-container').show().addClass('active')
@@ -279,13 +259,6 @@ const initPage = async function () {
             $('.taskId').show();
             $('.select-taskPurpose').parent().hide()
             $('.taskActivity').parent().hide()
-            
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         } else if (item == 'cv-loan') {
             $('.table-common.active').hide().removeClass('active')
             $('.cv-table-container').show().addClass('active')
@@ -298,13 +271,6 @@ const initPage = async function () {
             $('.taskId').show();
             $('.select-taskPurpose').parent().show()
             $('.taskActivity').parent().show()
-            
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         } else if (item == 'atms-loan') {
             $('.table-common.active').hide().removeClass('active')
             $('.atms-table-container').show().addClass('active')
@@ -317,13 +283,6 @@ const initPage = async function () {
             $('.taskId').show();
             $('.select-taskPurpose').parent().show()
             $('.taskActivity').parent().show()
-
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         } else if (item == 'incident') {
             $('.table-common.active').hide().removeClass('active')
             $('.incident-table-container').show().addClass('active')
@@ -335,16 +294,7 @@ const initPage = async function () {
             $('.select-taskPurpose').parent().hide()
             $('.select-group').parent().hide()
             $('.taskActivity').parent().hide()
-            
-
-            $('.customer-button').show();
-            if ($('.customer-button input').prop('checked')) {
-                $('.hub-node-btn').hide();
-            } else {
-                $('.hub-node-btn').show();
-            }
         }
-
     })
 
     $('#clearAll').on('click', function () {
@@ -507,7 +457,7 @@ const initTaskTable = function () {
                         // console.warn(`Driver Name is empty!`)
                         // console.warn(full)
                     }
-                    return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                    return `${ data || '-' } <br/> (${ full.contactNumber || '-' })`
                 }
             },
             // {
@@ -563,7 +513,7 @@ const initTaskTable = function () {
                     } else {
                         return `
                             <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0"> 
-                                ${ data ? data : '' }
+                                ${ data || '' }
                             </span>
                         `
                     }
@@ -585,7 +535,7 @@ const initTaskTable = function () {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style="max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
-                                ${ data ? data : '-' }
+                                ${ data || '-' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
                             <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
@@ -698,7 +648,7 @@ const initDriverTaskTable = function () {
                         // console.warn(`Driver Name is empty!`)
                         // console.warn(full)
                     }
-                    return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                    return `${ data || '-' } <br/> (${ full.contactNumber || '-' })`
                 }
             },
             {
@@ -757,7 +707,7 @@ const initDriverTaskTable = function () {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
-                                ${ data ? data : '-' }
+                                ${ data || '-' }
                             </span><br>
                             <label class="fw-bold">Amended by:</label> <label>${ full.cancelledBy ?? '-' }</label><br>
                             <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
@@ -823,7 +773,7 @@ const initDriverTaskTable = function () {
                         `
                     }
 
-                    return actionHtml ? actionHtml : '-';
+                    return actionHtml || '-';
                 }
             }
         ],
@@ -1039,7 +989,7 @@ const initMTRacTable = function () {
                         dataStr = dataStr.substring(0, 50) + '...';
                         return `<span style="border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showMTRacMitigation(this)" role="button" tabindex="0">${ dataStr }</span>`
                     } else {
-                        return data ? data : '-';
+                        return data || '-';
                     }
                     
                 }
@@ -1103,11 +1053,11 @@ const showMTRacDetail = function (e) {
                 ${ object.needCommander ? `
                     <div class="row">
                         <div class="col-4 text-end fw-bold">Commander :</div>
-                        <div class="col-8">${ object.commander ? object.commander : waitVerifyHtml }</div>
+                        <div class="col-8">${ object.commander || waitVerifyHtml }</div>
                     </div>
                     <div class="row">
                         <div class="col-4 text-end fw-bold">Commander Contact Number :</div>
-                        <div class="col-8">${ object.commanderContactNumber ? object.commanderContactNumber : waitVerifyHtml }</div>
+                        <div class="col-8">${ object.commanderContactNumber || waitVerifyHtml }</div>
                     </div>
                     <div class="row">
                         <div class="col-4 text-end fw-bold">Commander Signature DateTime :</div>
@@ -1625,8 +1575,6 @@ const initIncidentTable = function () {
 }
 
 const initCVTable = function () {
-    // $(".user-hub-params").show();
-    // $(".user-node-params").show();
     table = $('.cv-table').on('order.dt', function () {
     }).on('page.dt', function () {
     }).DataTable({
@@ -1679,13 +1627,6 @@ const initCVTable = function () {
             },
         },
         columns: [
-            // {
-            //     "title": "Group",
-            //     sortable: false,
-            //     render: function (data, type, full, meta) {
-            //         return `${ full.groupName ?? '-' }`
-            //     }
-            // },
             {
                 "title": "Hub/Node",
                 sortable: false,
@@ -1706,7 +1647,7 @@ const initCVTable = function () {
                 "title": "Group",
                 sortable: false,
                 render: function (data, type, full, meta) {
-                    return data ? data : '-'
+                    return data || '-'
                 }
             },
             {
@@ -1718,7 +1659,7 @@ const initCVTable = function () {
                         // console.warn(`Driver Name is empty!`)
                         // console.warn(full)
                     }
-                    return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                    return `${ data || '-' } <br/> (${ full.contactNumber || '-' })`
                 }
             },
             {
@@ -1770,7 +1711,7 @@ const initCVTable = function () {
                     } else {
                         return `
                             <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data || '' }
                             </span>
                         `
                     }
@@ -1856,31 +1797,15 @@ const initCVTable = function () {
                     let startBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-blue mx-1" onclick="startLoan(${ full.loanId ?? 0 })">Start</button>`
                     let completeBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-yellow mx-1" onclick="completeLoan(${ full.loanId ?? 0 }, '${ full.actualStartTime }')">Complete</button>`
                     let returnBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-green mx-1" onclick="returnLoan(${ full.loanId ?? 0 })">Return</button>`
-                    let cancelBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-gray mx-1" onclick="cancelLoan(${ full.loanId ?? 0 })">Cancel</button>`
-
                     
-
-                    if (data == 'pending') {
-                        if (operationList.includes('Start')) {
+                    if (data == 'pending' && operationList.includes('Start')) {
                             return startBtn
-                        } else {
-                            return  ''
-                        }
-                    } else if (data == 'started') {
-                        if (operationList.includes('Complete')) {
-                            return completeBtn
-                        } else {
-                            return ''
-                        }
-                    } else if (data == 'completed') {
-                        if (operationList.includes('Return')) {
-                            return returnBtn
-                        } else {
-                            return ''
-                        }
-                    } else {
-                        return ''
+                    } else if (data == 'started' && operationList.includes('Complete')) {
+                        return completeBtn
+                    } else if (data == 'completed' && operationList.includes('Return')) {
+                        return returnBtn
                     }
+                    return ''
                 }
             },
             
@@ -2026,7 +1951,7 @@ const initATMSTable = function () {
                     } else {
                         return `
                             <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showActivity(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data || '' }
                             </span>
                         `
                     }
@@ -2083,10 +2008,7 @@ const initATMSTable = function () {
                 sortable: false,
                 render: function (data, type, full, meta) {
                     let startTime = '-', endTime = '-'
-                    if (full.status == 'Cancelled') {
-                        startTime = '-'
-                        endTime = '-'
-                    } else {
+                    if (full.status != 'Cancelled') {
                         if (full.actualStartTime) {
                             startTime = moment(full.actualStartTime).format('DD/MM/YYYY HH:mm')
                         }
@@ -2124,29 +2046,15 @@ const initATMSTable = function () {
                     let startBtn = `<button type="button" class="btn btn-sm status-btn  custom-btn-blue mx-1" onclick="startLoan(${ full.loanId ?? 0 })">Start</button>`
                     let completeBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-yellow mx-1" onclick="completeLoan(${ full.loanId ?? 0 }, '${ full.actualStartTime }')">Complete</button>`
                     let returnBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-green mx-1" onclick="returnLoan(${ full.loanId ?? 0 })">Return</button>`
-                    let cancelBtn = `<button type="button" class="btn btn-sm status-btn custom-btn-gray mx-1" onclick="cancelLoan(${ full.loanId ?? 0 })">Cancel</button>`
 
-                    if (data == 'pending') {
-                        if (operationList.includes('Start')) {
-                            return startBtn
-                        } else {
-                            return ''
-                        }
-                    } else if (data == 'started') {
-                        if (operationList.includes('Complete')) {
-                            return completeBtn
-                        } else {
-                            return ''
-                        }
-                    } else if (data == 'completed') {
-                        if (operationList.includes('Return')) {
-                            return returnBtn
-                        } else {
-                            return ''
-                        }
-                    } else {
-                        return ''
+                    if (data == 'pending' && operationList.includes('Start')) {
+                        return startBtn
+                    } else if (data == 'started' && operationList.includes('Complete')) {
+                        return completeBtn
+                    } else if (data == 'completed' && operationList.includes('Return')) {
+                        return returnBtn
                     }
+                    return ''
                 }
             },
         ],
@@ -2393,7 +2301,7 @@ const initUrgentTaskTable = function () {
             "title": "Driver Assigned",
             sortable: false,
             render: function (data, type, full, meta) {
-                return `${ data ? data : '-' } <br/> (${ full.contactNumber ? full.contactNumber : '-' })`
+                return `${ data || '-' } <br/> (${ full.contactNumber || '-' })`
             }
         },
         {
@@ -2452,7 +2360,7 @@ const initUrgentTaskTable = function () {
                     return `
                     <div>
                         <span class="d-inline-block text-truncate" style=" max-width: 160px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
-                            ${ data ? data : '-' }
+                            ${ data || '-' }
                         </span><br>
                         <label class="fw-bold">Amended by:</label> <label>${ full.amendedByUsername ?? '-' }</label><br>
                         <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
@@ -2681,9 +2589,9 @@ const initUrgentDutyTable = function () {
                         return `
                         <div>
                             <span class="d-inline-block text-truncate" style="max-width: 90px; border-bottom: 1px solid gray; cursor: pointer;" data-row="${ meta.row }" onclick="showJustification(this);" role="button" tabindex="0">
-                                ${ data ? data : '' }
+                                ${ data || '' }
                             </span><br>
-                            <label class="fw-bold">Amended by:</label> <label>${ full.cancelledName ? full.cancelledName : '' }</label><br>
+                            <label class="fw-bold">Amended by:</label> <label>${ full.cancelledName || '' }</label><br>
                             <label class="fw-bold">Date Time:</label> <label>${ moment(full.cancelledDateTime).format('DD/MM/YYYY HH:mm:ss') }</label>
                         </div>
                         `
@@ -2708,10 +2616,7 @@ const initUrgentDutyTable = function () {
                 sortable: false,
                 render: function (data, type, full, meta) {
                     let startTime = '-', endTime = '-'
-                    if (full.status == 'Cancelled') {
-                        startTime = '-'
-                        endTime = '-'
-                    } else {
+                    if (full.status != 'Cancelled') {
                         if (full.mobileStartTime) {
                             startTime = moment(full.mobileStartTime).format('DD/MM/YYYY HH:mm')
                         }
@@ -2764,7 +2669,6 @@ const cancelIndent = async function (requestId, id) {
                             title: 'INFO',
                             content: `Cancellation reason is needed.`,
                         })
-                        return
                     } else {
                         let cancelBy = $('.cancelBy input[type="radio"]:checked').attr('value')
                         axios.post("/urgent/cancelIndent", { id, requestId, cancelledCause, cancelBy }).then(async res => {
