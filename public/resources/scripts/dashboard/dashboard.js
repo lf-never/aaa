@@ -1066,7 +1066,7 @@ const showMTRacDetail = function (e) {
                 ` : '' }
                 <div class="row">
                     <div class="col-4 text-end fw-bold">Officer :</div>
-                    <div class="col-8">${ object.officer ? object.officer : waitVerifyHtml }</div>
+                    <div class="col-8">${ object.officer || waitVerifyHtml }</div>
                 </div>
                 <div class="row">
                     <div class="col-4 text-end fw-bold">Officer Signature DateTime :</div>
@@ -1074,7 +1074,7 @@ const showMTRacDetail = function (e) {
                 </div>
                 <div class="row">
                     <div class="col-4 text-end fw-bold">Mitigation :</div>
-                    <div class="col-8">${ object.mitigation ? object.mitigation : waitVerifyHtml }</div>
+                    <div class="col-8">${ object.mitigation || waitVerifyHtml }</div>
                 </div>
                 <div class="row">
                     <div class="col-4 text-end fw-bold">Risk Assessment :</div>

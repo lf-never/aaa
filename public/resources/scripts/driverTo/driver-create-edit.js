@@ -338,9 +338,10 @@ const initClickEditDriver = function () {
             }
 
             if(key == 'unit'){
-                if($('.driver-role-select').val().toLowerCase() == 'to' || $('.driver-role-select').val().toLowerCase() == 'tl'){
-                    continue
-                } else if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
+                if($('.driver-role-select').val().toLowerCase() == 'to' 
+                || $('.driver-role-select').val().toLowerCase() == 'tl'
+                || $('.driver-unit-select').val() 
+                || $('.driver-hub-select').val()){
                     continue
                 }
             }

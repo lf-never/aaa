@@ -5,7 +5,7 @@
         url('iconfont.ttf?t=1658391269893') format('truetype');
 }
 .iconfont {
-    font-family: "iconfont" !important;
+    font-family: "iconfont", sans-serif !important;
     color: #204B4D;
     font-style: normal;
     -webkit-font-smoothing: antialiased;

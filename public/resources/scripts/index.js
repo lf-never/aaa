@@ -6,7 +6,7 @@ import { initSocketClientHandler, socketDisconnection } from './common-socket.js
 import { addMapObject, clearMapObject, deleteMapObject, removeMapObject, drawMarker, drawMarkerCenter, drawMarker2, drawPolyLine, bindTooltip, bindMarkerClickEvent } from './common-map.js'
 
 // Password length has to be minimum 12 characters includes 1 uppercase, 1 numeric and 1 symbol.
-let pwdRegExp = new RegExp(/^(?=.*[A-Z])(?=.*\d)(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]])[A-Za-z\d`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]]{12,}$/);
+let pwdRegExp = new RegExp(/^(?=.*[A-Z])(?=.*\d)(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]])[A-Za-z\d`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]]{12,}$/);
 
 let incidentMarkerList = [], driverMarkerList = [], deviceMarkerList = [];
 let cameraMarkerList = [], systemIncidentMarkerList = [];
@@ -113,7 +113,7 @@ const confirmChangeEmail = async function() {
         return false;
     }
     let regular = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;     
-    if ((regular).test($(".email").val()) == false) {
+    if (!(regular).test($(".email").val())) {
         $.alert({
             title: 'Warn',
             content: 'The E-Mail format is incorrect.'
@@ -194,7 +194,7 @@ const initWebHtml = function () {
             } else if (action == 'menu-system') {
                 let userBase = await getUserBaseByUserId(Cookies.get('userId'));
                 userBase = userBase.data
-                let cvState = userBase && userBase.cvUserId && userBase.cvUserStatus == 'Active' ? true : false;
+                let cvState = userBase?.cvUserId && userBase.cvUserStatus == 'Active';
                 if(cvState) {
                     $.confirm({
                         title: `Info`,
@@ -285,68 +285,42 @@ const initWebHtml = function () {
             console.log(action)
             switch (action) {
                 case 'app-driverTrack':
-                    // window.location = `/track`;
-                    // window.open(`/track`);
                     $('.iframe-page').attr('src', '/track')
                     break; 
                 case 'app-event':
-                    // window.location = `/event`;
-                    // window.open(`/event`);
                     $('.iframe-page').attr('src', '/event')
                     break; 
                 case 'app-dashboard':
-                    // window.location = `/hq`;
-                    // window.open(`/hq`);
                     $('.iframe-page').attr('src', '/hq')
                     break; 
                 case 'app-resources':
-                    // window.location = `/resources`;
-                    // window.open(`/resources`);
                     $('.iframe-page').attr('src', '/resources')
                     break; 
                 case 'app-mtAdmin':
-                    // window.location = `/mtAdmin`;
-                    // window.open(`/mtAdmin`);
                     $('.iframe-page').attr('src', '/mtAdmin')
                     break;
                 case 'app-mvDashboard':
-                    // window.location = `/dashboard`;
                     window.open(`/dashboard`);
-                    // $('.iframe-page').attr('src', '/dashboard')
                     break;
                 case 'app-mvDashboardTask':
-                    // window.location = `/MV-Dashboard`;
                     window.open(`/MV-Dashboard`);
-                    // $('.iframe-page').attr('src', '/MV-Dashboard')
                     break;
                 case 'app-resourcesDashboard':
-                    // window.location = `/resourcesDashboard`;
                     window.open(`/resourcesDashboard`);
-                    // $('.iframe-page').attr('src', '/resourcesDashboard')
                     break;
                 case 'app-resourcesDashboard2':
-                    // window.location = `/resourcesDashboard2`;
                     window.open(`/resourcesDashboard2`);
-                    // $('.iframe-page').attr('src', '/resourcesDashboard2')
                     break;
                 case 'app-taskDashboard':
-                    // window.location = `/dashboard/task`;
                     window.open(`/dashboard/task`);
-                    // $('.iframe-page').attr('src', '/dashboard/task')
                     break;
                 case 'app-notification':
-                    // window.location = `/dashboard/task`;
-                    // window.open(`/notice`);
                     $('.iframe-page').attr('src', '/notice')
                     break;
                 case 'app-menu-sos':
-                    // window.location = `/dashboard/task`;
-                    // window.open(`/sos`);
                     $('.iframe-page').attr('src', '/sos')
                     break;
                 case 'app-menu-report':
-                    // window.location = `/dashboard/task`;
-                    // window.open(`/report`);
                     $('.iframe-page').attr('src', '/report')
                     break;
                 case 'app-menu-arb-report':
@@ -354,23 +328,18 @@ const initWebHtml = function () {
                     $('.iframe-page').attr('src', '/arbReport')
                     break;
                 case 'app-menu-report-creator':
-                    // window.open(`/reportCreator/task`);
                     $('.iframe-page').attr('src', '/reportCreator')
                     break;
                 case 'app-menu-ekeypress':
-                    // window.open(`/keyManagement`);
                     $('.iframe-page').attr('src', '/keyManagement')
                     break;
 				case 'app-Hoto':
-                    // window.open(`/hoto`);
                     $('.iframe-page').attr('src', '/hoto')
                     break;				
                 case 'app-role':
-                    // window.open(`/role`);
                     $('.iframe-page').attr('src', '/role')
                     break;    
                 case 'app-urgentDuty':
-                    // window.open(`/urgent`);
                     $('.iframe-page').attr('src', '/urgent')
                     break;        
                 }
@@ -414,12 +383,6 @@ const initWebHtml = function () {
     initAppMenus();
     initAppMenusEventHandler();
     initLeftMenuEventHandler()
-    
-    // if(Cookies.get('node')) {
-    //     $('.div-hoto').hide()
-    // } else {
-    //     $('.div-hoto').show()
-    // }
 }
 
 const logoutEventHandler = function () {
@@ -445,12 +408,8 @@ const initNoticeCount = async function () {
     let count = unreadNotice.length > 10 ? '10+' : unreadNotice.length
     if (count) {
         $('#notification-count').html(count).show();
-        // $('.menu-notification img').attr('src', './images/index/notice.gif');
-        // window.document.getElementById("sound").src="./wav/AmberAlert.wav";
     } else {
         $('#notification-count').hide();
-        // $('.menu-notification img').attr('src', './images/index/notice.png');
-        // window.document.getElementById("sound").src="";
     }
 }
 
@@ -497,7 +456,7 @@ const getDriverAndDevicePositionList = async function (selectedDate) {
 }
 const checkTimeIfMissing = function (time) {
     let flag = Cookies.get('VehicleMissingFrequency');
-    flag = flag ? flag : 0;
+    flag = flag || 0;
     flag = Number.parseInt(flag);
     return moment().diff(moment(time), 'm') > flag;
 }
@@ -704,12 +663,10 @@ const drawDeviceMonitorMarker = async function (selectedDate) {
         // if (checkTimeIfMissing(devicePosition.updatedAt)) {
         if (devicePosition.missing) {
             marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#000000"), iconSize: [35, 35] });
+        } else if (devicePosition.speed > devicePosition.limitSpeed) {
+            marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#cf2928"), iconSize: [35, 35] } );
         } else {
-            if (devicePosition.speed > devicePosition.limitSpeed) {
-                marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#cf2928"), iconSize: [35, 35] } );
-            } else {
-                marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#4361b9"), iconSize: [35, 35] });
-            }
+            marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#4361b9"), iconSize: [35, 35] });
         }
         setTimeout(() => {
             addObdPopup(marker, devicePosition);

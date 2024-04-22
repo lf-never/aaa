@@ -10,18 +10,11 @@ let offenceListOption = {}
 let myChart = null;
 
 $(() => {
-	// if (Cookies.get('current_tab') != '0' && !Cookies.get('current_tab')) Cookies.get('current_tab') = 0;
-	// initRadioBtnEventHandler();
 	Cookies.get('current_tab', 0);
 
-	
 	initOffenceCardActiveHandler();
 
-	
 	illegalInterval = setInterval(initTrafficDashboardPage, 10 * 60 * 1000);
-
-
-	
 
 	layui.use('layer', function () {
         layer = layui.layer;
@@ -178,14 +171,14 @@ const initTrafficDashboardPage = async function () {
 							<div class="vr"></div>
 						</div>
 						<div class="col col-4">
-							<div style="line-height: 15px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count ? item.rapidAcc.count : 0 }</label>)</label></div>
+							<div style="line-height: 15px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
 							<div><label class="color-grey" style="font-size: 13px;">${ item.rapidAcc.occTime ? moment(item.rapidAcc.occTime).format('HH:mm:ss') : '-' }</label></div>  
 						</div>
 						<div class="col col-auto px-0">
 							<div class="vr"></div>
 						</div>
 						<div class="col col-4" style="width: 110px;">
-							<div style="line-height: 15px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count ? item.hardBraking.count : 0 }</label>)</label></div>
+							<div style="line-height: 15px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
 							<div><label class="color-grey" style="font-size: 13px;">${ item.hardBraking.occTime ? moment(item.hardBraking.occTime).format('HH:mm:ss') : '-' }</label></div>
 						</div>-->
 
@@ -193,7 +186,7 @@ const initTrafficDashboardPage = async function () {
 							['all', 'speeding'].includes(selectedOffenceType) ? 
 							`
 							<div class="col col-${ selectedOffenceType == 'all' ? 3 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count ? item.speeding.count : 0 }</label>)</label></div>
+								<div style="line-height: 18px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count || 0 }</label>)</label></div>
 								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.speeding.occTime ? moment(item.speeding.occTime).format('HH:mm:ss') : '-' }</div>
 							</div>
 							` : ''
@@ -202,7 +195,7 @@ const initTrafficDashboardPage = async function () {
 							['all', 'rapidAcc'].includes(selectedOffenceType) ? 
 							`
 							<div class="col col-${ selectedOffenceType == 'all' ? 3 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count ? item.rapidAcc.count : 0 }</label>)</label></div>
+								<div style="line-height: 18px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
 								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.rapidAcc.occTime ? moment(item.rapidAcc.occTime).format('HH:mm:ss') : '-' }</div>
 							</div>
 							` : ''
@@ -211,7 +204,7 @@ const initTrafficDashboardPage = async function () {
 							['all', 'hardBraking'].includes(selectedOffenceType) ? 
 							`
 							<div class="col col-${ selectedOffenceType == 'all' ? 4 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count ? item.hardBraking.count : 0 }</label>)</label></div>
+								<div style="line-height: 18px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
 								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.hardBraking.occTime ? moment(item.hardBraking.occTime).format('HH:mm:ss') : '-' }</div>
 							</div>
 							` : ''
@@ -220,7 +213,7 @@ const initTrafficDashboardPage = async function () {
 							['all', 'missing'].includes(selectedOffenceType) ? 
 							`
 							<div class="col col-${ selectedOffenceType == 'all' ? 2 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Missing(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.missing.count ? item.missing.count : 0 }</label>)</label></div>
+								<div style="line-height: 18px;"><label style="">Missing(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.missing.count || 0 }</label>)</label></div>
 								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.missing.occTime ? moment(item.missing.occTime).format('HH:mm:ss') : '-' }</div>
 							</div>
 							` : ''
@@ -290,57 +283,55 @@ const showVehiclePositionHandler = async function () {
 
 	let vehiclePositionList = await getPositionListRequest();
 	clearOffenceMarkerList();
-	if (!vehiclePositionList || !vehiclePositionList.length) return;
+	if (vehiclePositionList?.length) {
+		for (let position of vehiclePositionList) {
+			if (moment().diff(moment(position.updatedAt), 'm') > 10) {
+				console.log(`Data(${ position.type.toUpperCase() }) ${ position.deviceId ? ('DeviceId => ' + position.deviceId) : ('DriverName => ' + position.driverName) } missing gps data > 15 min, will not show!`)
+				continue;
+			};
 	
-	for (let position of vehiclePositionList) {
-		if (moment().diff(moment(position.updatedAt), 'm') > 10) {
-			console.log(`Data(${ position.type.toUpperCase() }) ${ position.deviceId ? ('DeviceId => ' + position.deviceId) : ('DriverName => ' + position.driverName) } missing gps data > 15 min, will not show!`)
-			continue;
-		};
-
-		let vehicleMarker = null;
-		let toolTipOffset = { direction: 'top', offset: [1, -60] };
-		let toolTipHtml;
-		if (position.type === 'mobile') {
-			toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
-								<label>${ position.vehicleNo }<br>${ position.driverName }</label>
-							</div> `;
-			// console.log(`mobile ` + position.speed + ' - ' + position.limitSpeed)
-			// Position from mobile
-			let option = { drawAble: false }
-			option.iconUrl = drawSpeedMarker(position.speed, position.speed > position.limitSpeed ? "#cf2928" : "#4361b9")
-			option.iconSize = [35, 35]
-			toolTipOffset.offset = [0, -13]
-			vehicleMarker = drawMarker2({ lat: position.lat, lng: position.lng }, option);
-		} else {
-			toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
-								<label>${ (position.vehicleNo && position.vehicleNo !== '-') ? position.vehicleNo : position.deviceId }<br>${ position.speed }</label>
-							</div> `;
-			let option = { iconUrl: `./images/vehicle/Vehicle.svg`, iconSize: [35, 70], drawAble: false };
-			toolTipOffset.offset = [0, -38]
-			// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
-			if (position.rpm == 0) {
-				option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
-			} else if (Number.parseFloat(position.speed) > position.limitSpeed){
-				option.iconUrl = `./images/vehicle/Speeding.svg`
-			} else if (!position.onRoad && !position.parked) {
-				option.iconUrl = `./images/vehicle/Vehicle0.svg`
-			} else if (position.parked) {
-				option.iconUrl = `./images/vehicle/Vehicle2.svg`
-			} else if (position.onRoad) {
-				option.iconUrl = `./images/vehicle/Vehicle.svg`
-			}
-			vehicleMarker = drawMarker(position, option);
-		} 
-		
-
-		storeOffenceMarkerList(vehicleMarker);
-		bindTooltip(vehicleMarker, toolTipHtml,	toolTipOffset);
-		// When update marker, also need update its marker icon and tooltip
-		// updateMapObject('track', { id: position.deviceId, mapObject: vehicleMarker }, option, {content: toolTipHtml, offset: toolTipOffset});
+			let vehicleMarker = null;
+			let toolTipOffset = { direction: 'top', offset: [1, -60] };
+			let toolTipHtml;
+			if (position.type === 'mobile') {
+				toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
+									<label>${ position.vehicleNo }<br>${ position.driverName }</label>
+								</div> `;
+				// console.log(`mobile ` + position.speed + ' - ' + position.limitSpeed)
+				// Position from mobile
+				let option = { drawAble: false }
+				option.iconUrl = drawSpeedMarker(position.speed, position.speed > position.limitSpeed ? "#cf2928" : "#4361b9")
+				option.iconSize = [35, 35]
+				toolTipOffset.offset = [0, -13]
+				vehicleMarker = drawMarker2({ lat: position.lat, lng: position.lng }, option);
+			} else {
+				toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
+									<label>${ (position.vehicleNo && position.vehicleNo !== '-') ? position.vehicleNo : position.deviceId }<br>${ position.speed }</label>
+								</div> `;
+				let option = { iconUrl: `./images/vehicle/Vehicle.svg`, iconSize: [35, 70], drawAble: false };
+				toolTipOffset.offset = [0, -38]
+				// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
+				if (position.rpm == 0) {
+					option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
+				} else if (Number.parseFloat(position.speed) > position.limitSpeed){
+					option.iconUrl = `./images/vehicle/Speeding.svg`
+				} else if (!position.onRoad && !position.parked) {
+					option.iconUrl = `./images/vehicle/Vehicle0.svg`
+				} else if (position.parked) {
+					option.iconUrl = `./images/vehicle/Vehicle2.svg`
+				} else if (position.onRoad) {
+					option.iconUrl = `./images/vehicle/Vehicle.svg`
+				}
+				vehicleMarker = drawMarker(position, option);
+			} 
+			
+	
+			storeOffenceMarkerList(vehicleMarker);
+			bindTooltip(vehicleMarker, toolTipHtml,	toolTipOffset);
+			// When update marker, also need update its marker icon and tooltip
+			// updateMapObject('track', { id: position.deviceId, mapObject: vehicleMarker }, option, {content: toolTipHtml, offset: toolTipOffset});
+		}
 	}
-
-	
 }
 
 const drawSpeedMarker = function (speed, color) {
@@ -408,7 +399,7 @@ const showEventHistory = async function (option) {
 					}},
 					{ title: 'Diff(s)', data: null, with: '10%', sortable: false, render: function (data, type, row, meta) {
 						if (row?.endTime) {
-							return moment(row.endTime).diff(moment(row.startTime)) / 1000;
+							return moment(row.endTime).diff(moment(row.startTime)) / 1000 + '';
 						} else {
 							return '-'
 						}

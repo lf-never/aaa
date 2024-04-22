@@ -1,7 +1,7 @@
 import * as MapUtil from './common-map.js'
 import { getSessionStorage, setSessionStorageWithExpiry } from './common-script.js'
 
-import { addMapObject, clearMapObject, deleteMapObject, removeMapObject, drawMarker, drawMarkerCenter, drawMarker2, drawPolyLine, bindTooltip, bindMarkerClickEvent } from './common-map.js'
+import { removeMapObject, drawMarker, drawMarker2, bindMarkerClickEvent } from './common-map.js'
 
 let incidentMarkerList = [], driverMarkerList = [], deviceMarkerList = [];
 let cameraMarkerList = [], systemIncidentMarkerList = [];
@@ -225,12 +225,10 @@ const drawDeviceMonitorMarker = async function (selectedDate) {
         // if (checkTimeIfMissing(devicePosition.updatedAt)) {
         if (devicePosition.missing) {
             marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#000000"), iconSize: [35, 35] });
+        } else if (devicePosition.speed > devicePosition.limitSpeed) {
+            marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#cf2928"), iconSize: [35, 35] } );
         } else {
-            if (devicePosition.speed > devicePosition.limitSpeed) {
-                marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#cf2928"), iconSize: [35, 35] } );
-            } else {
-                marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#4361b9"), iconSize: [35, 35] });
-            }
+            marker = drawMarker2(devicePosition, { iconUrl: drawSpeedMarker(devicePosition.speed, "#4361b9"), iconSize: [35, 35] });
         }
         setTimeout(() => {
             addObdPopup(marker, devicePosition);

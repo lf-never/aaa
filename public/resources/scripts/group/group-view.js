@@ -71,7 +71,6 @@ const userGroupGather = async function () {
                     noGroupList.push({value: user.username, title: user.username, userId: user.userId});
                     groupListName.push(user.username);
                 }
-                continue;
             }
         }
         

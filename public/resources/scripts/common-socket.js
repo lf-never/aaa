@@ -6,9 +6,6 @@ export function initSocketClientHandler () {
     // Localhost socket
     console.log('Socket Connected ...');
     __SocketObject = io({ path: '/driver.socket.io' });
-
-    // Test
-    // publicSocketMsg('hello', { name: 'John' });
 }
 
 export function newSocketClientEvent (topic, callBack) {
@@ -33,11 +30,3 @@ export function socketDisconnection () {
     console.log(`Socket Disconnected...`)
     __SocketObject.emit('disconnection', null);
 };
-
-// Test
-// setTimeout(() => {
-//     newSocketClientEvent('back', (msg) => {
-//         console.log(`%c(receiveSocketMsg): Topic  => back`, __CONSOLE_GREEN);
-//         console.log(`%c(receiveSocketMsg): Message=> ${msg}`, __CONSOLE_GREEN);
-//     })
-// }, 100)

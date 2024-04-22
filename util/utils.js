@@ -317,3 +317,13 @@ module.exports.getDateRangeRestdays = async function(startDate, endDate) {
     }
     return restdays;
 }
+
+module.exports.getSafePath = function (p) {
+    p = p.replace(/%2e/ig, '.')
+    p = p.replace(/%2f/ig, '/')
+    p = p.replace(/%5c/ig, '\\')
+    p = p.replace(/^[/\\]?/, '/')
+    p = p.replace(/[/\\]\.\.[/\\]/, '/')
+    p = path.normalize(p).replace(/\\/g, '/').slice(1)
+    return p
+}
