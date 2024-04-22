@@ -141,10 +141,10 @@ export function customConfirm (title, body, callback) {
         title: title,
         content: body,
         btn: ['Cancel', 'Confirm'],
-        btn1: function(index, layero){
+        btn1: function(index){
             layer.close(index);
         },
-        btn2: function(index, layero){
+        btn2: function(index){
             layer.close(index)
             return callback();
         }

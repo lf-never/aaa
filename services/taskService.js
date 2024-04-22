@@ -104,17 +104,15 @@ const TaskUtils = {
                 log.info(`checkoutAlertEvent => ${ alertZone.zoneName }`)
                 for (let location of locationList) {
                     location.createdAt = moment(location.createdAt).format('YYYY-MM-DD HH:mm:ss')
-                    if (this.checkAlertDate(alertZone, location.createdAt)) {
-                        if (this.checkAlertTime(alertZone, location.createdAt)) { 
-                            if (this.checkPointInPolygon([location.lat, location.lng], JSON.parse(alertZone.polygon))) { 
-                                result.push({
-                                    driverName: location.driverName,
-                                    vehicleNo: location.vehicleNo,
-                                    createdAt: location.createdAt,
-                                    zoneName: alertZone.zoneName
-                                })
-                            }
-                        } 
+                    if (this.checkAlertDate(alertZone, location.createdAt) 
+                        && this.checkAlertTime(alertZone, location.createdAt)
+                        && this.checkPointInPolygon([location.lat, location.lng], JSON.parse(alertZone.polygon))) {
+                            result.push({
+                                driverName: location.driverName,
+                                vehicleNo: location.vehicleNo,
+                                createdAt: location.createdAt,
+                                zoneName: alertZone.zoneName
+                            })
                     }
                 }
             }
@@ -723,7 +721,7 @@ module.exports = {
                     log.warn(`getAllOffenceDashboard => GroupID ${ user.unitId } has no driver`)
                     deviceSql += ` AND 1=2 `
                 }
-            } else if (CONTENT.USER_TYPE.UNIT == user.userType ) {
+            } else if (CONTENT.USER_TYPE.UNIT == user.userType) {
                 let vehicleList = await driverService.getVehicleInfo({ hub: user.hub, node: user.node })
                 let vehicleNoList = vehicleList.map(item => item.vehicleNo)
                 if (vehicleNoList.length) {
@@ -1425,21 +1423,15 @@ module.exports = {
             }
             let userId = req.cookies.userId;
             let hub = req.body.hub
-            let hubNodeIdList = [], groupIdList = [];
+            let hubNodeIdList = [];
             let user = await userService.UserUtils.getUserDetailInfo(userId);
             if (!user) {
                 log.error(`UserId ${ userId } does not exist!`)
                 return res.json(utils.response(0, `UserId ${ userId } does not exist!`));
             }
 
-            if (user.userType == CONTENT.USER_TYPE.CUSTOMER) {
-                groupIdList.push(user.unitId);
-                log.info(`getTodayRealAlert => (groupId) : ${ groupIdList }`)
-            } else {
-                if (hub == null) {
-                    groupIdList = await sequelizeSystemObj.query(` SELECT id FROM \`group\` `, { type: QueryTypes.SELECT })
-                    groupIdList = groupIdList.map(item => item.id)
-                } else if (!hub) {
+            if (user.userType !== CONTENT.USER_TYPE.CUSTOMER && hub !== null) {
+                if (!hub) {
                     let unitList = await unitService.UnitUtils.getPermitUnitList2(userId);
                     hubNodeIdList = unitList.hubNodeIdList;
                 } else {
@@ -3186,14 +3178,12 @@ module.exports = {
                 let { unitIdList, groupIdList } = await UnitUtils.getPermitUnitList(user.userId)
 
                 // HQ user has group permission
-                if (user.group?.length) {
-                    if (hub) {
-                        if((hub).toLowerCase() == 'dv_loa') {
-                            sosSql += ` AND ss.groupId is not null `
-                        } else {
-                            sosSql += ` AND ss.hub = ? `
-                            replacements.push(hub);
-                        }
+                if (hub && user.group?.length) {
+                    if((hub).toLowerCase() == 'dv_loa') {
+                        sosSql += ` AND ss.groupId is not null `
+                    } else {
+                        sosSql += ` AND ss.hub = ? `
+                        replacements.push(hub);
                     }
                 }
                 
@@ -3212,14 +3202,12 @@ module.exports = {
                 } else {
                     sosSql += ` and 1=2 `
                 }
-            } else if (user.userType.toLowerCase() == 'administrator') {
-                if (hub) {
-                    if((hub).toLowerCase() == 'dv_loa') {
-                        sosSql += ` AND ss.groupId is not null `
-                    } else {
-                        sosSql += ` AND ss.hub = '? `
-                        replacements.push(hub);
-                    }
+            } else if (user.userType.toLowerCase() == 'administrator' && hub) {
+                if((hub).toLowerCase() == 'dv_loa') {
+                    sosSql += ` AND ss.groupId is not null `
+                } else {
+                    sosSql += ` AND ss.hub = '? `
+                    replacements.push(hub);
                 }
 
             } else if (user.userType.toLowerCase() == 'unit') {
