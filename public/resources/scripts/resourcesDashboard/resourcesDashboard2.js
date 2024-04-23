@@ -473,16 +473,7 @@ const initIndentTotalChart = async function (timeNeeded, hub, node) {
         nodeVehicleMyChart = echarts.init(document.querySelector(`.vehicleAssignedChart`));
         let legendTop = '2%'
         let legendLeft = '50%'
-        if((hub).toLowerCase() == 'dv_loa') {
-            legendTop = '27%'
-            legendLeft = '60%'
-            if(node) {
-                if((node).toLowerCase() == 'dv_loa'){
-                    legendTop = '27%'
-                    legendLeft = '60%'
-                }
-            }
-        }
+        
         let option = {
             title: {
                 show: false

@@ -315,49 +315,66 @@ const initClickEditDriver = function () {
             node: 'Node', enlistmentDate: 'Enlistment Date', operationallyReadyDate: 'Operationally Ready Date (ORD)', nric: 'NRIC', driverName: 'Driver Name', 
             birthday: 'Date of Birth', contactNumber: 'Contact No.',
         }
-
-        for (let key in data) {
+        function checkContractNumber(key) {
             if(key == 'contactNumber') {
                 let firstNumber = ($('.contact-no-input').val()).substring(0, 1)
                 if (!(($('.contact-no-input').val()).length == 8 && (firstNumber == "8" || firstNumber == "9"))) {
-                    $.alert('Mobile Number must be 8 number and start with 8 or 9.')
-                    return false
+                   return 'Mobile Number must be 8 number and start with 8 or 9.';
                 } 
             }
-            if(key == 'nric') {   
+            return '';
+        }
+        function checkNric(key) {
+            if (key == 'nric') {   
                 let regular = /^[S,T]\d{7}[A-Z]$/;     
-                
                 if (!(regular).test($('.NRIC-input').val())) {
-                    $.alert('The nric format is incorrect.')
-                    return false
+                    return 'The nric format is incorrect.'
                 } 
             }
-
-            if(key == 'action' || key == 'driverId'){
-                continue 
+            return '';
+        }
+        for (let key in data) {
+            let errorMsg = checkContractNumber(key);
+            if (errorMsg) {
+                $.alert(errorMsg)
+                return false
+            }
+            errorMsg = checkNric(key);
+            if (errorMsg) {
+                $.alert(errorMsg)
+                return false
             }
 
-            if(key == 'unit'){
-                if($('.driver-role-select').val().toLowerCase() == 'to' 
-                || $('.driver-role-select').val().toLowerCase() == 'tl'
-                || $('.driver-unit-select').val() 
-                || $('.driver-hub-select').val()){
-                    continue
+            function checkNext() {
+                if(key == 'action' || key == 'driverId'){
+                    return true;
                 }
-            }
 
-            if(key == 'hub'){
-                if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
-                    continue
+                if(key == 'unit'){
+                    if($('.driver-role-select').val().toLowerCase() == 'to' 
+                    || $('.driver-role-select').val().toLowerCase() == 'tl'
+                    || $('.driver-unit-select').val() 
+                    || $('.driver-hub-select').val()){
+                        return true;
+                    }
                 }
-            }
-
-            if(key == 'node'){
-                if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
-                    continue
+    
+                if(key == 'hub'){
+                    if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
+                        return true;
+                    }
                 }
+    
+                if(key == 'node'){
+                    if($('.driver-unit-select').val() || $('.driver-hub-select').val()){
+                        return true;
+                    }
+                }
+                return false;
             }
-            
+            if (checkNext()) {
+                continue;
+            }
             
             if (data[key] == null || data[key] == "" || data[key].trim() == "") {
                 $.alert({

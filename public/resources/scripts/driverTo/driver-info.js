@@ -1,4 +1,3 @@
-
 let currentEditDriverId;
 let permitTypeColor = ['#1b9063', '#194a37', '#fad028', '#1c8aea', '#21517b', '#133553'];
 let permitInvalidReasons = ['Superseded', 'Revoke', 'Suspended', 'Disqualified', 'Deceased', 'Change Vocation', 'Pending Investigation'];
@@ -137,10 +136,10 @@ $(() => {
 
 const initBasicProfileHandler = async function () {
     const initBasicProfile = function (driver) {
-        $('.driver-username').html(driver.driverName);
+        $('.driver-username').text(driver.driverName);
         $('.driverName-input').val(driver.driverName)
 
-        $('.driver-status').html(driver.currentStatus);
+        $('.driver-status').text(driver.currentStatus);
         let statusColor = driverStatusColor.find(item => item.status == driver.currentStatus)
         if (!statusColor) {
             statusColor = 'orange';
@@ -149,27 +148,27 @@ const initBasicProfileHandler = async function () {
         }
         $('.driver-statusColor').css('background-color', statusColor);
 
-        $('.driver-vocation').html(driver.vocation ? driver.vocation : '-');
-        $('.driver-role').html(driver.role ? driver.role : '-');
+        $('.driver-vocation').text(driver.vocation ? driver.vocation : '-');
+        $('.driver-role').text(driver.role ? driver.role : '-');
     
         function initBaseInfo() {
-            $('.driver-unit').html(driver.group ? driver.group : '-');
-            $('.driver-nodeHub').html((driver.node ? driver.node : '-') + ', ' + (driver.hub ? driver.hub : '-'));
-            $('.driver-enlistmentDate').html(driver.enlistmentDate ? moment(driver.enlistmentDate).format('DD/MM/YYYY') : '-');
-            $('.driver-operationallyReadyDate').html(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate).format('DD/MM/YYYY') : '-');
-            $('.driver-nric').html(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
-            $('.driver-birthday').html(driver.birthday ? moment(driver.birthday).format('DD/MM/YYYY') : '-');
-            $('.driver-contactNo').html(driver.contactNumber ? driver.contactNumber : '-');
+            $('.driver-unit').text(driver.group ? driver.group : '-');
+            $('.driver-nodeHub').text((driver.node ? driver.node : '-') + ', ' + (driver.hub ? driver.hub : '-'));
+            $('.driver-enlistmentDate').text(driver.enlistmentDate ? moment(driver.enlistmentDate).format('DD/MM/YYYY') : '-');
+            $('.driver-operationallyReadyDate').text(driver.operationallyReadyDate ? moment(driver.operationallyReadyDate).format('DD/MM/YYYY') : '-');
+            $('.driver-nric').text(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
+            $('.driver-birthday').text(driver.birthday ? moment(driver.birthday).format('DD/MM/YYYY') : '-');
+            $('.driver-contactNo').text(driver.contactNumber ? driver.contactNumber : '-');
         }
         initBaseInfo();
    
         function initPermitInfo() {
-            $('.driver-permitType').html(driver.permitType ? driver.permitType : '-');
-            $('.driver-permitNo').html(driver.permitNo ? driver.permitNo : '-');
-            $('.driver-permitDateOfIssue').html(driver.permitIssueDate ? moment(driver.permitIssueDate).format("DD/MM/YYYY") : '-');
+            $('.driver-permitType').text(driver.permitType ? driver.permitType : '-');
+            $('.driver-permitNo').text(driver.permitNo ? driver.permitNo : '-');
+            $('.driver-permitDateOfIssue').text(driver.permitIssueDate ? moment(driver.permitIssueDate).format("DD/MM/YYYY") : '-');
             $('.driver-permitNo-input').val(driver.permitNo ? driver.permitNo : '');
-            $('.driver-permitCategory').html(driver.category ? driver.category : '-');
-            $('.driver-demeritPoints').html(driver.demeritPoints ? driver.demeritPoints : '0');
+            $('.driver-permitCategory').text(driver.category ? driver.category : '-');
+            $('.driver-demeritPoints').text(driver.demeritPoints ? driver.demeritPoints : '0');
     
             $(".driverCurrentPermitStatus").text(driver.permitStatus);
             if (driver.permitStatus && driver.permitStatus == 'invalid') {
@@ -222,12 +221,12 @@ const initBasicProfileHandler = async function () {
             $('.img-showNRIC').off('click').on('click', function(){  
                 $('.img-noShowNRIC').show()
                 $('.img-showNRIC').hide()
-                $('.driver-nric').html(driver.nric ? driver.nric : '-');
+                $('.driver-nric').text(driver.nric ? driver.nric : '-');
             })
             $('.img-noShowNRIC').off('click').on('click', function(){
                 $('.img-noShowNRIC').hide()
                 $('.img-showNRIC').show()
-                $('.driver-nric').html(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
+                $('.driver-nric').text(driver.nric ? ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4) : '-');
             })
             $('.img-noShowNRIC').trigger('click')
         } else {
@@ -401,7 +400,7 @@ const buildDetailPermitTypeMileageHtml = function(totalMileage, permitTypeStat) 
     }
 
     $permitTypeDiv.empty();
-    $permitTypeDiv.append(baseHtml);
+    $permitTypeDiv[0].innerHTML = baseHtml;
 }
 
 const formatNumber = function(str, splitStr = ',') {

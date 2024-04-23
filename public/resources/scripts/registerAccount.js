@@ -23,7 +23,7 @@ $(async function () {
                     if(dataList) fromValue = dataList.dataFrom ? dataList.dataFrom : null;
                 }
             }
-            initDataList()
+            await initDataList()
            
             if(registerUserId) {
                 $('.returnLogin').text('Return to Home menu')
@@ -67,6 +67,7 @@ $(async function () {
 
     const initAccountBtn = function (){
         $('.create-registerAccountUser').off('click').on('click',  function(){
+            console.log('=====<>')
             initUser()
         })
         $('.cancel-create-user').off('click').on('click',  function(){
@@ -376,17 +377,18 @@ export async function initPageByUserBase (id, registerUserId, dataType) {
         if(userBase) registerUserBaseId = userBase.id
     }
     if(!userBase) return
-    
+    console.log('=================>>>>')
+    console.log(userBase)
     const initDivOpt = function () {
         $('.ORD-Date').val(userBase.ord ? moment(userBase.ord).format('DD/MM/YYYY') : '')
         $("#user-nric").val(userBase.nric)
         $('#user-userName').val(userBase.fullName)
         $('.mobileNumber').val(userBase.contactNumber)
         $('.email').val(userBase.email)
-        $(`.cv-accountType option[data-id='${ userBase.cvRole }']`).prop("selected", "selected").trigger("change")
+        if(userBase.cvRole) $(`.cv-accountType option[data-id='${ userBase.cvRole }']`).prop("selected", "selected").trigger("change")
         // $(`.cv-unit option[data-id='${ userBase.cvGroupId }']`).prop("selected", "selected").trigger("change")
         $('#userType').val(userBase.mvUserType)
-        $('#userType').trigger('change')
+        if(userBase.mvUserType) $('#userType').trigger('change')
         if($('#userType').val()){
             $(`.mv-unit option[data-id='${ userBase.mvGroupId }']`).prop("selected", "selected")
             if(mvUnit) {
@@ -436,9 +438,14 @@ export async function initPageByUserBase (id, registerUserId, dataType) {
             if(userBase){
                 if(userBase.mvUserId) {
                     mvUserState = true
+                }
+                if(userBase.cvUserId){
                     cvUserState = true
                 }
             }
+            console.log(`===============>>>>>>>>>`)
+            console.log(mvUserState)
+            console.log(cvUserState)
             if(mvUserState) {
                 $('#user-userName').prop('disabled', 'disabled')
                 $('#user-userName').css('background-color', '#e9ecef')
@@ -501,6 +508,14 @@ const initUser = async function () {
     })
     if(serviceProviderArray.length > 0) serviceProviderId = serviceProviderArray.join(",")
 
+    let __newDataFrom = 'SERVER-USER'
+    if(dataFrom){
+        if(dataFrom == 'server'){
+            __newDataFrom = 'SERVER-REG'
+        } else {
+            __newDataFrom = 'SYSTEM-REG'
+        }
+    }
     const initAccountDataOj = function (){
         let accountUserByValid = {
             fullName: $('#user-userName').val(),
@@ -509,8 +524,7 @@ const initUser = async function () {
             email: $('.email').val(),
             ord: $('.ORD-Date').val()
         }
-        let __newDataFrom = 'SERVER-USER'
-        if(dataFrom != 'server') __newDataFrom = 'SYSTEM-REG'
+
         let accountUser = {
             nric: $("#user-nric").val(),
             fullName: $('#user-userName').val(),
@@ -613,6 +627,7 @@ const initUser = async function () {
                     return false
                 }
             }
+            return true
         }
         let state2 = vaMvUser()
         if(!state2) return state2
@@ -632,6 +647,7 @@ const initUser = async function () {
                 });
                 return false
             }
+            return true
         }
         let state = vaCVUser()
         if(!state) return state

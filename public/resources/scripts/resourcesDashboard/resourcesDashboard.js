@@ -239,9 +239,9 @@ const generateHubNodeCardHtml = function (hubNode, customClass, item, data) {
     `
 }
 const generateVehicleCardHtml = function (data, color, startedTaskCountTotal) {
-
-    let purpose = data.map(item => { return item.name });
-    let indexPurpose = purpose.indexOf("Familiarisation");
+    // old dv / loa
+    // let purpose = data.map(item => { return item.name });
+    // let indexPurpose = purpose.indexOf("Familiarisation");
 
     let index = 0;
     return `
@@ -265,99 +265,160 @@ const generateVehicleCardHtml = function (data, color, startedTaskCountTotal) {
                 </div>
                 <div>
                     <table aria-hidden="true" style="table-layout: fixed;" class="mb-2" >
-
-                        ${ indexPurpose != -1 ? `
                         <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Ops')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Ops</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Training')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Training</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Admin')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Admin</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Exercise')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Exercise</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Duty')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Duty</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Driving Training')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Driving Training</div>
-                            </td> 
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Maintenance')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Maintenance</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Others')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Others</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Familiarisation')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Familiarisation</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'WPT')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">WPT</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'MPT')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">MPT</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'AVI')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">AVI</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'PM')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">PM</div>
-                            </td>
-                        </tr>
-                        `: `
-                        <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Ops')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Ops</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Training')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Training</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'Admin')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">Admin</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'WPT')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">WPT</div>
-                            </td>
-                            <td>
-                                <div class="purpose-count">${ data.find(item => item.name == 'MPT')?.value }</div>
-                                <div style="color: ${ color[++index] }" class="purpose-type">MPT</div>
-                            </td>
-                        </tr>
-                        ` }
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'ops')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Ops</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'training')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Training</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'admin')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Admin</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'exercise')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Exercise</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'duty')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Duty</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'driving training')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Driving Training</div>
+                        </td> 
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'maintenance')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Maintenance</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'others')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Others</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'familiarisation')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">Familiarisation</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'wpt')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">WPT</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'mpt')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">MPT</div>
+                        </td>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'avi')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">AVI</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'pm')?.value }</div>
+                            <div style="color: ${ color[++index] }" class="purpose-type">PM</div>
+                        </td>
+                    </tr>
                     </table>
                 </div>
             </div>
         <!--</div> -->
     `
+
+    // old dv / loa
+    // ${ indexPurpose != -1 ? `
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'ops')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Ops</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'training')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Training</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'admin')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Admin</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'exercise')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Exercise</div>
+    //     </td>
+    // </tr>
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'duty')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Duty</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'driving training')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Driving Training</div>
+    //     </td> 
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'maintenance')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Maintenance</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'others')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Others</div>
+    //     </td>
+    // </tr>
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'familiarisation')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Familiarisation</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'wpt')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">WPT</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'mpt')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">MPT</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'avi')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">AVI</div>
+    //     </td>
+    // </tr>
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'pm')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">PM</div>
+    //     </td>
+    // </tr>
+    // `: `
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'ops')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Ops</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'training')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Training</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'admin')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">Admin</div>
+    //     </td>
+    // </tr>
+    // <tr>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'wpt')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">WPT</div>
+    //     </td>
+    //     <td>
+    //         <div class="purpose-count">${ data.find(item => item.name.toLowerCase() == 'mpt')?.value }</div>
+    //         <div style="color: ${ color[++index] }" class="purpose-type">MPT</div>
+    //     </td>
+    // </tr>
+    // ` }
 }
 
 const generateDriverCardHtml = function (data) {

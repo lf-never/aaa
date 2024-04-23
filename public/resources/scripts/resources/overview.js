@@ -26,55 +26,54 @@ $(() => {
         $(this).addClass('active');
 
         let tab = $(this).data('tab');
-        if (tab == 1) {
-         
-            $('iframe').attr('src', './indent/overview');
-        } else if (tab == 2) {
-  
-            $('iframe').attr('src', './vehicle/vehicleTask');
-            if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
-                $('.customer-button').show();
+        switch(tab) {
+            case 1: 
+                $('iframe').attr('src', './indent/overview');
+                break;
+            case 2:
+                $('iframe').attr('src', './vehicle/vehicleTask');
+                if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
+                    $('.customer-button').show();
 
-                if ($('#select-customer').prop('checked')) {
-                    $('#select-group').show()
-                    $('.hubNode-btn').hide();
-                } else {
-                    $('#select-group').hide().empty()
-                    $('.hubNode-btn').show();
-
-
+                    if ($('#select-customer').prop('checked')) {
+                        $('#select-group').show()
+                        $('.hubNode-btn').hide();
+                    } else {
+                        $('#select-group').hide().empty()
+                        $('.hubNode-btn').show();
+                    }
                 }
-            }
-        } else if(tab == 3) {
-            
-            $('.action-button').show();
-            $('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
-            if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
-                $('.customer-button').show();
+                break;
+            case 3:
+                $('.action-button').show();
+                $('.action-button').html(`<img alt="" src="../scripts/driverTo/icons/calender.svg">Calender View</div>`).data('action', 'task')
+                if (Cookies.get('userType') == 'HQ' || Cookies.get('userType') == 'ADMINISTRATOR') {
+                    $('.customer-button').show();
 
-                if ($('#select-customer').prop('checked')) {
-                    $('#select-group').show()
-                    $('.hubNode-btn').hide();
-                } else {
-                    $('#select-group').hide().empty()
-                    $('.hubNode-btn').show();
+                    if ($('#select-customer').prop('checked')) {
+                        $('#select-group').show()
+                        $('.hubNode-btn').hide();
+                    } else {
+                        $('#select-group').hide().empty()
+                        $('.hubNode-btn').show();
+                    }
                 }
-            }
-            $('iframe').attr('src', './driver/driverTask');
-        } else if(tab == 4) {
-            
-            $('iframe').attr('src', './resources/paradeState');	
-        } else if(tab == 5) {
-            
-            $('iframe').attr('src', './licensing');	
-        } else if(tab == 6) {
-            
-            $('iframe').attr('src', './hoto');	
-        } else if(tab == 7) {
-            
-            $('iframe').attr('src', './vehicleType');	
-        } else {
-            console.log(`Tab ${ tab } does not exist now.`)
+                $('iframe').attr('src', './driver/driverTask');
+                break;
+            case 4:
+                $('iframe').attr('src', './resources/paradeState');	
+                break;
+            case 5:
+                $('iframe').attr('src', './licensing');
+                break;
+            case 6: 
+                $('iframe').attr('src', './hoto');
+                break;
+            case 7: 
+                $('iframe').attr('src', './vehicleType');
+                break;
+            default: 
+                console.log(`Tab ${ tab } does not exist now.`)
         }
     })
     $('.action-button').off('click').on('click', function () {
@@ -179,7 +178,14 @@ const initHubAndNode = async function () {
                 $('#select-hub').append(`<option value="">Hub: All</option>`);
             }
             for (let item of unitData) {
-                let addAttr = hub ? (hub === item.unit ? 'selected' : 'disabled') : ''
+                let addAttr = '';
+                if (hub) {
+                    addAttr = 'disabled';
+                    if (hub === item.unit) {
+                        addAttr = 'selected';
+                    }
+                } 
+                
                 optionHtml += `<option value="${ item.unit }" ${ addAttr } >Hub: ${ item.unit }</option>`
             }
             $('#select-hub').append(optionHtml);

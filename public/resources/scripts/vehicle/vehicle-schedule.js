@@ -93,6 +93,22 @@ const initMonthSelectHandler = function () {
     })
 }
 
+function reloadTdHeight(dateLastTaskMarginTop, date) {
+    let tdTaskStep = dateLastTaskMarginTop / 35;
+    if (tdTaskStep >= 2) {
+        setTimeout(() => {
+            $('.week-day').each(function() {
+                if($(this).data('date')?.split(',').includes(date.date() + '')) {
+                    let newHeight = 50 * (tdTaskStep + 1);
+                    if ($(this).find('td').height() < newHeight) {
+                        $(this).find('td').height(newHeight)
+                    }
+                }
+            })
+        }, 100)
+    }
+}
+
 const initMonthHandler = async function () {
     const getAllWeeks = function (startDate, endWeekDay) {
         let weekList = [ ];
@@ -154,35 +170,37 @@ const initMonthHandler = async function () {
             for (let task of taskList) {
                 if (moment(task.indentStartTime).isSame(date, 'd')) {
                     taskCount++;
-                    if (task.virtualCount) {
-                        // add virtualCount
-                        taskCount += task.virtualCount;
-                    }
+
+                    // add virtualCount
+                    taskCount += task.virtualCount || 0;
 
                     let theme = "Default"
-                    if (task.purpose == 'Driving Training' || task.purpose == 'Training') theme = 'Training'
-                    if (task.purpose == 'Maintenance' || task.purpose == 'AVI' || task.purpose == 'PM' ||task.purpose == 'MPT'||task.purpose == 'WPT') theme = 'Maintenance'
-                    if (task.purpose == 'Familiarisation') theme = 'Familiarisation'
-                    if (task.purpose == 'Admin' || task.purpose == 'Duty') theme = 'Admin'
-                    if (task.purpose == 'Ops' || task.purpose == 'Others' || task.purpose == 'Operation') theme = 'Operations'
+                    function buildTheme() {
+                        if (task.purpose == 'Driving Training' || task.purpose == 'Training') theme = 'Training'
+                        if (task.purpose == 'Maintenance' || task.purpose == 'AVI' || task.purpose == 'PM' ||task.purpose == 'MPT'||task.purpose == 'WPT') theme = 'Maintenance'
+                        if (task.purpose == 'Familiarisation') theme = 'Familiarisation'
+                        if (task.purpose == 'Admin' || task.purpose == 'Duty') theme = 'Admin'
+                        if (task.purpose == 'Ops' || task.purpose == 'Others' || task.purpose == 'Operation') theme = 'Operations'
+                    }
+                    buildTheme();
                     
-
-                    let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
-                    let color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color
-                    bgColor = (task.taskId+"").startsWith('onEvent') ? '#f1b9b9' : bgColor;
-                    color = (task.taskId+"").startsWith('onEvent') ? '#bd0707' : color;
+                    let bgColor, color;
+                    function buildColorInfo() {
+                        bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
+                        color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color
+                        bgColor = (task.taskId+"").startsWith('onEvent') ? '#f1b9b9' : bgColor;
+                        color = (task.taskId+"").startsWith('onEvent') ? '#bd0707' : color;
+                    }
+                    buildColorInfo();
 
                     //check if exist other task through today
-                    //let hasPreTaskOgThough = 0;
-                    // let targetTaskList = taskList.filter(item => {
-                    // 	return item.taskId != task.taskId
-                    // })
                     let preThoughTask = null;
-                    for (let tempTask of taskList) {
-                        let isSelf = task.virtualTaskId ? (task.taskId == tempTask.taskId && task.virtualTaskId == tempTask.virtualTaskId) : task.taskId == tempTask.taskId;
-                        if (isSelf) {
-                            break;
-                        } else {
+                    function calcPreTask() {
+                        for (let tempTask of taskList) {
+                            let isSelf = task.virtualTaskId ? (task.taskId == tempTask.taskId && task.virtualTaskId == tempTask.virtualTaskId) : task.taskId == tempTask.taskId;
+                            if (isSelf) {
+                               return;
+                            }
                             let taskStartDateStr = moment(task.indentStartTime).format('YYYY-MM-DD')
                             let taskEndDateStr = moment(task.indentEndTime).format('YYYY-MM-DD')
                             let tempTaskStartDateStr = moment(tempTask.indentStartTime).format('YYYY-MM-DD')
@@ -195,6 +213,7 @@ const initMonthHandler = async function () {
                             }
                         }
                     }
+                    calcPreTask();
 
                     let content = ``;
                     let dateLength = moment(moment(task.indentEndTime).format('YYYY-MM-DD')).diff(moment(task.indentStartTime).format('YYYY-MM-DD'), 'day');
@@ -203,186 +222,179 @@ const initMonthHandler = async function () {
                     let eventEndDate = '';
                     let divTitle = '';
                     if (task.taskId && (task.taskId+"").startsWith('onEvent')) {//vehicle event
-                        eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
-                        eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
-                        if (task.isVirtualTask) {
-                            eventStartDate = moment(task.realStartTime).format('YYYY-MM-DD');
-                            eventEndDate = moment(task.realEndTime).format('YYYY-MM-DD');
-                            divTitle = task.reason + `, ` + moment(task.realStartTime).format('MM-DD HH:mm') + '-' + moment(task.realEndTime).format('MM-DD HH:mm');
-                        } else if (dateLength >= 1) {
-                            divTitle = task.reason + `, ` + moment(task.indentStartTime).format('MM-DD HH:mm') + '-' + moment(task.indentEndTime).format('MM-DD HH:mm');
-                        } else {
-                            divTitle = task.reason + `, ` + moment(task.indentStartTime).format('HH:mm') + '-' + moment(task.indentEndTime).format('HH:mm');
-                        }
-                        eventTask = true;
-
-                        content = `${ divTitle }`;
-                    } else {
-                        let taskTypeLabel = '';
-                        if (task.taskId.indexOf('CU-') != -1) {
-                            taskTypeLabel = 'CU-';
-                        } else if (task.dataFrom == 'MT-ADMIN') {
-                            taskTypeLabel = 'MT-';
-                        } else if (task.dataFrom == 'SYSTEM') {
-                            taskTypeLabel = 'SYS-';
-                        }
-                        let label = `${ taskTypeLabel + task.purpose }, `;
-                        if (task.indentEndTime) {
+                        function buildEventTask() {
+                            eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
+                            eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
                             if (task.isVirtualTask) {
-                                label += `${moment(task.realStartTime).format('MM-DD HH:mm')} - ${ moment(task.realEndTime).format('MM-DD HH:mm') }`
+                                eventStartDate = moment(task.realStartTime).format('YYYY-MM-DD');
+                                eventEndDate = moment(task.realEndTime).format('YYYY-MM-DD');
+                                divTitle = task.reason + `, ` + moment(task.realStartTime).format('MM-DD HH:mm') + '-' + moment(task.realEndTime).format('MM-DD HH:mm');
                             } else if (dateLength >= 1) {
-                                label += `${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
+                                divTitle = task.reason + `, ` + moment(task.indentStartTime).format('MM-DD HH:mm') + '-' + moment(task.indentEndTime).format('MM-DD HH:mm');
                             } else {
-                                label += `${moment(task.indentStartTime).format('HH:mm')} - ${ moment(task.indentEndTime).format('HH:mm') }`	
+                                divTitle = task.reason + `, ` + moment(task.indentStartTime).format('HH:mm') + '-' + moment(task.indentEndTime).format('HH:mm');
                             }
-                            
-                        } else {
-                            label += `${ moment(task.indentStartTime).format('HH:mm') }`
+                            eventTask = true;
+    
+                            content = `${ divTitle }`;
                         }
-                        divTitle = label;
-                        content += label;
+                        buildEventTask();
+                    } else {
+                        function buildEventTask() {
+                            let taskTypeLabel = '';
+                            if (task.taskId.indexOf('CU-') != -1) {
+                                taskTypeLabel = 'CU-';
+                            } else if (task.dataFrom == 'MT-ADMIN') {
+                                taskTypeLabel = 'MT-';
+                            } else if (task.dataFrom == 'SYSTEM') {
+                                taskTypeLabel = 'SYS-';
+                            }
+                            let label = `${ taskTypeLabel + task.purpose }, `;
+                            if (task.indentEndTime) {
+                                if (task.isVirtualTask) {
+                                    label += `${moment(task.realStartTime).format('MM-DD HH:mm')} - ${ moment(task.realEndTime).format('MM-DD HH:mm') }`
+                                } else if (dateLength >= 1) {
+                                    label += `${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
+                                } else {
+                                    label += `${moment(task.indentStartTime).format('HH:mm')} - ${ moment(task.indentEndTime).format('HH:mm') }`	
+                                }
+                                
+                            } else {
+                                label += `${ moment(task.indentStartTime).format('HH:mm') }`
+                            }
+                            divTitle = label;
+                            content += label;
+                        }
+                        buildEventTask();
                     }
                     
-                      
-                    let taskDivWidth = tdWidth - 12;
-                    if (task.hasVirtualTask) {
-                        dateLength = getDateLength(moment(task.indentStartTime).endOf('isoWeek'), task.indentStartTime)
-                    } 
-                    if (dateLength !== 0) {
-                        taskDivWidth = tdWidth * (dateLength + 1) - 19;
-                    }
-
-               
-
                     let currentTaskMarginTop = preThoughTask ? (preThoughTask.marginTop + 35) : 0;
-                    html += ` <div class="vehicle-info ${eventTask ? 'vehicle-event-info' : '' } ${ task.activity ? task.activity.toLowerCase() : '' } user-select-none px-2"
-                        title="${divTitle}"
-                        data-taskid="${ task.taskId ? task.taskId : moment().valueOf() + '' + Math.random() }"
-                        data-eventstartdate="${eventStartDate}"
-                        data-eventenddate="${eventEndDate}"
-                        style="width: ${ taskDivWidth }px; ${task.taskId ? '' : 'border: solid 1px #ce0a0a;'}
-                        background-color: ${ bgColor };
-                        color: ${ color };
-                        position: absolute;
-                        margin-top: ${ currentTaskMarginTop }px;
-
-                    ">${ content }</div> `
+                    function buildHtml() {
+                        let taskDivWidth = tdWidth - 12;
+                        if (task.hasVirtualTask) {
+                            dateLength = getDateLength(moment(task.indentStartTime).endOf('isoWeek'), task.indentStartTime)
+                        } 
+                        if (dateLength !== 0) {
+                            taskDivWidth = tdWidth * (dateLength + 1) - 19;
+                        }
+                        
+                        html += ` <div class="vehicle-info ${eventTask ? 'vehicle-event-info' : '' } ${ task.activity ? task.activity.toLowerCase() : '' } user-select-none px-2"
+                            title="${divTitle}"
+                            data-taskid="${ task.taskId || moment().valueOf() + '' + Math.random() }"
+                            data-eventstartdate="${eventStartDate}"
+                            data-eventenddate="${eventEndDate}"
+                            style="width: ${ taskDivWidth }px; ${task.taskId ? '' : 'border: solid 1px #ce0a0a;'}
+                            background-color: ${ bgColor };
+                            color: ${ color };
+                            position: absolute;
+                            margin-top: ${ currentTaskMarginTop }px;
+    
+                        ">${ content }</div> `
+                    }
+                    buildHtml();
 
                     task.marginTop = currentTaskMarginTop
                     dateLastTaskMarginTop = currentTaskMarginTop;
                 }
             }
-            //html += '</div>'
 
             // Expand tr height here
-            let tdTaskStep = dateLastTaskMarginTop / 35;
-            if (tdTaskStep >= 2) {
-                setTimeout(() => {
-                    $('.week-day').each(function() {
-                        if($(this).data('date')?.split(',').includes(date.date() + '')) {
-                            let newHeight = 50 * (tdTaskStep + 1);
-                            if ($(this).find('td').height() < newHeight) {
-                                $(this).find('td').height(newHeight)
-                            }
-                        }
-                    })
-                }, 10)
-            }
+            reloadTdHeight(dateLastTaskMarginTop, date);
 
             return html;
         }
+
+        const checkIfExistMoreThanTwoTask = function (list, targetDate, compareDate) {
+            let firstTaskId = null; // use for record which task should increase space
+            let count = 0;
+            for (let task of list) {
+                if (moment(task.indentStartTime).isSame(targetDate, 'd')) {
+                    if (moment({ hours: moment(task.indentStartTime).hours(), minutes: moment(task.indentStartTime).minutes() })
+                    .isSameOrAfter(moment({ hours: moment(compareDate).hours(), minutes: moment(compareDate).minutes() }), 'm')) {
+                        if (!firstTaskId) firstTaskId = task.taskId;
+                        count++;
+                    }
+                }
+            }
+            if (count >= 2) {
+                return firstTaskId
+            } else {
+                return null;
+            }
+        }
+        const checkTaskPosition = function (list) {
+            let checkTask = {}
+            for (let task1 of list) {
+                for (let task0 of list) {
+                    if (task0.taskId == task1.taskId || moment(task1.indentStartTime).isSame(moment(task0.indentStartTime), 'd')) continue;
+                    // Compare days
+                    let dayCase, dayCase1, dayCase2;
+                    function initDayCase() {
+                        dayCase = moment(task1.indentStartTime).isSameOrAfter(moment(task0.indentStartTime), 'd') 
+                            && moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentEndTime ? task0.indentEndTime : task0.indentStartTime), 'd')
+                        dayCase1 = moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentStartTime), 'd') 
+                            && moment(task1.indentEndTime ? task1.indentEndTime : task1.indentStartTime).isSameOrAfter(moment(task0.indentEndTime ? task0.indentEndTime : task0.indentStartTime), 'd')
+                        dayCase2 = moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentStartTime), 'd') 
+                            && moment(task1.indentEndTime ? task1.indentEndTime : task1.indentStartTime).isSameOrAfter(moment(task0.indentStartTime), 'd')
+                    }
+                    initDayCase();
+                    if (dayCase || dayCase1 || dayCase2) {
+                        // Compare minutes
+                        let minuteCase1 = moment({ hours: moment(task1.indentStartTime).hours(), minutes: moment(task1.indentStartTime).minutes() })
+                            .isSameOrAfter(moment({ hours: moment(task0.indentStartTime).hours(), minutes: moment(task0.indentStartTime).minutes() }), 'm')
+                        if (minuteCase1) {
+                            // check if today has more than two task need add space
+                            // if only one, just as follow, else only first one need add space
+                            let shouldIncreaseSpaceIndentId = checkIfExistMoreThanTwoTask(list, moment(task1.indentStartTime), moment(task0.indentStartTime))
+                            
+                            function calcSpaceInfo() {
+                                let tempTaskId = (task1.isVirtualTask ? 'v-' : '') + task1.taskId;
+                                if (!shouldIncreaseSpaceIndentId) {
+                                    // debugger
+                                    // Just add space here
+                                    if (!checkTask[tempTaskId]) {
+                                        checkTask[tempTaskId] = { space: 1 }
+                                        if (task1.isVirtualTask) {
+                                            checkTask[tempTaskId].isVirtualTask = true;
+                                        }
+                                    } else {
+                                        checkTask[tempTaskId].space += 1;
+                                    }
+                                } else if (shouldIncreaseSpaceIndentId == task1.taskId) {
+                                    // Only add space for first record
+                                    if (!checkTask[tempTaskId]) {
+                                        checkTask[tempTaskId] = { space: 1 }
+                                    } else {
+                                        checkTask[tempTaskId].space += 1;
+                                    }
+                                } else if (task1.virtualCount) {
+                                    task1.virtualCount += 1
+                                } else {
+                                    task1.virtualCount = 1
+                                }
+                            }
+                            calcSpaceInfo();
+                        } 
+                    }
+                }
+            }
+
+            function calcTaskSpace() {
+                for (let task of taskList) {
+                    task.space = task.space || 0;
+                    if (task.isVirtualTask) {
+                        if (checkTask['v-' + task.taskId]?.space) {
+                            task.space += checkTask['v-' + task.taskId].space
+                        }
+                    } else if (checkTask[task.taskId]?.space) {
+                        task.space += checkTask[task.taskId].space;
+                    }
+                }
+            }
+            calcTaskSpace();
+        }
         const generateDayHtml = function (date, index) {
             const checkNear7DaysTask = function (date) {
-                const checkIfExistMoreThanTwoTask = function (list, targetDate, compareDate) {
-                    let firstTaskId = null; // use for record which task should increase space
-                    let count = 0;
-                    for (let task of list) {
-                        if (moment(task.indentStartTime).isSame(targetDate, 'd')) {
-                            if (moment({ hours: moment(task.indentStartTime).hours(), minutes: moment(task.indentStartTime).minutes() })
-                            .isSameOrAfter(moment({ hours: moment(compareDate).hours(), minutes: moment(compareDate).minutes() }), 'm')) {
-                                if (!firstTaskId) firstTaskId = task.taskId;
-                                count++;
-                            }
-                        }
-                    }
-                    if (count >= 2) {
-                        return firstTaskId
-                    } else {
-                        return null;
-                    }
-                }
-                const checkTaskPosition = function (list) {
-                    // console.log(`checkTaskPosition => `, JSON.stringify(list, null, 4))
-                    let checkTask = {}
-                    for (let task1 of list) {
-                        for (let task0 of list) {
-                            if (task0.taskId == task1.taskId) continue;
-                            if (moment(task1.indentStartTime).isSame(moment(task0.indentStartTime), 'd')) continue;
-                            // Compare days
-                            let dayCase = moment(task1.indentStartTime).isSameOrAfter(moment(task0.indentStartTime), 'd') 
-                                && moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentEndTime ? task0.indentEndTime : task0.indentStartTime), 'd')
-                            let dayCase1 = moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentStartTime), 'd') 
-                                && moment(task1.indentEndTime ? task1.indentEndTime : task1.indentStartTime).isSameOrAfter(moment(task0.indentEndTime ? task0.indentEndTime : task0.indentStartTime), 'd')
-                            let dayCase2 = moment(task1.indentStartTime).isSameOrBefore(moment(task0.indentStartTime), 'd') 
-                                && moment(task1.indentEndTime ? task1.indentEndTime : task1.indentStartTime).isSameOrAfter(moment(task0.indentStartTime), 'd')
-                            if (dayCase || dayCase1 || dayCase2) {
-                                // Compare minutes
-                                let minuteCase1 = moment({ hours: moment(task1.indentStartTime).hours(), minutes: moment(task1.indentStartTime).minutes() })
-                                    .isSameOrAfter(moment({ hours: moment(task0.indentStartTime).hours(), minutes: moment(task0.indentStartTime).minutes() }), 'm')
-                                if (minuteCase1) {
-                                    // console.log(`******taskId******`)
-                                    // console.log(task1.taskId)
-                                    // console.log(`******========******`)
-                                    // console.log(`******========******`)
-                                    // check if today has more than two task need add space
-                                    // if only one, just as follow, else only first one need add space
-                                    let shouldIncreaseSpaceIndentId = checkIfExistMoreThanTwoTask(list, moment(task1.indentStartTime), moment(task0.indentStartTime))
-                                    
-                                    if (!shouldIncreaseSpaceIndentId) {
-                                        // debugger
-                                        // Just add space here
-                                        if (!checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId]) {
-                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId] = { space: 1 }
-                                            if (task1.isVirtualTask) {
-                                                checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].isVirtualTask = true;
-                                            }
-                                        } else {
-                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].space += 1;
-                                        }
-                                    } else if (shouldIncreaseSpaceIndentId == task1.taskId) {
-                                        // Only add space for first record
-                                        if (!checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId]) {
-                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId] = { space: 1 }
-                                        } else {
-                                            checkTask[(task1.isVirtualTask ? 'v-' : '') + task1.taskId].space += 1;
-                                        }
-                                    } else if (task1.virtualCount) {
-                                        task1.virtualCount += 1
-                                    } else {
-                                        task1.virtualCount = 1
-                                    }
-                                  
-
-                                } 
-                            }
-                        }
-                    }
-
-                    for (let task of taskList) {
-
-                        if (task.isVirtualTask) {
-                            if (checkTask['v-' + task.taskId] && checkTask['v-' + task.taskId].space) {
-                                if (task.space) task.space += checkTask['v-' + task.taskId].space
-                                else task.space = checkTask['v-' + task.taskId].space;
-                            }
-                        } else if (checkTask[task.taskId] && checkTask[task.taskId].space) {
-                            if (task.space) task.space += checkTask[task.taskId].space;
-                            else task.space = checkTask[task.taskId].space;
-                        }
-                    }
-                    // console.log(`CheckTask result => `, JSON.stringify(checkTask, null, 4))
-                }
-
                 let near7DaysTaskList = []
                 for (let task of taskList) {
                     if (moment(task.indentStartTime).isSameOrAfter(date) && moment(task.indentStartTime).diff(date, 'd') <= 6) {
@@ -399,28 +411,37 @@ const initMonthHandler = async function () {
             let resultHtml = `<div><label class="date ${ moment().isSame(date, 'd') ? ' active ' : ' ' }">${ date.date() }</label>`;
 
             if (vehicleWptEndTime && moment(vehicleWptEndTime).isSameOrAfter(moment())) {
-                if (moment(vehicleWptStartTime).isSame(date, 'd')) {
-                    resultHtml += `<label class="maintenace-s">WPT</label>`
+                function buildWptHtml() {
+                    if (moment(vehicleWptStartTime).isSame(date, 'd')) {
+                        resultHtml += `<label class="maintenace-s">WPT</label>`
+                    }
+                    if (moment(vehicleWptEndTime).isSame(date, 'd')) {
+                        resultHtml += `<label class="maintenace-e">WPT</label>`
+                    }
                 }
-                if (moment(vehicleWptEndTime).isSame(date, 'd')) {
-                    resultHtml += `<label class="maintenace-e">WPT</label>`
-                }
+                buildWptHtml();
             }
             if (vehicleMptEndTime && moment(vehicleWptEndTime).isSameOrAfter(moment())) {
-                if (moment(vehicleMptStartTime).isSame(date, 'd')) {
-                    resultHtml += `<label class="maintenace-s">MPT</label>`
+                function buildMptHtml() {
+                    if (moment(vehicleMptStartTime).isSame(date, 'd')) {
+                        resultHtml += `<label class="maintenace-s">MPT</label>`
+                    }
+                    if (moment(vehicleMptEndTime).isSame(date, 'd')) {
+                        resultHtml += `<label class="maintenace-e">MPT</label>`
+                    }
                 }
-                if (moment(vehicleMptEndTime).isSame(date, 'd')) {
-                    resultHtml += `<label class="maintenace-e">MPT</label>`
-                }
+                buildMptHtml();
             }
 
-            if (vehiclePmTime && moment(vehiclePmTime).isSame(date, 'd')) {
-                resultHtml += `<label class="maintenace-e">PM</label>`
+            function buildPmHtml() {
+                if (vehiclePmTime && moment(vehiclePmTime).isSame(date, 'd')) {
+                    resultHtml += `<label class="maintenace-e">PM</label>`
+                }
+                if (vehicleAviTime && moment(vehicleAviTime).isSame(date, 'd')) {
+                    resultHtml += `<label class="maintenace-e">AVI</label>`
+                }
             }
-            if (vehicleAviTime && moment(vehicleAviTime).isSame(date, 'd')) {
-                resultHtml += `<label class="maintenace-e">AVI</label>`
-            }
+            buildPmHtml();
 
             resultHtml += `${ html }</div>`
             return resultHtml;
@@ -633,18 +654,26 @@ const initPurposeHandler = async function () {
             }
         })
     }
+    function buildTheme(purpose) {
+        if (purpose.purposeName == 'Driving Training' || purpose.purposeName == 'Training') return 'Training'
+        if (purpose.purposeName == 'Maintenance') return 'Maintenance'
+        if (purpose.purposeName == 'Admin' || purpose.purposeName == 'Duty') return 'Admin'
+        if (purpose.purposeName == 'Ops' || purpose.purposeName == 'Others' || purpose.purposeName == 'Operation') return 'Operations'
+        return 'Default';
+    }
     const drawPurpose = function (mtPurposeList, systemPurposeList) {
         $('.activity-container').empty();
         let html = `<ul><li class="px-3" data-val="">All activities</li>`
         for (let purpose of mtPurposeList) {
-            let theme = "Default";
-            if (purpose.purposeName == 'Driving Training' || purpose.purposeName == 'Training') theme = 'Training'
-            if (purpose.purposeName == 'Maintenance') theme = 'Maintenance'
-            if (purpose.purposeName == 'Admin' || purpose.purposeName == 'Duty') theme = 'Admin'
-            if (purpose.purposeName == 'Ops' || purpose.purposeName == 'Others' || purpose.purposeName == 'Operation') theme = 'Operations'
+            let theme = buildTheme(purpose);
 
-            let borderColor = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color;
-            let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor
+            let borderColor;
+            let bgColor;
+            function buildColorInfo() {
+                borderColor = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color;
+                bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor
+            }
+            buildColorInfo();
             html += `<li class="px-3" data-val="MT-${ purpose.purposeName }">
                 <div class="row">
                     <div class="col-auto">
@@ -666,11 +695,7 @@ const initPurposeHandler = async function () {
         html += `<li><hr style="border-color: gray !important;"></li>`
 
         for (let purpose of systemPurposeList) {
-            let theme = "Default";
-            if (purpose.purposeName == 'Driving Training' || purpose.purposeName == 'Training') theme = 'Training'
-            if (purpose.purposeName == 'Maintenance') theme = 'Maintenance'
-            if (purpose.purposeName == 'Admin' || purpose.purposeName == 'Duty') theme = 'Admin'
-            if (purpose.purposeName == 'Ops' || purpose.purposeName == 'Others' || purpose.purposeName == 'Operation') theme = 'Operations'
+            let theme = buildTheme(purpose);
 
             let borderColor = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color;
             let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor

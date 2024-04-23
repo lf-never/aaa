@@ -11,7 +11,7 @@ $(() => {
     }, 500)
 
     currentVehicleNo = getParams("vehicleNo");
-    $(".vehicleNo-label").html(currentVehicleNo);
+    $(".vehicleNo-label").text(currentVehicleNo);
 
     $(".edit-content-btn-div").on('click', function() {
         initVehicleEditPage('edit', $(".vehicle-no").text());

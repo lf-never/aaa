@@ -275,9 +275,9 @@ const initDriverTable = function () {
                         if (data == 'Rejected') {
                             return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showRejectInfo('${full.rejectUser}', '${moment(full.rejectDate).format("YYYY-MM-DD HH:mm:ss")}', '${full.rejectReason}')" role="button" tabindex="0">${data}</div>`
                         } else if (data == 'Failed') {
-                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showFailInfo('${full.failUser || '-'}', '${full.failDate ? moment(full.failDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.failReason || '-'}')" role="button" tabindex="0">Not Approved</div>`
+                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showFailInfo('${full.failUser}', '${full.failDate ? moment(full.failDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.failReason}')" role="button" tabindex="0">Not Approved</div>`
                         } else if (data == 'Pending') {
-                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showPendingInfo('${full.pendingUser || '-'}', '${full.pendingDate ? moment(full.pendingDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.pendingReason || '-'}')" role="button" tabindex="0">${data}</div>`
+                            return `<div style="cursor: pointer; color: blue; text-decoration: underline; " onclick="showPendingInfo('${full.pendingUser}', '${full.pendingDate ? moment(full.pendingDate).format("YYYY-MM-DD HH:mm:ss") : '-'}', '${full.pendingReason}')" role="button" tabindex="0">${data}</div>`
                         } else if (data == 'Pending Approval') {
                             return 'Pending Submit'
                         } else if (data == 'Success') {

@@ -100,6 +100,13 @@ const initMonthSelectHandler = function () {
 }
 
 const initWeekDaysHandler = async function (weekIndex, year, month) {
+	const getTOCalenderDriverList = async function (startDate, endDate, unit, subUnit) {
+		return await axios.post('/driver/getTOCalenderDriverList', { startDate, endDate, unit, subUnit, driverName: $('.search-input').val().trim() })
+			.then(result => { 
+				return result.data.respMessage 
+			})
+	}
+
 	const initWeekDaysLabel = function (weekIndex, year, month) {
 		let initDate = moment({ year, month })
 		let date = initDate.add(weekIndex, 'W');
@@ -152,178 +159,187 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 		return moment(tempDate2).diff(moment(tempDate1), 'd')
 	}
 
-	const initDriverContainer = async function (startDate, driverList) {
-		let driverIndex = 0;
-		for (let driver of driverList) {
-			driverIndex ++;
-			let html = `
-				<td>
-					<div class="d-flex flex-row justify-content-start">
-						<div class="bd-highlight px-1"><label class="driverName">${ driver.driverName }</label></div>
-					</div>
-					<div class="d-flex flex-row justify-content-start">
-						<div class="bd-highlight px-1">
-							<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
-							<label class="date-label">${ driver.taskList.filter(item => item.taskId).length }</label>
-						</div>
-					</div>
-				</td>
-			`;
+	const isValidTask = function(task, currentDate) {
+		return currentDate.get('date') >= moment(task.indentStartTime).get('date') 
+			&& currentDate.get('date') <= moment(task.indentEndTime).get('date')
+			&& task.taskId && !(task.taskId+"").startsWith('onLeave');
+	}
 
-			let tdWidth = $('.weekTaskInfo td:last').width();
+	function getDriverTaskPreTask(currentTask, allTask) {
+		let preThoughTask = null;
+		for (let tempTask of allTask) {
+			if (currentTask.taskId != tempTask.taskId) {
+				if (getDateLength(tempTask.indentStartTime, currentTask.indentStartTime) == 0) {
+					if (currentTask.indentId != tempTask.indentId) {
+						preThoughTask = tempTask;
+					}
+				} else if (getDateLength(tempTask.indentEndTime, currentTask.indentStartTime) >= 0 
+					&& getDateLength(tempTask.indentStartTime, currentTask.indentStartTime) <= 0) {
+						preThoughTask = tempTask;
+				}
+			} else {
+				break;
+			}
+		}
+		return preThoughTask;
+	}
 
-			let maxTaskMarginTop = 0;
-			// index => Use for judge current date index
-			for (let index = 0; index < 7; index++) {
-				let taskHtml = ``, totalTask = [], totalDriver = [];
-	
-				let currentDate = moment(startDate).add(index, 'day');
+	function buildTakHtml(index, currentDate, task, driver) {
+		let currentTaskHtml = ``;
+		let tdWidth = $('.weekTaskInfo td:last').width();
+		// while start date is not monday
+		let realDateLength = getDateLength(task.indentEndTime, task.indentStartTime) + 1;
+		let dayLength = 1;
 
-				let barCount = 0;
-				for (let task of driver.taskList) {
-					// console.log(task)
+		let calculateStartDate = null, calculateEndDate = null;
+		function caclDateInfo() {
+			if (getDateLength(startDate, task.indentStartTime) >= 0) {
+				// if indentStartTime is before current week
+				calculateStartDate = startDate
+			} else {
+				// if indentStartTime is in current week
+				calculateStartDate = task.indentStartTime
+			}
+			if (getDateLength(task.indentEndTime, moment(startDate).endOf('isoWeek')) >= 0) {
+				// if indentEndTime is after current week
+				calculateEndDate = moment(startDate).endOf('isoWeek')
+			} else {
+				// if indentEndTime is in current week
+				calculateEndDate = task.indentEndTime
+			}
+		}
+		caclDateInfo();
+		dayLength = getDateLength(calculateEndDate, calculateStartDate) + 1;
+		// max size is 7 ever week
+		if (dayLength > 7) dayLength = 7;
 
-					// while start date is not monday
-					let realDateLength = getDateLength(task.indentEndTime, task.indentStartTime) + 1;
-					let dayLength = 1;
+		if ((index == 0 && moment(moment(currentDate).format('YYYY-MM-DD')).isSameOrAfter(moment(task.indentStartTime).format('YYYY-MM-DD')))
+			|| moment(moment(currentDate).format('YYYY-MM-DD')).isSame(moment(task.indentStartTime).format('YYYY-MM-DD'))) {
+			let theme = "Default";
+			function caclTheme() {
+				if (task.purpose == 'Driving Training' || task.purpose == 'Training') theme = 'Training';
+				if (task.purpose == 'Maintenance') theme = 'Maintenance';
+				if (task.purpose == 'Familiarisation') theme = 'Familiarisation';
+				if (task.purpose == 'Admin' || task.purpose == 'Duty') theme = 'Admin';
+				if (task.purpose == 'Ops' || task.purpose == 'Others' || task.purpose == 'Operation') theme = 'Operations';
+			}
+			caclTheme();
 
-					let calculateStartDate = null, calculateEndDate = null;
-					if (getDateLength(startDate, task.indentStartTime) >= 0) {
-						// if indentStartTime is before current week
-						calculateStartDate = startDate
+			let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
+			let color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color;
+
+			let preThoughTask = getDriverTaskPreTask(task, driver.taskList);
+
+			let marginTop = preThoughTask ? (preThoughTask.marginTop + 35) : 0; //(hasPreTaskOgThough) * 35
+			task.marginTop = marginTop;
+			if ((task.taskId + "").startsWith('onLeave')) {
+				// This on-leave record
+				let label = '';
+				function buildLabel() {
+					if (realDateLength > 1) {
+						label = `${task.reason} , ${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${moment(task.indentEndTime).format('MM-DD HH:mm')}`;
 					} else {
-						// if indentStartTime is in current week
-						calculateStartDate = task.indentStartTime
-					}
-					if (getDateLength(task.indentEndTime, moment(startDate).endOf('isoWeek')) >= 0) {
-						// if indentEndTime is after current week
-						calculateEndDate = moment(startDate).endOf('isoWeek')
-					} else {
-						// if indentEndTime is in current week
-						calculateEndDate = task.indentEndTime
-					}
-					dayLength = getDateLength(calculateEndDate, calculateStartDate) + 1;
-					// max size is 7 ever week
-					if (dayLength > 7) dayLength = 7;
-					
-					// IF through monday, need check here
-					if ((index == 0 && moment(moment(currentDate).format('YYYY-MM-DD')).isSameOrAfter(moment(task.indentStartTime).format('YYYY-MM-DD'))) 
-					|| moment(moment(currentDate).format('YYYY-MM-DD')).isSame(moment(task.indentStartTime).format('YYYY-MM-DD'))) {
-						barCount ++;
-						let theme = "Default"
-						if (task.purpose == 'Driving Training' || task.purpose == 'Training') theme = 'Training'
-						if (task.purpose == 'Maintenance') theme = 'Maintenance'
-						if (task.purpose == 'Familiarisation') theme = 'Familiarisation'
-						if (task.purpose == 'Admin' || task.purpose == 'Duty') theme = 'Admin'
-						if (task.purpose == 'Ops' || task.purpose == 'Others' || task.purpose == 'Operation') theme = 'Operations'
-
-						let bgColor = Object.keys(THEME).includes(theme) ? THEME[theme].bgColor : THEME.Default.bgColor;
-						let color = Object.keys(THEME).includes(theme) ? THEME[theme].color : THEME.Default.color
-
-						let preThoughTask = null;
-						for (let tempTask of driver.taskList) {
-							if (task.taskId != tempTask.taskId) {
-								if (getDateLength(tempTask.indentStartTime, task.indentStartTime) == 0) {
-									if (task.indentId != tempTask.indentId) {
-										preThoughTask = tempTask;
-									}
-								} else if (getDateLength(tempTask.indentEndTime,task.indentStartTime) >= 0 
-									&& getDateLength(tempTask.indentStartTime, task.indentStartTime) <= 0) {
-										preThoughTask = tempTask;
-								}
-							} else {
-								break;
-							}
-						}
-
-						let marginTop = preThoughTask ? (preThoughTask.marginTop + 35) : 0;//(hasPreTaskOgThough) * 35
-						if (task.taskId && (task.taskId+"").startsWith('onLeave')) {
-							// This on-leave record
-							let label = ''
-							if (realDateLength > 1) {
-								label = `${ task.reason } , ${ moment(task.indentStartTime).format('MM-DD HH:mm') } - ${ moment(task.indentEndTime).format('MM-DD HH:mm') }`
-							} else {
-								label = `${ task.reason } ,  ${ moment(task.indentStartTime).format('HH:mm') } - ${ moment(task.indentEndTime).format('HH:mm') }`
-							}
-							let eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
-							let eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
-
-							taskHtml += `
-								<div class="driver-task-container driver-leave" title="${label}"
-									style="color: #bd0707; margin-top: ${ marginTop }px; position: absolute; width: ${ dayLength * tdWidth + (dayLength - 1) * 20 }px;"
-									oncontextmenu="markAsUnAvailable1(${driver.driverId}, '${driver.driverName}', '${eventStartDate}', '${eventEndDate}')">
-									${label}
-								</div>
-							`;
-						} else {
-							// for show while task need more than one day
-							let label = ''
-							let taskTypeLabel = '';
-							if (task.taskId.indexOf('CU-') > -1) {
-								taskTypeLabel = 'CU-';
-							} else if (task.dataFrom == 'MT-ADMIN') {
-								taskTypeLabel = 'MT-';
-							} else if (task.dataFrom == 'SYSTEM') {
-								taskTypeLabel = 'SYS-';
-							}
-
-							if (realDateLength > 1) {
-								label = `${taskTypeLabel + task.purpose }, ${ moment(task.indentStartTime).format('MM-DD HH:mm') } - ${ moment(task.indentEndTime).format('MM-DD HH:mm')}`
-							} else {
-								label = `${taskTypeLabel + task.purpose }, ${ moment(task.indentStartTime).format('HH:mm') } - ${ moment(task.indentEndTime).format('HH:mm')}`
-							}
-
-							taskHtml += `
-								<div class="driver-task-container active " title="${label}" style="margin-top: 8px; background-color: ${ bgColor }; color: ${ color }; 
-									width: ${ dayLength * tdWidth + (dayLength - 1) * 20 }px; position: absolute; margin-top: ${ marginTop }px;" 
-									onclick="editDriverTask('${task.taskId}', '${task.indentStartTime}')" role="button" tabindex="0">
-									${ label }
-								</div>
-							`;
-						}
-						
-						if (marginTop > maxTaskMarginTop) {
-							maxTaskMarginTop = marginTop;
-						}
-						task.marginTop = marginTop
-						
-				
-					}
-
-					if (currentDate.get('date') >= moment(task.indentStartTime).get('date') && currentDate.get('date') <= moment(task.indentEndTime).get('date')) {
-						if (task.taskId && !(task.taskId+"").startsWith('onLeave')) {
-							totalTask.push(task.indentId);
-							totalDriver.push(driver.driverId)
-						}
+						label = `${task.reason} ,  ${moment(task.indentStartTime).format('HH:mm')} - ${moment(task.indentEndTime).format('HH:mm')}`;
 					}
 				}
+				buildLabel();
+				let eventStartDate = moment(task.indentStartTime).format('YYYY-MM-DD');
+				let eventEndDate = moment(task.indentEndTime).format('YYYY-MM-DD');
 
-				html += `
-					<td oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day').format('YYYY-MM-DD HH:mm:ss')}')" 
-						style="vertical-align: top;" class="${ currentDate.isBefore(moment(), 'day') ? 'preMonth' : '' }">
-						${ taskHtml }
-					</td>
-				`
+				currentTaskHtml += `
+					<div class="driver-task-container driver-leave" title="${label}"
+						style="color: #bd0707; margin-top: ${marginTop}px; position: absolute; width: ${dayLength * tdWidth + (dayLength - 1) * 20}px;"
+						oncontextmenu="markAsUnAvailable1(${driver.driverId}, '${driver.driverName}', '${eventStartDate}', '${eventEndDate}')">
+						${label}
+					</div>
+				`;
+			} else {
+				// for show while task need more than one day
+				let label = '';
+				let taskTypeLabel = '';
+				function buildLabel() {
+					if (task.taskId.indexOf('CU-') > -1) {
+						taskTypeLabel = 'CU-';
+					} else if (task.dataFrom == 'MT-ADMIN') {
+						taskTypeLabel = 'MT-';
+					} else if (task.dataFrom == 'SYSTEM') {
+						taskTypeLabel = 'SYS-';
+					}
+	
+					if (realDateLength > 1) {
+						label = `${taskTypeLabel + task.purpose}, ${moment(task.indentStartTime).format('MM-DD HH:mm')} - ${moment(task.indentEndTime).format('MM-DD HH:mm')}`;
+					} else {
+						label = `${taskTypeLabel + task.purpose}, ${moment(task.indentStartTime).format('HH:mm')} - ${moment(task.indentEndTime).format('HH:mm')}`;
+					}
+				}
+				buildLabel();
 
-				let $targetTD = $('.weekTaskInfo tr').eq(0).find('td').eq(index + 1)
-
-				let targetIndentCount = Number.parseInt($targetTD.find('.indentCount').html())
-				$targetTD.find('.indentCount').html(targetIndentCount + totalTask.length)
-
-				let targetDriverCount = Number.parseInt($targetTD.find('.driverCount').html())
-				$targetTD.find('.driverCount').html(targetDriverCount + Array.from(new Set(totalDriver)).length)
-			}	
-
-			let trHeight = maxTaskMarginTop + 50;
-			html = `<tr style="height: ${trHeight}px;">${html}</tr>`
-			$('.weekTaskInfo').append(html)
+				currentTaskHtml += `
+					<div class="driver-task-container active " title="${label}" style="margin-top: 8px; background-color: ${bgColor}; color: ${color}; 
+						width: ${dayLength * tdWidth + (dayLength - 1) * 20}px; position: absolute; margin-top: ${marginTop}px;" 
+						onclick="editDriverTask('${task.taskId}', '${task.indentStartTime}')" role="button" tabindex="0">
+						${label}
+					</div>
+				`;
+			}
 		}
+		return currentTaskHtml;
 	}
-	const getTOCalenderDriverList = async function (startDate, endDate, unit, subUnit) {
-		return await axios.post('/driver/getTOCalenderDriverList', { startDate, endDate, unit, subUnit, driverName: $('.search-input').val().trim() })
-			.then(result => { 
-				return result.data.respMessage 
-			})
+
+	const initDriverContainer = async function (startDate, driver) {
+		let html = `
+			<td>
+				<div class="d-flex flex-row justify-content-start">
+					<div class="bd-highlight px-1"><label class="driverName">${ driver.driverName }</label></div>
+				</div>
+				<div class="d-flex flex-row justify-content-start">
+					<div class="bd-highlight px-1">
+						<img alt="" class="date-img" src="../scripts/driverTo/icons/file.svg">
+						<label class="date-label">${ driver.taskList.filter(item => item.taskId).length }</label>
+					</div>
+				</div>
+			</td>
+		`;
+
+		let maxTaskMarginTop = 0;
+		// index => Use for judge current date index
+		for (let index = 0; index < 7; index++) {
+			let taskHtml = ``, totalTask = [], totalDriver = [];
+
+			let currentDate = moment(startDate).add(index, 'day');
+
+			for (let task of driver.taskList) {
+				// IF through monday, need check here
+				taskHtml += buildTakHtml(index, currentDate, task, driver);
+
+				if (task.marginTop > maxTaskMarginTop) {
+					maxTaskMarginTop = marginTop;
+				}
+				if (isValidTask(task, currentDate)) {
+					totalTask.push(task.indentId);
+					totalDriver.push(driver.driverId);
+				}
+			}
+
+			html += `
+				<td oncontextmenu="markAsUnAvailable(${driver.driverId}, '${driver.driverName}', '${moment(startDate).add(index, 'day').format('YYYY-MM-DD HH:mm:ss')}')" 
+					style="vertical-align: top;" class="${ currentDate.isBefore(moment(), 'day') ? 'preMonth' : '' }">
+					${ taskHtml }
+				</td>
+			`
+
+			let $targetTD = $('.weekTaskInfo tr').eq(0).find('td').eq(index + 1)
+
+			let targetIndentCount = Number.parseInt($targetTD.find('.indentCount').html())
+			$targetTD.find('.indentCount').html(targetIndentCount + totalTask.length)
+
+			let targetDriverCount = Number.parseInt($targetTD.find('.driverCount').html())
+			$targetTD.find('.driverCount').html(targetDriverCount + Array.from(new Set(totalDriver)).length)
+		}	
+
+		let trHeight = maxTaskMarginTop + 50;
+		html = `<tr style="height: ${trHeight}px;">${html}</tr>`
+		$('.weekTaskInfo').append(html)
 	}
 
 	let { startDate, endDate, dateList } = initWeekDaysLabel(weekIndex, year, month);
@@ -335,7 +351,9 @@ const initWeekDaysHandler = async function (weekIndex, year, month) {
 	let subUnit = Cookies.get('selectedSubUnit');
 	let driverList = await getTOCalenderDriverList(startDate, endDate, unit, subUnit);
 
-	initDriverContainer(currentStartDate, driverList);
+	for (let driver of driverList) {
+		initDriverContainer(currentStartDate, driver);
+	}
 }
 
 const editDriverTask = function(taskId, indentStartTime) {
