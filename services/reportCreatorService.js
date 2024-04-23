@@ -1361,7 +1361,7 @@ const ExportDataToExcel = async function (reportGroupSelectionTitle, datas, repo
     }
     reportDateRange = reportDateRange.replaceAll('-', '')
     let filename = `Task Report(${reportDateRange}).xlsx`
-    let filepath = downloadFolder + filename
+    let filepath = downloadFolder + utils.getSafePath(filename);
     let buffer = xlsx.build([
         {
             name: 'sheet1',
@@ -1415,7 +1415,7 @@ const ExportKeypressDataToExcel = async function (reportGroupSelectionTitle, dat
     }
     reportDateRange = reportDateRange.replaceAll('-', '')
     let filename = `KeypressReport(${reportDateRange}).xlsx`
-    let filepath = downloadFolder + filename
+    let filepath = downloadFolder + utils.getSafePath(filename);
     let buffer = xlsx.build([
         {
             name: 'sheet1',
@@ -1516,7 +1516,7 @@ const ExportTelematicsDataToExcel = async function (reportGroupSelectionTitle, d
         reportDateRange = moment(reportDateRange[0]).format(`YYYYMMDD`) + "~" + moment(reportDateRange.at(-1)).format(`YYYYMMDD`);
     }
     let filename = `Telematics Report(${ reportDateRange }).xlsx`
-    let filepath = downloadFolder + filename
+    let filepath = downloadFolder + utils.getSafePath(filename);
     let buffer = xlsx.build([
         {
             name: 'sheet1',

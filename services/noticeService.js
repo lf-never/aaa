@@ -387,7 +387,7 @@ module.exports = {
             }
 
             if (notification.coverImage) {
-                notification.coverImageBase64 = fs.readFileSync(`./public/resources/${ notification.coverImage }`, 'base64')
+                notification.coverImageBase64 = fs.readFileSync(`./public/resources/${ utils.getSafePath(notification.coverImage) }`, 'base64')
             }
             if (!notification.coverImage) {
                 notification.coverImageBase64 = fs.readFileSync(`./public/resources/upload/notification/notification-default.png`, 'base64')
@@ -395,7 +395,7 @@ module.exports = {
             }
 
             if (notification.mainImage) {
-                notification.mainImageBase64 = fs.readFileSync(`./public/resources/${ notification.mainImage }`, 'base64')
+                notification.mainImageBase64 = fs.readFileSync(`./public/resources/${ utils.getSafePath(notification.mainImage) }`, 'base64')
             } else {
                 notification.mainImageBase64 = null;
                 notification.mainImage = null;
