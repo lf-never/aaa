@@ -372,6 +372,7 @@ module.exports = {
                 transactDateTime = moment(transactDateTime, 'YYYY-MM-DD HH:mm:ss');
                 let tempTime = transactDateTime.add(1, 'minute');
                 if (currentTime.isAfter(tempTime)) {
+                    log.error(`parseKeyBoxQRCode: The QRCode has expired.`)
                     throw new Error('The QRCode has expired.');
                 }
             } else {

@@ -388,7 +388,10 @@ const checkFileExist = function (filePath) {
 
 module.exports.uploadImage = async function (req, res) {
 	try {
-		const form = formidable({ multiples: false, maxFileSize: 10 * 1024 * 1024, keepExtensions: true });
+		let folderPath = './public/resources/upload/notification';
+		checkFilePath(folderPath);
+
+		const form = formidable({ multiples: false, maxFileSize: 10 * 1024 * 1024, keepExtensions: false, uploadDir: folderPath });
 		form.parse(req, async (error, fields, files) => {
 			if (error) {
 				log.error(error)
@@ -397,9 +400,6 @@ module.exports.uploadImage = async function (req, res) {
 			log.info('fields: ', JSON.stringify(fields))
 			log.info('files: ', JSON.stringify(files))
 
-			let folderPath = './public/resources/upload/notification';
-			checkFilePath(folderPath);
-	
 			try {
 				let newFileName = `${ utils.generateUniqueKey() }.${ files.file.type.split('/')[1] }`
 				let filePath = `${ folderPath }/${ newFileName }`

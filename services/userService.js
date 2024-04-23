@@ -66,280 +66,346 @@ let TaskUtils = {
             let oldUserBase = null;
             let oldCVUser = null;
             let oldMVUser = null;
-            if(userBaseId) {
-                oldUserBase = await UserBase.findOne({ where: { id: userBaseId } })
-                if(oldUserBase.cvUserId) {
-                    oldCVUser = await _SysUser.USER.findOne({ where: { id: oldUserBase.cvUserId } })
-                }
-                if(oldUserBase.mvUserId) {
-                    oldMVUser = await User.findOne({ where: { userId: oldUserBase.mvUserId } })
-                }
-            }
-        
-            if(oldUserBase) {
-                //Reapply for a cv user
-                if(operationType.toLowerCase() == 'homeregistration' && oldUserBase.cvRejectDate && accountUser.cvRole) {
-                    await UserBase.update({ cvRejectDate: null, cvRejectBy: null, cvRejectReason: null }, { where: { id: userBaseId }, transaction: mvAffair });
-                }
-                //Reapply for a mv user
-                if(operationType.toLowerCase() == 'homeregistration' && oldUserBase.rejectDate && accountUser.mvUserType) {
-                    await UserBase.update({ status: 'Pending Approval', rejectDate: null, rejectBy: null, rejectReason: null }, { where: { id: userBaseId }, transaction: mvAffair });
+            const initOldUser = async function (){
+                if(userBaseId) {
+                    oldUserBase = await UserBase.findOne({ where: { id: userBaseId } })
+                    if(oldUserBase.cvUserId) {
+                        oldCVUser = await _SysUser.USER.findOne({ where: { id: oldUserBase.cvUserId } })
+                    }
+                    if(oldUserBase.mvUserId) {
+                        oldMVUser = await User.findOne({ where: { userId: oldUserBase.mvUserId } })
+                    }
                 }
             }
+            await initOldUser()
+            
+            //Reapply for a cv/mv user
+            const reapplyUser = async function (){
+                if(oldUserBase) {
+                    //Reapply for a cv user
+                    if(operationType.toLowerCase() == 'homeregistration' && oldUserBase.cvRejectDate && accountUser.cvRole) {
+                        await UserBase.update({ cvRejectDate: null, cvRejectBy: null, cvRejectReason: null }, { where: { id: userBaseId }, transaction: mvAffair });
+                    }
+                    //Reapply for a mv user
+                    if(operationType.toLowerCase() == 'homeregistration' && oldUserBase.rejectDate && accountUser.mvUserType) {
+                        await UserBase.update({ status: 'Pending Approval', rejectDate: null, rejectBy: null, rejectReason: null }, { where: { id: userBaseId }, transaction: mvAffair });
+                    }
+                }
+            }
+            await reapplyUser()
+
             let cvmvUserBase = null;
             if(userBaseId) cvmvUserBase = await UserBase.findOne({ where: { id: userBaseId } })
             let modelPageList = await userService.getUserPageList(loginUserId, 'User Management', 'View User')
             let operationList = modelPageList.map(item => `${ item.action }`).join(',')
             operationList = operationList.split(',')
             let mvRoleApprovalState = true;
-            if(accountUser.mvRoleName && operationType.toLowerCase() == 'edit') {
-                if(JUST_HQ_APPROVE_ROLE.includes(accountUser.mvRoleName) && loginUserType.toLowerCase() != 'hq') mvRoleApprovalState = false;
+            if((accountUser.mvRoleName && operationType.toLowerCase() == 'edit') && (JUST_HQ_APPROVE_ROLE.includes(accountUser.mvRoleName) && loginUserType.toLowerCase() != 'hq')) {
+                mvRoleApprovalState = false;
             }
-            let mvState = operationType.toLowerCase() == 'homeregistration' ? oldUserBase.approveDate ? true : false : true
-            let cvState = operationType.toLowerCase() == 'homeregistration' ? oldUserBase.cvApproveDate ? true : false : true
-            let mvEditApprovalState = cvmvUserBase ? !cvmvUserBase.rejectDate : true && mvRoleApprovalState && operationList.includes("Approval Status");
-            let mvState2 = operationType.toLowerCase() == 'edit' ? mvEditApprovalState ? true : false : true;
-            let cvEditApprovalState = cvmvUserBase ? !cvmvUserBase.cvRejectDate : true && operationList.includes("Approval Status");
-            let cvState2 = operationType.toLowerCase() == 'edit' ? cvEditApprovalState ? true : false : true
-            if(mvState && mvState2) {
-                if(accountUser.mvUserType) {
-                    let unitId = accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId;
-                    if(accountUser.mvUserType.toLowerCase() == 'hq') unitId = null
-                    if(oldMVUser){
-                        await User.update({
-                            username: accountUser.loginName,
-                            fullName: accountUser.fullName,
-                            nric: accountUser.nric,
-                            unitId: unitId,
-                            // unitId: accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId,
-                            // password: mvPassword,
+            //operationType.toLowerCase() == 'homeregistration' ? oldUserBase.approveDate ? true : false : true
+            let mvState = true;
+            if(operationType.toLowerCase() == 'homeregistration' && !oldUserBase.approveDate) mvState = false
+            //operationType.toLowerCase() == 'homeregistration' ? oldUserBase.cvApproveDate ? true : false : true
+            let cvState = true;
+            if(operationType.toLowerCase() == 'homeregistration' && !oldUserBase.cvApproveDate) cvState = false
+            let mvEditApprovalState = cvmvUserBase ? !cvmvUserBase.rejectDate : mvRoleApprovalState && operationList.includes("Approval Status");
+            // operationType.toLowerCase() == 'edit' ? mvEditApprovalState ? true : false : true
+            let mvState2 = true;
+            if(operationType.toLowerCase() == 'edit' && !mvEditApprovalState) mvState2 = false
+            let cvEditApprovalState = cvmvUserBase ? !cvmvUserBase.cvRejectDate : operationList.includes("Approval Status");
+            //operationType.toLowerCase() == 'edit' ? cvEditApprovalState ? true : false : true
+            let cvState2 = true;
+            if(operationType.toLowerCase() == 'edit' && !cvEditApprovalState) cvState2 = false
+
+            const updateMvUser = async function (){
+                if(mvState && mvState2) {
+                    if(accountUser.mvUserType) {
+                        let unitId = accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId;
+                        if(accountUser.mvUserType.toLowerCase() == 'hq') unitId = null
+                        if(oldMVUser){
+                            await User.update({
+                                username: accountUser.loginName,
+                                fullName: accountUser.fullName,
+                                nric: accountUser.nric,
+                                unitId: unitId,
+                                // unitId: accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId,
+                                // password: mvPassword,
+                                ord: accountUser.ord,
+                                userType: accountUser.mvUserType,
+                                role: accountUser.mvRoleName, 
+                                contactNumber: accountUser.contactNumber,
+                                hq: accountUser.hq
+                            }, { where: { userId: oldMVUser.userId }, transaction: mvAffair })
+                            mvUser = { userId: oldMVUser.userId }
+                        } else {
+                            mvUser = await User.create({
+                                username: accountUser.loginName,
+                                fullName: accountUser.fullName,
+                                nric: accountUser.nric,
+                                ord: accountUser.ord,
+                                unitId: unitId,
+                                // unitId: accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId,
+                                password: mvPassword,
+                                userType: accountUser.mvUserType,
+                                role: accountUser.mvRoleName,
+                                contactNumber: accountUser.contactNumber,
+                                hq: accountUser.hq
+                            }, { transaction: mvAffair })
+                        }
+                    } else if(oldMVUser) {
+                        await User.destroy({ where: { userId: oldMVUser.userId }, transaction: mvAffair });
+                    }
+                }
+            }
+            await updateMvUser()
+
+            const updateCVUser = async function (){
+                if(cvState && cvState2) {
+                    if(accountUser.cvRole){
+                        if(oldCVUser){
+                           await _SysUser.USER.update({
+                                nric: accountUser.nric,
+                                username: accountUser.fullName.toUpperCase(),
+                                loginName: accountUser.loginName,
+                                role: accountUser.cvRole,
+                                ord: accountUser.ord,
+                                // password: cvPassword,
+                                // historyPassword: cvPassword,
+                                group: accountUser.cvGroupId,
+                                contactNumber: accountUser.contactNumber,
+                                email: accountUser.email,
+                                serviceProviderId: accountUser.cvServiceProviderId,
+                                serviceTypeId: accountUser.cvServiceTypeId,
+                            }, { where: { id: oldCVUser.id }, transaction: cvAffair })
+                            cvUser = { id: oldCVUser.id }
+                        } else {
+                            cvUser = await _SysUser.USER.create({
+                                nric: accountUser.nric,
+                                username: accountUser.fullName.toUpperCase(),
+                                loginName: accountUser.loginName,
+                                ord: accountUser.ord,
+                                role: accountUser.cvRole,
+                                password: cvPassword,
+                                historyPassword: cvPassword,
+                                group: accountUser.cvGroupId,
+                                contactNumber: accountUser.contactNumber,
+                                email: accountUser.email,
+                                serviceProviderId: accountUser.cvServiceProviderId,
+                                serviceTypeId: accountUser.cvServiceTypeId,
+                            }, { transaction: cvAffair })
+                        }
+                    } else if(oldCVUser) {
+                        await _SysUser.USER.destroy({ where: { id: oldCVUser.id }, transaction: cvAffair });
+                    }
+                }
+            }
+            await updateCVUser()
+
+            let cvUserId = cvUser?.id || null;
+            let mvUserId = mvUser?.userId || null;
+            const updateOrCreateUserBase = async function (){
+                if(!userBaseId) {
+                    const createUserBase = async function (){
+                        let createUserBaer = {
+                            cvUserId: cvUserId,
+                            mvUserId: mvUserId,
                             ord: accountUser.ord,
-                            userType: accountUser.mvUserType,
-                            role: accountUser.mvRoleName, 
-                            contactNumber: accountUser.contactNumber,
-                            hq: accountUser.hq
-                        }, { where: { userId: oldMVUser.userId }, transaction: mvAffair })
-                        mvUser = { userId: oldMVUser.userId }
-                    } else {
-                        mvUser = await User.create({
-                            username: accountUser.loginName,
-                            fullName: accountUser.fullName,
                             nric: accountUser.nric,
-                            ord: accountUser.ord,
-                            unitId: unitId,
-                            // unitId: accountUser.mvUnitId ? accountUser.mvUnitId : accountUser.mvGroupId,
+                            fullName: accountUser.fullName,
+                            loginName: accountUser.loginName,
                             password: mvPassword,
-                            userType: accountUser.mvUserType,
-                            role: accountUser.mvRoleName,
                             contactNumber: accountUser.contactNumber,
+                            email: accountUser.email,
+                            status: 'Approved',
+                            // cvApproveDate: accountUser.approveDate,
+                            // cvApproveBy: 0,
+                            cvRole: accountUser.cvRole,
+                            cvGroupId: accountUser.cvGroupId,
+                            cvGroupName: accountUser.cvGroupName,
+                            cvServiceProviderId: accountUser.cvServiceProviderId,
+                            cvServiceTypeId: accountUser.cvServiceTypeId,
+                            mvUserType: accountUser.mvUserType,
+                            mvUnitId: accountUser.mvUnitId,
+                            mvGroupId: accountUser.mvGroupId,
+                            mvGroupName: accountUser.mvGroupName,
+                            mvRoleName: accountUser.mvRoleName,
+                            dataFrom: accountUser.dataFrom,
+                            creator: accountUser.creator,
                             hq: accountUser.hq
-                        }, { transaction: mvAffair })
+                            // approveDate: accountUser.approveDate,
+                            // approveBy: 0
+                        }
+                        if(accountUser.cvRole){
+                            createUserBaer.cvApproveDate = accountUser.approveDate
+                            createUserBaer.cvApproveBy = 0
+                        }
+                        if(accountUser.mvUserType) {
+                            createUserBaer.approveDate = accountUser.approveDate
+                            createUserBaer.approveBy = 0
+                        }
+                        newUserBase = await UserBase.create(createUserBaer, { transaction: mvAffair })
                     }
-                } else if(oldMVUser) {
-                    await User.destroy({ where: { userId: oldMVUser.userId }, transaction: mvAffair });
-                }
-            }
-            if(cvState && cvState2) {
-                if(accountUser.cvRole){
-                    if(oldCVUser){
-                       await _SysUser.USER.update({
-                            nric: accountUser.nric,
-                            username: accountUser.fullName.toUpperCase(),
-                            loginName: accountUser.loginName,
-                            role: accountUser.cvRole,
+                    await createUserBase()
+                } else if(operationType.toLowerCase() != 'create') {
+                    const editUserBase = async function (){
+                        let editUserBase = {
+                            cvUserId: cvUserId,
+                            mvUserId: mvUserId,
                             ord: accountUser.ord,
-                            // password: cvPassword,
-                            // historyPassword: cvPassword,
-                            group: accountUser.cvGroupId,
+                            nric: accountUser.nric,
+                            fullName: accountUser.fullName,
+                            loginName: accountUser.loginName,
+                            // password: mvPassword,
                             contactNumber: accountUser.contactNumber,
                             email: accountUser.email,
-                            serviceProviderId: accountUser.cvServiceProviderId,
-                            serviceTypeId: accountUser.cvServiceTypeId,
-                        }, { where: { id: oldCVUser.id }, transaction: cvAffair })
-                        cvUser = { id: oldCVUser.id }
-                    } else {
-                        cvUser = await _SysUser.USER.create({
-                            nric: accountUser.nric,
-                            username: accountUser.fullName.toUpperCase(),
-                            loginName: accountUser.loginName,
-                            ord: accountUser.ord,
-                            role: accountUser.cvRole,
-                            password: cvPassword,
-                            historyPassword: cvPassword,
-                            group: accountUser.cvGroupId,
-                            contactNumber: accountUser.contactNumber,
-                            email: accountUser.email,
-                            serviceProviderId: accountUser.cvServiceProviderId,
-                            serviceTypeId: accountUser.cvServiceTypeId,
-                        }, { transaction: cvAffair })
+                            cvRole: accountUser.cvRole,
+                            cvGroupId: accountUser.cvGroupId,
+                            cvGroupName: accountUser.cvGroupName,
+                            cvServiceProviderId: accountUser.cvServiceProviderId,
+                            cvServiceTypeId: accountUser.cvServiceTypeId,
+                            mvUserType: accountUser.mvUserType,
+                            mvUnitId: accountUser.mvUnitId,
+                            mvGroupId: accountUser.mvGroupId,
+                            mvGroupName: accountUser.mvGroupName,
+                            mvRoleName: accountUser.mvRoleName,
+                            hq: accountUser.hq
+                        }
+                        if(oldUserBase){
+                            if(!oldUserBase.approveDate && editUserBase.mvUserType && operationType.toLowerCase() != 'homeregistration' && !oldUserBase.rejectDate){
+                                editUserBase.approveDate = moment().format('YYYY-MM-DD HH:mm:ss')
+                                editUserBase.approveBy = 0
+                            }
+                            if(!oldUserBase.cvApproveDate && editUserBase.cvRole && operationType.toLowerCase() != 'homeregistration' && !oldUserBase.cvRejectDate){
+                                editUserBase.cvApproveDate = moment().format('YYYY-MM-DD HH:mm:ss')
+                                editUserBase.cvApproveBy = 0
+                            }
+                            // 2024-01-24 old password is null 
+                            const initOldPassWord = async function (){
+                                if(!oldUserBase.password){
+                                    let oldUserPassword = null;
+                                    if(oldUserBase.cvUserId) {
+                                        let oldSysUser = await _SysUser.USER.findOne({ where: { id: oldUserBase.cvUserId } })
+                                        oldUserPassword = oldSysUser ? oldSysUser.password.toUpperCase() : null;
+                                    }
+                                    if(oldUserBase.mvUserId) {
+                                        let oldServerUser = await User.findOne({ where: { userId: oldUserBase.mvUserId } })
+                                        oldUserPassword = oldServerUser ? oldServerUser.password : null;
+                                    }
+                                    editUserBase.password = oldUserPassword || mvPassword;
+                                }
+                            } 
+                            await initOldPassWord();
+                        }
+                        await UserBase.update(editUserBase, { where: { id: userBaseId }, transaction: mvAffair });
                     }
-                } else if(oldCVUser) {
-                    await _SysUser.USER.destroy({ where: { id: oldCVUser.id }, transaction: cvAffair });
+                    await editUserBase()
                 }
             }
+            await updateOrCreateUserBase();
 
-            let cvUserId = cvUser ? cvUser.id : null;
-            let mvUserId = mvUser ? mvUser.userId : null;
-            if(!userBaseId) {
-                let createUserBaer = {
-                    cvUserId: cvUserId,
-                    mvUserId: mvUserId,
-                    ord: accountUser.ord,
-                    nric: accountUser.nric,
-                    fullName: accountUser.fullName,
-                    loginName: accountUser.loginName,
-                    password: mvPassword,
-                    contactNumber: accountUser.contactNumber,
-                    email: accountUser.email,
-                    status: 'Approved',
-                    // cvApproveDate: accountUser.approveDate,
-                    // cvApproveBy: 0,
-                    cvRole: accountUser.cvRole,
-                    cvGroupId: accountUser.cvGroupId,
-                    cvGroupName: accountUser.cvGroupName,
-                    cvServiceProviderId: accountUser.cvServiceProviderId,
-                    cvServiceTypeId: accountUser.cvServiceTypeId,
-                    mvUserType: accountUser.mvUserType,
-                    mvUnitId: accountUser.mvUnitId,
-                    mvGroupId: accountUser.mvGroupId,
-                    mvGroupName: accountUser.mvGroupName,
-                    mvRoleName: accountUser.mvRoleName,
-                    dataFrom: accountUser.dataFrom,
-                    creator: accountUser.creator,
-                    hq: accountUser.hq
-                    // approveDate: accountUser.approveDate,
-                    // approveBy: 0
-                }
-                if(accountUser.cvRole){
-                    createUserBaer.cvApproveDate = accountUser.approveDate
-                    createUserBaer.cvApproveBy = 0
-                }
-                if(accountUser.mvUserType) {
-                    createUserBaer.approveDate = accountUser.approveDate
-                    createUserBaer.approveBy = 0
-                }
-                newUserBase = await UserBase.create(createUserBaer, { transaction: mvAffair })
+            const initRecord = async function (){
+                if(!newUserBase) newUserBase = await UserBase.findOne({ where: { id: userBaseId }, transaction: mvAffair })
+                if(oldUserBase || newUserBase){
+                    let operatorId = accountUser.creator;
+                    let loginUser = null;
+                    let optType = oldUserBase ? 'Account Edit' : 'Account Creation';
 
-            } else if(operationType.toLowerCase() != 'create') {
-                let editUserBase = {
-                    cvUserId: cvUserId,
-                    mvUserId: mvUserId,
-                    ord: accountUser.ord,
-                    nric: accountUser.nric,
-                    fullName: accountUser.fullName,
-                    loginName: accountUser.loginName,
-                    // password: mvPassword,
-                    contactNumber: accountUser.contactNumber,
-                    email: accountUser.email,
-                    cvRole: accountUser.cvRole,
-                    cvGroupId: accountUser.cvGroupId,
-                    cvGroupName: accountUser.cvGroupName,
-                    cvServiceProviderId: accountUser.cvServiceProviderId,
-                    cvServiceTypeId: accountUser.cvServiceTypeId,
-                    mvUserType: accountUser.mvUserType,
-                    mvUnitId: accountUser.mvUnitId,
-                    mvGroupId: accountUser.mvGroupId,
-                    mvGroupName: accountUser.mvGroupName,
-                    mvRoleName: accountUser.mvRoleName,
-                    hq: accountUser.hq
-                }
-                if(oldUserBase){
-                    if(!oldUserBase.approveDate && editUserBase.mvUserType && operationType.toLowerCase() != 'homeregistration' && !oldUserBase.rejectDate){
-                        editUserBase.approveDate = moment().format('YYYY-MM-DD HH:mm:ss')
-                        editUserBase.approveBy = 0
+                    const initReportData = async function (){
+                        if(accountUser.creator) loginUser = await User.findOne({ where: { userId: accountUser.creator }, transaction: mvAffair })
+                        if(operationType.toLowerCase() == 'homeregistration'){
+                            if(oldUserBase.cvUserId && !oldUserBase.mvUserId && newUserBase.mvUserType){
+                                operatorId = oldUserBase.cvUserId;
+                                loginUser = await UserBase.findOne({ where: { cvUserId: oldUserBase.cvUserId }, transaction: mvAffair })
+                                optType = 'Register MV Account'
+                            } else if(!oldUserBase.cvUserId && oldUserBase.mvUserId && newUserBase.cvRole) {
+                                operatorId = oldUserBase.mvUserId;
+                                loginUser = await UserBase.findOne({ where: { mvUserId: oldUserBase.mvUserId }, transaction: mvAffair })
+                                optType = 'Register CV Account'
+                            }
+                        } 
                     }
-                    if(!oldUserBase.cvApproveDate && editUserBase.cvRole && operationType.toLowerCase() != 'homeregistration' && !oldUserBase.cvRejectDate){
-                        editUserBase.cvApproveDate = moment().format('YYYY-MM-DD HH:mm:ss')
-                        editUserBase.cvApproveBy = 0
-                    }
-                    // 2024-01-24 old password is null 
-                    if(!oldUserBase.password){
-                        let oldUserPassword = null;
-                        if(oldUserBase.cvUserId) {
-                            let oldSysUser = await _SysUser.USER.findOne({ where: { id: oldUserBase.cvUserId } })
-                            oldUserPassword = oldSysUser ? oldSysUser.password.toUpperCase() : null;
-                        }
-                        if(oldUserBase.mvUserId) {
-                            let oldServerUser = await User.findOne({ where: { userId: oldUserBase.mvUserId } })
-                            oldUserPassword = oldServerUser ? oldServerUser.password : null;
-                        }
-                        editUserBase.password = oldUserPassword || mvPassword;
-                    }
-                }
-                await UserBase.update(editUserBase, { where: { id: userBaseId }, transaction: mvAffair });
-            }
-            if(!newUserBase) newUserBase = await UserBase.findOne({ where: { id: userBaseId }, transaction: mvAffair })
-            
-            if(oldUserBase || newUserBase){
-                let operatorId = accountUser.creator;
-                let loginUser = null;
-                if(accountUser.creator) loginUser = await User.findOne({ where: { userId: accountUser.creator }, transaction: mvAffair })
-                let optType = oldUserBase ? 'Account Edit' : 'Account Creation';
-                if(operationType.toLowerCase() == 'homeregistration'){
-                    if(oldUserBase.cvUserId && !oldUserBase.mvUserId && newUserBase.mvUserType){
-                        operatorId = oldUserBase.cvUserId;
-                        loginUser = await UserBase.findOne({ where: { cvUserId: oldUserBase.cvUserId }, transaction: mvAffair })
-                        optType = 'Register MV Account'
-                    } else if(!oldUserBase.cvUserId && oldUserBase.mvUserId && newUserBase.cvRole) {
-                        operatorId = oldUserBase.mvUserId;
-                        loginUser = await UserBase.findOne({ where: { mvUserId: oldUserBase.mvUserId }, transaction: mvAffair })
-                        optType = 'Register CV Account'
-                    }
-                } 
-                
-                if(optType.toLowerCase() != 'register mv account'){
-                    await OperationRecord.create({
-                        id: null,
-                        operatorId: operatorId,
-                        operatorName: loginUser.fullName,
-                        businessType: 'Manage User',
-                        businessId: oldUserBase ? oldUserBase.id : newUserBase.id,
-                        optType: optType,
-                        beforeData: oldUserBase ? `${ JSON.stringify(oldUserBase) }` : null,
-                        afterData: `${ JSON.stringify(newUserBase) }`,
-                        optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                        remarks: oldUserBase ? oldMVUser && !mvUser ? 'edit user (The user on the server side is not required)' : 'edit user' : `add user`
-                    }, { transaction: mvAffair })
-                }
-               
-                if(oldCVUser || cvUser){
-                    await _SysUser.UserManagementReport.create({
-                        operatorUserBaseId: loginUser ? loginUser.id : newUserBase.id,
-                        triggeredBy: loginUser.fullName,
-                        userId: oldCVUser ? oldCVUser.id : cvUser.id,
-                        activity: optType,
-                        beforeData: oldUserBase ? `${ JSON.stringify(oldUserBase) }` : null,
-                        afterData: `${ JSON.stringify(newUserBase) }`,
-                        operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
-                        remark: `Server ${ oldUserBase ? oldCVUser && !cvUser ? `cancel system side` : `edit` : 'create' } user:${ newUserBase ? newUserBase.fullName : oldUserBase.fullName }.`
-                    }, { transaction: cvAffair })
-                }
-                if(operationType.toLowerCase() == 'homeregistration'){
-                    if(!oldUserBase.cvUserId && newUserBase.cvRole && !newUserBase.cvRejectDate){
-                        await _SysUser.UserManagementReport.create({
-                            operatorUserBaseId: loginUser ? loginUser.id : newUserBase.id,
-                            triggeredBy: loginUser.fullName,
-                            activity: 'Account Register',
-                            afterData: `${ JSON.stringify(newUserBase) }`,
-                            operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
-                            remark:  `Account Register ${ accountUser.dataFrom }`
-                        }, { transaction: cvAffair })
-                    } else if(!oldUserBase.mvUserId && newUserBase.mvUserType && !newUserBase.rejectDate){
-                        await OperationRecord.create({
-                            id: null,
-                            operatorId: operatorId,
-                            businessType: 'Manage User',
-                            operatorName: loginUser.fullName,
-                            businessId: newUserBase.id,
-                            optType: 'Account Register',
-                            afterData: `${ JSON.stringify(newUserBase) }`,
-                            optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                            remarks:  `Account Register ${ accountUser.dataFrom }`
-                        }, { transaction: mvAffair })
-                    } 
+                    await initReportData();
                     
+                    const initOperationRecord = async function (){
+                        if(optType.toLowerCase() != 'register mv account'){
+                            //oldUserBase ? oldMVUser && !mvUser ? 'edit user (The user on the server side is not required)' : 'edit user' : `add user`
+                            let __operRemark = `add user`
+                            if(oldMVUser && !mvUser) {
+                                __operRemark = 'edit user (The user on the server side is not required)'
+                            } else {
+                                __operRemark = 'edit user'
+                            }
+                            await OperationRecord.create({
+                                id: null,
+                                operatorId: operatorId,
+                                operatorName: loginUser.fullName,
+                                businessType: 'Manage User',
+                                businessId: oldUserBase ? oldUserBase.id : newUserBase.id,
+                                optType: optType,
+                                beforeData: oldUserBase ? `${ JSON.stringify(oldUserBase) }` : null,
+                                afterData: `${ JSON.stringify(newUserBase) }`,
+                                optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                remarks: __operRemark
+                            }, { transaction: mvAffair })
+                        }
+                    }
+                    await initOperationRecord()
+                   
+                    const initUserManagementReport = async function (){
+                        if(oldCVUser || cvUser){
+                            //oldUserBase ? oldCVUser && !cvUser ? `cancel system side` : `edit` : 'create'
+                            let __sysReportRemark = 'create'
+                            if((oldCVUser && !cvUser)){
+                                __sysReportRemark = `cancel system side`
+                            } else {
+                                __sysReportRemark = `edit`
+                            }
+                            await _SysUser.UserManagementReport.create({
+                                operatorUserBaseId: loginUser ? loginUser.id : newUserBase.id,
+                                triggeredBy: loginUser.fullName,
+                                userId: oldCVUser ? oldCVUser.id : cvUser.id,
+                                activity: optType,
+                                beforeData: oldUserBase ? `${ JSON.stringify(oldUserBase) }` : null,
+                                afterData: `${ JSON.stringify(newUserBase) }`,
+                                operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                remark: `Server ${ __sysReportRemark } user:${ newUserBase ? newUserBase.fullName : oldUserBase.fullName }.`
+                            }, { transaction: cvAffair })
+                        }
+                    }
+                    await initUserManagementReport()
+
+                    const initReportByHomeRegister = async function (){
+                        if(operationType.toLowerCase() == 'homeregistration'){
+                            if(!oldUserBase.cvUserId && newUserBase.cvRole && !newUserBase.cvRejectDate){
+                                await _SysUser.UserManagementReport.create({
+                                    operatorUserBaseId: loginUser ? loginUser.id : newUserBase.id,
+                                    triggeredBy: loginUser.fullName,
+                                    activity: 'Account Register',
+                                    afterData: `${ JSON.stringify(newUserBase) }`,
+                                    operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                    remark:  `Account Register ${ accountUser.dataFrom }`
+                                }, { transaction: cvAffair })
+                            } else if(!oldUserBase.mvUserId && newUserBase.mvUserType && !newUserBase.rejectDate){
+                                await OperationRecord.create({
+                                    id: null,
+                                    operatorId: operatorId,
+                                    businessType: 'Manage User',
+                                    operatorName: loginUser.fullName,
+                                    businessId: newUserBase.id,
+                                    optType: 'Account Register',
+                                    afterData: `${ JSON.stringify(newUserBase) }`,
+                                    optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                                    remarks:  `Account Register ${ accountUser.dataFrom }`
+                                }, { transaction: mvAffair })
+                            } 
+                        }
+                    }
+                    await initReportByHomeRegister()
                 }
             }
+            await initRecord()
+
             await cvAffair.commit();
             await mvAffair.commit();
         } catch(error) {
@@ -357,103 +423,121 @@ let TaskUtils = {
         if(userBaseId) userBase = await UserBase.findOne({ where: { id: userBaseId } })
         if(nric){
             if(userBase) {
-                if(userBase.cvUserId){
-                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, nric: nric } })
+                const getUserBaseByNric = async function (){
+                    if(userBase.cvUserId){
+                        dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, nric: nric } })
+                        if(dataList.length > 0) {
+                            return `This Nric already exists.`
+                        }
+                    }
+                    if(userBase.mvUserId){
+                        dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, nric: nric } })
+                        if(dataList.length > 0) {
+                            return `This Nric already exists.`
+                        }
+                    }
+                    dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, nric: nric } })
                     if(dataList.length > 0) {
                         return `This Nric already exists.`
                     }
                 }
-                if(userBase.mvUserId){
-                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, nric: nric } })
-                    if(dataList.length > 0) {
-                        return `This Nric already exists.`
-                    }
-                }
-                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, nric: nric } })
-                if(dataList.length > 0) {
-                    return `This Nric already exists.`
-                }
+                return await getUserBaseByNric()
             } else {
-                dataList = await _SysUser.USER.findAll({ where: { nric: nric } })
-                if(dataList.length > 0) {
-                    return `This Nric already exists.`
+                const getUserByNric = async function (){
+                    dataList = await _SysUser.USER.findAll({ where: { nric: nric } })
+                    if(dataList.length > 0) {
+                        return `This Nric already exists.`
+                    }
+                    dataList = await User.findAll({ where: { nric: nric, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
+                    if(dataList.length > 0) {
+                        return `This Nric already exists.`
+                    }
+                    dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, nric: nric } })
+                    if(dataList.length > 0) {
+                        return `This Nric already exists.`
+                    }
                 }
-                dataList = await User.findAll({ where: { nric: nric, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
-                if(dataList.length > 0) {
-                    return `This Nric already exists.`
-                }
-                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, nric: nric } })
-                if(dataList.length > 0) {
-                    return `This Nric already exists.`
-                }
+                return await getUserByNric()
             }
         }
 
         if(contactNumber){
             if(userBase) {
-                if(userBase.cvUserId){
-                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, contactNumber: contactNumber } })
+                const getUserBaseByContactNumber = async function (){
+                    if(userBase.cvUserId){
+                        dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, contactNumber: contactNumber } })
+                        if(dataList.length > 0) {
+                            return `This Mobile Number already exists.`
+                        }
+                    }
+                    if(userBase.mvUserId){
+                        dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, contactNumber: contactNumber } })
+                        if(dataList.length > 0) {
+                            return `This Mobile Number already exists.`
+                        }
+                    }
+                    dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, contactNumber: contactNumber } })
                     if(dataList.length > 0) {
                         return `This Mobile Number already exists.`
                     }
                 }
-                if(userBase.mvUserId){
-                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, contactNumber: contactNumber } })
-                    if(dataList.length > 0) {
-                        return `This Mobile Number already exists.`
-                    }
-                }
-                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, contactNumber: contactNumber } })
-                if(dataList.length > 0) {
-                    return `This Mobile Number already exists.`
-                }
+                return await getUserBaseByContactNumber()
             } else {
-                dataList = await _SysUser.USER.findAll({ where: { contactNumber: contactNumber } })
-                if(dataList.length > 0) {
-                    return `This Mobile Number already exists.`
+                const getUserByContactNumber = async function () {
+                    dataList = await _SysUser.USER.findAll({ where: { contactNumber: contactNumber } })
+                    if(dataList.length > 0) {
+                        return `This Mobile Number already exists.`
+                    }
+                    dataList = await User.findAll({ where: { contactNumber: contactNumber, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
+                    if(dataList.length > 0) {
+                        return `This Mobile Number already exists.`
+                    }
+                    dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, contactNumber: contactNumber } })
+                    if(dataList.length > 0) {
+                        return `This Mobile Number already exists.`
+                    }
                 }
-                dataList = await User.findAll({ where: { contactNumber: contactNumber, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
-                if(dataList.length > 0) {
-                    return `This Mobile Number already exists.`
-                }
-                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, contactNumber: contactNumber } })
-                if(dataList.length > 0) {
-                    return `This Mobile Number already exists.`
-                }
+                return await getUserByContactNumber()
             }
         }
 
         if(loginName && fullName) {
             if(userBase) {
-                if(userBase.cvUserId){
-                    dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName, userName: fullName } })
-                    if(dataList.length > 0){
+                const getUserBaseByName = async function (){
+                    if(userBase.cvUserId){
+                        dataList = await _SysUser.USER.findAll({ where: { id: { [Op.ne]: userBase.cvUserId }, loginName: loginName, userName: fullName } })
+                        if(dataList.length > 0){
+                            return ` This loginName / fullName already exists.`
+                        }
+                    }
+                    if(userBase.mvUserId){
+                        dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName, fullName: fullName } })
+                        if(dataList.length > 0){
+                            return ` This loginName / fullName already exists.`
+                        }
+                    }
+                    dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
+                    if(dataList.length > 0) {
                         return ` This loginName / fullName already exists.`
                     }
                 }
-                if(userBase.mvUserId){
-                    dataList = await User.findAll({ where: { userId: { [Op.ne]: userBase.mvUserId }, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE }, username: loginName, fullName: fullName } })
-                    if(dataList.length > 0){
-                        return ` This loginName / fullName already exists.`
-                    }
-                }
-                dataList = await UserBase.findAll({ where: { id: { [Op.ne]: userBaseId }, status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
-                if(dataList.length > 0) {
-                    return ` This loginName / fullName already exists.`
-                }
+                return await getUserBaseByName()
             } else {
-                dataList = await _SysUser.USER.findAll({ where: { loginName: loginName, userName: fullName } })
-                if(dataList.length > 0){
-                    return ` This loginName / fullName already exists.`
+                const getUserByName = async function (){
+                    dataList = await _SysUser.USER.findAll({ where: { loginName: loginName, userName: fullName } })
+                    if(dataList.length > 0){
+                        return ` This loginName / fullName already exists.`
+                    }
+                    dataList = await User.findAll({ where: { username: loginName, fullName: fullName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
+                    if(dataList.length > 0){
+                        return ` This loginName / fullName already exists.`
+                    }
+                    dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
+                    if(dataList.length > 0) {
+                        return ` This loginName / fullName already exists.`
+                    }
                 }
-                dataList = await User.findAll({ where: { username: loginName, fullName: fullName, userType: { [Op.ne]: CONTENT.USER_TYPE.MOBILE } } })
-                if(dataList.length > 0){
-                    return ` This loginName / fullName already exists.`
-                }
-                dataList = await UserBase.findAll({ where: { status: { [Op.ne]: 'Rejected' }, loginName: loginName, fullName: fullName } })
-                if(dataList.length > 0) {
-                    return ` This loginName / fullName already exists.`
-                }
+                return await getUserByName()
             }
         }
         return null
@@ -2045,42 +2129,53 @@ module.exports.getSystemRole = async function (req, res) {
 
 module.exports.getAccountUserData = async function (req, res) {
     try {
-        let userId = req.body.userStatus == true ? req.cookies ? req.cookies.userId : null : null;
+        //req.body.userStatus ? req.cookies ? req.cookies.userId : null : null
+        let userId = null;
         let loginUser = null;
-        if(userId) {
+        if(req.body.userStatus && req.cookies.userId){
+            userId = req.cookies.userId
             loginUser = await User.findOne({ where: { userId: userId } })
         }
-        let sql = ` select id, groupName from \`group\` `
-        let replacementsGroup = []
-        if(loginUser){
-            if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
-                sql += ` where id = ?`
-                replacementsGroup.push(loginUser.unitId)
-            }
-        }
-        let groupList = await sequelizeSystemObj.query(sql, { type: QueryTypes.SELECT, replacements: replacementsGroup });
-        let unitList = await Unit.findAll()
-        if(loginUser){
-            if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
-                unitList = []
-            } else if(loginUser.unitId) {
-                let unitList2 = await Unit.findOne({ where: { id: loginUser.unitId } })
-                if(unitList2){
-                    if(!unitList2.subUnit) {
-                        unitList = await Unit.findAll({ where: { unit: unitList2.unit } })
-                    } else {
-                        unitList = [unitList2]
-                    }
+        
+        const getGroupList = async function (){
+            let sql = ` select id, groupName from \`group\` `
+            let replacementsGroup = []
+            if(loginUser){
+                if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
+                    sql += ` where id = ?`
+                    replacementsGroup.push(loginUser.unitId)
                 }
-            } else if(loginUser.hq){
-                let unitTypeList = await sequelizeObj.query(`
-                    SELECT * FROM unit WHERE hq is not null
-                    and FIND_IN_SET(?, hq)
-                    group by id order by unit, subUnit
-                `, { type: QueryTypes.SELECT, replacements: [loginUser.hq] })
-                unitList = unitTypeList;
             }
+            let groupList = await sequelizeSystemObj.query(sql, { type: QueryTypes.SELECT, replacements: replacementsGroup });
+            return groupList
         }
+        let groupList = await getGroupList();
+        const getUnitList = async function (){
+            let unitList = await Unit.findAll()
+            if(loginUser){
+                if(loginUser.userType.toUpperCase() == 'CUSTOMER'){
+                    unitList = []
+                } else if(loginUser.unitId) {
+                    let unitList2 = await Unit.findOne({ where: { id: loginUser.unitId } })
+                    if(unitList2){
+                        if(!unitList2.subUnit) {
+                            unitList = await Unit.findAll({ where: { unit: unitList2.unit } })
+                        } else {
+                            unitList = [unitList2]
+                        }
+                    }
+                } else if(loginUser.hq){
+                    let unitTypeList = await sequelizeObj.query(`
+                        SELECT * FROM unit WHERE hq is not null
+                        and FIND_IN_SET(?, hq)
+                        group by id order by unit, subUnit
+                    `, { type: QueryTypes.SELECT, replacements: [loginUser.hq] })
+                    unitList = unitTypeList;
+                }
+            }
+            return unitList
+        }
+        let unitList = await getUnitList()
         let userTypeList = Object.values(CONTENT.USER_TYPE)
         userTypeList = userTypeList.filter(item => item != 'LICENSING OFFICER')
         if(loginUser) {
@@ -2135,7 +2230,7 @@ module.exports.registerAccountUser = async function (req, res) {
     try {
         let accountUser = req.body.accountUser;
         // keep "UNIT" in user
-        if (['hub', 'node'].includes(accountUser.mvUserType.toLowerCase())) {
+        if (['hub', 'node'].includes(accountUser.mvUserType?.toLowerCase())) {
             accountUser.mvUserType = CONTENT.USER_TYPE.UNIT
         }
         let newNric = ((accountUser.nric).toString()).substr(0, 1)+((accountUser.nric).toString()).substr(((accountUser.nric).toString()).length-4, 4);
@@ -2145,71 +2240,77 @@ module.exports.registerAccountUser = async function (req, res) {
         let userBaseStatus = await TaskUtils.getUserByData(null, accountUser.nric, accountUser.contactNumber, accountUser.loginName, accountUser.fullName)
         if(userBaseStatus) throw userBaseStatus
         if(accountUser.dataFrom.toUpperCase() == 'SERVER-USER'){
-            accountUser.creator = req.cookies.userId
-            accountUser.approveDate = moment().format('YYYY-MM-DD HH:mm:ss')
-            accountUser.approveBy = req.cookies.userId
-            // prove the existence
-            let userBases = await UserBase.findOne({ where: { loginName: accountUser.loginName, password: accountUser.password } })
-            // let errData = await TaskUtils.initCVAndMVUser(accountUser, 'create')
-            let errData = null;
-            if(userBases){
-                if(userBases.cvRejectDate || userBases.rejectDate){
-                    errData = await TaskUtils.initCVAndMVUser(accountUser, 'homeregistration', userBases.id)
+            const createUser = async function (){
+                accountUser.creator = req.cookies.userId
+                accountUser.approveDate = moment().format('YYYY-MM-DD HH:mm:ss')
+                accountUser.approveBy = req.cookies.userId
+                // prove the existence
+                let userBases = await UserBase.findOne({ where: { loginName: accountUser.loginName, password: accountUser.password } })
+                // let errData = await TaskUtils.initCVAndMVUser(accountUser, 'create')
+                let errData = null;
+                if(userBases){
+                    if(userBases.cvRejectDate || userBases.rejectDate){
+                        errData = await TaskUtils.initCVAndMVUser(accountUser, 'homeregistration', userBases.id)
+                    }
+                } else {
+                    errData = await TaskUtils.initCVAndMVUser(accountUser, 'create')
                 }
-            } else {
-                errData = await TaskUtils.initCVAndMVUser(accountUser, 'create')
+                if(errData) throw new Error(` Creation failure.`)
             }
-            if(errData) throw new Error(` Creation failure.`)
+            await createUser()
             return res.json(utils.response(1, true));
         } else { 
-            serverAffair = await sequelizeObj.transaction();
-            systemAffair = await sequelizeSystemObj.transaction();
-            accountUser.password = utils.generateMD5Code((accountUser.nric.substr((accountUser.nric.length)-4, 4)) + accountUser.contactNumber.substr(0, 4)).toUpperCase();
-            accountUser.nric = utils.generateAESCode(accountUser.nric).toUpperCase();
-            let userBases = await UserBase.findOne({ where: { loginName: accountUser.loginName, password: accountUser.password } })
-            let userBase = null;
-            if(userBases) {
-                //Reapply for a cv user
-                if(userBases.cvRejectDate && accountUser.cvRole) {
-                    await UserBase.update({ cvRejectDate: null, cvRejectBy: null, cvRejectReason: null }, { where: { id: userBases.id }, transaction: serverAffair });
+            const loginRegisterUser = async function (){
+                serverAffair = await sequelizeObj.transaction();
+                systemAffair = await sequelizeSystemObj.transaction();
+                accountUser.password = utils.generateMD5Code((accountUser.nric.substr((accountUser.nric.length)-4, 4)) + accountUser.contactNumber.substr(0, 4)).toUpperCase();
+                accountUser.nric = utils.generateAESCode(accountUser.nric).toUpperCase();
+                let userBases = await UserBase.findOne({ where: { loginName: accountUser.loginName, password: accountUser.password } })
+                let userBase = null;
+                if(userBases) {
+                    //Reapply for a cv user
+                    if(userBases.cvRejectDate && accountUser.cvRole) {
+                        await UserBase.update({ cvRejectDate: null, cvRejectBy: null, cvRejectReason: null }, { where: { id: userBases.id }, transaction: serverAffair });
+                    }
+                     //Reapply for a mv user
+                    if(userBases.rejectDate && accountUser.mvUserType) {
+                        await UserBase.update({ status: 'Pending Approval', rejectDate: null, rejectBy: null, rejectReason: null }, { where: { id: userBases.id }, transaction: serverAffair });
+                    }
+                    if(userBases.cvRejectDate || userBases.rejectDate){
+                        await UserBase.update(accountUser, { where: { id: userBases.id }, transaction: serverAffair });
+                    }
+                    userBase = await UserBase.findOne({ where: { id: userBases.id } })
+                } else {
+                    userBase = await UserBase.create(accountUser, { transaction: serverAffair })
                 }
-                 //Reapply for a mv user
-                if(userBases.rejectDate && accountUser.mvUserType) {
-                    await UserBase.update({ status: 'Pending Approval', rejectDate: null, rejectBy: null, rejectReason: null }, { where: { id: userBases.id }, transaction: serverAffair });
+                if(accountUser.mvUserType){
+                    await OperationRecord.create({
+                        id: null,
+                        operatorId: 0,
+                        businessType: 'Manage User',
+                        operatorName: accountUser.fullName,
+                        businessId: userBase.id,
+                        optType: 'Account Register',
+                        afterData: `${ JSON.stringify(userBase) }`,
+                        optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                        remarks:  `Account Register ${ accountUser.dataFrom }`
+                    }, { transaction: serverAffair })
                 }
-                if(userBases.cvRejectDate || userBases.rejectDate){
-                    await UserBase.update(accountUser, { where: { id: userBases.id }, transaction: serverAffair });
+    
+                if(accountUser.cvRole){
+                    await _SysUser.UserManagementReport.create({
+                        operatorUserBaseId: userBase.id,
+                        triggeredBy: accountUser.fullName,
+                        activity: 'Account Register',
+                        afterData: `${ JSON.stringify(userBase) }`,
+                        operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
+                        remark:  `Account Register ${ accountUser.dataFrom }`
+                    }, { transaction: systemAffair })
                 }
-                userBase = await UserBase.findOne({ where: { id: userBases.id } })
-            } else {
-                userBase = await UserBase.create(accountUser, { transaction: serverAffair })
+                await systemAffair.commit();
+                await serverAffair.commit();
             }
-            if(accountUser.mvUserType){
-                await OperationRecord.create({
-                    id: null,
-                    operatorId: 0,
-                    businessType: 'Manage User',
-                    operatorName: accountUser.fullName,
-                    businessId: userBase.id,
-                    optType: 'Account Register',
-                    afterData: `${ JSON.stringify(userBase) }`,
-                    optTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                    remarks:  `Account Register ${ accountUser.dataFrom }`
-                }, { transaction: serverAffair })
-            }
-
-            if(accountUser.cvRole){
-                await _SysUser.UserManagementReport.create({
-                    operatorUserBaseId: userBase.id,
-                    triggeredBy: accountUser.fullName,
-                    activity: 'Account Register',
-                    afterData: `${ JSON.stringify(userBase) }`,
-                    operateDate: moment().format('YYYY-MM-DD HH:mm:ss'),
-                    remark:  `Account Register ${ accountUser.dataFrom }`
-                }, { transaction: systemAffair })
-            }
-            await systemAffair.commit();
-            await serverAffair.commit();
+            await loginRegisterUser();
 
             return res.json(utils.response(1, true));
         }
@@ -2255,20 +2356,17 @@ module.exports.editAccountUser = async function (req, res) {
             accountUser.approveBy = req.cookies.userId
         }
         
-        if(optionType != 'homeregistration') {
-            if(oldUserBase.cvRejectBy){
-                if(accountUser.cvRole != oldUserBase.cvRole || accountUser.cvGroupId != oldUserBase.cvGroupId 
-                    || accountUser.cvServiceProviderId != oldUserBase.cvServiceProviderId || oldUserBase.cvServiceTypeId != accountUser.cvServiceTypeId){
-                        return res.json(utils.response(0, ` It has been rejected. CV information cannot be edited!`));
-                }
-            }
-            if(oldUserBase.rejectBy){
-                if(accountUser.mvUserType != oldUserBase.mvUserType || accountUser.mvUnitId != oldUserBase.mvUnitId 
-                    || accountUser.mvGroupId != oldUserBase.mvGroupId || oldUserBase.mvRoleName != accountUser.mvRoleName){
-                        return res.json(utils.response(0, ` It has been rejected. MV information cannot be edited!`));
-                }
-            }
-        } 
+        if((oldUserBase.cvRejectBy && optionType != 'homeregistration') &&
+            (accountUser.cvRole != oldUserBase.cvRole || accountUser.cvGroupId != oldUserBase.cvGroupId 
+            || accountUser.cvServiceProviderId != oldUserBase.cvServiceProviderId 
+            || oldUserBase.cvServiceTypeId != accountUser.cvServiceTypeId)){
+                return res.json(utils.response(0, ` It has been rejected. CV information cannot be edited!`));
+        }
+        if((oldUserBase.rejectBy && optionType != 'homeregistration') &&
+            (accountUser.mvUserType != oldUserBase.mvUserType || accountUser.mvUnitId != oldUserBase.mvUnitId 
+            || accountUser.mvGroupId != oldUserBase.mvGroupId || oldUserBase.mvRoleName != accountUser.mvRoleName)){
+                return res.json(utils.response(0, ` It has been rejected. MV information cannot be edited!`));
+        }
         
         if(oldUserBase.cvUserId && !accountUser.cvRole) {
             return res.json(utils.response(0, ` It has been approved, CV Account Type Request can not be empty!`));
@@ -2280,7 +2378,7 @@ module.exports.editAccountUser = async function (req, res) {
         accountUser.loginName = newNric + ((accountUser.fullName.toString()).replace(/\s*/g,"").toUpperCase()).substr(0, 3);
         let userBaseStatus = await TaskUtils.getUserByData(userBaseId, accountUser.nric, accountUser.contactNumber, accountUser.loginName, accountUser.fullName)
         if(userBaseStatus) throw userBaseStatus
-        accountUser.creator = oldUserBase.creator ? oldUserBase.creator : req.cookies.userId
+        accountUser.creator = oldUserBase.creator ?? req.cookies.userId
 
         let errData = await TaskUtils.initCVAndMVUser(accountUser, optionType, userBaseId, req.cookies.userId, req.cookies.userType)
         if(errData) throw new Error(` Edit failure.`)
@@ -2672,7 +2770,8 @@ module.exports.getUserOptHistoryList = async function (req, res) {
 
 module.exports.getHqTypeList = async function(req, res){
     try {
-        let userId = req.body.userStatus == true ? req.cookies ? req.cookies.userId : null : null;
+        let userId = null;
+        if(req.body.userStatus && req.cookies.userId) userId = req.cookies.userId
         let userBaseUsableId = req.body.userUsableId
         let sql = `SELECT hq FROM unit WHERE hq is not null`
         let replacements = []

@@ -311,16 +311,20 @@ const GetTodayMilitaryTasks = async function (unitIds, userId, userType) {
             })
         }
     }
-    for (let row of rows1) {
-        let taskStatus = row.driverStatus.toLowerCase()
-        if (taskStatus == 'completed') {
-            result.completed = result.completed + 1
-        } else if (taskStatus == 'started') {
-            result.ongoing = result.ongoing + 1
-        } else if (taskStatus == 'waitcheck') {
-            result.pending = result.pending + 1
+
+    const initStatusNumber = function (){
+        for (let row of rows1) {
+            let taskStatus = row.driverStatus.toLowerCase()
+            if (taskStatus == 'completed') {
+                result.completed = result.completed + 1
+            } else if (taskStatus == 'started') {
+                result.ongoing = result.ongoing + 1
+            } else if (taskStatus == 'waitcheck') {
+                result.pending = result.pending + 1
+            }
         }
     }
+    initStatusNumber()
     result.total = result.total + rows1.length
     return result
 }
@@ -493,6 +497,15 @@ module.exports.getIndentAllocationGraph = async function (req, res) {
 
         let userType = req.cookies.userType;
         let userId = req.cookies.userId;
+        let typeArr = PurposeTypes
+        if (utils.stringNotEmpty(type)) {
+            typeArr = [type]
+        }
+        let queryTypeCount = []
+        typeArr.forEach((val, index) => {
+            queryTypeCount.push(`sum( IF ( c.purposeType like ?, 1, 0 ) ) as count${index}`)
+            replacements.push(val+'%')
+        });
         let unitIds = []
         
         if (utils.stringNotEmpty(hub)) {
@@ -512,11 +525,6 @@ module.exports.getIndentAllocationGraph = async function (req, res) {
             replacements.push(unitIds)
         }
 
-        let typeArr = PurposeTypes
-        if (utils.stringNotEmpty(type)) {
-            typeArr = [type]
-        }
-
         if (utils.stringNotEmpty(vehicle)) {
             filter += ` and b.vehicleType = ?`
             replacements.push(vehicle)
@@ -528,10 +536,7 @@ module.exports.getIndentAllocationGraph = async function (req, res) {
         replacements.push(dateStart)
         replacements.push(dateEnd)
 
-        let queryTypeCount = []
-        typeArr.forEach((val, index) => {
-            queryTypeCount.push(`sum( IF ( c.purposeType like '${val}%', 1, 0 ) ) as count${index}`)
-        });
+
         let sql = `SELECT
                         a.executionDate,
                         ${queryTypeCount.join(',')}
@@ -551,12 +556,14 @@ module.exports.getIndentAllocationGraph = async function (req, res) {
             replacements: replacements,
             type: QueryTypes.SELECT
         })
-       
+
+        let replacements1 = []
         let queryTypeCount1 = []
         typeArr.forEach((val, index) => {
-            queryTypeCount1.push(`sum( IF ( purpose like '${val}%', 1, 0 ) ) as count${index}`)
+            queryTypeCount1.push(`sum( IF ( purpose like ?, 1, 0 ) ) as count${index}`)
+            replacements1.push(val+'%')
         });
-        let replacements1 = []
+        
         let sql1 = `
             SELECT DATE_FORMAT(t.indentStartTime, '%Y-%m-%d') as executionDate,
                 ${queryTypeCount1.join(',')}

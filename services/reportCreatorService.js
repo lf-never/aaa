@@ -1604,7 +1604,7 @@ const ExportOBDDataToExcel = async function (reportGroupSelectionTitle, dataList
 
 module.exports.DownloadExcel = async function (req, res) {
     let { filename } = req.query
-    fileName = utils.getSafePath(filename);
+    filename = utils.getSafePath(filename);
     let rs = fs.createReadStream(downloadFolder + filename);
     res.writeHead(200, {
         'Content-Type': 'application/force-download',
@@ -2198,7 +2198,7 @@ const vehicleReportExcel = async function (reportGroupSelectionTitle, datas, rep
         });
     }
     let filename = reportDateRange ? `vehicleReport(${reportDateRange}).xlsx` : `Vehicle Report(${ moment().format('YYYY-MM-DD') }).xlsx`
-    let filepath = downloadFolder + filename
+    let filepath = downloadFolder + utils.getSafePath(filename);
     let buffer = xlsx.build([
         {
             name: 'sheet1',
