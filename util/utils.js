@@ -320,6 +320,7 @@ module.exports.getDateRangeRestdays = async function(startDate, endDate) {
 }
 
 module.exports.getSafePath = function (p) {
+    p = p || '';
     p = p.replace(/%2e/ig, '.')
     p = p.replace(/%2f/ig, '/')
     p = p.replace(/%5c/ig, '\\')

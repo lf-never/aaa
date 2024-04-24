@@ -207,7 +207,7 @@ let TaskUtils = {
             if(groupId){
                 if(groupId.length > 0){
                     sql += ` and vv.unitId in(?)`
-                    replacements.push(groupId.join(","))
+                    replacements.push(groupId)
                 } else {
                     sql += ` and vv.unitId = ?`
                     replacements.push(groupId)
@@ -394,7 +394,7 @@ let TaskUtils = {
             if(unitId){
                 if(unitId.length > 0){
                     sql +=  ` and d.groupId in(?)  `
-                    replacements.push(unitId.join(","))
+                    replacements.push(unitId)
                 } else {
                     sql += ` and d.groupId = ?`
                     replacements.push(unitId)
@@ -491,7 +491,7 @@ let TaskUtils = {
             if(unitId){
                 if(unitId.length > 0){
                     sql2 += ` and dd.unitId in(?)`
-                    replacements2.push(unitId.join(","))
+                    replacements2.push(unitId)
                 } else {
                     sql2 += ` and dd.unitId = ?`
                     replacements2.push(unitId)

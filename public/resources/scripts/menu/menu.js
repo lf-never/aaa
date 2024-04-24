@@ -35,22 +35,7 @@ $(() => {
         outTime = setTimeout(() => {
             $('.collapse').removeClass('show');
             
-            setTimeout(() => {
-                $('.menu2 .menu2-label').hide()
-                $('.menu2 .menu2-img').hide()
-                setTimeout(() => {
-                    $('.menu2').removeClass('expand')
-                }, 200);
-
-                //mark selected menu
-                if (currentSelectedMenu != null) {
-                    if ($(currentSelectedMenu).hasClass('menu2-item')) {
-                        $(currentSelectedMenu).find('.menu-img').addClass('menu-selected');
-                    } else if ($(currentSelectedMenu).hasClass('menu2-item2')) {
-                        $(currentSelectedMenu).parent('.collapse').prev().addClass('menu-selected');
-                    } 
-                }
-            }, 200)
+            markSelectedMenu();
         }, 200)
     })
 
@@ -95,6 +80,25 @@ $(() => {
     $('.user-lastLoginTime-label').text('Last Login Time:' + Cookies.get('lastLoginTime'));
     initHeadWarnMessage();
 })
+
+const markSelectedMenu = function() {
+    setTimeout(() => {
+        $('.menu2 .menu2-label').hide()
+        $('.menu2 .menu2-img').hide()
+        setTimeout(() => {
+            $('.menu2').removeClass('expand')
+        }, 200);
+
+        //mark selected menu
+        if (currentSelectedMenu != null) {
+            if ($(currentSelectedMenu).hasClass('menu2-item')) {
+                $(currentSelectedMenu).find('.menu-img').addClass('menu-selected');
+            } else if ($(currentSelectedMenu).hasClass('menu2-item2')) {
+                $(currentSelectedMenu).parent('.collapse').prev().addClass('menu-selected');
+            } 
+        }
+    }, 200);
+}
 
 const initAppMenusEventHandler = function () {
     $('.menu2-item').hover(function () {

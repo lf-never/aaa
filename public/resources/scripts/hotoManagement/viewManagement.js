@@ -15,9 +15,11 @@ let viewNode = null;
 let tableName = null;
 $(async function () {
    await initDetailPage(requestId)
-   setTimeout(async function(){
-    await initDetail()
-   }, 150)
+   
+   async function initDetails (){
+        await initDetail()
+   }
+   setTimeout(initDetails(), 150)
 });
 
 const showDivTablePage = function (){
@@ -251,9 +253,6 @@ const initDetail = async function () {
                 $(".laydate-time-list>li").css("height", "100%")
             });
         }
-        
-
-        
  
         layui.use('laydate', function(){
             let laydate = layui.laydate;

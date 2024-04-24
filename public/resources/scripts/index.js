@@ -3,7 +3,7 @@ import * as MapUtil from './common-map.js'
 import { showNotice } from './notice/notice.js'
 import { viewIntervalIncidentMarker } from './incident/incident-view.js'
 import { initSocketClientHandler, socketDisconnection } from './common-socket.js'
-import { addMapObject, clearMapObject, deleteMapObject, removeMapObject, drawMarker, drawMarkerCenter, drawMarker2, drawPolyLine, bindTooltip, bindMarkerClickEvent } from './common-map.js'
+import { removeMapObject, drawMarker, drawMarkerCenter, drawMarker2, bindMarkerClickEvent } from './common-map.js'
 
 // Password length has to be minimum 12 characters includes 1 uppercase, 1 numeric and 1 symbol.
 let pwdRegExp = new RegExp(/^(?=.*[A-Z])(?=.*\d)(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]])[A-Za-z\d`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]]{12,}$/);
@@ -17,7 +17,7 @@ let intervalOf3rdCamera;
 let intervalOf3rdIncident;
 
 let needChangePassword = Cookies.get('needChangePassword');
-let needSetEmail = Cookies.get('email') ? false : true;
+let needSetEmail = Cookies.get('email') == null || Cookies.get('email') == undefined || Cookies.get('email') == '';
 
 $(function () {
     initWebHtml();
@@ -218,17 +218,20 @@ const initWebHtml = function () {
                     });
                 } else {
                     let title = 'You need to register as a cv user to jump.'
-                    if(userBase.cvRole) {
-                        if(userBase.cvRejectDate) {
-                            title = 'The request has been denied and can be reapplied.'
-                        } else if (userBase.cvUserStatus == 'Deactivated') {
-                            title = `CV Account [${ userBase.loginName }] is deactivated, please contact administrator.`
-                        } else if (userBase.cvUserStatus == 'Lock Out') {
-                            title = `CV Account [${ userBase.loginName }] is locked, please contact administrator.`
-                        } else {
-                            title = 'Under approval, please operate later.'
+                    function buildTitle() {
+                        if(userBase.cvRole) {
+                            if(userBase.cvRejectDate) {
+                                title = 'The request has been denied and can be reapplied.'
+                            } else if (userBase.cvUserStatus == 'Deactivated') {
+                                title = `CV Account [${ userBase.loginName }] is deactivated, please contact administrator.`
+                            } else if (userBase.cvUserStatus == 'Lock Out') {
+                                title = `CV Account [${ userBase.loginName }] is locked, please contact administrator.`
+                            } else {
+                                title = 'Under approval, please operate later.'
+                            }
                         }
                     }
+                    buildTitle();
                     
                     $.confirm({
                         title: `Info`,
@@ -353,27 +356,27 @@ const initWebHtml = function () {
             if ($(this).hasClass('view-camera')) {
                 if ($(this).hasClass('active')) {
                     draw3rdCameraMonitorMarker();
-                } else {
-                    clear3rdCameraMonitorMarker();
+                    return;
                 }
+                clear3rdCameraMonitorMarker();
             } else if ($(this).hasClass('view-traffic-incident')) {
                 if ($(this).hasClass('active')) {
                     draw3rdIncidentMonitorMarker();
-                } else {
-                    clear3rdIncidentMonitorMarker();
+                    return;
                 }
+                clear3rdIncidentMonitorMarker();
             } else if ($(this).hasClass('view-obd')) {
                 if ($(this).hasClass('active')) {
                     drawDeviceMonitorMarker();
-                } else {
-                    clearDeviceMonitorMarker();
+                    return;
                 }
+                clearDeviceMonitorMarker();
             } else if ($(this).hasClass('view-missing-car')) {
                 if ($(this).hasClass('active')) {
                     drawDriverMonitorMarker();
-                } else {
-                    clearDriverMonitorMarker();
+                    return;
                 }
+                clearDriverMonitorMarker();
             }
         })
     }

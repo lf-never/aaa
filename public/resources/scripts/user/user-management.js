@@ -251,12 +251,19 @@ $(function () {
                     let operationList = full.operation ? (full.operation).toLowerCase().split(',') : '';
                     let viewHistoryBtnHtml = `<img alt="" src='../images/user/View History.svg' style='width: 30px; height: 30px; margin-left: 10px;' onclick="viewUserOptHistory(${full.id}, '${full.fullName}')" role="button" title='View History'/>`;
 
-                    if(data == 'Lock Out') {
-                        if (currentPageTab == 'Approved' && operationList.includes('unlock')) {
-                            //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #1B9063; border-color: #1B9063;" onclick="unlockUserByManager(${full.id}, '${full.fullName}')">Unlock</button>`
-                            actionHtml += `<img alt="" src='../images/user/Unlock.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="unlockUserByManager(${full.id}, '${full.fullName}')" role="button" title='Unlock'/>`;
+                    function buildLockOutHtml() {
+                        if(data == 'Lock Out') {
+                            if (currentPageTab == 'Approved' && operationList.includes('unlock')) {
+                                //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #1B9063; border-color: #1B9063;" onclick="unlockUserByManager(${full.id}, '${full.fullName}')">Unlock</button>`
+                                actionHtml += `<img alt="" src='../images/user/Unlock.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="unlockUserByManager(${full.id}, '${full.fullName}')" role="button" title='Unlock'/>`;
+                            }
+                            return actionHtml + viewHistoryBtnHtml;
                         }
-                        return actionHtml + viewHistoryBtnHtml;
+                        return '';
+                    }
+                    let resultHtml = buildLockOutHtml();
+                    if (resultHtml) {
+                        return resultHtml;
                     }
                     if (data == 'Disabled') {
                         if (currentPageTab == 'Disabled' && operationList.includes('disable')) {
@@ -274,31 +281,34 @@ $(function () {
                         return actionHtml;
                     }
 
-                    if((currentPageTab == 'Pending Approval' || currentPageTab == 'Approved') 
-                        && (data == 'Pending Approval' || data == 'Approved') && operationList.includes('edit')) {
-                        //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #337ab7; border-color: #337ab7;" onclick="editUser(${full.id})">Edit</button>`
-                        actionHtml += `<img alt="" src='../images/user/Edit.svg' style='width: 22px; height: 22px; margin-left: 10px;' onclick="editUser(${full.id})" role="button" title='Edit'/>`;
-                    }
-
-                    if (currentPageTab == 'Approved' ) {
-                        if (data != 'Disabled' && operationList.includes('disable')) {
-                            //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #FF0000; border-color: #FF0000;"  onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')">Deactivate</button>`
-                            actionHtml += `<img alt="" src='../images/user/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')" role="button" title='Deactivate'/>`;
+                    function buildActionHtml() {
+                        if((currentPageTab == 'Pending Approval' || currentPageTab == 'Approved') 
+                            && (data == 'Pending Approval' || data == 'Approved') && operationList.includes('edit')) {
+                            //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #337ab7; border-color: #337ab7;" onclick="editUser(${full.id})">Edit</button>`
+                            actionHtml += `<img alt="" src='../images/user/Edit.svg' style='width: 22px; height: 22px; margin-left: 10px;' onclick="editUser(${full.id})" role="button" title='Edit'/>`;
                         }
-                        if (operationList.includes('reset password')) {
-                            //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #CA4C26; border-color: #CA4C26;" onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')">Reset Password</button>`
-                            actionHtml += `<img alt="" src='../images/user/Reset Password.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')" role="button" title='Reset Password'/>`;
+    
+                        if (currentPageTab == 'Approved' ) {
+                            if (data != 'Disabled' && operationList.includes('disable')) {
+                                //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #FF0000; border-color: #FF0000;"  onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')">Deactivate</button>`
+                                actionHtml += `<img alt="" src='../images/user/Deactivate.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="enableUserOnManagePage(${full.id}, '${full.fullName}', 'disable')" role="button" title='Deactivate'/>`;
+                            }
+                            if (operationList.includes('reset password')) {
+                                //actionHtml += `<button class="btn btn-sm ms-2 table-btn" style="background-color: #CA4C26; border-color: #CA4C26;" onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')">Reset Password</button>`
+                                actionHtml += `<img alt="" src='../images/user/Reset Password.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="resetUserPasswordByManager(${full.id}, '${full.fullName}')" role="button" title='Reset Password'/>`;
+                            }
+    
+                            actionHtml += viewHistoryBtnHtml;
                         }
-
-                        actionHtml += viewHistoryBtnHtml;
+                        
+                        if (currentPageTab == 'Pending Approval' && full.canApprove == 1) {
+                            // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')">Approve</button>`
+                            // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')">Reject</button>`
+                            actionHtml += `<img alt="" src='../images/user/Approve.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')" role="button" title='Approve'/>`;
+                            actionHtml += `<img alt="" src='../images/user/Reject.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')" role="button" title='Reject'/>`;
+                        }
                     }
-                    
-                    if (currentPageTab == 'Pending Approval' && full.canApprove == 1) {
-                        // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')">Approve</button>`
-                        // actionHtml += `<button class="btn btn-sm ms-2 table-btn" onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')">Reject</button>`
-                        actionHtml += `<img alt="" src='../images/user/Approve.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'pass')" role="button" title='Approve'/>`;
-                        actionHtml += `<img alt="" src='../images/user/Reject.svg' style='width: 25px; height: 25px; margin-left: 10px;' onclick="approveUserRegistApply(${full.id}, '${full.fullName}', 'reject')" role="button" title='Reject'/>`;
-                    }
+                    buildActionHtml();
 
                     return `<div style="width: 100%; height: 30px; display: flex; justify-content: center; align-items: center;">${actionHtml}</div>`;
                 }
@@ -487,19 +497,23 @@ window.viewUserOptHistory = async function(userBaseId, userName) {
       </div>
     `);
 
+    function buildOptHistoryList(temp) {
+        $('.user-opt-detail-content-div').append(`
+            <div class="row py-1" style="display: flex; border-bottom: 1px solid #e2dede; font-size: 14px;">
+            <div class="col-3" style="text-align: center;">${temp.optType ? temp.optType : '-'}</div>
+            <div class="col-5" style="text-align: center;">${temp.operatorName ? temp.operatorName : temp.fullname ? temp.fullname : '-'}</div>
+            <div class="col-4" style="text-align: center;">${temp.optTime ? moment(temp.optTime).format("YYYY-MM-DD HH:mm:ss") : '-'}</div>
+            </div>
+        `);
+    }
+
     axios.post('/user/getUserOptHistoryList', { userBaseId }).then(function (res) {
         let respCode = res.data.respCode;
         let optInfoList = res.data.respMessage;
         if (respCode == 1) {
             if (optInfoList?.length > 0) {
                 for(let temp of optInfoList) {
-                  $('.user-opt-detail-content-div').append(`
-                    <div class="row py-1" style="display: flex; border-bottom: 1px solid #e2dede; font-size: 14px;">
-                      <div class="col-3" style="text-align: center;">${temp.optType ? temp.optType : '-'}</div>
-                      <div class="col-5" style="text-align: center;">${temp.operatorName ? temp.operatorName : temp.fullname ? temp.fullname : '-'}</div>
-                      <div class="col-4" style="text-align: center;">${temp.optTime ? moment(temp.optTime).format("YYYY-MM-DD HH:mm:ss") : '-'}</div>
-                    </div>
-                  `);
+                    buildOptHistoryList(temp);
                 }
               }
         }

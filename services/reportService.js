@@ -584,21 +584,25 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
 
         let dbForamt = '%Y-%m';
         let dateStr = '';
-        if (selectedMonth) {
-            dateStr = selectedYear + '-' + selectedMonth;
-        } else {
-            dbForamt = '%Y';
-            dateStr = selectedYear;
+        let monthWorkDayNum = 0;
+        async function initDateInfo() {
+            if (selectedMonth) {
+                dateStr = selectedYear + '-' + selectedMonth;
+            } else {
+                dbForamt = '%Y';
+                dateStr = selectedYear;
+            }
+    
+    
+            let monthWorkDayList = [] ;
+            if (selectedMonth) {
+                monthWorkDayList = await utils.getMonthWeekdays(dateStr);
+            } else {
+                monthWorkDayList = await utils.getYearWeekdays(dateStr);
+            }
+            monthWorkDayNum = monthWorkDayList.length;
         }
-
-
-        let monthWorkDayList = [] ;
-        if (selectedMonth) {
-            monthWorkDayList = await utils.getMonthWeekdays(dateStr);
-        } else {
-            monthWorkDayList = await utils.getYearWeekdays(dateStr);
-        }
-        let monthWorkDayNum = monthWorkDayList.length;
+        await initDateInfo();
         resultDataList = { totalData: {
             unitId: 'All',
             unitFullName: 'All',
@@ -617,15 +621,19 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         }, unitDataList: []};
 
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
-            return [];
-        } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
-            if (user.unit) {
-                selectedHub = user.unit;
-            }
-            if (user.subUnit) {
-                selectedNode = user.subUnit;
+            return resultDataList;
+        }
+        function initUnitInfo() {
+            if (user.userType == CONTENT.USER_TYPE.UNIT) {
+                if (user.unit) {
+                    selectedHub = user.unit;
+                }
+                if (user.subUnit) {
+                    selectedNode = user.subUnit;
+                }
             }
         }
+        initUnitInfo();
 
         //user unit info
         let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode);
@@ -657,10 +665,9 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
 
         //stat TO driver numbers
         let unitToInfoResult = await getUnitTOList(selectedHub, selectedNode, dbForamt, dateStr);
-        
         for (let unitInfo of resultUnitDataList) {
             let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
-            if (unitToInfoList?.length > 0) {
+            if (unitToInfoList.length > 0) {
                 allUnitToNumber += unitToInfoList.length;
                 unitInfo.toNumber = unitToInfoList.length;
                 unitInfo.toIdList = unitToInfoList.map(toInfo => toInfo.driverId);
@@ -688,23 +695,26 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
                 let toLeaveDays = 0;
                 let toHotoOutDays = 0;
                 let unitTaskNumber = 0;
-                for (let toId of unitToIdList) {
-                    let toWorkTimeInfoList = toMonthWorkdaysData.filter(item => item.driverId == toId);
-                    for (let toWorkTimeInfo of toWorkTimeInfoList) {
-                        unitToDataList.push(toWorkTimeInfo);
-
-                        unitTaskNumber += toWorkTimeInfo.taskNum;
-                        toLeaveDays += toWorkTimeInfo.leaveDays;
-                        toHotoOutDays += toWorkTimeInfo.hotoOutDays;
-                        if (toWorkTimeInfo.driverUnitId == toWorkTimeInfo.workUnitId) {
-                            planWorkDaysSelf += toWorkTimeInfo.planWorkDays;
-                            actualWorkDaysSelf += toWorkTimeInfo.actualWorkDays;
-                        } else {
-                            planWorkDaysOthers += toWorkTimeInfo.planWorkDays;
-                            actualWorkDaysOthers += toWorkTimeInfo.actualWorkDays;
+                function buildTOStatInfo() {
+                    for (let toId of unitToIdList) {
+                        let toWorkTimeInfoList = toMonthWorkdaysData.filter(item => item.driverId == toId);
+                        for (let toWorkTimeInfo of toWorkTimeInfoList) {
+                            unitToDataList.push(toWorkTimeInfo);
+    
+                            unitTaskNumber += toWorkTimeInfo.taskNum;
+                            toLeaveDays += toWorkTimeInfo.leaveDays;
+                            toHotoOutDays += toWorkTimeInfo.hotoOutDays;
+                            if (toWorkTimeInfo.driverUnitId == toWorkTimeInfo.workUnitId) {
+                                planWorkDaysSelf += toWorkTimeInfo.planWorkDays;
+                                actualWorkDaysSelf += toWorkTimeInfo.actualWorkDays;
+                            } else {
+                                planWorkDaysOthers += toWorkTimeInfo.planWorkDays;
+                                actualWorkDaysOthers += toWorkTimeInfo.actualWorkDays;
+                            }
                         }
                     }
                 }
+                buildTOStatInfo();
                 unitInfo.toDatas = unitToDataList;
                 unitInfo.taskNumber = unitTaskNumber;
                 unitInfo.planWorkDaysSelf = planWorkDaysSelf;
@@ -765,19 +775,24 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         let allUnitVehicleHotoInDays = 0;
 
         let dateStr = '';
-        if (selectedMonth) {
-            dateStr = selectedYear + '-' + selectedMonth;
-        } else {
-            dateStr = selectedYear;
+        let monthWorkDayNum = 0;
+        async function initDateInfo() {
+            if (selectedMonth) {
+                dateStr = selectedYear + '-' + selectedMonth;
+            } else {
+                dateStr = selectedYear;
+            }
+    
+            let monthWorkDayList = [] ;
+            if (selectedMonth) {
+                monthWorkDayList = await utils.getMonthWeekdays(dateStr);
+            } else {
+                monthWorkDayList = await utils.getYearWeekdays(dateStr);
+            }
+            monthWorkDayNum = monthWorkDayList.length;
         }
+        await initDateInfo();
 
-        let monthWorkDayList = [] ;
-        if (selectedMonth) {
-            monthWorkDayList = await utils.getMonthWeekdays(dateStr);
-        } else {
-            monthWorkDayList = await utils.getYearWeekdays(dateStr);
-        }
-        let monthWorkDayNum = monthWorkDayList.length;
         resultDataList = { totalData: {
             unitId: 'All',
             unitFullName: 'All',
@@ -797,14 +812,18 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
 
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             return resultDataList;
-        } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
-            if (user.unit) {
-                selectedHub = user.unit;
-            }
-            if (user.subUnit) {
-                selectedNode = user.subUnit;
+        }
+        function initVehicleUnitInfo() {
+            if (user.userType == CONTENT.USER_TYPE.UNIT) {
+                if (user.unit) {
+                    selectedHub = user.unit;
+                }
+                if (user.subUnit) {
+                    selectedNode = user.subUnit;
+                }
             }
         }
+        initVehicleUnitInfo();
         //user unit info
         let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode)
 
@@ -845,17 +864,20 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
 
         // filter vehicle number > 0 data.
         let newResultUnitDataList = [];
-        let unitVehicleInfoResult = await getUnitVehicleList(selectedHub, selectedNode, vehicleType);
-        for (let unitInfo of resultUnitDataList) {
-            let unitVehicleInfoList = unitVehicleInfoResult.filter(item => item.unitId == unitInfo.unitId && item.vehicleType == unitInfo.vehicleType);
-            if (unitVehicleInfoList?.length > 0) {
-                allUnitVehicleNumber += unitVehicleInfoList.length;
-                unitInfo.vehicleNumber = unitVehicleInfoList.length;
-                unitInfo.vehicleNoList = unitVehicleInfoList.map(vehicleInfo => vehicleInfo.vehicleNo);
-
-                newResultUnitDataList.push(unitInfo);
+        async function buildNewUnitData() {
+            let unitVehicleInfoResult = await getUnitVehicleList(selectedHub, selectedNode, vehicleType);
+            for (let unitInfo of resultUnitDataList) {
+                let unitVehicleInfoList = unitVehicleInfoResult.filter(item => item.unitId == unitInfo.unitId && item.vehicleType == unitInfo.vehicleType);
+                if (unitVehicleInfoList?.length > 0) {
+                    allUnitVehicleNumber += unitVehicleInfoList.length;
+                    unitInfo.vehicleNumber = unitVehicleInfoList.length;
+                    unitInfo.vehicleNoList = unitVehicleInfoList.map(vehicleInfo => vehicleInfo.vehicleNo);
+    
+                    newResultUnitDataList.push(unitInfo);
+                }
             }
         }
+        await buildNewUnitData();
         resultUnitDataList = newResultUnitDataList;
 
         // month to workdays data
@@ -870,49 +892,53 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         for (let unitInfo of resultUnitDataList) {
             let unitVehicleNoList = unitInfo.vehicleNoList;
             let unitVehicleDataList = [];
-            if (unitVehicleNoList?.length > 0) {
-                let planWorkDaysSelf = 0;
-                let planWorkDaysOthers = 0;
-                let actualWorkDaysSelf = 0;
-                let actualWorkDaysOthers = 0;
-                let vehicleLeaveDays = 0;
-                let vehicleHotoOutDays = 0;
-                let unitTaskNumber = 0;
-                for (let vehicleNo of unitVehicleNoList) {
-                    let vehicleWorkTimeInfoList = vehicleMonthWorkdaysData.filter(item => item.vehicleNo == vehicleNo);
-                    for (let vehicleWorkTimeInfo of vehicleWorkTimeInfoList) {
-                        unitVehicleDataList.push(vehicleWorkTimeInfo);
+            function buildVehicleStatData() {
+                if (unitVehicleNoList?.length > 0) {
+                    let planWorkDaysSelf = 0;
+                    let planWorkDaysOthers = 0;
+                    let actualWorkDaysSelf = 0;
+                    let actualWorkDaysOthers = 0;
+                    let vehicleLeaveDays = 0;
+                    let vehicleHotoOutDays = 0;
+                    let unitTaskNumber = 0;
+                    
+                    for (let vehicleNo of unitVehicleNoList) {
+                        let vehicleWorkTimeInfoList = vehicleMonthWorkdaysData.filter(item => item.vehicleNo == vehicleNo);
+                        for (let vehicleWorkTimeInfo of vehicleWorkTimeInfoList) {
+                            unitVehicleDataList.push(vehicleWorkTimeInfo);
 
-                        unitTaskNumber += vehicleWorkTimeInfo.taskNum;
-                        vehicleLeaveDays += vehicleWorkTimeInfo.eventDays;
-                        vehicleHotoOutDays += vehicleWorkTimeInfo.hotoOutDays;
+                            unitTaskNumber += vehicleWorkTimeInfo.taskNum;
+                            vehicleLeaveDays += vehicleWorkTimeInfo.eventDays;
+                            vehicleHotoOutDays += vehicleWorkTimeInfo.hotoOutDays;
 
-                        if (vehicleWorkTimeInfo.vehicleUnitId == vehicleWorkTimeInfo.workUnitId) {
-                            planWorkDaysSelf += vehicleWorkTimeInfo.planWorkDays;
-                            actualWorkDaysSelf += vehicleWorkTimeInfo.actualWorkDays;
-                        } else {
-                            planWorkDaysOthers += vehicleWorkTimeInfo.planWorkDays;
-                            actualWorkDaysOthers += vehicleWorkTimeInfo.actualWorkDays;
+                            if (vehicleWorkTimeInfo.vehicleUnitId == vehicleWorkTimeInfo.workUnitId) {
+                                planWorkDaysSelf += vehicleWorkTimeInfo.planWorkDays;
+                                actualWorkDaysSelf += vehicleWorkTimeInfo.actualWorkDays;
+                            } else {
+                                planWorkDaysOthers += vehicleWorkTimeInfo.planWorkDays;
+                                actualWorkDaysOthers += vehicleWorkTimeInfo.actualWorkDays;
+                            }
                         }
                     }
-                }
-                unitInfo.vehicleDatas = unitVehicleDataList;
-                unitInfo.taskNumber = unitTaskNumber;
-                unitInfo.vehicleLeaveDays = vehicleLeaveDays;
-                unitInfo.vehicleHotoOutDays = vehicleHotoOutDays;
-                unitInfo.planWorkDaysSelf = planWorkDaysSelf;
-                unitInfo.planWorkDaysOthers = planWorkDaysOthers;
-                unitInfo.actualWorkDaysSelf = actualWorkDaysSelf;
-                unitInfo.actualWorkDaysOthers = actualWorkDaysOthers;
+                    unitInfo.vehicleDatas = unitVehicleDataList;
+                    unitInfo.taskNumber = unitTaskNumber;
+                    unitInfo.vehicleLeaveDays = vehicleLeaveDays;
+                    unitInfo.vehicleHotoOutDays = vehicleHotoOutDays;
+                    unitInfo.planWorkDaysSelf = planWorkDaysSelf;
+                    unitInfo.planWorkDaysOthers = planWorkDaysOthers;
+                    unitInfo.actualWorkDaysSelf = actualWorkDaysSelf;
+                    unitInfo.actualWorkDaysOthers = actualWorkDaysOthers;
 
-                allUnitTaskNumber += unitTaskNumber;
-                allUnitVehicleLeaveDays += vehicleLeaveDays;
-                allUnitVehicleHotoOutDays += vehicleHotoOutDays;
-                allUnitPlanWorkDaysSelf += planWorkDaysSelf;
-                allUnitPlanWorkDaysOthers += planWorkDaysOthers;
-                allUnitActualWorkDaysSelf += actualWorkDaysSelf;
-                allUnitActualWorkDaysOthers += actualWorkDaysOthers;
+                    allUnitTaskNumber += unitTaskNumber;
+                    allUnitVehicleLeaveDays += vehicleLeaveDays;
+                    allUnitVehicleHotoOutDays += vehicleHotoOutDays;
+                    allUnitPlanWorkDaysSelf += planWorkDaysSelf;
+                    allUnitPlanWorkDaysOthers += planWorkDaysOthers;
+                    allUnitActualWorkDaysSelf += actualWorkDaysSelf;
+                    allUnitActualWorkDaysOthers += actualWorkDaysOthers;
+                }
             }
+            buildVehicleStatData();
         }
 
         let allUnitInfoData = {
@@ -949,29 +975,44 @@ const calcLicensingDataLastStatus = function(driverLicensingAppry, selectedYear,
         dateFormat = 'YYYY-MM';
         selectDateStr = selectedYear + '-' + selectedMonth;
     }
-    if (driverLicensingAppry.failDate && moment(driverLicensingAppry.failDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Failed';
+    let status = null;
+    function calcStatus1() {
+        if (driverLicensingAppry.failDate && moment(driverLicensingAppry.failDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Failed';
+        }
+        if (driverLicensingAppry.successDate && moment(driverLicensingAppry.successDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Success';
+        }
+        if (driverLicensingAppry.rejectDate && moment(driverLicensingAppry.rejectDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Rejected';
+        }
+        if (driverLicensingAppry.pendingDate && moment(driverLicensingAppry.pendingDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Pending';
+        }
+        return null;
     }
-    if (driverLicensingAppry.successDate && moment(driverLicensingAppry.successDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Success';
+    status = calcStatus1();
+    if (status) {
+        return status;
     }
-    if (driverLicensingAppry.rejectDate && moment(driverLicensingAppry.rejectDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Rejected';
+    function calcStatus2() {
+        if (driverLicensingAppry.recommendDate && moment(driverLicensingAppry.recommendDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Recommended';
+        }
+        if (driverLicensingAppry.verifyDate && moment(driverLicensingAppry.verifyDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Verified';
+        }
+        if (driverLicensingAppry.endorseDate && moment(driverLicensingAppry.endorseDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Endorsed';
+        }
+        if (driverLicensingAppry.submitDate && moment(driverLicensingAppry.submitDate, dateFormat).format(dateFormat) == selectDateStr) {
+            return 'Submitted';
+        }
+        return null;
     }
-    if (driverLicensingAppry.pendingDate && moment(driverLicensingAppry.pendingDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Pending';
-    }
-    if (driverLicensingAppry.recommendDate && moment(driverLicensingAppry.recommendDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Recommended';
-    }
-    if (driverLicensingAppry.verifyDate && moment(driverLicensingAppry.verifyDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Verified';
-    }
-    if (driverLicensingAppry.endorseDate && moment(driverLicensingAppry.endorseDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Endorsed';
-    }
-    if (driverLicensingAppry.submitDate && moment(driverLicensingAppry.submitDate, dateFormat).format(dateFormat) == selectDateStr) {
-        return 'Submitted';
+    status = calcStatus2();
+    if (status) {
+        return status;
     }
 
     return 'Pending Approval';
@@ -981,61 +1022,70 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
     try {
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             return {data: [], totalCount: 0};
-        } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
-            if (user.unit) {
-                selectedHub = user.unit;
-            }
-            if (user.subUnit) {
-                selectedNode = user.subUnit;
-            }
         }
-
         let selectedMonthStr = selectedMonth
-        if (!selectedMonthStr) {
-            selectedMonthStr = 'All';
-        }
-
         let dbForamt = '%Y-%m';
         let dateStr = '';
-        if (selectedMonth) {
-            dateStr = selectedYear + '-' + selectedMonth;
-        } else {
-            dbForamt = '%Y';
-            dateStr = selectedYear;
+
+        function initParams1() {
+            if (user.userType == CONTENT.USER_TYPE.UNIT) {
+                if (user.unit) {
+                    selectedHub = user.unit;
+                }
+                if (user.subUnit) {
+                    selectedNode = user.subUnit;
+                }
+            }
+            if (!selectedMonthStr) {
+                selectedMonthStr = 'All';
+            }
+    
+            if (selectedMonth) {
+                dateStr = selectedYear + '-' + selectedMonth;
+            } else {
+                dbForamt = '%Y';
+                dateStr = selectedYear;
+            }
         }
+        initParams1();
 
         //user unit info
         let unitInfoSql = `
             select un.id, un.unit, un.subUnit from unit un where 1=1 
         `;
         let replacements = [];
-        if (selectedHub) {
-            unitInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+        async function initUnitSql() {
+            if (selectedHub) {
+                unitInfoSql += ` and un.unit = ? `;
+                replacements.push(selectedHub);
+            } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                let hqUserUnitNameList = userUnitList.map(item => item.unit);
+                if (hqUserUnitNameList.length > 0) {
+                    hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                    unitInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
+                } else {
+                    return false;
+                }
             }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                unitInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                return {data: [], totalCount: 0};
+            if (selectedNode) {
+                if (selectedNode == '-') {
+                    unitInfoSql += ` and un.subUnit is null `;
+                } else {
+                    unitInfoSql += ` and un.subUnit = ? `;
+                    replacements.push(selectedNode);
+                }
             }
+            return true;
         }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                unitInfoSql += ` and un.subUnit is null `;
-            } else {
-                unitInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
+        let result = await initUnitSql();
+        if (!result) {
+            return {data: [], totalCount: 0};
         }
         let unitInfoTotalSql = unitInfoSql;
 
         let unitInfoTotalResult = await sequelizeObj.query(unitInfoTotalSql, { type: QueryTypes.SELECT, replacements });
-        let totalCount = unitInfoTotalResult ? unitInfoTotalResult.length : 0;
+        let totalCount = unitInfoTotalResult.length || 0;
 
         replacements.push(pageNum);
         replacements.push(pageLength);
@@ -1102,60 +1152,69 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
             )
         `;
         replacements = [];
-        if (selectedHub) {
-            toLicensingInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                toLicensingInfoSql += ` and un.subUnit is null `;
-            } else {
-                toLicensingInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
+        function buildSqlParams1() {
+            if (selectedHub) {
+                toLicensingInfoSql += ` and un.unit = ? `;
+                replacements.push(selectedHub);
+            }
+            if (selectedNode) {
+                if (selectedNode == '-') {
+                    toLicensingInfoSql += ` and un.subUnit is null `;
+                } else {
+                    toLicensingInfoSql += ` and un.subUnit = ? `;
+                    replacements.push(selectedNode);
+                }
             }
         }
+        buildSqlParams1();
         let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` ORDER BY un.unit ASC, un.subUnit asc `, { type: QueryTypes.SELECT, replacements })
 
-        if (toLicensingInfoResult && toLicensingInfoResult.length > 0) {
-            for (let unitInfo of resultUnitDataList) {
-                let appliedNo = 0;
-                let submittedNo = 0;
-                let endorsedNo = 0;
-                let verifiedNo = 0;
-                let recommendedNo = 0;
-                let rejectedNo = 0;
-                let pendingNo = 0;
-                let successedNo = 0;
-                let failedNo = 0;
-                let totalNo = 0;
+        for (let unitInfo of resultUnitDataList) {
+            let appliedNo = 0;
+            let submittedNo = 0;
+            let endorsedNo = 0;
+            let verifiedNo = 0;
+            let recommendedNo = 0;
+            let rejectedNo = 0;
+            let pendingNo = 0;
+            let successedNo = 0;
+            let failedNo = 0;
+            let totalNo = 0;
 
-                let rejectedReasonDatas = [];
-                let pendingReasonDatas = [];
-                let failedReasonDatas = [];
-                let rejectedReasonSummary = '';
-                let pendingReasonSummary = '';
-                let failedReasonSummary = '';
+            let rejectedReasonDatas = [];
+            let pendingReasonDatas = [];
+            let failedReasonDatas = [];
+            let rejectedReasonSummary = '';
+            let pendingReasonSummary = '';
+            let failedReasonSummary = '';
+
+            let unitDriverLicensingList = toLicensingInfoResult.filter(item => item.unitId == unitInfo.unitId);
+            function buildUnitStatInfo() {
+                for (let driverLicensing of unitDriverLicensingList) {
+                    //recalc licensing data select month last status
+                    let selectedDateLastStatus = calcLicensingDataLastStatus(driverLicensing, selectedYear, selectedMonth);
     
-                let unitDriverLicensingList = toLicensingInfoResult.filter(item => item.unitId == unitInfo.unitId);
-                if (unitDriverLicensingList && unitDriverLicensingList.length > 0) {
-                    for (let driverLicensing of unitDriverLicensingList) {
-                        //recalc licensing data select month last status
-                        let selectedDateLastStatus = calcLicensingDataLastStatus(driverLicensing, selectedYear, selectedMonth);
-
-                        totalNo++;
-                        if (selectedDateLastStatus == 'Pending Approval') {
+                    totalNo++;
+                    switch (selectedDateLastStatus) {
+                        case 'Pending Approval':
                             appliedNo++;
-                        } else if (selectedDateLastStatus == 'Submitted') {
+                            break;
+                        case 'Submitted':
                             submittedNo++;
-                        } else if (selectedDateLastStatus == 'Endorsed') {
+                            break;
+                        case 'Endorsed':
                             endorsedNo++;
-                        } else if (selectedDateLastStatus == 'Verified') {
+                            break;
+                        case 'Verified':
                             verifiedNo++;
-                        } else if (selectedDateLastStatus == 'Recommended') {
+                            break;
+                        case 'Recommended':
                             recommendedNo++;
-                        } else if (selectedDateLastStatus == 'Success') {
+                            break;
+                        case 'Success':
                             successedNo++;
-                        } else if (selectedDateLastStatus == 'Rejected') {
+                            break;
+                        case 'Rejected':
                             rejectedNo++;
                             if (!rejectedReasonSummary && driverLicensing.rejectReason) {
                                 rejectedReasonSummary += `${driverLicensing.applyId}:${driverLicensing.rejectReason}; `;
@@ -1169,7 +1228,8 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
                                 optUserName: driverLicensing.rejectUserName,
                                 reason: driverLicensing.rejectReason
                             });
-                        } else if (selectedDateLastStatus == 'Pending') {
+                            break;
+                        case 'Pending':
                             pendingNo++;
                             if (!pendingReasonSummary && driverLicensing.pendingReason) {
                                 pendingReasonSummary += `${driverLicensing.applyId}:${driverLicensing.pendingReason}; `;
@@ -1184,7 +1244,8 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
                                 optUserName: driverLicensing.pendingUserName,
                                 reason: driverLicensing.pendingReason
                             });
-                        } else if (selectedDateLastStatus == 'Failed') {
+                            break;
+                        case 'Failed':
                             failedNo++;
                             if (!failedReasonSummary && driverLicensing.failReason) {
                                 failedReasonSummary += `${driverLicensing.applyId}:${driverLicensing.failReason}; `;
@@ -1199,27 +1260,28 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
                                 optUserName: driverLicensing.failUserName,
                                 reason: driverLicensing.failReason
                             });
-                        }
+                            break;
                     }
                 }
-
-                unitInfo.appliedNo = appliedNo;
-                unitInfo.submittedNo = submittedNo;
-                unitInfo.endorsedNo = endorsedNo;
-                unitInfo.verifiedNo = verifiedNo;
-                unitInfo.recommendedNo = recommendedNo;
-                unitInfo.rejectedNo = rejectedNo;
-                unitInfo.pendingNo = pendingNo;
-                unitInfo.successedNo = successedNo;
-                unitInfo.failedNo = failedNo;
-                unitInfo.totalNo = totalNo;
-                unitInfo.rejectedReasonDatas = rejectedReasonDatas;
-                unitInfo.pendingReasonDatas = pendingReasonDatas;
-                unitInfo.failedReasonDatas = failedReasonDatas;
-                unitInfo.rejectedReasonSummary = rejectedReasonSummary;
-                unitInfo.pendingReasonSummary = pendingReasonSummary;
-                unitInfo.failedReasonSummary = failedReasonSummary;
             }
+            buildUnitStatInfo();
+
+            unitInfo.appliedNo = appliedNo;
+            unitInfo.submittedNo = submittedNo;
+            unitInfo.endorsedNo = endorsedNo;
+            unitInfo.verifiedNo = verifiedNo;
+            unitInfo.recommendedNo = recommendedNo;
+            unitInfo.rejectedNo = rejectedNo;
+            unitInfo.pendingNo = pendingNo;
+            unitInfo.successedNo = successedNo;
+            unitInfo.failedNo = failedNo;
+            unitInfo.totalNo = totalNo;
+            unitInfo.rejectedReasonDatas = rejectedReasonDatas;
+            unitInfo.pendingReasonDatas = pendingReasonDatas;
+            unitInfo.failedReasonDatas = failedReasonDatas;
+            unitInfo.rejectedReasonSummary = rejectedReasonSummary;
+            unitInfo.pendingReasonSummary = pendingReasonSummary;
+            unitInfo.failedReasonSummary = failedReasonSummary;
         }
 
         return {data: resultUnitDataList, totalCount: totalCount};
@@ -1229,32 +1291,36 @@ const getTOLicecsingReport1 = async function (user, selectedYear, selectedMonth,
     }
 }
 
-const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth, permitType, selectedHub, selectedNode, pageNum, pageLength) {
+const getTOLicecsingReport2 = async function (params) {
     try {
+        let {user, selectedYear, selectedMonth, permitType, selectedHub, selectedNode, pageNum, pageLength} = params;
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             return {data: [], totalCount: 0};
-        } else if (user.userType == CONTENT.USER_TYPE.UNIT) {
-            if (user.unit) {
-                selectedHub = user.unit;
-            }
-            if (user.subUnit) {
-                selectedNode = user.subUnit;
-            }
         }
-
         let selectedMonthStr = selectedMonth
-        if (!selectedMonthStr) {
-            selectedMonthStr = 'All';
-        }
-        
         let dbForamt = '%Y-%m';
         let dateStr = '';
-        if (selectedMonth) {
-            dateStr = selectedYear + '-' + selectedMonth;
-        } else {
-            dbForamt = '%Y';
-            dateStr = selectedYear;
+
+        function initParams() {
+            if (user.userType == CONTENT.USER_TYPE.UNIT) {
+                if (user.unit) {
+                    selectedHub = user.unit;
+                }
+                if (user.subUnit) {
+                    selectedNode = user.subUnit;
+                }
+            }
+            if (!selectedMonthStr) {
+                selectedMonthStr = 'All';
+            }
+            if (selectedMonth) {
+                dateStr = selectedYear + '-' + selectedMonth;
+            } else {
+                dbForamt = '%Y';
+                dateStr = selectedYear;
+            }
         }
+        initParams();
 
         let permitTypeSql = `select * from permittype where 1=1 and permitType like 'CL%' `;
         let permitTypeCountSql = `select count(*) as permitTypeNo from permittype where 1=1 and permitType like 'CL%' `;
@@ -1301,55 +1367,62 @@ const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth,
             where us.role in('TO', 'TL', 'DV', 'LOA') AND dp.approveStatus='Approved' and dp.permitType like 'CL%' and DATE_FORMAT(dp.passDate, '${dbForamt}') = ?
         `;
         replacements = [dateStr];
-        if (selectedHub) {
-            toLicensingInfoSql += ` and un.unit = ? `;
-            replacements.push(selectedHub);
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+        async function buildSqlParams() {
+            if (selectedHub) {
+                toLicensingInfoSql += ` and un.unit = ? `;
+                replacements.push(selectedHub);
+            } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                let hqUserUnitNameList = userUnitList.map(item => item.unit);
+                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                    hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                    toLicensingInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
+                } else {
+                    return false;
+                }
             }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                toLicensingInfoSql += ` and un.unit in('${hqUserUnitNameList.join("','")}') `;
-            } else {
-                return {data: [], totalCount: 0};
+            if (selectedNode) {
+                if (selectedNode == '-') {
+                    toLicensingInfoSql += ` and un.subUnit is null `;
+                } else {
+                    toLicensingInfoSql += ` and un.subUnit = ? `;
+                    replacements.push(selectedNode);
+                }
             }
+            return true;
         }
-        if (selectedNode) {
-            if (selectedNode == '-') {
-                toLicensingInfoSql += ` and un.subUnit is null `;
-            } else {
-                toLicensingInfoSql += ` and un.subUnit = ? `;
-                replacements.push(selectedNode);
-            }
+        let result = await buildSqlParams();
+        if (!result) {
+            return {data: [], totalCount: 0};
         }
+       
         let toLicensingInfoResult = await sequelizeObj.query(toLicensingInfoSql + ` GROUP BY dp.permitType, us.role ORDER BY dp.permitType ASC `, { type: QueryTypes.SELECT, replacements })
 
-        if (toLicensingInfoResult && toLicensingInfoResult.length > 0) {
-            for (let permitTypeInfo of resultDataList) {
-                let issuedNo = 0;
-    
-                let permitTypeLicensingList = toLicensingInfoResult.filter(item => item.permitType == permitTypeInfo.permitType);
-                if (permitTypeLicensingList && permitTypeLicensingList.length > 0) {
-                    for (let permitTypeLicensing of permitTypeLicensingList) {
-                        if (permitTypeLicensing.role == 'TO') {
-                            issuedNo += permitTypeLicensing.dataNum;
-                            permitTypeInfo.toNo = permitTypeLicensing.dataNum;
-                        } else if (permitTypeLicensing.role == 'TL') {
-                            issuedNo += permitTypeLicensing.dataNum;
-                            permitTypeInfo.tlNo = permitTypeLicensing.dataNum;
-                        } else if (permitTypeLicensing.role == 'DV') {
-                            issuedNo += permitTypeLicensing.dataNum;
-                            permitTypeInfo.dvNo = permitTypeLicensing.dataNum;
-                        } else if (permitTypeLicensing.role == 'LOA') {
-                            issuedNo += permitTypeLicensing.dataNum;
-                            permitTypeInfo.loaNo = permitTypeLicensing.dataNum;
-                        }
-                    }
+        for (let permitTypeInfo of resultDataList) {
+            let issuedNo = 0;
+
+            let permitTypeLicensingList = toLicensingInfoResult.filter(item => item.permitType == permitTypeInfo.permitType);
+            for (let permitTypeLicensing of permitTypeLicensingList) {
+                switch (permitTypeLicensing.role) {
+                    case 'TO':
+                        issuedNo += permitTypeLicensing.dataNum;
+                        permitTypeInfo.toNo = permitTypeLicensing.dataNum;
+                        break;
+                    case 'TL':
+                        issuedNo += permitTypeLicensing.dataNum;
+                        permitTypeInfo.tlNo = permitTypeLicensing.dataNum;
+                        break;
+                    case 'DV':
+                        issuedNo += permitTypeLicensing.dataNum;
+                        permitTypeInfo.dvNo = permitTypeLicensing.dataNum;
+                        break;
+                    case 'LOA':
+                        issuedNo += permitTypeLicensing.dataNum;
+                        permitTypeInfo.loaNo = permitTypeLicensing.dataNum;
+                        break;
                 }
-                permitTypeInfo.issuedNo = issuedNo;
             }
+            permitTypeInfo.issuedNo = issuedNo;
         }
 
         return {data: resultDataList, totalCount: totalCount};
@@ -1360,7 +1433,7 @@ const getTOLicecsingReport2 = async function (user, selectedYear, selectedMonth,
 }
 
 const calcOpsSummary = async function(opsSummaryResult, startDate, endDate, allNodeList, supportHubList) {
-    if (allNodeList && allNodeList.length > 0) {
+    if (allNodeList.length > 0) {
         // all node task(system, mobile)
         let allHubTaskList = await sequelizeObj.query(`
             SELECT
@@ -1498,8 +1571,8 @@ const calcOpsSummary = async function(opsSummaryResult, startDate, endDate, allN
                 || (item.toHub == supportNodeObj.unit && item.toNode == supportNodeObj.subUnit)));
             let nodeLoanList = allHubLoanList.filter(item => item.unit == supportNodeObj.unit && item.subUnit == supportNodeObj.subUnit);
 
-            let nodeOpsSummaryResult = await calcNodeOpsSummary(supportNodeObj, startDate, endDate, nodeTaskList, 
-                nodeToList, nodeToLeaveList, nodeVehicleList, nodeVehicleLeaveList, nodeHotoList, nodeLoanList, restDates);
+            let nodeOpsSummaryResult = await calcNodeOpsSummary({supportNodeObj, startDate, endDate, nodeTaskList, 
+                nodeToList, nodeToLeaveList, nodeVehicleList, nodeVehicleLeaveList, nodeHotoList, nodeLoanList, restDates});
 
             let supportHubData = opsSummaryResult.hubData.find(item => item.name.toUpperCase() == supportNodeObj.unit.toUpperCase());
             if (supportHubData && nodeOpsSummaryResult) {
@@ -1535,8 +1608,13 @@ const calcOpsSummary = async function(opsSummaryResult, startDate, endDate, allN
 
     return opsSummaryResult;
 }
-const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, nodeTaskList, nodeToList, nodeToLeaveList, nodeVehicleList, 
-    nodeVehicleLeaveList, nodeHotoDataList, nodeLoanDataList, restDates) {
+const calcNodeOpsSummary = async function(params) {
+    let {supportNodeObj, startDate, endDate, nodeTaskList, 
+        nodeToList, nodeToLeaveList, nodeVehicleList, nodeVehicleLeaveList, nodeHotoList, nodeLoanList, restDates} = params;
+    let supportNodeData = supportNodeObj;
+    let nodeHotoDataList = nodeHotoList;
+    let nodeLoanDataList = nodeLoanList;
+
     let nodeOpsSummaryResult = {
         name: supportNodeData.subUnit,
         hubName: supportNodeData.unit,
@@ -1569,7 +1647,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
     let nodeOpsWorkingDays = 0;
     let nodeTrgWorkingDays = 0;
     let nodeAdmWorkingDays = 0;
-    if (nodeTaskList && nodeTaskList.length > 0) {
+    function calcTaskWorkingDays() {
         for (let task of nodeTaskList) {
             let taskStartDate = moment(moment(task.mobileStartTime).format('YYYY-MM-DD'));
             let taskEndDate = moment(moment(task.mobileEndTime).format('YYYY-MM-DD'));
@@ -1592,14 +1670,15 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
                 nodeAdmWorkingDays += taskWorkingDays;
             }
         }
-        nodeOpsSummaryResult.taskWorkingDays = nodeTaskWorkingDays;
-        nodeOpsSummaryResult.opsTaskWorkingDays = nodeOpsWorkingDays;
-        nodeOpsSummaryResult.trgTaskWorkingDays = nodeTrgWorkingDays;
-        nodeOpsSummaryResult.admTaskWorkingDays = nodeAdmWorkingDays;
     }
+    calcTaskWorkingDays();
+    nodeOpsSummaryResult.taskWorkingDays = nodeTaskWorkingDays;
+    nodeOpsSummaryResult.opsTaskWorkingDays = nodeOpsWorkingDays;
+    nodeOpsSummaryResult.trgTaskWorkingDays = nodeTrgWorkingDays;
+    nodeOpsSummaryResult.admTaskWorkingDays = nodeAdmWorkingDays;
 
     //calc node driver working days
-    if (nodeToList && nodeToList.length > 0) {
+    if (nodeToList.length > 0) {
         nodeOpsSummaryResult.toNumber = nodeToList.length;
         let nodeAllToPlanWorkingDays = nodeOpsSummaryResult.workingDays * nodeOpsSummaryResult.toNumber;
         let nodeToLeaveDays = 0;
@@ -1608,60 +1687,72 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
 
         let nodeToIdList = nodeToList.map(item => item.driverId);
         //calc node to leave days
-        nodeToLeaveList = nodeToLeaveList.filter(item => nodeToIdList.indexOf(item.driverId) > -1);
-        if (nodeToLeaveList && nodeToLeaveList.length > 0) {
-            nodeToLeaveDays = calcResourceLeaveDays(nodeToLeaveList, restDates);
-            nodeOpsSummaryResult.toLeaveDays = nodeToLeaveDays;
-        }
-        //calc node to hoto in days
-        let nodeToHotoInList = nodeHotoDataList.filter(item => {
-            return item.driverId && item.role == 'TO' && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
-        });
-        if (nodeToHotoInList && nodeToHotoInList.length > 0) {
-            let nodeHotoInDriverIds = nodeToHotoInList.map(item => item.driverId);
-            nodeHotoInDriverIds = Array.from(new Set(nodeHotoInDriverIds));
-            for (let driverId of nodeHotoInDriverIds) {
-                let currentDriverHotoInList = nodeToHotoInList.filter(item => item.driverId == driverId);
-                if (currentDriverHotoInList.length > 0) {
-                    nodeToLoanInDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverHotoInList, restDates);
-                }
+        function calcToLeaveDatas() {
+            nodeToLeaveList = nodeToLeaveList.filter(item => nodeToIdList.indexOf(item.driverId) > -1);
+            if (nodeToLeaveList && nodeToLeaveList.length > 0) {
+                nodeToLeaveDays = calcResourceLeaveDays(nodeToLeaveList, restDates);
+                nodeOpsSummaryResult.toLeaveDays = nodeToLeaveDays;
             }
         }
-        nodeOpsSummaryResult.toLoanInDays = nodeToLoanInDays;
+        calcToLeaveDatas();
+        //calc node to hoto in days
+        function calcToLoanInDatas() {
+            let nodeToHotoInList = nodeHotoDataList.filter(item => {
+                return item.driverId && item.role == 'TO' && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
+            });
+            if (nodeToHotoInList && nodeToHotoInList.length > 0) {
+                let nodeHotoInDriverIds = nodeToHotoInList.map(item => item.driverId);
+                nodeHotoInDriverIds = Array.from(new Set(nodeHotoInDriverIds));
+                for (let driverId of nodeHotoInDriverIds) {
+                    let currentDriverHotoInList = nodeToHotoInList.filter(item => item.driverId == driverId);
+                    if (currentDriverHotoInList.length > 0) {
+                        nodeToLoanInDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverHotoInList, restDates);
+                    }
+                }
+            }
+            nodeOpsSummaryResult.toLoanInDays = nodeToLoanInDays;
+        }
+        calcToLoanInDatas();
 
         //calc node to hoto out days
         let nodeToHotoOutDays = 0;
-        let nodeToHotoOutList = nodeHotoDataList.filter(item => {
-            return item.driverId && item.role == 'TO' && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
-        });
-        if (nodeToHotoOutList && nodeToHotoOutList.length > 0) {
-            let nodeHotoOutDriverIds = nodeToHotoOutList.map(item => item.driverId);
-            nodeHotoOutDriverIds = Array.from(new Set(nodeHotoOutDriverIds));
-            for (let driverId of nodeHotoOutDriverIds) {
-                let currentDriverHotoOutList = nodeToHotoOutList.filter(item => item.driverId == driverId);
-                if (currentDriverHotoOutList.length > 0) {
-                    nodeToHotoOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverHotoOutList, restDates);
+        function calcToHotoOutDatas() {
+            let nodeToHotoOutList = nodeHotoDataList.filter(item => {
+                return item.driverId && item.role == 'TO' && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
+            });
+            if (nodeToHotoOutList && nodeToHotoOutList.length > 0) {
+                let nodeHotoOutDriverIds = nodeToHotoOutList.map(item => item.driverId);
+                nodeHotoOutDriverIds = Array.from(new Set(nodeHotoOutDriverIds));
+                for (let driverId of nodeHotoOutDriverIds) {
+                    let currentDriverHotoOutList = nodeToHotoOutList.filter(item => item.driverId == driverId);
+                    if (currentDriverHotoOutList.length > 0) {
+                        nodeToHotoOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverHotoOutList, restDates);
+                    }
                 }
             }
         }
+        calcToHotoOutDatas();
 
         //calc node to loan out days
-        let tempNodeToLoanOutDays = 0;
-        let nodeToLoanOutList = nodeLoanDataList.filter(item => {
-            return item.driverId && item.role == 'TO' && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
-        });
-        if (nodeToLoanOutList && nodeToLoanOutList.length > 0) {
-            let nodeLoanOutDriverIds = nodeToLoanOutList.map(item => item.driverId);
-            nodeLoanOutDriverIds = Array.from(new Set(nodeLoanOutDriverIds));
-            for (let driverId of nodeLoanOutDriverIds) {
-                let currentDriverLoanOutList = nodeToLoanOutList.filter(item => item.driverId == driverId);
-                if (currentDriverLoanOutList.length > 0) {
-                    tempNodeToLoanOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverLoanOutList, restDates);
+        function calcToLoanOutDatas() {
+            let tempNodeToLoanOutDays = 0;
+            let nodeToLoanOutList = nodeLoanDataList.filter(item => {
+                return item.driverId && item.role == 'TO' && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
+            });
+            if (nodeToLoanOutList && nodeToLoanOutList.length > 0) {
+                let nodeLoanOutDriverIds = nodeToLoanOutList.map(item => item.driverId);
+                nodeLoanOutDriverIds = Array.from(new Set(nodeLoanOutDriverIds));
+                for (let driverId of nodeLoanOutDriverIds) {
+                    let currentDriverLoanOutList = nodeToLoanOutList.filter(item => item.driverId == driverId);
+                    if (currentDriverLoanOutList.length > 0) {
+                        tempNodeToLoanOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentDriverLoanOutList, restDates);
+                    }
                 }
             }
+            nodeToLoanOutDays = nodeToHotoOutDays + tempNodeToLoanOutDays;
+            nodeOpsSummaryResult.toLoanOutDays = nodeToLoanOutDays;
         }
-        nodeToLoanOutDays = nodeToHotoOutDays + tempNodeToLoanOutDays;
-        nodeOpsSummaryResult.toLoanOutDays = nodeToLoanOutDays;
+        calcToLoanOutDatas();
 
         nodeOpsSummaryResult.toActualWorkingDays = nodeAllToPlanWorkingDays + nodeToLoanInDays - nodeToLoanOutDays - nodeToLeaveDays;
         if (nodeOpsSummaryResult.toActualWorkingDays < 0) {
@@ -1672,7 +1763,7 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
         nodeOpsSummaryResult.toWorkingRate = Number(nodeToWorkingRate.toFixed(1));
     }
 
-    if (nodeVehicleList && nodeVehicleList.length > 0) {
+    if (nodeVehicleList.length > 0) {
         nodeOpsSummaryResult.vehicleNumber = nodeVehicleList.length;
         let nodeAllVehiclePlanWorkingDays = nodeOpsSummaryResult.workingDays * nodeOpsSummaryResult.vehicleNumber;
         let nodeVehicleLeaveDays = 0;
@@ -1681,60 +1772,72 @@ const calcNodeOpsSummary = async function(supportNodeData, startDate, endDate, n
 
         let nodeVehicleNoList = nodeVehicleList.map(item => item.vehicleNo);
         //calc node vehicle leave days
-        nodeVehicleLeaveList = nodeVehicleLeaveList.filter(item => nodeVehicleNoList.indexOf(item.vehicleNo) > -1);
-        if (nodeVehicleLeaveList && nodeVehicleLeaveList.length > 0) {
-            nodeVehicleLeaveDays = calcResourceLeaveDays(nodeVehicleLeaveList, restDates);
-            nodeOpsSummaryResult.vehicleLeaveDays = nodeVehicleLeaveDays;
-        }
-        //calc node vehicle hoto in days
-        let nodeVehicleHotoInList = nodeHotoDataList.filter(item => {
-            return item.vehicleNo && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
-        });
-        if (nodeVehicleHotoInList && nodeVehicleHotoInList.length > 0) {
-            let nodeHotoInVehicleNos = nodeVehicleHotoInList.map(item => item.vehicleNo);
-            nodeHotoInVehicleNos = Array.from(new Set(nodeHotoInVehicleNos));
-            for (let vehicleNo of nodeHotoInVehicleNos) {
-                let currentVehicleHotoInList = nodeVehicleHotoInList.filter(item => item.vehicleNo == vehicleNo);
-                if (currentVehicleHotoInList.length > 0) {
-                    nodeVehicleLoanInDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleHotoInList, restDates);
-                }
+        function calcVehicleLeaveDatas() {
+            nodeVehicleLeaveList = nodeVehicleLeaveList.filter(item => nodeVehicleNoList.indexOf(item.vehicleNo) > -1);
+            if (nodeVehicleLeaveList && nodeVehicleLeaveList.length > 0) {
+                nodeVehicleLeaveDays = calcResourceLeaveDays(nodeVehicleLeaveList, restDates);
+                nodeOpsSummaryResult.vehicleLeaveDays = nodeVehicleLeaveDays;
             }
         }
-        nodeOpsSummaryResult.vehicleLoanInDays = nodeVehicleLoanInDays;
+        calcVehicleLeaveDatas();
+        //calc node vehicle hoto in days
+        function calcVehicleHotoInDatas() {
+            let nodeVehicleHotoInList = nodeHotoDataList.filter(item => {
+                return item.vehicleNo && item.toHub == supportNodeData.unit && item.toNode == supportNodeData.subUnit;
+            });
+            if (nodeVehicleHotoInList && nodeVehicleHotoInList.length > 0) {
+                let nodeHotoInVehicleNos = nodeVehicleHotoInList.map(item => item.vehicleNo);
+                nodeHotoInVehicleNos = Array.from(new Set(nodeHotoInVehicleNos));
+                for (let vehicleNo of nodeHotoInVehicleNos) {
+                    let currentVehicleHotoInList = nodeVehicleHotoInList.filter(item => item.vehicleNo == vehicleNo);
+                    if (currentVehicleHotoInList.length > 0) {
+                        nodeVehicleLoanInDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleHotoInList, restDates);
+                    }
+                }
+            }
+            nodeOpsSummaryResult.vehicleLoanInDays = nodeVehicleLoanInDays;
+        }
+        calcVehicleHotoInDatas();
 
         //calc node vehicle hoto out days
         let nodeVehicleHotoOutDays = 0;
-        let nodeVehicleHotoOutList = nodeHotoDataList.filter(item => {
-            return item.vehicleNo && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
-        });
-        if (nodeVehicleHotoOutList && nodeVehicleHotoOutList.length > 0) {
-            let nodeHotoOutVehicleNos = nodeVehicleHotoOutList.map(item => item.vehicleNo);
-            nodeHotoOutVehicleNos = Array.from(new Set(nodeHotoOutVehicleNos));
-            for (let vehicleNo of nodeHotoOutVehicleNos) {
-                let currentVehicleHotoOutList = nodeVehicleHotoOutList.filter(item => item.driverId == vehicleNo);
-                if (currentVehicleHotoOutList.length > 0) {
-                    nodeVehicleHotoOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleHotoOutList, restDates);
+        function calcVehicleHotoOutDatas() {
+            let nodeVehicleHotoOutList = nodeHotoDataList.filter(item => {
+                return item.vehicleNo && item.fromHub == supportNodeData.unit && item.fromNode == supportNodeData.subUnit;
+            });
+            if (nodeVehicleHotoOutList && nodeVehicleHotoOutList.length > 0) {
+                let nodeHotoOutVehicleNos = nodeVehicleHotoOutList.map(item => item.vehicleNo);
+                nodeHotoOutVehicleNos = Array.from(new Set(nodeHotoOutVehicleNos));
+                for (let vehicleNo of nodeHotoOutVehicleNos) {
+                    let currentVehicleHotoOutList = nodeVehicleHotoOutList.filter(item => item.driverId == vehicleNo);
+                    if (currentVehicleHotoOutList.length > 0) {
+                        nodeVehicleHotoOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleHotoOutList, restDates);
+                    }
                 }
             }
         }
+        calcVehicleHotoOutDatas();
 
         //calc node vehicle loan out days
-        let tempNodeVehicleLoanOutDays = 0;
-        let nodeVehicleLoanOutList = nodeLoanDataList.filter(item => {
-            return item.vehicleNo && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
-        });
-        if (nodeVehicleLoanOutList && nodeVehicleLoanOutList.length > 0) {
-            let nodeLoanOutVehicleNos = nodeVehicleLoanOutList.map(item => item.vehicleNo);
-            nodeLoanOutVehicleNos = Array.from(new Set(nodeLoanOutVehicleNos));
-            for (let vehicleNo of nodeLoanOutVehicleNos) {
-                let currentVehicleLoanOutList = nodeVehicleLoanOutList.filter(item => item.vehicleNo == vehicleNo);
-                if (currentVehicleLoanOutList.length > 0) {
-                    tempNodeVehicleLoanOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleLoanOutList, restDates);
+        function calcVehicleLoanOutDatas() {
+            let tempNodeVehicleLoanOutDays = 0;
+            let nodeVehicleLoanOutList = nodeLoanDataList.filter(item => {
+                return item.vehicleNo && item.unit == supportNodeData.unit && item.subUnit == supportNodeData.subUnit;
+            });
+            if (nodeVehicleLoanOutList && nodeVehicleLoanOutList.length > 0) {
+                let nodeLoanOutVehicleNos = nodeVehicleLoanOutList.map(item => item.vehicleNo);
+                nodeLoanOutVehicleNos = Array.from(new Set(nodeLoanOutVehicleNos));
+                for (let vehicleNo of nodeLoanOutVehicleNos) {
+                    let currentVehicleLoanOutList = nodeVehicleLoanOutList.filter(item => item.vehicleNo == vehicleNo);
+                    if (currentVehicleLoanOutList.length > 0) {
+                        tempNodeVehicleLoanOutDays += calcResourceUseDays(startDateTimeLong, endDateTimeLong, currentVehicleLoanOutList, restDates);
+                    }
                 }
             }
+            nodeVehicleLoanOutDays = nodeVehicleHotoOutDays + tempNodeVehicleLoanOutDays;
+            nodeOpsSummaryResult.vehicleLoanOutDays = nodeVehicleLoanOutDays;
         }
-        nodeVehicleLoanOutDays = nodeVehicleHotoOutDays + tempNodeVehicleLoanOutDays;
-        nodeOpsSummaryResult.vehicleLoanOutDays = nodeVehicleLoanOutDays;
+        calcVehicleLoanOutDatas();
 
         nodeOpsSummaryResult.vehicleActualWorkingDays = (nodeAllVehiclePlanWorkingDays + nodeVehicleLoanInDays - nodeVehicleLoanOutDays - nodeVehicleLeaveDays) / nodeOpsSummaryResult.workingDays;
         if (nodeOpsSummaryResult.vehicleActualWorkingDays < 0) {
@@ -1764,54 +1867,60 @@ const calcResourceLeaveDays = function(nodeResourceLeaveList, restDates) {
 
 const calcResourceUseDays = function(startDateTimeLong, endDateTimeLong, nodeResourceHotoList, restDates) {
     let nodeHotoDays = 0;
-    for (let temp of nodeResourceHotoList) {
-        if (Number(moment(temp.startDateTime).format('H')) < 12) {
-            temp.startDateTime = moment(temp.startDateTime).format('YYYY-MM-DD') + ' 00:00:00';
-        } else {
-            temp.startDateTime = moment(temp.startDateTime).format('YYYY-MM-DD') + ' 12:00:00';
-        }
-        if (Number(moment(temp.endDateTime).format('H')) < 12) {
-            temp.endDateTime = moment(temp.endDateTime).format('YYYY-MM-DD') + ' 11:59:59';
-        } else {
-            temp.endDateTime = moment(temp.endDateTime).format('YYYY-MM-DD') + ' 23:59:59';
-        }
-        let hotoStartTimeLong = moment(temp.startDateTime).format('YYYYMMDDHHmmss');
-        if (startDateTimeLong > hotoStartTimeLong) {
-            temp.startDateTime = moment(startDateTimeLong, 'YYYYMMDDHHmmss').format('YYYY-MM-DD HH:mm:ss');
-        }
-        let hotoEndTimeLong = moment(temp.endDateTime).format('YYYYMMDDHHmmss');
-        if (endDateTimeLong < hotoEndTimeLong) {
-            temp.endDateTime = moment(endDateTimeLong, 'YYYYMMDDHHmmss').format('YYYY-MM-DD HH:mm:ss');
+    function buildDateInfo() {
+        for (let temp of nodeResourceHotoList) {
+            if (Number(moment(temp.startDateTime).format('H')) < 12) {
+                temp.startDateTime = moment(temp.startDateTime).format('YYYY-MM-DD') + ' 00:00:00';
+            } else {
+                temp.startDateTime = moment(temp.startDateTime).format('YYYY-MM-DD') + ' 12:00:00';
+            }
+            if (Number(moment(temp.endDateTime).format('H')) < 12) {
+                temp.endDateTime = moment(temp.endDateTime).format('YYYY-MM-DD') + ' 11:59:59';
+            } else {
+                temp.endDateTime = moment(temp.endDateTime).format('YYYY-MM-DD') + ' 23:59:59';
+            }
+            let hotoStartTimeLong = moment(temp.startDateTime).format('YYYYMMDDHHmmss');
+            if (startDateTimeLong > hotoStartTimeLong) {
+                temp.startDateTime = moment(startDateTimeLong, 'YYYYMMDDHHmmss').format('YYYY-MM-DD HH:mm:ss');
+            }
+            let hotoEndTimeLong = moment(temp.endDateTime).format('YYYYMMDDHHmmss');
+            if (endDateTimeLong < hotoEndTimeLong) {
+                temp.endDateTime = moment(endDateTimeLong, 'YYYYMMDDHHmmss').format('YYYY-MM-DD HH:mm:ss');
+            }
         }
     }
+    buildDateInfo();
 
     //split hoto days to every day list then exclude month rest days(weekend and holidays)
     let newHotoDaysList = [];
-    for (let temp of nodeResourceHotoList) {
-        let diffDays = moment(temp.endDateTime, 'YYYY-MM-DD').diff(moment(temp.startDateTime, 'YYYY-MM-DD'), 'day');
-        let index = 0;
-        while (index <= diffDays) {
-            let hotoDayStr = moment(temp.startDateTime).add(index, 'days').format('YYYY-MM-DD');
-            if (restDates.indexOf(hotoDayStr) != -1) {
+    function buildHotoDateInfo() {
+        for (let temp of nodeResourceHotoList) {
+            let diffDays = moment(temp.endDateTime, 'YYYY-MM-DD').diff(moment(temp.startDateTime, 'YYYY-MM-DD'), 'day');
+            let index = 0;
+            while (index <= diffDays) {
+                let hotoDayStr = moment(temp.startDateTime).add(index, 'days').format('YYYY-MM-DD');
+                if (restDates.indexOf(hotoDayStr) != -1) {
+                    index++;
+                    continue;
+                }
+    
+                let hotoDay = {startDateTime: '', endDateTime: ''};
+                if (index == 0) {
+                    hotoDay.startDateTime = temp.startDateTime;
+                } else {
+                    hotoDay.startDateTime = hotoDayStr + ' 00:00:00';
+                }
+                if (index == diffDays) {
+                    hotoDay.endDateTime = temp.endDateTime;
+                } else {
+                    hotoDay.endDateTime = hotoDayStr + ' 23:59:59';
+                }
+                newHotoDaysList.push(hotoDay);
                 index++;
-                continue;
             }
-
-            let hotoDay = {startDateTime: '', endDateTime: ''};
-            if (index == 0) {
-                hotoDay.startDateTime = temp.startDateTime;
-            } else {
-                hotoDay.startDateTime = hotoDayStr + ' 00:00:00';
-            }
-            if (index == diffDays) {
-                hotoDay.endDateTime = temp.endDateTime;
-            } else {
-                hotoDay.endDateTime = hotoDayStr + ' 23:59:59';
-            }
-            newHotoDaysList.push(hotoDay);
-            index++;
         }
     }
+    buildHotoDateInfo();
 
     //hoto data order by startDateTime asc
     newHotoDaysList = newHotoDaysList.sort(function(item1, item2) {
@@ -1823,15 +1932,22 @@ const calcResourceUseDays = function(startDateTimeLong, endDateTimeLong, nodeRes
 
     //Merge Intersections days
     let hotoIntervalList = [];
-    for (let temp of newHotoDaysList) {
-        let tempStartTimeLong = Number(moment(temp.startDateTime).format('YYYYMMDDHHmmss'));
-        let tempEndTimeLong = Number(moment(temp.endDateTime).format('YYYYMMDDHHmmss'));
-
-        if (hotoIntervalList.length > 0) {
-            let preHoto = hotoIntervalList[hotoIntervalList.length - 1];
-            if (tempStartTimeLong < preHoto.endTime) {
-                if (tempEndTimeLong > preHoto.endTime) {
-                    preHoto.endTime = tempEndTimeLong;
+    function mergeHotoDate() {
+        for (let temp of newHotoDaysList) {
+            let tempStartTimeLong = Number(moment(temp.startDateTime).format('YYYYMMDDHHmmss'));
+            let tempEndTimeLong = Number(moment(temp.endDateTime).format('YYYYMMDDHHmmss'));
+    
+            if (hotoIntervalList.length > 0) {
+                let preHoto = hotoIntervalList[hotoIntervalList.length - 1];
+                if (tempStartTimeLong < preHoto.endTime) {
+                    if (tempEndTimeLong > preHoto.endTime) {
+                        preHoto.endTime = tempEndTimeLong;
+                    }
+                } else {
+                    hotoIntervalList.push({
+                        startTime: tempStartTimeLong,
+                        endTime: tempEndTimeLong
+                    });
                 }
             } else {
                 hotoIntervalList.push({
@@ -1839,13 +1955,9 @@ const calcResourceUseDays = function(startDateTimeLong, endDateTimeLong, nodeRes
                     endTime: tempEndTimeLong
                 });
             }
-        } else {
-            hotoIntervalList.push({
-                startTime: tempStartTimeLong,
-                endTime: tempEndTimeLong
-            });
         }
     }
+    mergeHotoDate();
     for (let timeInterval of hotoIntervalList) {
         let startTime = timeInterval.startTime;
         let endTime = timeInterval.endTime;
@@ -1873,18 +1985,21 @@ const calcWorkingTime = function(startTime, endTime) {
 
     let diffDays = moment(endTime.format("YYYY-MM-DD")).diff(moment(startTime.format("YYYY-MM-DD")), 'days');
     let workDays = 0.5;
+
+    let startDays = (startAm == 'am' ? 1 : 0.5);
+    let endDays = (endAm == 'am' ? 0.5 : 1);
     if (diffDays == 0) {
         if (startAm != endAm) {
             workDays = 1;
         }
     } else if (diffDays == 1) {
-        let startTimeWorkDays = (startAm == 'am' ? 1 : 0.5);
-        let endTimeWorkDays = (endAm == 'am' ? 0.5 : 1);
+        let startTimeWorkDays = startDays;
+        let endTimeWorkDays = endDays;
 
         workDays = startTimeWorkDays + endTimeWorkDays;
     } else {
-        let startTimeWorkDays = (startAm == 'am' ? 1 : 0.5);
-        let endTimeWorkDays = (endAm == 'am' ? 0.5 : 1);
+        let startTimeWorkDays = startDays;
+        let endTimeWorkDays = endDays;
 
         workDays = startTimeWorkDays + endTimeWorkDays + (diffDays - 1);
     }
@@ -1945,15 +2060,15 @@ module.exports = {
         let startIndex = pageNum;
         let endIndex = startIndex + pageLength;
 
-        if (selectedYear) {
-            if (resourceType == 'to') {
-                let toReportData = await getTOUtilisationReport(user, selectedYear, selectedMonth, selectedHub, selectedNode);
-                let totalData = toReportData.totalData;
-                let unitDataList = toReportData.unitDataList;
+        if (resourceType == 'to') {
+            let toReportData = await getTOUtilisationReport(user, selectedYear, selectedMonth, selectedHub, selectedNode);
+            let totalData = toReportData.totalData;
+            let unitDataList = toReportData.unitDataList;
 
-                let totalCount = 0;
+            let totalCount = 0;
+            let resultData = [];
+            function buildToResult() {
                 if(unitDataList) totalCount = unitDataList.length;
-                let resultData = [];
                 if (totalCount > 0) {
                     if (endIndex > totalCount) {
                         endIndex = totalCount;
@@ -1970,37 +2085,39 @@ module.exports = {
                         resultData = [totalData].concat(resultData);
                     }
                 }
-
-                return res.json({ respMessage: resultData, recordsFiltered: totalCount, recordsTotal: totalCount });
-            } else {
-                let vehicleReportData = await getVehicleUtilisationReport(user, selectedYear, selectedMonth, selectedHub, selectedNode, vehicleType);
-                let totalData = vehicleReportData.totalData;
-                let unitDataList = vehicleReportData.unitDataList;
-
-                let totalCount = unitDataList.length;
-                let resultData = [];
-                if (totalCount > 0) {
-                    if (endIndex > totalCount) {
-                        endIndex = totalCount;
-                    }
-                    resultData = unitDataList.slice(startIndex, endIndex);
-                    if (resultData && resultData.length > 0) {
-                        let index = startIndex;
-                        for (let data of resultData) {
-                            index++;
-                            data.index = index;
-                        }
-                    }
-                    if (totalCount > 1) {
-                        resultData = [totalData].concat(resultData);
-                    }
-                }
-
-                return res.json({ respMessage: resultData, recordsFiltered: totalCount, recordsTotal: totalCount });
             }
-        }
+            buildToResult();
 
-        return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+            return res.json({ respMessage: resultData, recordsFiltered: totalCount, recordsTotal: totalCount });
+        } else {
+            let vehicleReportData = await getVehicleUtilisationReport(user, selectedYear, selectedMonth, selectedHub, selectedNode, vehicleType);
+            let totalData = vehicleReportData.totalData;
+            let unitDataList = vehicleReportData.unitDataList;
+
+            let totalCount = unitDataList.length;
+            let resultData = [];
+            function buildVehicleResult() {
+                if (totalCount > 0) {
+                    if (endIndex > totalCount) {
+                        endIndex = totalCount;
+                    }
+                    resultData = unitDataList.slice(startIndex, endIndex);
+                    if (resultData && resultData.length > 0) {
+                        let index = startIndex;
+                        for (let data of resultData) {
+                            index++;
+                            data.index = index;
+                        }
+                    }
+                    if (totalCount > 1) {
+                        resultData = [totalData].concat(resultData);
+                    }
+                }
+            }
+            buildVehicleResult();
+
+            return res.json({ respMessage: resultData, recordsFiltered: totalCount, recordsTotal: totalCount });
+        }
     },
 
     licensingMonthReport: async function(req, res) {
@@ -2022,7 +2139,7 @@ module.exports = {
             let pageLength = Number(req.body.pageLength).valueOf();
 
             if (resourceType ==  '2') {
-                let report2Data = await getTOLicecsingReport2(user, selectedYear, selectedMonth, permitType, selectedHub, selectedNode, pageNum, pageLength);
+                let report2Data = await getTOLicecsingReport2({user, selectedYear, selectedMonth, permitType, selectedHub, selectedNode, pageNum, pageLength});
 
                 return res.json({ respMessage: report2Data.data, recordsFiltered: report2Data.totalCount, recordsTotal: report2Data.totalCount });
             } else {
@@ -2418,12 +2535,15 @@ module.exports = {
         }
         let startDate = req.body.startDate;
         let endDate = req.body.endDate;
-        if (!startDate || startDate == 'Invalid date') {
-            startDate = moment().add(-7, 'day').format('YYYY-MM-DD');
+        function initDate() {
+            if (!startDate || startDate == 'Invalid date') {
+                startDate = moment().add(-7, 'day').format('YYYY-MM-DD');
+            }
+            if (!endDate || endDate == 'Invalid date') {
+                endDate = moment().format('YYYY-MM-DD');
+            }
         }
-        if (!endDate || endDate == 'Invalid date') {
-            endDate = moment().format('YYYY-MM-DD');
-        }
+        initDate();
         let dateRangeDiffDays = moment(endDate).diff(moment(startDate), 'day') + 1;
         let preCycleStartDate = moment(startDate).add((0 - dateRangeDiffDays), 'day').format('YYYY-MM-DD');
         let preCycleEndDate = moment(endDate).add((0 - dateRangeDiffDays), 'day').format('YYYY-MM-DD');
@@ -2436,25 +2556,29 @@ module.exports = {
         let opsSummaryConfHub = conf.OPS_SUMMARY_HUB_LIST;
         let userHubList = [];
         let userNode = null;
-        if (user.userType == CONTENT.USER_TYPE.UNIT) {
-            if (user.unit) {
-                userHubList.push(user.unit);
-            }
-            userNode = user.subUnit;
-        } else if ([ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.LICENSING_OFFICER ].includes(user.userType)) {
-            let unitList = await sequelizeObj.query(` 
-                SELECT unit FROM unit GROUP BY unit;
-            `, { type: QueryTypes.SELECT });
-
-            unitList.forEach(item => {
-                if (item.unit) {
-                    userHubList.push(item.unit);
+        async function initUnitInfo() {
+            if (user.userType == CONTENT.USER_TYPE.UNIT) {
+                if (user.unit) {
+                    userHubList.push(user.unit);
                 }
-            });
-         } else if (CONTENT.USER_TYPE.HQ == user.userType) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            userHubList = userUnitList.map(item => item.unit);
-         }
+                userNode = user.subUnit;
+            } else if ([ CONTENT.USER_TYPE.ADMINISTRATOR, CONTENT.USER_TYPE.LICENSING_OFFICER ].includes(user.userType)) {
+                let unitList = await sequelizeObj.query(` 
+                    SELECT unit FROM unit GROUP BY unit;
+                `, { type: QueryTypes.SELECT });
+    
+                unitList.forEach(item => {
+                    if (item.unit) {
+                        userHubList.push(item.unit);
+                    }
+                });
+             } else if (CONTENT.USER_TYPE.HQ == user.userType) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                userHubList = userUnitList.map(item => item.unit);
+             }
+        }
+        await initUnitInfo();
+        
          let supportHubList = opsSummaryConfHub.filter(item => userHubList.indexOf(item) > -1);
          if (supportHubList && supportHubList.length > 0) {
             let hubColorConfList = jsonfile.readFileSync(`./conf/hubNodeConf.json`);
@@ -2500,7 +2624,7 @@ module.exports = {
                 supportNodeSql += ` and subUnit='${userNode}' `;
             }
             let supportNodeList = await sequelizeObj.query(supportNodeSql, { type: QueryTypes.SELECT, replacements: [supportHubList] });
-            if (supportNodeList && supportNodeList.length > 0) {
+            if (supportNodeList.length > 0) {
                 selectedCycleResult = await calcOpsSummary(selectedCycleResult, startDate, endDate, supportNodeList, supportHubList);
 
                 preCycleResult = await calcOpsSummary(preCycleResult, preCycleStartDate, preCycleEndDate, supportNodeList, supportHubList);
