@@ -1450,17 +1450,19 @@ module.exports.getTOCalenderDriverList = async function (req, res) {
 
 module.exports.getTODriverDetailInfo = async function (req, res) {
     let user = await userService.getUserDetailInfo(req.cookies.userId)
-    if (!user) {
-        log.warn(`User ${ user.userId } does not exist.`);
-        return res.json(utils.response(0, `User ${ user.userId } does not exist.`));
-    }
-    
     let driverId = req.body.driverId;
-    if (!driverId) {
-        log.error(`DriverId ${ driverId } is not correct! current login user is ${ req.cookies.userId }`)
-        return res.json(utils.response(0, `DriverId ${ driverId } is not correct!`));
+    function checkParams() {
+        if (!user) {
+            log.warn(`User ${ user.userId } does not exist.`);
+            throw new Error(`User ${ user.userId } does not exist.`);
+        }
+        if (!driverId) {
+            log.error(`DriverId ${ driverId } is not correct! current login user is ${ req.cookies.userId }`)
+            throw new Error(`DriverId ${ driverId } is not correct!`);
+        }
     }
     try {
+        checkParams();
         //driver current task
         let currentTaskList = await sequelizeObj.query(`
             SELECT DISTINCT tt.driverId as driverId
@@ -1720,72 +1722,81 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
     let taskCreatorId = currentTask.creator;
     let taskCreator = await User.findByPk(taskCreatorId);
     if (taskCreator && taskCreator.userType == "CUSTOMER") {
-        let driverVchicleArray = { driverList: [], vehicleList: [] }
-        let sql = `
-            select v.vehicleNumber as vehicleNo, v.vehicleType, "" as permitType, 0 as totalMileage, 0 as taskNum
-            from vehicle v
-            LEFT JOIN job_task jt ON jt.id = v.taskId
-            LEFT JOIN job j ON j.requestId = jt.requestId
-            LEFT JOIN service_type st ON j.serviceTypeId = st.id
-            LEFT JOIN request r ON r.id = jt.requestId
-            where r.groupId = ${ taskCreator.unitId } and j.driver = 0 
-            and jt.taskStatus = 'Assigned'
-            and st.category = 'MV'
-            and ('${ moment(currentTask.indentStartTime).format('YYYY-MM-DD HH:mm') }' >= DATE_FORMAT(jt.startDate, '%Y-%m-%d %H:%i:%s') and '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD HH:mm') }' <= DATE_FORMAT(jt.endDate, '%Y-%m-%d %H:%i:%s'))
-        `
-        if(vehicleType) {
-            sql += ` and v.vehicleType = `+ sequelizeSystemObj.escape(vehicleType)
-        }
-        let vehicleList = await sequelizeSystemObj.query(sql + ` GROUP BY v.vehicleNumber`, {
-            type: QueryTypes.SELECT,
-            replacements: []
-        });
-        driverVchicleArray.vehicleList = vehicleList;
-
-        sql = `
-            select
-                d.driverId, d.driverName, d.permitType, d.totalMileage, 0 as taskNum
-            from driver d
-            LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
-            LEFT JOIN user u ON u.driverId = d.driverId
-            where d.driverId is not null and u.role in ('DV', 'LOA')
-        `
-        if(taskCreator.unitId){
-            sql += ` and d.unit = '${ taskCreator.unitId }'`
-        }
-        if(vehicleType) {
-            sql += ` and FIND_IN_SET(`+sequelizeSystemObj.escape(vehicleType)+`, dc.vehicleType)`
-        }
-        if(currentTask.indentEndTime) {
-            sql += ` and (d.operationallyReadyDate > '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)`
-        }
-        let driverList = await sequelizeObj.query(
-            sql + ` GROUP BY d.driverId`,
-            {
-                type: QueryTypes.SELECT
+        async function buildCustomerResult() {
+            let driverVchicleArray = { driverList: [], vehicleList: [] }
+            let sql = `
+                select v.vehicleNumber as vehicleNo, v.vehicleType, "" as permitType, 0 as totalMileage, 0 as taskNum
+                from vehicle v
+                LEFT JOIN job_task jt ON jt.id = v.taskId
+                LEFT JOIN job j ON j.requestId = jt.requestId
+                LEFT JOIN service_type st ON j.serviceTypeId = st.id
+                LEFT JOIN request r ON r.id = jt.requestId
+                where r.groupId = ${ taskCreator.unitId } and j.driver = 0 
+                and jt.taskStatus = 'Assigned'
+                and st.category = 'MV'
+                and ('${ moment(currentTask.indentStartTime).format('YYYY-MM-DD HH:mm') }' >= DATE_FORMAT(jt.startDate, '%Y-%m-%d %H:%i:%s') and '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD HH:mm') }' <= DATE_FORMAT(jt.endDate, '%Y-%m-%d %H:%i:%s'))
+            `
+            if(vehicleType) {
+                sql += ` and v.vehicleType = `+ sequelizeSystemObj.escape(vehicleType)
             }
-        );
-        driverVchicleArray.driverList = driverList;
+            let vehicleList = await sequelizeSystemObj.query(sql + ` GROUP BY v.vehicleNumber`, {
+                type: QueryTypes.SELECT,
+                replacements: []
+            });
+            driverVchicleArray.vehicleList = vehicleList;
+    
+            sql = `
+                select
+                    d.driverId, d.driverName, d.permitType, d.totalMileage, 0 as taskNum
+                from driver d
+                LEFT JOIN driver_platform_conf dc on dc.driverId = d.driverId and dc.approveStatus='Approved'
+                LEFT JOIN user u ON u.driverId = d.driverId
+                where d.driverId is not null and u.role in ('DV', 'LOA')
+            `
+            if(taskCreator.unitId){
+                sql += ` and d.unit = '${ taskCreator.unitId }'`
+            }
+            if(vehicleType) {
+                sql += ` and FIND_IN_SET(`+sequelizeSystemObj.escape(vehicleType)+`, dc.vehicleType)`
+            }
+            if(currentTask.indentEndTime) {
+                sql += ` and (d.operationallyReadyDate > '${ moment(currentTask.indentEndTime).format('YYYY-MM-DD') }' OR d.operationallyReadyDate is null)`
+            }
+            let driverList = await sequelizeObj.query(
+                sql + ` GROUP BY d.driverId`,
+                {
+                    type: QueryTypes.SELECT
+                }
+            );
+            driverVchicleArray.driverList = driverList;
 
-        return res.json(utils.response(1, driverVchicleArray));
+            return driverVchicleArray;
+        }
+        let resultData = await buildCustomerResult();
+
+        return res.json(utils.response(1, resultData));
     }
 
     let currentHub = currentTask.hub;
     let currentNode = currentTask.node;
     let unitIdArray = [];
-    if (currentNode) {
-        let currentUnit =  await Unit.findOne({where: { unit: currentHub, subUnit: currentNode}})
-        if (currentUnit) {
-            unitIdArray.push(currentUnit.id);
-        }
-    } else {
-        let unitList = await Unit.findAll({where: { unit: currentHub }})
-        if (unitList && unitList.length > 0) {
-            for (let temp of unitList) {
-                unitIdArray.push(temp.id);
+    async function buildUnitInfo() {
+        if (currentNode) {
+            let currentUnit =  await Unit.findOne({where: { unit: currentHub, subUnit: currentNode}})
+            if (currentUnit) {
+                unitIdArray.push(currentUnit.id);
+            }
+        } else {
+            let unitList = await Unit.findAll({where: { unit: currentHub }})
+            if (unitList && unitList.length > 0) {
+                for (let temp of unitList) {
+                    unitIdArray.push(temp.id);
+                }
             }
         }
     }
+    await buildUnitInfo();
+
     // before 2022-12-18 system preParkTask's indentEndTime maybe null
     if (!currentTask.indentEndTime) {
         currentTask.indentEndTime = moment(currentTask.indentStartTime).add(5, 'year');
@@ -1796,19 +1807,22 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
 
         //vehicles: user unit vehicle + hoto user unit vehicle - hoto others unit vehicle - markAsUnavailable vehicle
         // query hoto others unit vehicle
-        let hotoOthersUnitVehicleNos = await sequelizeObj.query(`
-            SELECT 
-                DISTINCT hh.vehicleNo 
-            from hoto hh
-            LEFT JOIN vehicle vv on hh.vehicleNo = vv.vehicleNo
-            where hh.vehicleNo is not null ${(unitIdArray && unitIdArray.length > 0) ? ' and vv.unitId in(?) ' : ''} 
-            and (
-                hh.startDateTime BETWEEN '${indentStartTimeStr}' and '${indentEndTimeStr}'
-                or hh.endDateTime BETWEEN '${indentStartTimeStr}' and '${indentEndTimeStr}' 
-                or ( '${indentStartTimeStr}' < hh.startDateTime and '${indentEndTimeStr}'  > hh.endDateTime)
-            )
-        `, { type: QueryTypes.SELECT, replacements: (unitIdArray && unitIdArray.length > 0) ? [unitIdArray] : [] });
-        let hotoOthersVehicleNoArray = Array.from(new Set(hotoOthersUnitVehicleNos.map(hotoOtherVehicle => hotoOtherVehicle.vehicleNo)))
+        async function queryHotoDataList() {
+            let hotoOthersUnitVehicleNos = await sequelizeObj.query(`
+                SELECT 
+                    DISTINCT hh.vehicleNo 
+                from hoto hh
+                LEFT JOIN vehicle vv on hh.vehicleNo = vv.vehicleNo
+                where hh.vehicleNo is not null ${(unitIdArray && unitIdArray.length > 0) ? ' and vv.unitId in(?) ' : ''} 
+                and (
+                    hh.startDateTime BETWEEN '${indentStartTimeStr}' and '${indentEndTimeStr}'
+                    or hh.endDateTime BETWEEN '${indentStartTimeStr}' and '${indentEndTimeStr}' 
+                    or ( '${indentStartTimeStr}' < hh.startDateTime and '${indentEndTimeStr}'  > hh.endDateTime)
+                )
+            `, { type: QueryTypes.SELECT, replacements: (unitIdArray && unitIdArray.length > 0) ? [unitIdArray] : [] });
+            return Array.from(new Set(hotoOthersUnitVehicleNos.map(hotoOtherVehicle => hotoOtherVehicle.vehicleNo)))
+        }
+        let hotoOthersVehicleNoArray = await queryHotoDataList();
 
         // query markAsUnavailable vehicle
         let leaveVehicleNos = await sequelizeObj.query(`
@@ -1826,22 +1840,26 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
         let leaveVehicleNoArray = Array.from(new Set(leaveVehicleNos.map(leaveVehicle => leaveVehicle.vehicleNo)))
 
         //query user unit vehicle + hoto user unit vehicle
-        let vehicleList = await sequelizeObj.query(`
-            select * from (
-                SELECT
-                    vv.vehicleNo, vv.vehicleType, vv.permitType, vv.totalMileage, count(taskId) as taskNum,
-                    IF(hh.toHub is NULL, vv.unitId, hh.unitId) as currentUnitId
-                FROM vehicle vv
-                LEFT JOIN (select ho.vehicleNo, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and ho.startDateTime < '${indentStartTimeStr}'  AND ho.endDateTime > '${indentEndTimeStr}') hh ON hh.vehicleNo = vv.vehicleNo
-                LEFT JOIN task tt ON vv.vehicleNo=tt.vehicleNumber
-                where vv.vehicleType=`+sequelizeSystemObj.escape(vehicleType)+` GROUP BY vv.vehicleNo 
-            ) rr where rr.currentUnitId is not null ${(unitIdArray && unitIdArray.length > 0) ? ' and rr.currentUnitId in(?) ' : ''} 
-        `, {
-            replacements: (unitIdArray && unitIdArray.length > 0) ? [unitIdArray] : [],
-            type: QueryTypes.SELECT,
-        });
-        vehicleList = vehicleList.filter(vehicle => hotoOthersVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
-        let canUseVehicles = vehicleList.filter(vehicle => leaveVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
+        async function buildVehicleDataList() {
+            let vehicleList = await sequelizeObj.query(`
+                select * from (
+                    SELECT
+                        vv.vehicleNo, vv.vehicleType, vv.permitType, vv.totalMileage, count(taskId) as taskNum,
+                        IF(hh.toHub is NULL, vv.unitId, hh.unitId) as currentUnitId
+                    FROM vehicle vv
+                    LEFT JOIN (select ho.vehicleNo, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and ho.startDateTime < '${indentStartTimeStr}'  AND ho.endDateTime > '${indentEndTimeStr}') hh ON hh.vehicleNo = vv.vehicleNo
+                    LEFT JOIN task tt ON vv.vehicleNo=tt.vehicleNumber
+                    where vv.vehicleType=`+sequelizeSystemObj.escape(vehicleType)+` GROUP BY vv.vehicleNo 
+                ) rr where rr.currentUnitId is not null ${(unitIdArray && unitIdArray.length > 0) ? ' and rr.currentUnitId in(?) ' : ''} 
+            `, {
+                replacements: (unitIdArray && unitIdArray.length > 0) ? [unitIdArray] : [],
+                type: QueryTypes.SELECT,
+            });
+            vehicleList = vehicleList.filter(vehicle => hotoOthersVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
+            return vehicleList.filter(vehicle => leaveVehicleNoArray.indexOf(vehicle.vehicleNo) == -1);
+        }
+
+        let canUseVehicles = await buildVehicleDataList();
 
         //drivers: user unit driver + hoto user unit driver - hoto others unit driver - markAsUnavailable driver
         // query hoto others unit driver
@@ -1873,37 +1891,40 @@ module.exports.getDriverAndVehicleForTask = async function (req, res) {
         `, { type: QueryTypes.SELECT, replacements: [] });
         let leaveDriverIdArray = Array.from(new Set(leaveDriverIds.map(leaveDriver => leaveDriver.driverId)))
 
-        let currentTaskEndDateStr = moment(currentTask.indentEndTime).format("YYYY-MM-DD");
-        let driverList = []
-        let needVehicleTypeFilter = currentTask.purpose && currentTask.purpose.toLowerCase() != 'driving training' && currentTask.purpose.toLowerCase() != 'familiarisation';
-        let needUnitFilter = currentTask.purpose && currentTask.purpose.toLowerCase() != 'familiarisation'
-        let driverReplacements = []
-        if (needVehicleTypeFilter) {
-            driverReplacements.push(vehicleType);
+        async function buildDriverDataList() {
+            let currentTaskEndDateStr = moment(currentTask.indentEndTime).format("YYYY-MM-DD");
+            let driverList = []
+            let needVehicleTypeFilter = currentTask.purpose && currentTask.purpose.toLowerCase() != 'driving training' && currentTask.purpose.toLowerCase() != 'familiarisation';
+            let needUnitFilter = currentTask.purpose && currentTask.purpose.toLowerCase() != 'familiarisation'
+            let driverReplacements = []
+            if (needVehicleTypeFilter) {
+                driverReplacements.push(vehicleType);
+            }
+            if (needUnitFilter && unitIdArray && unitIdArray.length > 0) {
+                driverReplacements.push(unitIdArray);
+            }
+            driverList = await sequelizeObj.query(`
+                select * from (SELECT
+                    dd.driverId, dd.driverName, dd.permitType, dd.totalMileage, count(taskId) as taskNum,
+                    IF(hh.toHub is NULL, dd.unitId, hh.unitId) as currentUnitId,
+                    GROUP_CONCAT(dp.vehicleType) as driverSupportVehicleTypes
+                    FROM driver dd
+                    left join (SELECT driverId, vehicleType FROM driver_platform_conf where approveStatus='Approved') dp on dp.driverId = dd.driverId
+                    left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and ho.startDateTime < '${indentStartTimeStr}'  AND ho.endDateTime > '${indentEndTimeStr}') hh ON hh.driverId = dd.driverId
+                    LEFT JOIN task tt ON tt.driverId = dd.driverId
+                    where (dd.operationallyReadyDate is null OR dd.operationallyReadyDate > '${currentTaskEndDateStr}')
+                    GROUP BY dd.driverId
+                ) dr where 1=1 
+                ${needVehicleTypeFilter ? " and FIND_IN_SET(?, dr.driverSupportVehicleTypes) " : ' '}
+                ${needUnitFilter && unitIdArray && unitIdArray.length > 0 ? ' and dr.currentUnitId in (?) ' : ' '} 
+            `, {
+                replacements: driverReplacements,
+                type: QueryTypes.SELECT,
+            });
+            driverList = driverList.filter(driver => hotoOthersDriverIdArray.indexOf(driver.driverId) == -1);
+            return driverList.filter(driver => leaveDriverIdArray.indexOf(driver.driverId) == -1);
         }
-        if (needUnitFilter && unitIdArray && unitIdArray.length > 0) {
-            driverReplacements.push(unitIdArray);
-        }
-        driverList = await sequelizeObj.query(`
-            select * from (SELECT
-                dd.driverId, dd.driverName, dd.permitType, dd.totalMileage, count(taskId) as taskNum,
-                IF(hh.toHub is NULL, dd.unitId, hh.unitId) as currentUnitId,
-                GROUP_CONCAT(dp.vehicleType) as driverSupportVehicleTypes
-                FROM driver dd
-                left join (SELECT driverId, vehicleType FROM driver_platform_conf where approveStatus='Approved') dp on dp.driverId = dd.driverId
-                left join (select ho.driverId, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and ho.startDateTime < '${indentStartTimeStr}'  AND ho.endDateTime > '${indentEndTimeStr}') hh ON hh.driverId = dd.driverId
-                LEFT JOIN task tt ON tt.driverId = dd.driverId
-                where (dd.operationallyReadyDate is null OR dd.operationallyReadyDate > '${currentTaskEndDateStr}')
-                GROUP BY dd.driverId
-            ) dr where 1=1 
-            ${needVehicleTypeFilter ? " and FIND_IN_SET(?, dr.driverSupportVehicleTypes) " : ' '}
-            ${needUnitFilter && unitIdArray && unitIdArray.length > 0 ? ' and dr.currentUnitId in (?) ' : ' '} 
-        `, {
-            replacements: driverReplacements,
-            type: QueryTypes.SELECT,
-        });
-        driverList = driverList.filter(driver => hotoOthersDriverIdArray.indexOf(driver.driverId) == -1);
-        let canUseDrivers = driverList.filter(driver => leaveDriverIdArray.indexOf(driver.driverId) == -1);
+        let canUseDrivers = await buildDriverDataList();
 
         return res.json(utils.response(1, { driverList: canUseDrivers, vehicleList: canUseVehicles }));
     } catch (error) {
@@ -2005,13 +2026,16 @@ module.exports.markAsUnavailable = async function (req, res) {
         }
         let startTimeStr = startDate + ' 00:00:00';
         let endTimeStr = endDate + ' 23:59:59';
-        if (startDate == endDate) {
-            if (dayType == 'am') {
-                endTimeStr = endDate + ' 12:00:00';
-            } else if (dayType == 'pm') {
-                startTimeStr = startDate + ' 12:00:00';
+        function initDateStr() {
+            if (startDate == endDate) {
+                if (dayType == 'am') {
+                    endTimeStr = endDate + ' 12:00:00';
+                } else if (dayType == 'pm') {
+                    startTimeStr = startDate + ' 12:00:00';
+                }
             }
         }
+        initDateStr();
         
         //check has assigned task
         let assignedTaskList = await sequelizeObj.query(`
@@ -2055,32 +2079,35 @@ module.exports.markAsUnavailable = async function (req, res) {
                     dayType: dayType, reason: reason, remarks: additionalNotes, creator: req.cookies.userId
                 });
             } else {
-                let leaveDays = momentEndDate.diff(momentStartDate, 'day');
-                let index = 0;
-                let exitLeaveReocrds = await sequelizeObj.query(`
-                    SELECT
-                        id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
-                    FROM driver_leave_record dl
-                    WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
-                `, { type: QueryTypes.SELECT, replacements: [driverId, startDate, endDate] });
-
-                while(index <= leaveDays) {
-                    momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
-                    let currentDateStr = momentStartDate.format('YYYY-MM-DD');
-                    let tempStartDateStr = currentDateStr + ' 00:00:00';
-                    let tempEndDateStr = currentDateStr + ' 23:59:59';
-                    
-                    let recordId = null;
-                    if (exitLeaveReocrds.length > 0) {
-                        let currentDateRecord = exitLeaveReocrds.find(item => item.startTime == currentDateStr);
-                        recordId = currentDateRecord ? currentDateRecord.id : null;
+                async function buildLeaveRecords() {
+                    let leaveDays = momentEndDate.diff(momentStartDate, 'day');
+                    let index = 0;
+                    let exitLeaveReocrds = await sequelizeObj.query(`
+                        SELECT
+                            id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
+                        FROM driver_leave_record dl
+                        WHERE dl.driverId = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+                    `, { type: QueryTypes.SELECT, replacements: [driverId, startDate, endDate] });
+    
+                    while(index <= leaveDays) {
+                        momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
+                        let currentDateStr = momentStartDate.format('YYYY-MM-DD');
+                        let tempStartDateStr = currentDateStr + ' 00:00:00';
+                        let tempEndDateStr = currentDateStr + ' 23:59:59';
+                        
+                        let recordId = null;
+                        if (exitLeaveReocrds.length > 0) {
+                            let currentDateRecord = exitLeaveReocrds.find(item => item.startTime == currentDateStr);
+                            recordId = currentDateRecord ? currentDateRecord.id : null;
+                        }
+                        driverLeaveRecords.push({id: recordId,
+                            driverId: driverId, startTime: tempStartDateStr, endTime: tempEndDateStr,
+                            dayType: 'all', reason: reason, remarks: additionalNotes, creator: req.cookies.userId
+                        });
+                        index++;
                     }
-                    driverLeaveRecords.push({id: recordId,
-                        driverId: driverId, startTime: tempStartDateStr, endTime: tempEndDateStr,
-                        dayType: 'all', reason: reason, remarks: additionalNotes, creator: req.cookies.userId
-                    });
-                    index++;
                 }
+                await buildLeaveRecords();
             }
 
             await DriverLeaveRecord.bulkCreate(driverLeaveRecords, { updateOnDuplicate: [ 'startTime','endTime', 'dayType', 'optTime', 'reason', 'remarks','creator','updatedAt' ] });
@@ -2634,54 +2661,55 @@ module.exports.getLicensingDriverList = async function (req, res) {
             where d.driverId is not null
         `;
         let limitSQL = []
-        if (user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
-            let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
-            limitSQL.push(` (LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
-        }
-        
-        if (unit) {
-            limitSQL.push( ` u.unit = ? `);
-            replacements.push(unit);
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+        async function buildSqlAndParams() {
+            if (user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
+                let date21YearsAgo = moment().add(-21, 'year').format("YYYY-MM-DD");
+                limitSQL.push(` (LOWER(da.permitType) != 'cl 4' OR (LOWER(da.permitType) = 'cl 4' and d.birthday <= '${date21YearsAgo}') ) `);
+            }
+            
+            if (unit) {
+                limitSQL.push( ` u.unit = ? `);
+                replacements.push(unit);
+            } else if (user.userType == CONTENT.USER_TYPE.HQ) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                let hqUserUnitNameList = userUnitList.map(item => item.unit);
                 hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                if (hqUserUnitNameList.length > 0) {
+                    limitSQL.push( ` u.unit in('${hqUserUnitNameList.join("','")}') `);
+                } else {
+                    return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+                }
             }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                limitSQL.push( ` u.unit in('${hqUserUnitNameList.join("','")}') `);
-            } else {
-                return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+            if (subUnit) {
+                if(subUnit.toLowerCase() == 'null') {
+                    limitSQL.push( ` u.subUnit is null `);
+                } else {
+                    limitSQL.push( ` u.subUnit = ? `);
+                    replacements.push(subUnit);  
+                }
+            }
+            if (cusromerGroupId) {
+                limitSQL.push( ` us.unitId = ${cusromerGroupId} `);
+                limitSQL.push( ` us.role in('DV', 'LOA') `);
+            }
+    
+            if (permitType) {
+                limitSQL.push(` da.permitType = ? `);
+                replacements.push(permitType);
+            }
+            if (applyStatus) {
+                limitSQL.push(` da.status = ? `);
+                replacements.push(applyStatus);
+            }
+            if (searchCondition) {
+                limitSQL.push(` d.driverName LIKE `+ sequelizeObj.escape("%" +searchCondition+ "%"));
+            }
+    
+            if (limitSQL.length) {
+                baseSQL += ' and ' + limitSQL.join(' AND ');
             }
         }
-        if (subUnit) {
-            if(subUnit.toLowerCase() == 'null') {
-                limitSQL.push( ` u.subUnit is null `);
-            } else {
-                limitSQL.push( ` u.subUnit = ? `);
-                replacements.push(subUnit);  
-            }
-        }
-        if (cusromerGroupId) {
-            limitSQL.push( ` us.unitId = ${cusromerGroupId} `);
-            limitSQL.push( ` us.role in('DV', 'LOA') `);
-        }
-
-        if (permitType) {
-            limitSQL.push(` da.permitType = ? `);
-            replacements.push(permitType);
-        }
-        if (applyStatus) {
-            limitSQL.push(` da.status = ? `);
-            replacements.push(applyStatus);
-        }
-        if (searchCondition) {
-            limitSQL.push(` d.driverName LIKE `+ sequelizeObj.escape("%" +searchCondition+ "%"));
-        }
-
-        if (limitSQL.length) {
-            baseSQL += ' and ' + limitSQL.join(' AND ');
-        }
+        await buildSqlAndParams();
 
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
@@ -2690,56 +2718,58 @@ module.exports.getLicensingDriverList = async function (req, res) {
         replacements.push(pageNum);
         replacements.push(pageLength);
         let driverExchangePermitApplyList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements });
+        function buildDriverMileageInfo(apply) {
+            let totalMileage = 0;
+            let classType = apply.exchangePermitType;
+            let driverMileageInfo = apply.driverMileageInfo;
+            let mileageArray = driverMileageInfo.split(';');
+            if (mileageArray.length > 0) {
+                if (classType.toLowerCase() == 'cl 3' || classType.toLowerCase() == 'cl 4') {
+                    if (mileageArray.length > 1) {
+                        let mileage1 = mileageArray[0].split(":")[1];
+                        let mileage2 = mileageArray[1].split(":")[1];
+                        let maxMileage = mileage1 > mileage2 ? mileage1 : mileage2;
+
+                        if (apply.driverMileage.indexOf(':0 km') != -1) {
+                            apply.driverMileage = apply.driverMileage.replaceAll(':0 km', `:${maxMileage} km`);
+                            driverMileageInfo = driverMileageInfo.replaceAll(':0', `:${maxMileage}`);
+
+                            mileageArray = driverMileageInfo.split(';');
+                        }
+                    }
+                }
+                function caclTotalMileage() {
+                    for (let mileageInfo of mileageArray) {
+                        if (mileageInfo) {
+                            let tempArray = mileageInfo.split(":");
+                            if (tempArray && tempArray.length >= 2) {
+                                let mileage = tempArray[1];
+                                totalMileage += Number(mileage);
+                            }
+                        }
+                    }
+                }
+                caclTotalMileage();
+            }
+            apply.totalMileage = totalMileage;
+        }
         function buildApplyData() {
             for (let apply of driverExchangePermitApplyList) {
                 let driverMileageInfo = apply.driverMileageInfo;
                 if (driverMileageInfo && driverMileageInfo.toLowerCase().indexOf('km') == -1) {
-                    let classType = apply.exchangePermitType;
                     apply.driverMileage = driverMileageInfo.replaceAll(';', ' km;');
-                    let totalMileage = 0;
-                    let mileageArray = driverMileageInfo.split(';');
-                    if (mileageArray && mileageArray.length > 0) {
-                        if (classType.toLowerCase() == 'cl 3' || classType.toLowerCase() == 'cl 4') {
-                            if (mileageArray.length > 1) {
-                                let mileage1 = mileageArray[0].split(":")[1];
-                                let mileage2 = mileageArray[1].split(":")[1];
-                                let maxMileage = mileage1 > mileage2 ? mileage1 : mileage2;
-
-                                if (apply.driverMileage.indexOf(':0 km') != -1) {
-                                    apply.driverMileage = apply.driverMileage.replaceAll(':0 km', `:${maxMileage} km`);
-                                    driverMileageInfo = driverMileageInfo.replaceAll(':0', `:${maxMileage}`);
-
-                                    mileageArray = driverMileageInfo.split(';');
-                                }
-                            }
-                        }
-                        for (let mileageInfo of mileageArray) {
-                            if (mileageInfo) {
-                                let tempArray = mileageInfo.split(":");
-                                if (tempArray && tempArray.length >= 2) {
-                                    let mileage = tempArray[1];
-                                    totalMileage += Number(mileage);
-                                }
-                            }
-                        }
-                    }
-                    apply.totalMileage = totalMileage;
+                    
+                    buildDriverMileageInfo(apply);
                 } else {
                     apply.driverMileage = driverMileageInfo;
                 }
             }
         }
+        
         buildApplyData();
 
         // 2023-08-29 Get decrypted is nric.
-        for(let driver of driverExchangePermitApplyList){
-            if(driver.nric){
-                if(driver.nric.length > 9) driver.nric = utils.decodeAESCode(driver.nric);
-                if(pageList2.length <= 0) {
-                    if(driver.nric) driver.nric = ((driver.nric).toString()).substr(0, 1) + '****' + ((driver.nric).toString()).substr(((driver.nric).toString()).length-4, 4)
-                }
-            } 
-        }
+        await decodeDriverNric(driverExchangePermitApplyList, pageList2.length > 0);
         return res.json({ respMessage: driverExchangePermitApplyList, recordsFiltered: totalRecord, recordsTotal: totalRecord });
     } catch (error) {
         log.error(error);
@@ -3437,124 +3467,90 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
 
         let updateJson = {}
 
-        if (driverId) {
-            let driver = await Driver.findByPk(driverId);
-            let driverEmail = driver.email || null;
-            let permitTypeApply = await DriverLicenseExchangeApply.findOne({where: {driverId, permitType}});
+        let driver = await Driver.findByPk(driverId);
+        let driverEmail = driver.email || null;
+        let permitTypeApply = await DriverLicenseExchangeApply.findOne({where: {driverId, permitType}});
 
-            updateJson.emailConfirm = driverEmail;
-            if (permitTypeApply) {
-                function isEndStatus() {
-                    return permitTypeApply.status == 'fail' || permitTypeApply.status == 'rejected' || permitTypeApply.status == 'success';
+        updateJson.emailConfirm = driverEmail;
+        if (permitTypeApply) {
+            function isEndStatus() {
+                return permitTypeApply.status == 'fail' || permitTypeApply.status == 'rejected' || permitTypeApply.status == 'success';
+            }
+            if (isEndStatus()) {
+                return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
+            }
+            let pageList = await userService.getUserPageList(userId, 'Resources', 'Licensing')
+            let actionList = pageList.map(item => {return item.action});
+            function checkRejectData() {
+                if (!actionList.includes('Reject')) {
+                    throw new Error('No permission!');
                 }
-                if (isEndStatus()) {
-                    return res.json(utils.response(0, 'ApprovePermitExchangeApply data status error, please refresh page!'));
+            }
+            function checkPendingData() {
+                if (!actionList.includes('Approval Status')) {
+                    throw new Error('No permission!');
                 }
-                let pageList = await userService.getUserPageList(userId, 'Resources', 'Licensing')
-                let actionList = pageList.map(item => {return item.action});
+            }
+            function buildSuccessOrFailData() {
+                if (!actionList.includes('Approval Status')) {
+                    return res.json(utils.response(0, 'No permission!'));
+                }
+                updateJson.approveDate = moment();
+                updateJson.approveBy = userId;
+                updateJson.status = optType == 'success' ? 'Success' : 'Failed';
+                if (optType == 'fail') {
+                    updateJson.failReason = reason;
+                    updateJson.failDate = moment();
+                    updateJson.failBy = userId;
+                } else {
+                    updateJson.successDate = moment();
+                    updateJson.successBy = userId;
+                }
+            }
 
-                if (optType == 'reject') {
-                    if (!actionList.includes('Reject')) {
-                        return res.json(utils.response(0, 'No permission!'));
-                    }
-                    updateJson.rejectDate = moment();
-                    updateJson.rejectBy = userId;
-                    updateJson.status = 'Rejected'
-                    updateJson.rejectReason = reason
-                } else if (optType == 'pending') {
-                    if (!actionList.includes('Approval Status')) {
-                        return res.json(utils.response(0, 'No permission!'));
-                    }
-                    updateJson.status = 'Pending'
-                    updateJson.pendingReason = reason;
-                    updateJson.pendingDate = moment();
-                    updateJson.pendingBy = userId;
-                } else if (optType == 'success' || optType == 'fail') {
-                    function buildSuccessOrFailData() {
-                        if (!actionList.includes('Approval Status')) {
-                            return res.json(utils.response(0, 'No permission!'));
-                        }
-                        updateJson.approveDate = moment();
-                        updateJson.approveBy = userId;
-                        updateJson.status = optType == 'success' ? 'Success' : 'Failed';
-                        if (optType == 'fail') {
-                            updateJson.failReason = reason;
-                            updateJson.failDate = moment();
-                            updateJson.failBy = userId;
-                        } else {
-                            updateJson.successDate = moment();
-                            updateJson.successBy = userId;
+            function checkSubmitData() {
+                if (!actionList.includes('Submit')) {
+                    throw new Error('No permission!');
+                }
+                if (permitTypeApply.status != 'Pending Approval') {
+                    throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                }
+            }
+            
+            function buildSubmitData() {
+                updateJson.submitDate = moment();
+                updateJson.submitBy = userId;
+                updateJson.status = 'Submitted'
+                if (actionList.includes('Endorse')) {
+                    updateJson.status = 'Endorsed'
+                    updateJson.endorseDate = moment();
+                    updateJson.endorseBy = userId;
+                    if (actionList.includes('Verify')) {
+                        updateJson.status = 'Verified'
+                        updateJson.verifyDate = moment();
+                        updateJson.verifyBy = userId;
+                        if (actionList.includes('Recommend')) {
+                            updateJson.status = 'Recommended'
+                            updateJson.recommendDate = moment();
+                            updateJson.recommendBy = userId;
                         }
                     }
-                    buildSuccessOrFailData();
-                }else if (optType == 'submit') {
-                    function checkSubmitData() {
-                        if (!actionList.includes('Submit')) {
-                            throw new Error('No permission!');
-                        }
-                        if (permitTypeApply.status != 'Pending Approval') {
-                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
-                        }
-                    }
-                    checkSubmitData();
-                    function buildSubmitData() {
-                        updateJson.submitDate = moment();
-                        updateJson.submitBy = userId;
-                        updateJson.status = 'Submitted'
-                        if (actionList.includes('Endorse')) {
-                            updateJson.status = 'Endorsed'
-                            updateJson.endorseDate = moment();
-                            updateJson.endorseBy = userId;
-                            if (actionList.includes('Verify')) {
-                                updateJson.status = 'Verified'
-                                updateJson.verifyDate = moment();
-                                updateJson.verifyBy = userId;
-                                if (actionList.includes('Recommend')) {
-                                    updateJson.status = 'Recommended'
-                                    updateJson.recommendDate = moment();
-                                    updateJson.recommendBy = userId;
-                                }
-                            }
-                        }
-                    }
-                    buildSubmitData();
-                } else if (optType == 'endorse') {
-                    function checkEndorseData() {
-                        if (!actionList.includes('Endorse')) {
-                            throw new Error('No permission!');
-                        }
-                        if (permitTypeApply.status != 'Submitted') {
-                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
-                        }
-                    }
-                    checkEndorseData();
-                    function buildEndorseData() {
-                        updateJson.status = 'Endorsed'
-                        updateJson.endorseDate = moment();
-                        updateJson.endorseBy = userId;
-                        if (actionList.includes('Verify')) {
-                            updateJson.status = 'Verified'
-                            updateJson.verifyDate = moment();
-                            updateJson.verifyBy = userId;
-                            if (actionList.includes('Recommend')) {
-                                updateJson.status = 'Recommended'
-                                updateJson.recommendDate = moment();
-                                updateJson.recommendBy = userId;
-                            }
-                        }
-                    }
-                    buildEndorseData();
-                } else if (optType == 'verify') {
-                    function checkVerifyData() {
-                        if (!actionList.includes('Verify')) {
-                            throw new Error('No permission!');
-                        }
-                        if (permitTypeApply.status != 'Endorsed') {
-                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
-                        }
-                    }
-                    checkVerifyData();
-                    
+                }
+            }
+
+            function checkEndorseData() {
+                if (!actionList.includes('Endorse')) {
+                    throw new Error('No permission!');
+                }
+                if (permitTypeApply.status != 'Submitted') {
+                    throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                }
+            }
+            function buildEndorseData() {
+                updateJson.status = 'Endorsed'
+                updateJson.endorseDate = moment();
+                updateJson.endorseBy = userId;
+                if (actionList.includes('Verify')) {
                     updateJson.status = 'Verified'
                     updateJson.verifyDate = moment();
                     updateJson.verifyBy = userId;
@@ -3563,33 +3559,78 @@ module.exports.approvePermitExchangeApply = async function (req, res) {
                         updateJson.recommendDate = moment();
                         updateJson.recommendBy = userId;
                     }
-                } else if (optType == 'recommend') {
-                    function checkRecommendData() {
-                        if (!actionList.includes('Recommend')) {
-                            throw new Error('No permission!');
-                        }
-                        if (permitTypeApply.status != 'Verified') {
-                            throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
-                        }
+                }
+            }
+
+            function checkVerifyData() {
+                if (!actionList.includes('Verify')) {
+                    throw new Error('No permission!');
+                }
+                if (permitTypeApply.status != 'Endorsed') {
+                    throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                }
+            }
+            function checkRecommendData() {
+                if (!actionList.includes('Recommend')) {
+                    throw new Error('No permission!');
+                }
+                if (permitTypeApply.status != 'Verified') {
+                    throw new Error('ApprovePermitExchangeApply data status error, please refresh page!');
+                }
+            }
+
+            switch (optType) {
+                case 'reject':
+                    checkRejectData();
+                    updateJson.rejectDate = moment();
+                    updateJson.rejectBy = userId;
+                    updateJson.status = 'Rejected'
+                    updateJson.rejectReason = reason
+                    break;
+                case 'pending':
+                    checkPendingData();
+                    updateJson.status = 'Pending'
+                    updateJson.pendingReason = reason;
+                    updateJson.pendingDate = moment();
+                    updateJson.pendingBy = userId;
+                    break;
+                case 'success':
+                    buildSuccessOrFailData();
+                    break;
+                case 'fail':
+                    buildSuccessOrFailData();
+                    break;
+                case 'submit':
+                    checkSubmitData();
+                    buildSubmitData();
+                    break;
+                case 'endorse':
+                    checkEndorseData();
+                    buildEndorseData();
+                    break;
+                case 'verify':
+                    checkVerifyData();
+                
+                    updateJson.status = 'Verified'
+                    updateJson.verifyDate = moment();
+                    updateJson.verifyBy = userId;
+                    if (actionList.includes('Recommend')) {
+                        updateJson.status = 'Recommended'
+                        updateJson.recommendDate = moment();
+                        updateJson.recommendBy = userId;
                     }
+                    break;
+                case 'recommend':
                     checkRecommendData();
                     updateJson.status = 'Recommended'
                     updateJson.recommendDate = moment();
                     updateJson.recommendBy = userId;
-                } else {
+                    break;
+                default: 
                     return res.json(utils.response(0, 'Unsupport option: ' + optType));
-                }
-
-                await sequelizeObj.transaction(async transaction => {
-                    await DriverLicenseExchangeApply.update(updateJson, {where: {applyId: permitTypeApply.applyId}});
-                }).catch(error => {
-                    throw error
-                })
             }
-        } else {
-            return res.json(utils.response(0, 'ApprovePermitExchangeApply params driverId is empty!'));
+            await DriverLicenseExchangeApply.update(updateJson, {where: {applyId: permitTypeApply.applyId}});
         }
-        
         return res.json(utils.response(1, 'Operation success!'));
     } catch (error) {
         log.error(error)

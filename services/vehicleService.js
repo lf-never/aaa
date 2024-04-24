@@ -698,7 +698,7 @@ module.exports.getVehicleTasks = async function (req, res) {
         let operationList = pageList.map(item => `${ item.action }`).join(',')
 
         let permissionPageList = await userService.getUserPageList(userId, 'Vehicle', 'Indent')
-        if (permissionPageList && permissionPageList.length > 0) {
+        if (permissionPageList.length > 0) {
             operationList += ',ViewIndent';
         }
 
@@ -720,7 +720,8 @@ module.exports.getVehicleTasks = async function (req, res) {
         let replacements = [];
         //2023-07-05 CUSTOMER UNIT 
         let customerGroupId = '';
-        if(user.userType.toUpperCase() == CONTENT.USER_TYPE.CUSTOMER) {
+        let userType = user.userType.toUpperCase();
+        if(userType == CONTENT.USER_TYPE.CUSTOMER) {
             customerGroupId = user.unitId;
             unit = null;
             subUnit = null;
@@ -742,131 +743,153 @@ module.exports.getVehicleTasks = async function (req, res) {
             } else {
                 return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
             }
-        } else if (user.userType == CONTENT.USER_TYPE.HQ) {
-            if (selectGroup == '1') {
-                unit = null;
-                subUnit = null;
-                if (groupId) {
-                    paramList.push(` vv.groupId = ? `);
-                    replacements.push(groupId)
-                } else {
-                    let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
-                    let hqUserGroupIds = groupList.map(item => item.id);
-                    if (hqUserGroupIds && hqUserGroupIds.length > 0) {
-                        paramList.push(` vv.groupId in(${hqUserGroupIds}) `);
+        } else if (userType == CONTENT.USER_TYPE.HQ) {
+            async function buildHQParams() {
+                if (selectGroup == '1') {
+                    unit = null;
+                    subUnit = null;
+                    if (groupId) {
+                        paramList.push(` vv.groupId = ? `);
+                        replacements.push(groupId)
                     } else {
-                        return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+                        let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
+                        let hqUserGroupIds = groupList.map(item => item.id);
+                        if (hqUserGroupIds && hqUserGroupIds.length > 0) {
+                            paramList.push(` vv.groupId in(${hqUserGroupIds}) `);
+                        } else {
+                            return false;
+                        }
                     }
+                } else if (selectGroup == '0') {
+                    paramList.push(` vv.groupId is null `);
                 }
-            } else if (selectGroup == '0') {
-                paramList.push(` vv.groupId is null `);
+                return true;
             }
-        } else if (user.userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
-            if (selectGroup == '1') {
-                unit = null;
-                subUnit = null;
-                if (groupId) {
-                    paramList.push(` vv.groupId = ? `);
-                    replacements.push(groupId)
-                } else {
-                    paramList.push(` vv.groupId is not null `);
-                }
-            } else if (selectGroup == '0') {
-                paramList.push(` vv.groupId is null `);
-            }
-        }
-
-        if (unit) {
-            paramList.push(` (vv.currentUnit =? or vv.unit = ?) `);
-            replacements.push(unit)
-            replacements.push(unit)
-        } else if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
-            let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
-            let hqUserUnitNameList = userUnitList.map(item => item.unit);
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
-            }
-            if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
-                paramList.push(` vv.currentUnit in('${hqUserUnitNameList.join("','")}') `);
-            } else {
+            let buildResult = await buildHQParams();
+            if (!buildResult) {
                 return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
             }
+        } else if (userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
+            function buildAdminParams() {
+                if (selectGroup == '1') {
+                    unit = null;
+                    subUnit = null;
+                    if (groupId) {
+                        paramList.push(` vv.groupId = ? `);
+                        replacements.push(groupId)
+                    } else {
+                        paramList.push(` vv.groupId is not null `);
+                    }
+                } else if (selectGroup == '0') {
+                    paramList.push(` vv.groupId is null `);
+                }
+            }
+            buildAdminParams();
         }
-        if (subUnit) {
-            if (subUnit == 'null') {
-                paramList.push(` (vv.currentSubUnit is null or vv.subUnit is null) `)
-            } else {
-                paramList.push(` (vv.currentSubUnit =? or vv.subUnit =?) `)
-                replacements.push(subUnit)
-                replacements.push(subUnit)
+
+        async function buildUnitParams() {
+            if (unit) {
+                paramList.push(` (vv.currentUnit =? or vv.unit = ?) `);
+                replacements.push(unit)
+                replacements.push(unit)
+            } else if (selectGroup == '0' && user.userType == CONTENT.USER_TYPE.HQ) {
+                let userUnitList = await unitService.UnitUtils.getUnitListByHQUnit(user.hq);
+                let hqUserUnitNameList = userUnitList.map(item => item.unit);
+                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                    hqUserUnitNameList = Array.from(new Set(hqUserUnitNameList));
+                }
+                if (hqUserUnitNameList && hqUserUnitNameList.length > 0) {
+                    paramList.push(` vv.currentUnit in('${hqUserUnitNameList.join("','")}') `);
+                } else {
+                    return false;
+                }
+            }
+            if (subUnit) {
+                if (subUnit == 'null') {
+                    paramList.push(` (vv.currentSubUnit is null or vv.subUnit is null) `)
+                } else {
+                    paramList.push(` (vv.currentSubUnit =? or vv.subUnit =?) `)
+                    replacements.push(subUnit)
+                    replacements.push(subUnit)
+                }
+            }
+            return true;
+        }
+        let buildResult = await buildUnitParams();
+        if (!buildResult) {
+            return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
+        }
+        
+        function buildCommonParams1() {
+            // paramList.push(` veh.vehicleNo != 'NNNNNNNN' `)
+            if (vehicleStatus) {
+                paramList.push(` FIND_IN_SET(vv.currentStatus, ?)`)
+                replacements.push(vehicleStatus)
+            }
+            if (searchParam) {
+                let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
+                paramList.push(` (vv.vehicleNo like `+likeCondition+` or vv.vehicleType like `+likeCondition + `) `)
+            }
+          
+            if (executionDate != "" && executionDate != null) {
+                if (executionDate.indexOf('~') != -1) {
+                    const dates = executionDate.split(' ~ ')
+    
+                    paramList.push(` vv.indentStartTime >= ? `)
+                    paramList.push(` vv.indentStartTime <= ? `)
+                    replacements.push(dates[0])
+                    replacements.push(dates[1])
+                } else {
+                    paramList.push(` vv.indentStartTime = ? `)
+                    replacements.push(executionDate)
+                }
+            }
+    
+            if (aviDate != "" && aviDate != null) {
+                if (aviDate.indexOf('~') != -1) {
+                    const dates = aviDate.split(' ~ ')
+    
+                    paramList.push(` vv.nextAviTime >= ? `)
+                    paramList.push(` vv.nextAviTime <= ? `)
+                    replacements.push(dates[0])
+                    replacements.push(dates[1])
+                } else {
+                    paramList.push(` vv.nextAviTime = ? `);
+                    replacements.push(aviDate)
+                }
             }
         }
-        // paramList.push(` veh.vehicleNo != 'NNNNNNNN' `)
-        if (vehicleStatus) {
-            paramList.push(` FIND_IN_SET(vv.currentStatus, ?)`)
-            replacements.push(vehicleStatus)
-        }
-        if (searchParam) {
-            let likeCondition = sequelizeObj.escape("%" + searchParam + "%");
-            paramList.push(` (vv.vehicleNo like `+likeCondition+` or vv.vehicleType like `+likeCondition + `) `)
-        }
-      
-        if (executionDate != "" && executionDate != null) {
-            if (executionDate.indexOf('~') != -1) {
-                const dates = executionDate.split(' ~ ')
-
-                paramList.push(` vv.indentStartTime >= ? `)
-                paramList.push(` vv.indentStartTime <= ? `)
-                replacements.push(dates[0])
-                replacements.push(dates[1])
-            } else {
-                paramList.push(` vv.indentStartTime = ? `)
-                replacements.push(executionDate)
+        function buildCommonParams2() {
+            if (pmDate != "" && pmDate != null) {
+                if (pmDate.indexOf('~') != -1) {
+                    const dates = pmDate.split(' ~ ')
+    
+                    paramList.push(` vv.nextPmTime >= ? `)
+                    paramList.push(` vv.nextPmTime <= ? `)
+                    replacements.push(dates[0])
+                    replacements.push(dates[1])
+                } else {
+                    paramList.push(` vv.nextPmTime = ? `)
+                    replacements.push(pmDate)
+                }
+            }
+    
+            if (wptDate != "" && wptDate != null) {
+                if (wptDate.indexOf('~') != -1) {
+                    const dates = wptDate.split(' ~ ')
+    
+                    paramList.push(` vv.nextWpt1Time >= ? `)
+                    paramList.push(` vv.nextWpt1Time <= '? `)
+                    replacements.push(dates[0])
+                    replacements.push(dates[1])
+                } else {
+                    paramList.push(` vv.nextWpt1Time = ? `)
+                    replacements.push(wptDate)
+                }
             }
         }
-
-        if (aviDate != "" && aviDate != null) {
-            if (aviDate.indexOf('~') != -1) {
-                const dates = aviDate.split(' ~ ')
-
-                paramList.push(` vv.nextAviTime >= ? `)
-                paramList.push(` vv.nextAviTime <= ? `)
-                replacements.push(dates[0])
-                replacements.push(dates[1])
-            } else {
-                paramList.push(` vv.nextAviTime = ? `);
-                replacements.push(aviDate)
-            }
-        }
-
-        if (pmDate != "" && pmDate != null) {
-            if (pmDate.indexOf('~') != -1) {
-                const dates = pmDate.split(' ~ ')
-
-                paramList.push(` vv.nextPmTime >= ? `)
-                paramList.push(` vv.nextPmTime <= ? `)
-                replacements.push(dates[0])
-                replacements.push(dates[1])
-            } else {
-                paramList.push(` vv.nextPmTime = ? `)
-                replacements.push(pmDate)
-            }
-        }
-
-        if (wptDate != "" && wptDate != null) {
-            if (wptDate.indexOf('~') != -1) {
-                const dates = wptDate.split(' ~ ')
-
-                paramList.push(` vv.nextWpt1Time >= ? `)
-                paramList.push(` vv.nextWpt1Time <= '? `)
-                replacements.push(dates[0])
-                replacements.push(dates[1])
-            } else {
-                paramList.push(` vv.nextWpt1Time = ? `)
-                replacements.push(wptDate)
-            }
-        }
-
+        buildCommonParams1();
+        buildCommonParams2();
         //vehicle current task
         let currentTaskList = await sequelizeObj.query(`
             SELECT DISTINCT tt.vehicleNumber as vehicleNumber
@@ -875,10 +898,8 @@ module.exports.getVehicleTasks = async function (req, res) {
             and (now() BETWEEN tt.indentStartTime and tt.indentEndTime OR tt.driverStatus = 'started')
         `, { type: QueryTypes.SELECT , replacements: []})
         let currentVehicleNumStr = '';
-        if (currentTaskList && currentTaskList.length > 0) {
-            for (let temp of currentTaskList) {
-                currentVehicleNumStr += temp.vehicleNumber + ','
-            }
+        for (let temp of currentTaskList) {
+            currentVehicleNumStr += temp.vehicleNumber + ','
         }
 
         //loan out driver
@@ -886,10 +907,8 @@ module.exports.getVehicleTasks = async function (req, res) {
             select l.vehicleNo from loan l where l.vehicleNo IS NOT NULL and now() BETWEEN l.startDate and l.endDate
         `, { type: QueryTypes.SELECT , replacements: []})
         let currentLoanOutVehicleNos = '';
-        if (currentLoanOutVehicleList && currentLoanOutVehicleList.length > 0) {
-            for (let temp of currentLoanOutVehicleList) {
-                currentLoanOutVehicleNos += temp.vehicleNo + ','
-            }
+        for (let temp of currentLoanOutVehicleList) {
+            currentLoanOutVehicleNos += temp.vehicleNo + ','
         }
 
         let baseSQL = `
@@ -956,20 +975,23 @@ module.exports.getVehicleTasks = async function (req, res) {
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length
 
-        let vehicleNoOrder = req.body.vehicleNoOrder;
-        let orderList = [];
-        if (vehicleNoOrder) {
-            orderList.push(` vv.vehicleNo ` + (vehicleNoOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
+        function buildOrderInfo() {
+            let vehicleNoOrder = req.body.vehicleNoOrder;
+            let orderList = [];
+            if (vehicleNoOrder) {
+                orderList.push(` vv.vehicleNo ` + (vehicleNoOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
+            }
+            let hubOrder = req.body.hubOrder;
+            if (hubOrder) {
+                orderList.push(` vv.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
+            }
+            if (orderList.length) {
+                baseSQL += ' ORDER BY ' + orderList.join(' , ')
+            } else {
+                baseSQL += ' ORDER BY vv.createdAt desc'
+            }
         }
-        let hubOrder = req.body.hubOrder;
-        if (hubOrder) {
-            orderList.push(` vv.unit ` + (hubOrder.toLowerCase() == 'desc' ? 'DESC' : 'ASC'));
-        }
-        if (orderList.length) {
-            baseSQL += ' ORDER BY ' + orderList.join(' , ')
-        } else {
-            baseSQL += ' ORDER BY vv.createdAt desc'
-        }
+        buildOrderInfo();
 
         baseSQL += ` limit ?, ?`
         replacements.push(pageNum);
@@ -977,8 +999,9 @@ module.exports.getVehicleTasks = async function (req, res) {
         console.log(baseSQL)
         let vehicleInfoList = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
 
-        // upcoming event
         let upcomingEventRecords = []
+        let vehicleMileageWaringTaskNums = [];
+        // upcoming event
         if(vehicleInfoList.length > 0){
             let vehicleNoList = vehicleInfoList.map(a=>a.vehicleNo)
             upcomingEventRecords = await sequelizeObj.query(`
@@ -992,12 +1015,7 @@ module.exports.getVehicleTasks = async function (req, res) {
                 ) b on a.endTime = b.startTime and a.vehicleNo = b.vehicleNo
                 ORDER BY a.vehicleNo, a.startTime;
             `, { type: QueryTypes.SELECT, replacements: [vehicleNoList, vehicleNoList] })
-        }
 
-        //vehicle has mileage warning task
-        let vehicleMileageWaringTaskNums = [];
-        if(vehicleInfoList && vehicleInfoList.length > 0){
-            let vehicleNoList = vehicleInfoList.map(a=>a.vehicleNo)
             vehicleMileageWaringTaskNums = await sequelizeObj.query(`
                 SELECT t.vehicleNumber, COUNT(*) AS taskNum
                 FROM mileage m
@@ -1015,29 +1033,32 @@ module.exports.getVehicleTasks = async function (req, res) {
                 order by t.indentEndTime desc
                 LIMIT 1
             `, { type: QueryTypes.SELECT , replacements: [ vehicleTask.vehicleNo ]})
-            if (latestTask.length > 0) {
-                vehicleTask.taskId = latestTask[0].taskId
-                vehicleTask.indentId = latestTask[0].indentId
-                vehicleTask.indentStartTime = latestTask[0].indentEndTime
-                vehicleTask.purpose = latestTask[0].purpose
-            } else {
-                vehicleTask.taskId = ''
-                vehicleTask.indentId = ''
-                vehicleTask.indentStartTime = ''
-                vehicleTask.purpose = ''
-            }
-            // upcoming event
-            let records = upcomingEventRecords.filter(a=>a.vehicleNo == vehicleTask.vehicleNo)
-            vehicleTask.upcomingEvent = getUpcomingEvent(records)
-
-            vehicleTask.operation = operationList
-
-            if (vehicleMileageWaringTaskNums) {
-                let vehicleMileageWaringTaskNum = vehicleMileageWaringTaskNums.find(item => item.vehicleNumber == vehicleTask.vehicleNo);
-                if (vehicleMileageWaringTaskNum) {
-                    vehicleTask.vehicleMileageWaringTaskNum = vehicleMileageWaringTaskNum.taskNum
+           function buildVehicleData() {
+                if (latestTask.length > 0) {
+                    vehicleTask.taskId = latestTask[0].taskId
+                    vehicleTask.indentId = latestTask[0].indentId
+                    vehicleTask.indentStartTime = latestTask[0].indentEndTime
+                    vehicleTask.purpose = latestTask[0].purpose
+                } else {
+                    vehicleTask.taskId = ''
+                    vehicleTask.indentId = ''
+                    vehicleTask.indentStartTime = ''
+                    vehicleTask.purpose = ''
                 }
-            }
+                // upcoming event
+                let records = upcomingEventRecords.filter(a=>a.vehicleNo == vehicleTask.vehicleNo)
+                vehicleTask.upcomingEvent = getUpcomingEvent(records)
+    
+                vehicleTask.operation = operationList
+    
+                if (vehicleMileageWaringTaskNums) {
+                    let vehicleMileageWaringTaskNum = vehicleMileageWaringTaskNums.find(item => item.vehicleNumber == vehicleTask.vehicleNo);
+                    if (vehicleMileageWaringTaskNum) {
+                        vehicleTask.vehicleMileageWaringTaskNum = vehicleMileageWaringTaskNum.taskNum
+                    }
+                }
+           }
+           buildVehicleData();
         }
 
         return res.json({respMessage: vehicleInfoList, recordsFiltered: totalRecord, recordsTotal: totalRecord});
@@ -1729,13 +1750,16 @@ module.exports.markAsUnavailable = async function (req, res) {
         let startTimeStr = startDate + ' 00:00:00';
         let endTimeStr = endDate + ' 23:59:59';
         let isOneDay = (startDate == endDate);
-        if (isOneDay) {
-            if (dayType == 'am') {
-                endTimeStr = endDate + ' 12:00:00';
-            } else if (dayType == 'pm') {
-                startTimeStr = startDate + ' 12:00:00';
+        function buildDateInfo() {
+            if (isOneDay) {
+                if (dayType == 'am') {
+                    endTimeStr = endDate + ' 12:00:00';
+                } else if (dayType == 'pm') {
+                    startTimeStr = startDate + ' 12:00:00';
+                }
             }
         }
+        buildDateInfo();
         //check has assigned task
         let assignedTaskList = await sequelizeObj.query(`
             SELECT
@@ -1777,29 +1801,32 @@ module.exports.markAsUnavailable = async function (req, res) {
                     dayType: dayType, reason: reason, remarks: additionalNotes, creator: req.cookies.userId
                 });
             } else {
-                let leaveDays = momentEndDate.diff(momentStartDate, 'day');
-                let index = 0;
-                let exitLeaveReocrds = await sequelizeObj.query(`
-                    SELECT
-                        id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
-                    FROM vehicle_leave_record dl
-                    WHERE dl.vehicleNo = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
-                `, { type: QueryTypes.SELECT, replacements: [vehicleNo, startDate, endDate] });
-                while(index <= leaveDays) {
-                    momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
-                    let currentDateStr = momentStartDate.format('YYYY-MM-DD');
-                    let tempStartDateStr = currentDateStr + ' 00:00:00';
-                    let tempEndDateStr = currentDateStr + ' 23:59:59';
-
-                    let currentDateRecord = exitLeaveReocrds.find(item => item.startTime == currentDateStr);
-                    let recordId = currentDateRecord ? currentDateRecord.id : null;
-
-                    vehicleLeaveRecords.push({id: recordId,
-                        vehicleNo: vehicleNo, startTime: tempStartDateStr, endTime: tempEndDateStr,
-                        dayType: 'all', reason: reason, remarks: additionalNotes, creator: req.cookies.userId
-                    });
-                    index++;
+                async function buildLeaveRecords() {
+                    let leaveDays = momentEndDate.diff(momentStartDate, 'day');
+                    let index = 0;
+                    let exitLeaveReocrds = await sequelizeObj.query(`
+                        SELECT
+                            id, DATE_FORMAT(startTime, '%Y-%m-%d') as startTime
+                        FROM vehicle_leave_record dl
+                        WHERE dl.vehicleNo = ? AND status=1 AND DATE_FORMAT(startTime, '%Y-%m-%d') BETWEEN ? and ?
+                    `, { type: QueryTypes.SELECT, replacements: [vehicleNo, startDate, endDate] });
+                    while(index <= leaveDays) {
+                        momentStartDate = index == 0 ? momentStartDate : momentStartDate.add(1, 'day');
+                        let currentDateStr = momentStartDate.format('YYYY-MM-DD');
+                        let tempStartDateStr = currentDateStr + ' 00:00:00';
+                        let tempEndDateStr = currentDateStr + ' 23:59:59';
+    
+                        let currentDateRecord = exitLeaveReocrds.find(item => item.startTime == currentDateStr);
+                        let recordId = currentDateRecord ? currentDateRecord.id : null;
+    
+                        vehicleLeaveRecords.push({id: recordId,
+                            vehicleNo: vehicleNo, startTime: tempStartDateStr, endTime: tempEndDateStr,
+                            dayType: 'all', reason: reason, remarks: additionalNotes, creator: req.cookies.userId
+                        });
+                        index++;
+                    }
                 }
+                await buildLeaveRecords();
             }
             //opt log
             let operationRecord = {

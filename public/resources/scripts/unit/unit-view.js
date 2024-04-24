@@ -3,7 +3,6 @@ import { initUnitEditPage } from '../unit/unit-edit.js'
 
 $(function () {
     $('#view-unit .unit-search').on('keyup', _.debounce(() => {
-        filterOfUsername = $('#view-unit .unit-search').val();
         initDataTables();
     }, 500))
 })

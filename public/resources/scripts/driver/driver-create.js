@@ -55,13 +55,11 @@ export async function initDriverTaskCreatePage () {
                     } else {
                         $('#create-driver .select-unit').prop('disabled', false);
                     }
-                    setTimeout(() => {
-                        if (driver.subUnit) {
-                            $('#create-driver .select-subUnit').val(driver.subUnit).prop('disabled', true);
-                        } else {
-                            $('#create-driver .select-subUnit').prop('disabled', false);
-                        }
-                    }, 100)
+                    if (driver.subUnit) {
+                        $('#create-driver .select-subUnit').val(driver.subUnit).prop('disabled', true);
+                    } else {
+                        $('#create-driver .select-subUnit').prop('disabled', false);
+                    }
                     
                     return true;
                 }

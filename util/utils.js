@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const jwtConf = require('../conf/jwt');
 const jsonfile = require('jsonfile')
 const CONTENT = require('../util/content');
+const path = require('path');
 
 const log = require('../log/winston').logger('Utils');
 

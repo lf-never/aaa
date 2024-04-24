@@ -6,13 +6,16 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const cors = require('cors');
-const log = require('./log/winston').logger('APP');
+
 const utils = require('./util/utils');
 const conf = require('./conf/conf');
 const helmet = require('helmet');
 const crypto = require('crypto');
 
 const app = express();
+
+require('./log/winston').initLogger()
+const log = require('./log/winston').logger('APP');
 
 app.use((req, res, next) => {
 	res.locals.cspNonce = crypto.randomBytes(32).toString("hex");
@@ -72,21 +75,6 @@ app.use(express.static(path.join(__dirname, 'public', 'statics'), options));
 app.use(cors({
 	origin: `https://localhost`
 }));
-
-app.use (function (req, res, next) {
-	// console.log(req.protocol)
-	if (req.protocol == 'https') {
-		// request was via https, so do no special handling
-		next();
-	} else {
-		let host = req.get('host');
-		if (host.indexOf(':') > -1) {
-			host = host.split(':')[0] + `:${ conf.serverPortHttps }`
-		}
-		// request was via http, so redirect to https
-		res.redirect('https://' + host + req.url);
-	}
-});
 
 const home = require('./singpass/home')
 const callback = require('./singpass/callback')

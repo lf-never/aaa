@@ -359,7 +359,7 @@ const reloadResourceReport = async function () {
 
 const showNodeToDetails = async function(hub, node) {
     $('.unitSelect').val(hub.toUpperCase());
-    await initSubUnitData(hub);
+    initSubUnitData(hub);
 
     if (node) {
         $('.subUnitSelect').val(node);
