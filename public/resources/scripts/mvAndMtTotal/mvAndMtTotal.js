@@ -365,7 +365,7 @@ const initMarquee = async function (hub) {
         return axios.post('/dashboard/getDriverStateSos', { userId: userId, timeSelected: timeSelected, hub: hub })
             .then(function (res) {
 				if (res.respCode == 0 || res.data?.respCode == 0) return []
-                return res.respMessage ? res.respMessage : res.data.respMessage;
+                return res.respMessage ?? res.data.respMessage;
         });
     }
 
@@ -467,12 +467,12 @@ const initTopHub = function (obj) {
     let legendLeft = '42%'
     let seriesLeft = '-60%'
     let graphicLeft = '18%'
-    if((obj.hub).toLowerCase() == 'dv_loa') {
-        legendTop = '20%'
-        legendLeft = '60%'
-        seriesLeft = '-30%'
-        graphicLeft = '34%'
-    }
+    // if((obj.hub).toLowerCase() == 'dv_loa') {
+    //     legendTop = '20%'
+    //     legendLeft = '60%'
+    //     seriesLeft = '-30%'
+    //     graphicLeft = '34%'
+    // }
     let myChart = echarts.init(document.querySelector(`.chart-${ obj.hub.replaceAll(" ","-") }`));
 
     let option = {
@@ -926,18 +926,22 @@ const viewVehicleEventHandler = async function () {
                 continue;
             }
 
-            let state = ''
-            if (vehicle.driverStatus?.toLowerCase() == 'completed') {
-                state = 'Ended'
-            } else if (!vehicle.missingType || vehicle.missingType == 'Resume') {
-                // ... 
-            } else if (vehicle.missingType?.indexOf('Permission') > -1 || vehicle.missingType?.indexOf('Pause') > -1) {
-                state = `Missing(${ vehicle.missingType })` 
-            } else if (vehicle.missingType && vehicle.missingType != '0') {
-                state = `Missing(${ vehicle.missingType })` 
-            } else if (missingResult) {
-                state = `Missing(Network)`
+            const initMissingSate = function (){
+                let state = ''
+                if (vehicle.driverStatus?.toLowerCase() == 'completed') {
+                    state = 'Ended'
+                } else if (!vehicle.missingType || vehicle.missingType == 'Resume') {
+                    // ... 
+                } else if (vehicle.missingType?.indexOf('Permission') > -1 || vehicle.missingType?.indexOf('Pause') > -1) {
+                    state = `Missing(${ vehicle.missingType })` 
+                } else if (vehicle.missingType && vehicle.missingType != '0') {
+                    state = `Missing(${ vehicle.missingType })` 
+                } else if (missingResult) {
+                    state = `Missing(Network)`
+                }
+                return state
             }
+            let state = initMissingSate()
 
             // console.log(state)
 
@@ -947,90 +951,103 @@ const viewVehicleEventHandler = async function () {
                 continue;
             }
 
-            let html = `
-                <div class="px-3 py-2">
-                    <table aria-hidden="true">
-                        <tr>
-                            <td style="text-align: right;"><b>Driver :</b></td>
-                            <td style="padding-left: 10px;">${ vehicle.driverName ? vehicle.driverName : '-' }</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><b>Vehicle :</b></td>
-                            <td style="padding-left: 10px;">${ vehicle.vehicleNumber ? vehicle.vehicleNumber : '-' }</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><b>${ vehicle.groupName ?  'Group' : 'Node' } :</b></td>
-                            <td style="padding-left: 10px;">${ vehicle.groupName ?  vehicle.groupName: (vehicle.node ?? '-') }</td>
-                        </tr>
-                        ${ state ? `
+            const initHtml = function(){
+                let html = `
+                    <div class="px-3 py-2">
+                        <table aria-hidden="true">
                             <tr>
-                                <td style="text-align: right;"><b>State :</b></td>
-                                <td style="padding-left: 10px;text-align: top;">${ state }</td>
+                                <td style="text-align: right;"><b>Driver :</b></td>
+                                <td style="padding-left: 10px;">${ vehicle.driverName ?? '-' }</td>
                             </tr>
-                        ` : '' }
-                        
-                    </table>
-                </div>
-            `
+                            <tr>
+                                <td style="text-align: right;"><b>Vehicle :</b></td>
+                                <td style="padding-left: 10px;">${ vehicle.vehicleNumber ?? '-' }</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right;"><b>${ vehicle.groupName ?  'Group' : 'Node' } :</b></td>
+                                <td style="padding-left: 10px;">${ vehicle.groupName ?  vehicle.groupName: (vehicle.node ?? '-') }</td>
+                            </tr>
+                            ${ state ? `
+                                <tr>
+                                    <td style="text-align: right;"><b>State :</b></td>
+                                    <td style="padding-left: 10px;text-align: top;">${ state }</td>
+                                </tr>
+                            ` : '' }
+                            
+                        </table>
+                    </div>
+                `
+                return html
+            }
+            let html = initHtml()
             let marker = null;
 
             let circleColor = '#4361b9' // blue;
             let fontColor = 'black'
-            if (state.indexOf('Missing') > -1) {
-                if (state.indexOf('Signal') > -1) {
-                    circleColor = 'black'
-                    fontColor = '#8d5524'
-                } else if (state.indexOf('Service') > -1) {
-                    circleColor = 'black'
-                    fontColor = '#005aff'
-                } else if (state.indexOf('Pause') > -1) {
-                    circleColor = 'gray'
-                    fontColor = '#8d5524'
-                } else if (state.indexOf('Permission') > -1) {
-                    circleColor = 'gray'
-                    fontColor = '#005aff'
-                } else if (state.indexOf('Network') > -1) {
-                    circleColor = 'gray'
-                    fontColor = '#86007d'
+            const initColor = function (){
+                if (state.indexOf('Missing') > -1) {
+                    if (state.indexOf('Signal') > -1) {
+                        circleColor = 'black'
+                        fontColor = '#8d5524'
+                    } else if (state.indexOf('Service') > -1) {
+                        circleColor = 'black'
+                        fontColor = '#005aff'
+                    } else if (state.indexOf('Pause') > -1) {
+                        circleColor = 'gray'
+                        fontColor = '#8d5524'
+                    } else if (state.indexOf('Permission') > -1) {
+                        circleColor = 'gray'
+                        fontColor = '#005aff'
+                    } else if (state.indexOf('Network') > -1) {
+                        circleColor = 'gray'
+                        fontColor = '#86007d'
+                    }
+                } else if (vehicle.speed > vehicle.limitSpeed) {
+                    circleColor = '#cf2928' // red;
+                    fontColor = 'black'
+                } else {
+                    circleColor = vehicle.circleColor;
                 }
-            } else if (vehicle.speed > vehicle.limitSpeed) {
-                circleColor = '#cf2928' // red;
-                fontColor = 'black'
-            } else {
-                circleColor = vehicle.circleColor;
             }
+            initColor()
 
-            if (vehicle.driverStatus?.toLowerCase() == 'completed') {
-                vehicle.speed = '-'
-            }
-            if (vehicle.state?.toLowerCase().indexOf('pause') > -1) {
-                vehicle.speed = '0'
-            }
+            const initVehicleSpeed = function (){
+                if (vehicle.driverStatus?.toLowerCase() == 'completed') {
+                    vehicle.speed = '-'
+                }
+                if (vehicle.state?.toLowerCase().indexOf('pause') > -1) {
+                    vehicle.speed = '0'
+                }
 
-            if (vehicle.speed == null || vehicle.speed?.toString().toLowerCase() == 'null') {
-                vehicle.speed = '-'
+                if (vehicle.speed == null || vehicle.speed?.toString().toLowerCase() == 'null') {
+                    vehicle.speed = '-'
+                }
             }
+            initVehicleSpeed()
 
-            if (vehicle.state?.toLowerCase().indexOf('sos') > -1) {
-                marker = MapUtil.drawMarkerTop(vehicle, { iconUrl: "../images/mvAndMtTotal/SOS.svg", iconSize: [35, 45] })
-                MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -20] })
-            } else if (vehicle.state?.toLowerCase().indexOf('pause') > -1 || vehicle.driverStatus?.toLowerCase().includes('completed')) {
-                // Pause Or Completed only show at "Last known location" (missing car)
-                // From: Joseph at 2023-04-19 14:29:00
-                if ($('.view-missing-car').hasClass('active')) {
-                    // marker = MapUtil.drawMarkerCenter(vehicle, { iconUrl: "../images/mvAndMtTotal/vehicle-paused.svg", iconSize: [30, 30] })
+            const initMarkerList = function (){
+                if (vehicle.state?.toLowerCase().indexOf('sos') > -1) {
+                    marker = MapUtil.drawMarkerTop(vehicle, { iconUrl: "../images/mvAndMtTotal/SOS.svg", iconSize: [35, 45] })
+                    MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -20] })
+                } else if (vehicle.state?.toLowerCase().indexOf('pause') > -1 || vehicle.driverStatus?.toLowerCase().includes('completed')) {
+                    // Pause Or Completed only show at "Last known location" (missing car)
+                    // From: Joseph at 2023-04-19 14:29:00
+                    if ($('.view-missing-car').hasClass('active')) {
+                        // marker = MapUtil.drawMarkerCenter(vehicle, { iconUrl: "../images/mvAndMtTotal/vehicle-paused.svg", iconSize: [30, 30] })
+                        marker = MapUtil.drawMarker2(vehicle, { iconUrl: drawSpeedMarker(vehicle.speed, circleColor, fontColor, vehicle.alert), iconSize: [35, 35] })
+                        MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -15] })
+                    }
+                } else {
+                    // marker = MapUtil.drawMarker2(vehicle, { iconUrl: "../images/mvAndMtTotal/vehicle-1.svg", iconSize: [30, 30] })
                     marker = MapUtil.drawMarker2(vehicle, { iconUrl: drawSpeedMarker(vehicle.speed, circleColor, fontColor, vehicle.alert), iconSize: [35, 35] })
                     MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -15] })
                 }
-            } else {
-                // marker = MapUtil.drawMarker2(vehicle, { iconUrl: "../images/mvAndMtTotal/vehicle-1.svg", iconSize: [30, 30] })
-                marker = MapUtil.drawMarker2(vehicle, { iconUrl: drawSpeedMarker(vehicle.speed, circleColor, fontColor, vehicle.alert), iconSize: [35, 35] })
-                MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -15] })
+                
+                if (marker) {
+                    markerList.push(marker)
+                }
             }
-            
-            if (marker) {
-                markerList.push(marker)
-            }
+            initMarkerList()
         }
         return markerList;
     }
@@ -1065,29 +1082,33 @@ const viewVehicleEventHandler = async function () {
             //     <img alt="" style="width: 20px; margin-top: 3px;" src="../images/mvAndMtTotal/vehicle.svg">
             // </div>`
             let marker = MapUtil.drawMarker2(device, { iconUrl: drawSpeedMarker(device.speed, circleColor, fontColor, device.alert), iconSize: [35, 35] })
-            let html = `
-                <div class="px-3 py-2">
-                    <table aria-hidden="true">
-                        <tr>
-                            <td style="text-align: right;"><b>Device :</b></td>
-                            <td style="padding-left: 10px;">${ device.deviceId }</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><b>Driver :</b></td>
-                            <td style="padding-left: 10px;">${ device.driverName ? device.driverName : '-' }</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><b>Vehicle :</b></td>
-                            <td style="padding-left: 10px;">${ device.vehicleNumber ? device.vehicleNumber : '-' }</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><b>${ device.groupName ?  'Group' : 'Node' } :</b></td>
-                            <td style="padding-left: 10px;">${ device.groupName ?  device.groupName: (device.node ?? '-') }</td>
-                        </tr>
-                    </table>
-                </div>
-                
-            `
+            const initHtml2 = function (){
+                let html = `
+                    <div class="px-3 py-2">
+                        <table aria-hidden="true">
+                            <tr>
+                                <td style="text-align: right;"><b>Device :</b></td>
+                                <td style="padding-left: 10px;">${ device.deviceId }</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right;"><b>Driver :</b></td>
+                                <td style="padding-left: 10px;">${ device.driverName ?? '-' }</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right;"><b>Vehicle :</b></td>
+                                <td style="padding-left: 10px;">${ device.vehicleNumber ?? '-' }</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right;"><b>${ device.groupName ?  'Group' : 'Node' } :</b></td>
+                                <td style="padding-left: 10px;">${ device.groupName ?  device.groupName: (device.node ?? '-') }</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                `
+                return html
+            }
+            let html = initHtml2()
             MapUtil.bindTooltipDefault(marker, html, { direction: 'top', offset: [0, -15] })
             markerList.push(marker)
         }
@@ -1170,16 +1191,20 @@ const initOffenceDataList = async function () {
 const viewOffenceEventHandler = function () {
     const showOffenceListHandler = async function (type) {
         const drawOffenceList = function (type) {
-            let iconUrl = ''
-            if (type == 'speeding') {
-                iconUrl = `../images/transport/event/Speeding - Marker.svg`
-            } else if (type == 'rapidAcc') {
-                iconUrl = `../images/transport/event/Rapid Acc - Marker.svg`
-            } else if (type == 'hardBraking') {
-                iconUrl = `../images/transport/event/Hard braking - Marker.svg`
-            } else if (type == 'missing') {
-                iconUrl = `../images/transport/event/Missing - Marker.svg`
+            const initIconUrl = function (){
+                let iconUrl = ''
+                if (type == 'speeding') {
+                    iconUrl = `../images/transport/event/Speeding - Marker.svg`
+                } else if (type == 'rapidAcc') {
+                    iconUrl = `../images/transport/event/Rapid Acc - Marker.svg`
+                } else if (type == 'hardBraking') {
+                    iconUrl = `../images/transport/event/Hard braking - Marker.svg`
+                } else if (type == 'missing') {
+                    iconUrl = `../images/transport/event/Missing - Marker.svg`
+                }
+                return iconUrl
             }
+            let iconUrl = initIconUrl()
             let markerList = []
             for (let offence of offenceDataList) {
                 // ???

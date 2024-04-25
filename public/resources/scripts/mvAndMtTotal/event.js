@@ -123,107 +123,131 @@ const initTrafficDashboardPage = async function () {
 			}).reverse()
 		}
 
-		$('.driver-datas').html('');
-		for (let item of data.list) {
-			if (['speeding'].includes(selectedOffenceType) && item.speeding.count == 0) continue;
-			if (['rapidAcc'].includes(selectedOffenceType) && item.rapidAcc.count == 0) continue;
-			if (['hardBraking'].includes(selectedOffenceType) && item.hardBraking.count == 0) continue;
-			if (['missing'].includes(selectedOffenceType) && item.missing.count == 0) continue;
-			if (['noGoAlert'].includes(selectedOffenceType) && item.noGoAlert.count == 0) continue;
+		const initDriverDatas = function (){
+			$('.driver-datas').html('');
+			for (let item of data.list) {
+				const initHtmlState = function (){
+					let state = false
+					if (['speeding'].includes(selectedOffenceType) && item.speeding.count == 0) state = true;
+					if (['rapidAcc'].includes(selectedOffenceType) && item.rapidAcc.count == 0) state = true;
+					if (['hardBraking'].includes(selectedOffenceType) && item.hardBraking.count == 0) state = true;
+					if (['missing'].includes(selectedOffenceType) && item.missing.count == 0) state = true;
+					if (['noGoAlert'].includes(selectedOffenceType) && item.noGoAlert.count == 0) state = true;
+					return state
+				}
+				let stateHtml = initHtmlState()
+				if(stateHtml) continue
 
-			let noGoZoneAlert = ``
-			if (item.noGoAlert.count) {
-				noGoZoneAlert = `<img alt="" src="./images/transport/event/alert-red.svg" style="width: 23px; margin-left: 10px; " /><label style="color: red; font-weight: bolder; margin-left: 3px;">${ item.noGoAlert.count }</label>`
+				let noGoZoneAlert = ``
+				if (item.noGoAlert.count) {
+					noGoZoneAlert = `<img alt="" src="./images/transport/event/alert-red.svg" style="width: 23px; margin-left: 10px; " /><label style="color: red; font-weight: bolder; margin-left: 3px;">${ item.noGoAlert.count }</label>`
+				}
+	
+				// console.log(item)
+				let __colNumber = 12;
+				let __colNumber2 = 12;
+				let __colNumber3 = 12;
+				if(selectedOffenceType == 'all'){
+					__colNumber = 3
+					__colNumber2 = 4
+					__colNumber3 = 2
+				}
+	
+				let __speedingOccTime = item.speeding.occTime ? moment(item.speeding.occTime).format('HH:mm:ss') : '-';
+				let __rapidAccOccTime = item.rapidAcc.occTime ? moment(item.rapidAcc.occTime).format('HH:mm:ss') : '-';
+				let __hardBrakingOccTime = item.hardBraking.occTime ? moment(item.hardBraking.occTime).format('HH:mm:ss') : '-';
+				let __missingOccTime = item.missing.occTime ? moment(item.missing.occTime).format('HH:mm:ss') : '-';
+				const initHtml = function () {
+					let html = `<div class="col-12 driver-box" style="border-color: #BF9F27; ${ selectedOffenceType == 'noGoAlert' ? 'height: 70px;' : '' };">
+							<div class="row align-items-center">
+								<img alt="" class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
+								<div class="col col-3 driver-box-tag-zIndex">
+									<label class="driver-box-tag-label">${ item.vehicleNo }</label>
+								</div>
+								<div class="col p-0" style="line-height: 1.3rem;">
+									${ item.vehicleType }
+									<br/>
+									${ item.dataFrom === 'mobile' ? item.driver : '' }
+								</div>
+								<div class="col-auto align-items-end" 
+									data-id="${ item.deviceId }"
+									data-vehicleNo="${ item.vehicleNo && item.vehicleNo !== '-' ? item.vehicleNo : '' }"
+									data-type="${ item.dataFrom }"
+									data-driver="${ item.driver }"
+									data-occTime="${ item.occTime }"
+									data-hub="${ item.hub }"
+									data-node="${ item.node }"
+									data-groupname="${ item.groupName }"
+									>
+									<div class="float-start px-2" style="padding-top: 0.2rem;"><label class="fs-driver">${ noGoZoneAlert }</label></div>
+									<img alt="" src="../images/track/trackLabel/orange_arrow.svg">
+								</div>
+							</div>
+							<div class="row offence-row align-items-center text-center pt-1">
+								<!--<div class="col col-4">
+									<div style="line-height: 15px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count ? item.speeding.count : 0 }</label>)</label></div>
+									<div><label class="color-grey" style="font-size: 13px;">${ __speedingOccTime }</label></div>
+								</div>
+								<div class="col col-auto px-0">
+									<div class="vr"></div>
+								</div>
+								<div class="col col-4">
+									<div style="line-height: 15px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
+									<div><label class="color-grey" style="font-size: 13px;">${ __rapidAccOccTime }</label></div>  
+								</div>
+								<div class="col col-auto px-0">
+									<div class="vr"></div>
+								</div>
+								<div class="col col-4" style="width: 110px;">
+									<div style="line-height: 15px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
+									<div><label class="color-grey" style="font-size: 13px;">${ __hardBrakingOccTime }</label></div>
+								</div>-->
+		
+								${
+									['all', 'speeding'].includes(selectedOffenceType) ? 
+									`
+									<div class="col col-${ __colNumber } m-0 p-0">
+										<div style="line-height: 18px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count || 0 }</label>)</label></div>
+										<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ __speedingOccTime }</div>
+									</div>
+									` : ''
+								}
+								${
+									['all', 'rapidAcc'].includes(selectedOffenceType) ? 
+									`
+									<div class="col col-${ __colNumber } m-0 p-0">
+										<div style="line-height: 18px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
+										<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ __rapidAccOccTime }</div>
+									</div>
+									` : ''
+								}
+								${
+									['all', 'hardBraking'].includes(selectedOffenceType) ? 
+									`
+									<div class="col col-${ __colNumber2 } m-0 p-0">
+										<div style="line-height: 18px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
+										<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ __hardBrakingOccTime }</div>
+									</div>
+									` : ''
+								}
+								${
+									['all', 'missing'].includes(selectedOffenceType) ? 
+									`
+									<div class="col col-${ __colNumber3 } m-0 p-0">
+										<div style="line-height: 18px;"><label style="">Missing(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.missing.count || 0 }</label>)</label></div>
+										<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ __missingOccTime }</div>
+									</div>
+									` : ''
+								}
+								
+							</div>
+						</div>`;
+					$('.driver-datas').append(html);
+				}
+				initHtml()
 			}
-
-			// console.log(item)
-			let html = `<div class="col-12 driver-box" style="border-color: #BF9F27; ${ selectedOffenceType == 'noGoAlert' ? 'height: 70px;' : '' };">
-					<div class="row align-items-center">
-						<img alt="" class="w-auto driver-box-tag" width="200px" src="../images/track/trackLabel/speeding.svg">
-						<div class="col col-3 driver-box-tag-zIndex">
-							<label class="driver-box-tag-label">${ item.vehicleNo }</label>
-						</div>
-						<div class="col p-0" style="line-height: 1.3rem;">
-							${ item.vehicleType }
-							<br/>
-							${ item.dataFrom === 'mobile' ? item.driver : '' }
-						</div>
-						<div class="col-auto align-items-end" 
-							data-id="${ item.deviceId }"
-							data-vehicleNo="${ item.vehicleNo && item.vehicleNo !== '-' ? item.vehicleNo : '' }"
-							data-type="${ item.dataFrom }"
-							data-driver="${ item.driver }"
-							data-occTime="${ item.occTime }"
-							data-hub="${ item.hub }"
-							data-node="${ item.node }"
-							data-groupname="${ item.groupName }"
-							>
-							<div class="float-start px-2" style="padding-top: 0.2rem;"><label class="fs-driver">${ noGoZoneAlert }</label></div>
-							<img alt="" src="../images/track/trackLabel/orange_arrow.svg">
-						</div>
-					</div>
-					<div class="row offence-row align-items-center text-center pt-1">
-						<!--<div class="col col-4">
-							<div style="line-height: 15px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count ? item.speeding.count : 0 }</label>)</label></div>
-							<div><label class="color-grey" style="font-size: 13px;">${ item.speeding.occTime ? moment(item.speeding.occTime).format('HH:mm:ss') : '-' }</label></div>
-						</div>
-						<div class="col col-auto px-0">
-							<div class="vr"></div>
-						</div>
-						<div class="col col-4">
-							<div style="line-height: 15px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
-							<div><label class="color-grey" style="font-size: 13px;">${ item.rapidAcc.occTime ? moment(item.rapidAcc.occTime).format('HH:mm:ss') : '-' }</label></div>  
-						</div>
-						<div class="col col-auto px-0">
-							<div class="vr"></div>
-						</div>
-						<div class="col col-4" style="width: 110px;">
-							<div style="line-height: 15px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
-							<div><label class="color-grey" style="font-size: 13px;">${ item.hardBraking.occTime ? moment(item.hardBraking.occTime).format('HH:mm:ss') : '-' }</label></div>
-						</div>-->
-
-						${
-							['all', 'speeding'].includes(selectedOffenceType) ? 
-							`
-							<div class="col col-${ selectedOffenceType == 'all' ? 3 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Speeding(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.speeding.count || 0 }</label>)</label></div>
-								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.speeding.occTime ? moment(item.speeding.occTime).format('HH:mm:ss') : '-' }</div>
-							</div>
-							` : ''
-						}
-						${
-							['all', 'rapidAcc'].includes(selectedOffenceType) ? 
-							`
-							<div class="col col-${ selectedOffenceType == 'all' ? 3 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Rapid Acc(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.rapidAcc.count || 0 }</label>)</label></div>
-								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.rapidAcc.occTime ? moment(item.rapidAcc.occTime).format('HH:mm:ss') : '-' }</div>
-							</div>
-							` : ''
-						}
-						${
-							['all', 'hardBraking'].includes(selectedOffenceType) ? 
-							`
-							<div class="col col-${ selectedOffenceType == 'all' ? 4 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Hard Braking(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.hardBraking.count || 0 }</label>)</label></div>
-								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.hardBraking.occTime ? moment(item.hardBraking.occTime).format('HH:mm:ss') : '-' }</div>
-							</div>
-							` : ''
-						}
-						${
-							['all', 'missing'].includes(selectedOffenceType) ? 
-							`
-							<div class="col col-${ selectedOffenceType == 'all' ? 2 : 12 } m-0 p-0">
-								<div style="line-height: 18px;"><label style="">Missing(<label style="color: orange; font-weight: bolder;font-size: 11px;">${ item.missing.count || 0 }</label>)</label></div>
-								<div style="line-height: 18px;font-size: 13px;" class="color-grey">${ item.missing.occTime ? moment(item.missing.occTime).format('HH:mm:ss') : '-' }</div>
-							</div>
-							` : ''
-						}
-						
-					</div>
-				</div>`;
-
-			$('.driver-datas').append(html);
 		}
+		initDriverDatas()
 	}
 	const initIllegalMarker = function (data) {
 		let option = { iconUrl: './images/vehicle.png', iconSize: [30, 35], drawAble: false };
@@ -293,37 +317,40 @@ const showVehiclePositionHandler = async function () {
 			let vehicleMarker = null;
 			let toolTipOffset = { direction: 'top', offset: [1, -60] };
 			let toolTipHtml;
-			if (position.type === 'mobile') {
-				toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
-									<label>${ position.vehicleNo }<br>${ position.driverName }</label>
-								</div> `;
-				// console.log(`mobile ` + position.speed + ' - ' + position.limitSpeed)
-				// Position from mobile
-				let option = { drawAble: false }
-				option.iconUrl = drawSpeedMarker(position.speed, position.speed > position.limitSpeed ? "#cf2928" : "#4361b9")
-				option.iconSize = [35, 35]
-				toolTipOffset.offset = [0, -13]
-				vehicleMarker = drawMarker2({ lat: position.lat, lng: position.lng }, option);
-			} else {
-				toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
-									<label>${ (position.vehicleNo && position.vehicleNo !== '-') ? position.vehicleNo : position.deviceId }<br>${ position.speed }</label>
-								</div> `;
-				let option = { iconUrl: `./images/vehicle/Vehicle.svg`, iconSize: [35, 70], drawAble: false };
-				toolTipOffset.offset = [0, -38]
-				// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
-				if (position.rpm == 0) {
-					option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
-				} else if (Number.parseFloat(position.speed) > position.limitSpeed){
-					option.iconUrl = `./images/vehicle/Speeding.svg`
-				} else if (!position.onRoad && !position.parked) {
-					option.iconUrl = `./images/vehicle/Vehicle0.svg`
-				} else if (position.parked) {
-					option.iconUrl = `./images/vehicle/Vehicle2.svg`
-				} else if (position.onRoad) {
-					option.iconUrl = `./images/vehicle/Vehicle.svg`
-				}
-				vehicleMarker = drawMarker(position, option);
-			} 
+			const initVehicleMarkerAndToolTipHtml = function (){
+				if (position.type === 'mobile') {
+					toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
+										<label>${ position.vehicleNo }<br>${ position.driverName }</label>
+									</div> `;
+					// console.log(`mobile ` + position.speed + ' - ' + position.limitSpeed)
+					// Position from mobile
+					let option = { drawAble: false }
+					option.iconUrl = drawSpeedMarker(position.speed, position.speed > position.limitSpeed ? "#cf2928" : "#4361b9")
+					option.iconSize = [35, 35]
+					toolTipOffset.offset = [0, -13]
+					vehicleMarker = drawMarker2({ lat: position.lat, lng: position.lng }, option);
+				} else {
+					toolTipHtml = ` <div class="custom-map-popup" style="text-align: center;">
+										<label>${ (position.vehicleNo && position.vehicleNo !== '-') ? position.vehicleNo : position.deviceId }<br>${ position.speed }</label>
+									</div> `;
+					let option = { iconUrl: `./images/vehicle/Vehicle.svg`, iconSize: [35, 70], drawAble: false };
+					toolTipOffset.offset = [0, -38]
+					// console.log(`obd ` + position.speed + ' - ' + position.limitSpeed)
+					if (position.rpm == 0) {
+						option.iconUrl = `./images/vehicle/Vehicle-gray.svg`
+					} else if (Number.parseFloat(position.speed) > position.limitSpeed){
+						option.iconUrl = `./images/vehicle/Speeding.svg`
+					} else if (!position.onRoad && !position.parked) {
+						option.iconUrl = `./images/vehicle/Vehicle0.svg`
+					} else if (position.parked) {
+						option.iconUrl = `./images/vehicle/Vehicle2.svg`
+					} else if (position.onRoad) {
+						option.iconUrl = `./images/vehicle/Vehicle.svg`
+					}
+					vehicleMarker = drawMarker(position, option);
+				} 
+			}
+			initVehicleMarkerAndToolTipHtml()
 			
 	
 			storeOffenceMarkerList(vehicleMarker);
@@ -523,40 +550,44 @@ const showEventHistory = async function (option) {
 			// console.log(list)
 			let timeList = [], speedList = [];
 			let startCoord, endCoord;
-			for (let data of list) {
-				if (moment(data.createdAt ? data.createdAt : data.timestamp).isSame(moment(option.startTime))) {
-					startCoord = [moment(data.createdAt ? data.createdAt : data.timestamp).format('mm:ss')]
-				}
-				if (moment(data.createdAt ? data.createdAt : data.timestamp).isSame(moment(option.endTime))) {
-					endCoord = [moment(data.createdAt ? data.createdAt : data.timestamp).format('mm:ss')]
-				}
+			const initCharData = function (){
+				for (let data of list) {
+					let __createTimes = data.createdAt ?? data.timestamp
+					if (moment(__createTimes).isSame(moment(option.startTime))) {
+						startCoord = [moment(__createTimes).format('mm:ss')]
+					}
+					if (moment(__createTimes).isSame(moment(option.endTime))) {
+						endCoord = [moment(__createTimes).format('mm:ss')]
+					}
 
-				// X
-				let time = data.createdAt ? moment(data.createdAt).format('mm:ss') : moment(data.timestamp).format('mm:ss')
-				timeList.push({
-					value: time
-				});
-	
-				// Y
-				if(moment(data.createdAt ? data.createdAt : data.timestamp).isSameOrBefore(moment(option.endTime)) 
-					&& moment(data.createdAt ? data.createdAt : data.timestamp).isSameOrAfter(moment(option.startTime))) {
-					speedList.push({
-						value: data.speed,
-						itemStyle : {
-							color:'red',
-							borderWidth: 5
-						}
-					})
-				} else {
-					speedList.push({
-						value: data.speed,
-						itemStyle: {
-							color:'#72BC88',
-							borderWidth: 5
-						}
-					})
+					// X
+					let time = data.createdAt ? moment(data.createdAt).format('mm:ss') : moment(data.timestamp).format('mm:ss')
+					timeList.push({
+						value: time
+					});
+		
+					// Y
+					if(moment(__createTimes).isSameOrBefore(moment(option.endTime)) 
+						&& moment(__createTimes).isSameOrAfter(moment(option.startTime))) {
+						speedList.push({
+							value: data.speed,
+							itemStyle : {
+								color:'red',
+								borderWidth: 5
+							}
+						})
+					} else {
+						speedList.push({
+							value: data.speed,
+							itemStyle: {
+								color:'#72BC88',
+								borderWidth: 5
+							}
+						})
+					}
 				}
 			}
+			initCharData()
 			myChart = echarts.init(document.getElementById('speed-echart'));
 			let chartOption = {
 				grid: {
@@ -627,7 +658,7 @@ const showEventHistory = async function (option) {
 	}
 
 	let eventDataTable = null;
-	let violationType = $('.driver-statistics-card2.active').data('type') ? $('.driver-statistics-card2.active').data('type') : undefined
+	let violationType = $('.driver-statistics-card2.active').data('type') ?? undefined
 	
 
 	let timeSelected = $("#div-calendar").text()
@@ -655,13 +686,16 @@ const showEventHistory = async function (option) {
 	// debugger
 	eventDataTable = showEventDataTablesHandler(eventList, violationType);
 	initDataTableClickEvent(eventDataTable, option);
-	let title = `${ option.driver && option.driver != '-' && option.driver != 'undefined' ? option.driver : '' } (${ option.vehicleNo ? option.vehicleNo : option.deviceId })`
-
-	if (option.hub && option.hub != '-') {
-		title += ` - ${ option.hub }/${ option.node ?? '-' } `
-	} else if (option.group) {
-		title += ` - ${ option.group } `
+	const initTitle = function (){
+		let title = `${ option.driver && option.driver != '-' && option.driver != 'undefined' ? option.driver : '' } (${ option.vehicleNo ?? option.deviceId })`
+		if (option.hub && option.hub != '-') {
+			title += ` - ${ option.hub }/${ option.node ?? '-' } `
+		} else if (option.group) {
+			title += ` - ${ option.group } `
+		}
+		return title
 	}
+	let title = initTitle()
 
 	$('#modal-speed-chart .modal-title').html(title)
 	$('#modal-speed-chart').modal('show')

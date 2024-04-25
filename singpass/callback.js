@@ -36,14 +36,17 @@ async function index(req, res) {
     let name = ""
     let temp = ""
 
-    for (const [key, value] of data) {
-      if (key == "NRIC NUMBER") {
-        temp = value
-      }
-      else if(key == "NAME") {
-        name = value
+    function initUserInfo() {
+      for (const [key, value] of data) {
+        if (key == "NRIC NUMBER") {
+          temp = value
+        }
+        else if(key == "NAME") {
+          name = value
+        }
       }
     }
+    initUserInfo();
 
     // let name = "lf-test"
     // let temp = "S8654565T"
@@ -91,8 +94,8 @@ async function index(req, res) {
     log.error(error);
     res.render('login/index', {
       title: 'Welcome Mobius',
-      singpassError: error && error.message ? error.message : "Singpass callback error!",
-      loginError: error && error.message ? error.message : "Singpass callback error!"
+      singpassError: error?.message ? error.message : "Singpass callback error!",
+      loginError: error?.message ? error.message : "Singpass callback error!"
     })
   }
 }

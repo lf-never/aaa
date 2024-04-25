@@ -704,21 +704,27 @@ module.exports = {
                 replacements: [ moment(timeSelected).format('YYYY-MM-DD') ] 
             })
 
-            let taskListByGroup = null
-            if(userUnit?.groupIdList.length){
-                taskListByGroup = await sequelizeObj.query(`
-                    select count(t.taskId) as taskNum, t.hub, t.purpose from task t
-                    LEFT JOIN driver d ON d.driverId = t.driverId
-                    where t.driverId is not null and t.driverStatus != 'Cancelled' and d.permitStatus != 'invalid' and
-                    ((? between (DATE_FORMAT(t.indentStartTime,'%Y-%m-%d')) and DATE_FORMAT(t.indentEndTime,'%Y-%m-%d'))
-                    OR t.driverStatus = 'started')
-                    and t.groupId in ( ? )
-                    GROUP BY t.hub, t.purpose 
-                `, { 
-                    type: QueryTypes.SELECT,
-                    replacements: [ moment(timeSelected).format('YYYY-MM-DD'), userUnit.groupIdList ] 
-                })
+            const initTaskListByGroup = async function (){
+                let taskListByGroup = []
+                if(userUnit.groupIdList){
+                    if(userUnit.groupIdList.length){
+                        taskListByGroup = await sequelizeObj.query(`
+                            select count(t.taskId) as taskNum, t.hub, t.purpose from task t
+                            LEFT JOIN driver d ON d.driverId = t.driverId
+                            where t.driverId is not null and t.driverStatus != 'Cancelled' and d.permitStatus != 'invalid' and
+                            ((? between (DATE_FORMAT(t.indentStartTime,'%Y-%m-%d')) and DATE_FORMAT(t.indentEndTime,'%Y-%m-%d'))
+                            OR t.driverStatus = 'started')
+                            and t.groupId in ( ? )
+                            GROUP BY t.hub, t.purpose 
+                        `, { 
+                            type: QueryTypes.SELECT,
+                            replacements: [ moment(timeSelected).format('YYYY-MM-DD'), userUnit.groupIdList ] 
+                        })
+                    }
+                }
+                return taskListByGroup
             }
+            let taskListByGroup = await initTaskListByGroup();
     
              let result = []
              let hubConf = jsonfile.readFileSync(`./conf/hubNodeConf.json`)
@@ -751,13 +757,13 @@ module.exports = {
                 } = generateTotalTask(taskListDataArray)
                    
                  
-                if((hubData.hub).toUpperCase() == 'DV_LOA') {
-                    hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount})
-                    hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount})
-                    hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount})   
-                    hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount})
-                    hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount})   
-                } else {
+                // if((hubData.hub).toUpperCase() == 'DV_LOA') {
+                //     hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount})
+                //     hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount})
+                //     hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount})   
+                //     hubData.purposeData.push({purpose: 'WPT', taskCount: wptCount})
+                //     hubData.purposeData.push({purpose: 'MPT', taskCount: mptCount})   
+                // } else {
                     hubData.purposeData.push({purpose: 'Ops', taskCount: opsCount})
                     hubData.purposeData.push({purpose: 'Training', taskCount: trainingCount})
                     hubData.purposeData.push({purpose: 'Admin', taskCount: adminCount})   
@@ -772,7 +778,7 @@ module.exports = {
                     hubData.purposeData.push({purpose: 'AVI', taskCount: aviCount})
                     hubData.purposeData.push({purpose: 'PM', taskCount: pmCount})   
 
-                }
+                // }
             
                 result.push(hubData);
             }
