@@ -109,7 +109,7 @@ async function index(req, res) {
 async function fetchToken(baseUrl, code) {
   try {
     return await sgid.fetchToken(
-      baseUrl,
+      encodeURI(baseUrl),
       clientId,
       clientSecret,
       `${hostname}/callback`,
@@ -131,8 +131,9 @@ async function fetchToken(baseUrl, code) {
  */
 async function fetchUserInfo(baseUrl, accessToken, privateKeyPem) {
   try {
+    
     const { sub, data } = await sgid.fetchUserInfo(
-      baseUrl,
+      encodeURI(baseUrl),
       accessToken,
       privateKeyPem
     )

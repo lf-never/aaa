@@ -108,7 +108,7 @@ const getVehicleList = async function (option = {}) {
     }
 }
 
-const checkEditVehicleParams = async function(vehicleNo, action, vehicleHub, vehicleGroup) {
+const checkEditVehicleParams = async function(vehicleNo, action, vehicleHub, vehicleGroup, vehicleKeyTagId) {
     let errorMsg;
     if (!vehicleNo) {
         return res.json(utils.response(0, `Params vehicleNo is empty.`));
@@ -147,7 +147,7 @@ module.exports.editVehicle = async function (req, res) {
         }
         let {vehicleNo, pmType, vehiclePmMaxMileage, vehiclePmMonths, vehicleHub, vehicleNode, vehicleGroup, vehicleMileage, vehicleKeyTagId, vehicleCategory, vehicleType, vehicleDimensions, permitType, vehicleSpeedlimit, aviDate, action} = req.body;
         
-        let paramsCheckError = await checkEditVehicleParams(vehicleNo, action);
+        let paramsCheckError = await checkEditVehicleParams(vehicleNo, action, vehicleHub, vehicleGroup, vehicleKeyTagId);
         if (paramsCheckError) {
             return res.json(utils.response(0, paramsCheckError));
         }
@@ -721,70 +721,76 @@ module.exports.getVehicleTasks = async function (req, res) {
         //2023-07-05 CUSTOMER UNIT 
         let customerGroupId = '';
         let userType = user.userType.toUpperCase();
-        if(userType == CONTENT.USER_TYPE.CUSTOMER) {
-            customerGroupId = user.unitId;
-            unit = null;
-            subUnit = null;
-            
-            log.info(`user groupId ${ JSON.stringify(user.unitId) }`)
-            let loanOutVehicleNoList = await sequelizeObj.query(`
-                select l.vehicleNo from loan l where l.groupId=${customerGroupId} and l.vehicleNo IS NOT NULL and now() BETWEEN l.startDate and l.endDate
-            `, { type: QueryTypes.SELECT });
-            loanOutVehicleNoList = loanOutVehicleNoList.map(item => item.vehicleNo)
 
-            let groupVehicleNoList = await sequelizeObj.query(`
-                select vv.vehicleNo from vehicle vv where vv.groupId=${customerGroupId}
-            `, { type: QueryTypes.SELECT });
-            groupVehicleNoList = groupVehicleNoList.map(item => item.vehicleNo)
-
-            let customerNoList = loanOutVehicleNoList.concat(groupVehicleNoList);
-            if(customerNoList.length > 0){ 
-                paramList.push(` vv.vehicleNo in ('${ customerNoList.join("','") }')`)
-            } else {
-                return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
-            }
-        } else if (userType == CONTENT.USER_TYPE.HQ) {
-            async function buildHQParams() {
-                if (selectGroup == '1') {
-                    unit = null;
-                    subUnit = null;
-                    if (groupId) {
-                        paramList.push(` vv.groupId = ? `);
-                        replacements.push(groupId)
-                    } else {
-                        let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
-                        let hqUserGroupIds = groupList.map(item => item.id);
-                        if (hqUserGroupIds && hqUserGroupIds.length > 0) {
-                            paramList.push(` vv.groupId in(${hqUserGroupIds}) `);
+        const initPermitSql = async function () {
+            if(userType == CONTENT.USER_TYPE.CUSTOMER) {
+                customerGroupId = user.unitId;
+                unit = null;
+                subUnit = null;
+                
+                log.info(`user groupId ${ JSON.stringify(user.unitId) }`)
+                let loanOutVehicleNoList = await sequelizeObj.query(`
+                    select l.vehicleNo from loan l where l.groupId=${customerGroupId} and l.vehicleNo IS NOT NULL and now() BETWEEN l.startDate and l.endDate
+                `, { type: QueryTypes.SELECT });
+                loanOutVehicleNoList = loanOutVehicleNoList.map(item => item.vehicleNo)
+    
+                let groupVehicleNoList = await sequelizeObj.query(`
+                    select vv.vehicleNo from vehicle vv where vv.groupId=${customerGroupId}
+                `, { type: QueryTypes.SELECT });
+                groupVehicleNoList = groupVehicleNoList.map(item => item.vehicleNo)
+    
+                let customerNoList = loanOutVehicleNoList.concat(groupVehicleNoList);
+                if(customerNoList.length > 0){ 
+                    paramList.push(` vv.vehicleNo in ('${ customerNoList.join("','") }')`)
+                    return true
+                } else {
+                    return false
+                }
+            } else if (userType == CONTENT.USER_TYPE.HQ) {
+                async function buildHQParams() {
+                    if (selectGroup == '1') {
+                        unit = null;
+                        subUnit = null;
+                        if (groupId) {
+                            paramList.push(` vv.groupId = ? `);
+                            replacements.push(groupId)
                         } else {
-                            return false;
+                            let groupList = await unitService.UnitUtils.getGroupListByHQUnit(user.hq);
+                            let hqUserGroupIds = groupList.map(item => item.id);
+                            if (hqUserGroupIds && hqUserGroupIds.length > 0) {
+                                paramList.push(` vv.groupId in(${hqUserGroupIds}) `);
+                            } else {
+                                return false;
+                            }
                         }
+                    } else if (selectGroup == '0') {
+                        paramList.push(` vv.groupId is null `);
                     }
-                } else if (selectGroup == '0') {
-                    paramList.push(` vv.groupId is null `);
+                    return true;
                 }
-                return true;
-            }
-            let buildResult = await buildHQParams();
-            if (!buildResult) {
-                return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
-            }
-        } else if (userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
-            function buildAdminParams() {
-                if (selectGroup == '1') {
-                    unit = null;
-                    subUnit = null;
-                    if (groupId) {
-                        paramList.push(` vv.groupId = ? `);
-                        replacements.push(groupId)
-                    } else {
-                        paramList.push(` vv.groupId is not null `);
+                let buildResult = await buildHQParams();
+                return buildResult
+            } else if (userType == CONTENT.USER_TYPE.ADMINISTRATOR) {
+                function buildAdminParams() {
+                    if (selectGroup == '1') {
+                        unit = null;
+                        subUnit = null;
+                        if (groupId) {
+                            paramList.push(` vv.groupId = ? `);
+                            replacements.push(groupId)
+                        } else {
+                            paramList.push(` vv.groupId is not null `);
+                        }
+                    } else if (selectGroup == '0') {
+                        paramList.push(` vv.groupId is null `);
                     }
-                } else if (selectGroup == '0') {
-                    paramList.push(` vv.groupId is null `);
                 }
+                buildAdminParams();
             }
-            buildAdminParams();
+        }
+        let result = await initPermitSql();
+        if (!result) {
+            return res.json({ respMessage: [], recordsFiltered: 0, recordsTotal: 0 });
         }
 
         async function buildUnitParams() {
@@ -911,39 +917,25 @@ module.exports.getVehicleTasks = async function (req, res) {
             currentLoanOutVehicleNos += temp.vehicleNo + ','
         }
 
-        let baseSQL = `
-            select * from (
-                SELECT
-                    veh.vehicleNo, veh.createdAt, veh.onhold,
-                    lo.indentId as loanIndentId, lo.taskId as loanTaskId, lo.startDate as loanStartDate, lo.endDate as loanEndDate,
-                    IF(veh.groupId is not null, veh.groupId, lo.groupId) as groupId,
-                    veh.vehicleType,veh.permitType,veh.totalMileage,
-                    veh.nextAviTime, veh.nextPmTime, veh.nextWpt1Time, veh.nextMptTime, veh.status, veh.overrideStatus,
-                    un.unit, un.subUnit, hh.toHub as hotoUnit,hh.toNode as hotoSubUnit,
-                    IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
-                    IF(hh.toHub is NULL, veh.unitId, hh.unitId) as unitId,
-        `;
-        if (customerGroupId) {
-            baseSQL += ` 
-                IF(FIND_IN_SET(veh.vehicleNo, '${currentVehicleNumStr}'), 'Deployed',
-                    IF(ll.reason != '' and ll.reason is not null, ll.reason,
-                        IF(veh.nextAviTime IS NOT NULL && nextAviTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending AVI',
-                            IF(veh.nextMptTime IS NOT NULL && nextMptTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending MPT',
-                                IF((
-                                    (veh.nextWpt3Time IS NOT NULL && nextWpt3Time < DATE_FORMAT(NOW(),'%y-%m-%d')) 
-                                    || (veh.nextWpt2Time IS NOT NULL && nextWpt2Time < DATE_FORMAT(NOW(),'%y-%m-%d')) 
-                                    || (veh.nextWpt1Time IS NOT NULL && nextWpt1Time < DATE_FORMAT(NOW(),'%y-%m-%d'))
-                                ), 'Pending WPT', 'Deployable')
-                            )
-                        )
-                    )
-                ) as currentStatus
+        
+        let baseSQL = ''
+        const initBaseSql = function () {
+            baseSQL = `
+                select * from (
+                    SELECT
+                        veh.vehicleNo, veh.createdAt, veh.onhold,
+                        lo.indentId as loanIndentId, lo.taskId as loanTaskId, lo.startDate as loanStartDate, lo.endDate as loanEndDate,
+                        IF(veh.groupId is not null, veh.groupId, lo.groupId) as groupId,
+                        veh.vehicleType,veh.permitType,veh.totalMileage,
+                        veh.nextAviTime, veh.nextPmTime, veh.nextWpt1Time, veh.nextMptTime, veh.status, veh.overrideStatus,
+                        un.unit, un.subUnit, hh.toHub as hotoUnit,hh.toNode as hotoSubUnit,
+                        IF(hh.toHub is NULL, un.unit, hh.toHub) as currentUnit, IF(hh.toHub is NULL, un.subUnit, hh.toNode) as currentSubUnit,
+                        IF(hh.toHub is NULL, veh.unitId, hh.unitId) as unitId,
             `;
-        } else {
-            baseSQL += `
-                IF(FIND_IN_SET(veh.vehicleNo, '${currentVehicleNumStr}'), 'Deployed',
-                    IF(FIND_IN_SET(veh.vehicleNo, '${currentLoanOutVehicleNos}'), 'Loan Out', 
-                        IF(ll.reason != '' and ll.reason is not null, ll.reason, 
+            if (customerGroupId) {
+                baseSQL += ` 
+                    IF(FIND_IN_SET(veh.vehicleNo, '${currentVehicleNumStr}'), 'Deployed',
+                        IF(ll.reason != '' and ll.reason is not null, ll.reason,
                             IF(veh.nextAviTime IS NOT NULL && nextAviTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending AVI',
                                 IF(veh.nextMptTime IS NOT NULL && nextMptTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending MPT',
                                     IF((
@@ -954,23 +946,42 @@ module.exports.getVehicleTasks = async function (req, res) {
                                 )
                             )
                         )
-                    )
-                ) as currentStatus
+                    ) as currentStatus
+                `;
+            } else {
+                baseSQL += `
+                    IF(FIND_IN_SET(veh.vehicleNo, '${currentVehicleNumStr}'), 'Deployed',
+                        IF(FIND_IN_SET(veh.vehicleNo, '${currentLoanOutVehicleNos}'), 'Loan Out', 
+                            IF(ll.reason != '' and ll.reason is not null, ll.reason, 
+                                IF(veh.nextAviTime IS NOT NULL && nextAviTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending AVI',
+                                    IF(veh.nextMptTime IS NOT NULL && nextMptTime < DATE_FORMAT(NOW(),'%y-%m-%d'), 'Pending MPT',
+                                        IF((
+                                            (veh.nextWpt3Time IS NOT NULL && nextWpt3Time < DATE_FORMAT(NOW(),'%y-%m-%d')) 
+                                            || (veh.nextWpt2Time IS NOT NULL && nextWpt2Time < DATE_FORMAT(NOW(),'%y-%m-%d')) 
+                                            || (veh.nextWpt1Time IS NOT NULL && nextWpt1Time < DATE_FORMAT(NOW(),'%y-%m-%d'))
+                                        ), 'Pending WPT', 'Deployable')
+                                    )
+                                )
+                            )
+                        )
+                    ) as currentStatus
+                `;
+            }
+            baseSQL += `
+                    FROM
+                        vehicle veh
+                    left join unit un on un.id = veh.unitId
+                    left join (select ho.vehicleNo, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and NOW() BETWEEN ho.startDateTime AND ho.endDateTime) hh ON hh.vehicleNo = veh.vehicleNo
+                    left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status=1 and NOW() BETWEEN vl.startTime AND vl.endTime) ll ON ll.vehicleNo = veh.vehicleNo
+                    left join (select l.vehicleNo, l.groupId, l.indentId, l.taskId, l.startDate, l.endDate from loan l where now() BETWEEN l.startDate and l.endDate) lo ON lo.vehicleNo = veh.vehicleNo
+                    GROUP BY veh.vehicleNo
+                ) vv
             `;
+            if (paramList.length) {
+                baseSQL += ' WHERE ' + paramList.join(' AND ')
+            }
         }
-        baseSQL += `
-                FROM
-                    vehicle veh
-                left join unit un on un.id = veh.unitId
-                left join (select ho.vehicleNo, ho.toHub, ho.toNode, ho.unitId from hoto ho where ho.status = 'Approved' and NOW() BETWEEN ho.startDateTime AND ho.endDateTime) hh ON hh.vehicleNo = veh.vehicleNo
-                left join (select vl.vehicleNo, vl.reason from vehicle_leave_record vl where vl.status=1 and NOW() BETWEEN vl.startTime AND vl.endTime) ll ON ll.vehicleNo = veh.vehicleNo
-                left join (select l.vehicleNo, l.groupId, l.indentId, l.taskId, l.startDate, l.endDate from loan l where now() BETWEEN l.startDate and l.endDate) lo ON lo.vehicleNo = veh.vehicleNo
-                GROUP BY veh.vehicleNo
-            ) vv
-        `;
-        if (paramList.length) {
-            baseSQL += ' WHERE ' + paramList.join(' AND ')
-        }
+        initBaseSql()
 
         let countResult = await sequelizeObj.query(baseSQL, { type: QueryTypes.SELECT, replacements })
         let totalRecord = countResult.length

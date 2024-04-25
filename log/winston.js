@@ -14,7 +14,7 @@ const customFilePrintFormat = function (ifConsole = false) {
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
         format.printf((i) => {
             if (ifConsole) {
-                return format.colorize().colorize(i.level, `[${ i.timestamp }] [${ i.level.toString().toUpperCase() }] - `) + i.message
+                return format.colorize().colorize(i.level, `[${ i.timestamp }] [${ i.level.toString().toUpperCase() }] `) + i.message
             } else {
                 return `[${ i.timestamp }] [${ i.level.toString().toUpperCase() }] ${i.message}`
             }
