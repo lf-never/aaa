@@ -18,12 +18,8 @@ router.use(async (req, res, next) => {
     log.info('HTTP Request UserId : ', req.cookies.userId);
     log.info('HTTP Request Body: ', JSON.stringify(req.body));
 
-    if (whitePageList.indexOf(req.url) != -1 || req.url == '/login') {
-        next();
-        return;
-    }
-
-    if (req.url.startsWith('/') && req.query.token) {
+    if ((whitePageList.indexOf(req.url) != -1 || req.url == '/login') 
+        || (req.url.startsWith('/') && req.query.token)) {
         next();
         return;
     }
@@ -40,9 +36,7 @@ router.use(async (req, res, next) => {
         }
         log.warn(`UserId ${ userId } does not exist!`);
         return res.redirect('/login')
-    }
-
-    if (req.method.toLowerCase() == 'post') {
+    } else if (req.method.toLowerCase() == 'post') {
         if (!userId) {
             return res.json(utils.response(-100, `UserId does not exist!`));
         }

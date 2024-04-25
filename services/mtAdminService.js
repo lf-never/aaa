@@ -7,27 +7,17 @@ const { Sequelize, Op, QueryTypes } = require('sequelize');
 const { sequelizeObj } = require('../db/dbConf')
 const { sequelizeSystemObj } = require('../db/dbConf_system')
 
-const { CheckList } = require('../model/checkList');
 const { MtAdmin } = require('../model/mtAdmin');
-const { Vehicle } = require('../model/vehicle.js');
-const { Driver } = require('../model/driver');
-const { PermitType } = require('../model/permitType');
 const { Unit } = require('../model/unit.js');
 const { Task } = require('../model/task.js');
 const { lowerCase } = require('lodash');
 const { User } = require('../model/user.js');
-const { ServiceMode } = require('../model/serviceMode');
 const { PurposeMode } = require('../model/purposeMode');
 
-const { VehicleRelation } = require('../model/vehicleRelation.js');
 const { OperationRecord } = require('../model/operationRecord');
 const vehicleService = require('../services/vehicleService.js');
-const { loan } = require('../model/loan');
-
 
 const userService = require('../services/userService');
-const { loanRecord } = require('../model/loanRecord');
-
 const unitService = require('../services/unitService');
 
 const purposeList = ['avi', 'wpt', 'mpt', 'pm']

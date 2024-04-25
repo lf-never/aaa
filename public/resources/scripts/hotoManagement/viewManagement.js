@@ -15,117 +15,91 @@ let viewNode = null;
 let tableName = null;
 $(async function () {
    await initDetailPage(requestId)
-   
-   async function initDetails (){
-        await initDetail()
-   }
-   setTimeout(initDetails(), 150)
+   setTimeout(async function(){
+    await initDetail()
+   }, 150)
 });
 
-const showDivTablePage = function (){
-    if(requestType.toLowerCase() == 'replace' || requestType.toLowerCase() == 'view'){
-        $('.div-table-span').show()
-    } else {
-        $('.div-table-span').hide()
-    }
-}
-
-const initHubNode = async function(){
-    const getHubNode = async function() {
-        return await axios.post('/mtAdmin/getHubNode', { userType: Cookies.get('userType') })
-        .then(function (res) {
-            if (res.respCode === 1) {
-                return res.respMessage;
-            } else {
-                console.error(res.respMessage);
-                return null;
-            }
-        });
-    }
-    
-    const initUnit = async function (unitList) {
-        if(unitList) {
-            let __unitList = unitList.map(unit => { return unit.unit });
-            $('.form-hub').empty();
-            __unitList = Array.from(new Set(__unitList));
-            let html = `<option value="all">Hub:All</option>`;
-            for (let __unit of __unitList) {
-                html += `<option name="unitType" value="${ __unit }">${ __unit }</option>`
-            }
-            $('.form-hub').append(html); 
-
-            $('.form-hub').off('change').on('change' , function () {
-                let selectedUnit = $(this).val();
-                $(".form-node").empty();
-                let html2
-                if(unitList.length > 1) {
-                    html2 = `<option value="all">Node:All</option>`;
-                } else {
-                    html2 = `<option name="subUnitType" value='${ unitList[0].subUnit }'>Node:All</option>`;
-                }
-                for (let unit of unitList) {
-                    if (unit.unit === selectedUnit && unit.subUnit) {
-                        if((unit.subUnit).toLowerCase() === 'null') continue
-                        html2 += `<option name="subUnitType" data-id="${ unit.id }" value='${ unit.subUnit }'>${ unit.subUnit }</option>`
-                    } else {
-                        continue;
-                    }
-                }
-                $(".form-node").append(html2);
-                dataTable.ajax.reload(null, true)
-            })
+window.initDetailPage = async function (requestId) {
+    const showTableSpan = function (){
+        if(requestType.toLowerCase() == 'replace' || requestType.toLowerCase() == 'view'){
+            $('.div-table-span').show()
+        } else {
+            $('.div-table-span').hide()
         }
     }
-
-    if(Cookies.get('userType').toUpperCase() != 'CUSTOMER'){ 
-       let unitList = await getHubNode();
-       initUnit(unitList); 
-    } 
-
-    $(".form-node").off('change').on("change", function () {
-        dataTable.ajax.reload(null, true) 
-    })
-}
-
-const getHotoRequestById = async function (requestId) {
-    return await axios.post('/hoto/getHotoRequestById', { requestId })
-        .then(function (res) {
-            if (res.respCode == 1) {
-                return res.respMessage;
-            } else {
-                console.error(res.respMessage);
-                return null;
+    showTableSpan()
+    const initHubNode = async function(){
+        const getHubNode = async function() {
+            return await axios.post('/mtAdmin/getHubNode', { userType: Cookies.get('userType') })
+            .then(function (res) {
+                if (res.respCode === 1) {
+                    return res.respMessage;
+                } else {
+                    console.error(res.respMessage);
+                    return null;
+                }
+            });
+        }
+        
+        const initUnit = async function (unitList) {
+            if(unitList) {
+                let __unitList = unitList.map(unit => { return unit.unit });
+                $('.form-hub').empty();
+                __unitList = Array.from(new Set(__unitList));
+                let html = `<option value="all">Hub:All</option>`;
+                for (let __unit of __unitList) {
+                    html += `<option name="unitType" value="${ __unit }">${ __unit }</option>`
+                }
+                $('.form-hub').append(html); 
+    
+                $('.form-hub').off('change').on('change' , function () {
+                    let selectedUnit = $(this).val();
+                    $(".form-node").empty();
+                    let html2
+                    if(unitList.length > 1) {
+                        html2 = `<option value="all">Node:All</option>`;
+                    } else {
+                        html2 = `<option name="subUnitType" value='${ unitList[0].subUnit }'>Node:All</option>`;
+                    }
+                    for (let unit of unitList) {
+                        if (unit.unit === selectedUnit && unit.subUnit) {
+                            if((unit.subUnit).toLowerCase() === 'null') continue
+                            html2 += `<option name="subUnitType" data-id="${ unit.id }" value='${ unit.subUnit }'>${ unit.subUnit }</option>`
+                        } else {
+                            continue;
+                        }
+                    }
+                    $(".form-node").append(html2);
+                    dataTable.ajax.reload(null, true)
+                })
             }
-        });
-}
-const initupdateTimeName = function (hotoRequest){
-    if(hotoRequest.status.toLowerCase() == 'approved') {
-        $('.updateTime-name').text('Approval Time:')
+        }
+    
+        if(Cookies.get('userType').toUpperCase() != 'CUSTOMER'){ 
+           let unitList = await getHubNode();
+           initUnit(unitList); 
+        } 
+
+        // $(".form-hub").off('change').on("change", function () {
+        //     dataTable.ajax.reload(null, true) 
+        // })
+        $(".form-node").off('change').on("change", function () {
+            dataTable.ajax.reload(null, true) 
+        })
     }
-    if(hotoRequest.status.toLowerCase() == 'assigned') {
-        $('.updateTime-name').text('Assign Time:')
+    await initHubNode();
+    const getHotoRequestById = async function (requestId) {
+        return await axios.post('/hoto/getHotoRequestById', { requestId })
+            .then(function (res) {
+                if (res.respCode == 1) {
+                    return res.respMessage;
+                } else {
+                    console.error(res.respMessage);
+                    return null;
+                }
+            });
     }
-    if(hotoRequest.status.toLowerCase() == 'rejected') {
-        $('.updateTime-name').text('Rejection Time:')
-    }
-    if(hotoRequest.status.toLowerCase() == 'cancelled') {
-        $('.updateTime-name').text('Cancellation Time:')
-    }
-    if(hotoRequest.status.toLowerCase() == 'completed') {
-        $('.updateTime-name').text('Completion Time:')
-    }
-    $('.updateTime-view').text(hotoRequest.updatedAt ? moment(hotoRequest.updatedAt).format('DD/MM/YYYY HH:mm') : '-')
-}
-const initRequestType = function () {
-    $('.top-title').text(`${ _.capitalize(requestType) } Resource`)
-    if(requestType.toLowerCase() == 'view') {
-        $('#request-button').hide()
-    } else {
-        $('#request-button').show()
-    }
-    if(requestType) $('#requestAssign').text(`${ _.capitalize(requestType) }`)    
-}
-const initHotoRequest = async function (requestId){
     let hotoRequest = await getHotoRequestById(requestId);
     if(hotoRequest) {
         vehicleType = hotoRequest.vehicleType
@@ -137,26 +111,49 @@ const initHotoRequest = async function (requestId){
         requestOperateType = hotoRequest.resource
         $('.type-view').text(hotoRequest.vehicleType)
         $('.startTime-view').text(hotoRequest.startTime ? moment(hotoRequest.startTime).format('DD/MM/YYYY HH:mm') : '-')
+        // $('.hub-view').text(hotoRequest.hub ? hotoRequest.hub : '-')
+        // $('.node-view').text(hotoRequest.node ? hotoRequest.node : '-')
         viewHub = hotoRequest.hub;
         viewNode = hotoRequest.node;
-        $('.requestFor-view').text(`${ hotoRequest.hub ? hotoRequest.hub : '-' } / ${ hotoRequest.node ? hotoRequest.node : '-' }`)
+        $('.requestFor-view').text(`${ hotoRequest.hub ?? '-' } / ${ hotoRequest.node ?? '-' }`)
         $('.resourceQty-view').text(hotoRequest.resourceQty)
         $('.endTime-view').text(hotoRequest.endTime ? moment(hotoRequest.endTime).format('DD/MM/YYYY HH:mm') : '-')
         $('.explanation-view').text(hotoRequest.explanation)
         $('.status-view').text(hotoRequest.status)
-        initupdateTimeName(hotoRequest)
+        const initUpdateTimeText = function (){
+            if(hotoRequest.status.toLowerCase() == 'approved') {
+                $('.updateTime-name').text('Approval Time:')
+            }
+            if(hotoRequest.status.toLowerCase() == 'assigned') {
+                $('.updateTime-name').text('Assign Time:')
+            }
+            if(hotoRequest.status.toLowerCase() == 'rejected') {
+                $('.updateTime-name').text('Rejection Time:')
+            }
+            if(hotoRequest.status.toLowerCase() == 'cancelled') {
+                $('.updateTime-name').text('Cancellation Time:')
+            }
+            if(hotoRequest.status.toLowerCase() == 'completed') {
+                $('.updateTime-name').text('Completion Time:')
+            }
+        }
+        initUpdateTimeText()
+        $('.updateTime-view').text(hotoRequest.updatedAt ? moment(hotoRequest.updatedAt).format('DD/MM/YYYY HH:mm') : '-')
         requestStartTime = hotoRequest.startTime ? moment(hotoRequest.startTime).format('YYYY/MM/DD HH:mm') : null;
         requestEndTime = hotoRequest.endTime ? moment(hotoRequest.endTime).format('YYYY/MM/DD HH:mm') : null;
         requestQty = hotoRequest.resourceQty
-        initRequestType()
+        $('.top-title').text(`${ _.capitalize(requestType) } Resource`)
+        const initShowRequestButton = function (){
+            if(requestType.toLowerCase() == 'view') {
+                $('#request-button').hide()
+            } else {
+                $('#request-button').show()
+            }
+        }
+        initShowRequestButton()
+        if(requestType) $('#requestAssign').text(`${ _.capitalize(requestType) }`)       
     }
-}
 
-window.initDetailPage = async function (requestId) {
-    showDivTablePage()
-    await initHubNode();
-    await initHotoRequest(requestId)
-    
     const initPermitTypeData = function () {
         axios.post("/driver/getPermitTypeList").then(async res => {
             let permitTypeList = res.respMessage ? res.respMessage : res.data.respMessage;
@@ -183,33 +180,43 @@ window.initDetailPage = async function (requestId) {
     }
     initPermitTypeData()
 
-    if(requestOperateType.toLowerCase() == 'vehicle'){
-        $('.permitType-div').hide()
-        $('.screen-vehicle-input').show();
-        $('.screen-driver-input').hide();
-    } else {
-        $('.permitType-div').show()
-        $('.screen-vehicle-input').hide();
-        $('.screen-driver-input').show();
+    const showScreenDiv = function (){
+        if(requestOperateType.toLowerCase() == 'vehicle'){
+            $('.permitType-div').hide()
+            $('.screen-vehicle-input').show();
+            $('.screen-driver-input').hide();
+        } else {
+            $('.permitType-div').show()
+            $('.screen-vehicle-input').hide();
+            $('.screen-driver-input').show();
+        }
     }
+    showScreenDiv()
 
-    $('.screen-vehicle').on('keyup', function(){
-        let number = ($(this).val()).split("")
-        if(number.length > 2 || number.length == 0) {
-            dataTable.ajax.reload(null, true)
-        }
-    })
-    $('.screen-driver').on('keyup', function(){
-        let number = ($(this).val()).split("")
-        if(number.length > 3 || number.length == 0) {
-            dataTable.ajax.reload(null, true)
-        }
-    })
-    if(requestType.toLowerCase() == 'assign'){
-       $('.select-div-row').show()
-    } else {
-        $('.select-div-row').hide()
+    const updateTableByScreen = function (){
+        $('.screen-vehicle').on('keyup', function(){
+            let number = ($(this).val()).split("")
+            if(number.length > 2 || number.length == 0) {
+                dataTable.ajax.reload(null, true)
+            }
+        })
+        $('.screen-driver').on('keyup', function(){
+            let number = ($(this).val()).split("")
+            if(number.length > 3 || number.length == 0) {
+                dataTable.ajax.reload(null, true)
+            }
+        })
     }
+    updateTableByScreen()
+
+    const showSelectDiv = function (){
+        if(requestType.toLowerCase() == 'assign'){
+            $('.select-div-row').show()
+         } else {
+             $('.select-div-row').hide()
+         }
+    }
+    showSelectDiv()
 
     $('.clearAll-hoto').off('click').on('click', function(){
         $(".form-hub").val("all")
@@ -253,7 +260,7 @@ const initDetail = async function () {
                 $(".laydate-time-list>li").css("height", "100%")
             });
         }
- 
+        
         layui.use('laydate', function(){
             let laydate = layui.laydate;
             laydate.render({
@@ -269,7 +276,7 @@ const initDetail = async function () {
                     noSecond()
                 },
                 change: (value) => { 
-                    noSecond()                   
+                    noSecond()                    
                 },
                 done: (value) => {
                     if (value) {
@@ -363,130 +370,44 @@ const initDetail = async function () {
         }
     }
 
-    // vehicle Action
-    const initRequsetTime = function (aData, nRow, startTime, endTime){
-        $(`.from-date-input-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
-        $(`.to-date-input-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(endTime ? moment(endTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
+    const initChageRequestByVehicle = function (aData, nRow, vehicleListByReplace){
+        $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.vehicleNo)
+        $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).on('change', () =>{
+            let vehicleByReplace = vehicleListByReplace.filter(item => item.vehicleNo == $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val());
+            $('td:eq(2)', nRow).empty()
+            $('td:eq(2)', nRow).prepend(`<div>${ vehicleByReplace[0].unit ? vehicleByReplace[0].unit : '' }</div>
+            <div><span style="color: #6c757d; font-size: 0.75rem;">${ vehicleByReplace[0].subUnit ? vehicleByReplace[0].subUnit : '' }</span></div>`);
+            $('td:eq(6)', nRow).empty()
+            $('td:eq(6)', nRow).text(`${ vehicleByReplace[0].hotoDateTime ? moment(vehicleByReplace[0].hotoDateTime).format('YYYY/MM/DD HH:mm') : '-' }`)
+        })
     }
-    const initToHub = function (aData, unitList, nRow, requestHub, requestNode, startTime, endTime){
-        if(!aData.toHub && unitList) {
-            let html = '<option></option>'
-            for (let unit of unitList) {
-                if(unit) html += `<option name="unitType" data-unit="${ unit.unit }" data-subUnit="${ unit.subUnit }">${ unit.unit }/${ unit.subUnit ? unit.subUnit : '-' }</option>`
+
+    const initChageRequestByReplace = function (aData, nRow, driverListByReplace){
+        $(`#request-view-${ aData.driverId }`, nRow).val(aData.driverName)
+        $(`#request-view-${ aData.driverId }`, nRow).on('change', () =>{
+            let driverByReplace = driverListByReplace.filter(item => item.driverId == $(`#request-view-${ aData.driverId } option:selected`, nRow).attr('data-val'))[0];
+            let classText = null;
+            if (driverByReplace.permitType) {
+                let permitList = driverByReplace.permitType.split(',');
+                if (permitList.length > 10) {
+                    classText = `${ permitList.slice(0, 5) },<br>${ permitList.slice(5, 10) },<br>${ permitList.slice(10) }`
+                } else if (permitList.length > 5) {
+                    classText = `${ permitList.slice(0, 5) },<br>${ permitList.slice(5) }`
+                } else {
+                    classText = driverByReplace.permitType
+                }
+            } else {
+                classText = '-';
             }
             $('td:eq(3)', nRow).empty()
-            $('td:eq(3)', nRow).prepend(`<select class="form-select form-select-sm" id="hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }">${html}</select>`);
-            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.hub)
-            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
-            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
-            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
-            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).trigger('change')
-
-            initRequsetTime(aData, nRow, startTime, endTime)
-        }
+            $('td:eq(3)', nRow).prepend(`${ classText }`)
+            $('td:eq(2)', nRow).empty()
+            $('td:eq(2)', nRow).prepend(`<div>${ driverByReplace.unit ? driverByReplace.unit : '' }</div>
+            <div><span style="color: #6c757d; font-size: 0.75rem;">${ driverByReplace.subUnit ? driverByReplace.subUnit : '' }</span></div>`);
+            $('td:eq(7)', nRow).empty()
+            $('td:eq(7)', nRow).text(`${ driverByReplace.hotoDateTime ? moment(driverByReplace.hotoDateTime).format('YYYY/MM/DD HH:mm') : '-' }`)
+        })
     }
-    const initBtnRequest = function (requestType, vehicleListByReplace, aData, nRow, startTime, endTime){
-        if(requestType.toLowerCase() == 'replace' && moment().format('YYYY-MM-DD HH:mm') < moment(endTime, 'YYYY/MM/DD HH:mm').format('YYYY-MM-DD HH:mm')) {
-            if(vehicleListByReplace.length > 0){
-                let html = `<option>${ aData.vehicleNo }</option>`
-                for(let item of vehicleListByReplace) {
-                    if(item.vehicleNo && item.vehicleNo != aData.vehicleNo) html += `<option>${ item.vehicleNo }</option>`
-                }
-
-                $('td:eq(1)', nRow).empty()
-                $('td:eq(1)', nRow).prepend(`<select class="form-select form-select-sm" id="request-view-${ (aData.vehicleNo).replaceAll(" ","_") }">${html}</select>`);
-                $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.vehicleNo)
-                $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).on('change', () =>{
-                    let requestVal = $(`#request-view-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val()
-                    let vehicleByReplace = vehicleListByReplace.filter(item => item.vehicleNo == requestVal);
-                    $('td:eq(2)', nRow).empty()
-                    $('td:eq(2)', nRow).prepend(`<div>${ vehicleByReplace[0].unit ? vehicleByReplace[0].unit : '' }</div>
-                    <div><span style="color: #6c757d; font-size: 0.75rem;">${ vehicleByReplace[0].subUnit ? vehicleByReplace[0].subUnit : '' }</span></div>`);
-                    $('td:eq(6)', nRow).empty()
-                    $('td:eq(6)', nRow).text(`${ vehicleByReplace[0].hotoDateTime ? moment(vehicleByReplace[0].hotoDateTime).format('YYYY/MM/DD HH:mm') : '-' }`)
-                })
-            }
-
-            initRequsetTime(aData, nRow, startTime, endTime)
-        }
-    }
-    const initBtnRequest2 = function (aData, nRow, startTime, endTime){
-        if(requestType.toLowerCase() == 'replace') {
-            initRequsetTime(aData, nRow, startTime, endTime)
-        }
-    }
-
-    // driver Action
-    const initActionTime = function (aData, nRow, startTime, endTime){
-        $(`.from-date-input-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
-        $(`.to-date-input-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(endTime ? moment(endTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
-    }
-    const initDriverActionByHubNode = function (aData, unitList, nRow, requestHub, requestNode, startTime, endTime){
-        if(!aData.toHub && unitList) {
-            let html = '<option></option>'
-            for (let unit of unitList) {
-                if(unit) html += `<option name="unitType" data-unit="${ unit.unit }" data-subUnit="${ unit.subUnit }">${ unit.unit }/${ unit.subUnit ? unit.subUnit : '-' }</option>`
-            }
-            if (aData.checkResult) {
-                $('td:eq(4)', nRow).empty()
-                $('td:eq(4)', nRow).prepend(`<label>${aData.hub}</label>`);
-            } else {
-                $('td:eq(4)', nRow).empty()
-                $('td:eq(4)', nRow).prepend(`<select class="form-select form-select-sm" id="hub-node-${ (aData.driverId) }">${html}</select>`);
-            }
-        
-            $(`#hub-node-${ (aData.driverId) }`, nRow).val(aData.hub)
-            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
-            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
-            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
-            $(`#hub-node-${ (aData.driverId) }`, nRow).trigger('change')
-
-            initActionTime(aData, nRow, startTime, endTime)
-        }
-    }
-    const initDriverAction = function (requestType, driverListByReplace, aData, nRow, startTime, endTime){
-        if(requestType.toLowerCase() == 'replace' && moment().format('YYYY-MM-DD HH:mm') < moment(endTime, 'YYYY/MM/DD HH:mm').format('YYYY-MM-DD HH:mm')) {
-            if(driverListByReplace.length > 0){
-                let html = `<option data-val='${ aData.driverId }'>${ aData.driverName }</option>`
-                for(let item of driverListByReplace) {
-                    if(item.driverId && item.driverId != aData.driverId) html += `<option data-val='${ item.driverId }'>${ item.driverName }</option>`
-                }
-                $('td:eq(1)', nRow).empty()
-                $('td:eq(1)', nRow).prepend(`<select class="form-select form-select-sm" data-val id="request-view-${ aData.driverId }">${html}</select>`);
-                $(`#request-view-${ aData.driverId }`, nRow).val(aData.driverName)
-                $(`#request-view-${ aData.driverId }`, nRow).on('change', () =>{
-                    let driverByReplace = driverListByReplace.filter(item => item.driverId == $(`#request-view-${ aData.driverId } option:selected`, nRow).attr('data-val'))[0];
-                    let classText = null;
-                    if (driverByReplace.permitType) {
-                        let permitList = driverByReplace.permitType.split(',');
-                        if (permitList.length > 10) {
-                            classText = `${ permitList.slice(0, 5) },<br>${ permitList.slice(5, 10) },<br>${ permitList.slice(10) }`
-                        } else if (permitList.length > 5) {
-                            classText = `${ permitList.slice(0, 5) },<br>${ permitList.slice(5) }`
-                        } else {
-                            classText = driverByReplace.permitType
-                        }
-                    } else {
-                        classText = '-';
-                    }
-                    $('td:eq(3)', nRow).empty()
-                    $('td:eq(3)', nRow).prepend(`${ classText }`)
-                    $('td:eq(2)', nRow).empty()
-                    $('td:eq(2)', nRow).prepend(`<div>${ driverByReplace.unit ? driverByReplace.unit : '' }</div>
-                    <div><span style="color: #6c757d; font-size: 0.75rem;">${ driverByReplace.subUnit ? driverByReplace.subUnit : '' }</span></div>`);
-                    $('td:eq(7)', nRow).empty()
-                    $('td:eq(7)', nRow).text(`${ driverByReplace.hotoDateTime ? moment(driverByReplace.hotoDateTime).format('YYYY/MM/DD HH:mm') : '-' }`)
-                })
-            }
-            initActionTime(aData, nRow, startTime, endTime)
-        }
-    }
-    const initDriverActionByTime = function (aData, nRow, startTime, endTime){
-        if(requestType.toLowerCase() == 'replace') {
-            initActionTime(aData, nRow, startTime, endTime)
-        }
-    }
-    
     const initTable = function (unitList, vehicleListByReplace, driverListByReplace) {
         if(!requestOperateType) return
         if(requestOperateType.toLowerCase() == 'vehicle'){
@@ -562,8 +483,8 @@ const initDetail = async function () {
                             if (!full.toHub) {
                                  return `<input class="form-control form-select form-select-sm" readonly="readonly"/>`
                             } else {
-                                let newnode = full.toNode ? `/${ full.toNode }` : '';
-                                return `${ full.toHub } ${ newnode }`
+                                let __toHubS2 = full.toNode ? `/${ full.toNode }` : ''
+                                return `${ full.toHub } ${ __toHubS2 }`
                             }
                         }
                     },
@@ -626,9 +547,50 @@ const initDetail = async function () {
                 fnCreatedRow: async function(nRow, aData, iDataIndex, full) {
                     let startTime = aData.startDateTime ? moment(aData.startDateTime).format('YYYY/MM/DD HH:mm') : requestStartTime;
                     let endTime = aData.endDateTime ? moment(aData.endDateTime).format('YYYY/MM/DD HH:mm') : requestEndTime;
-                    initToHub(aData, unitList, nRow, requestHub, requestNode, startTime, endTime)
-                    initBtnRequest(requestType, vehicleListByReplace, aData, nRow, startTime, endTime)
-                    initBtnRequest2(aData, nRow, startTime, endTime)
+                    const initFromToDate = function (){
+                        $(`.from-date-input-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
+                        $(`.to-date-input-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(endTime ? moment(endTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
+                    }
+
+
+                    const initVehicleNoSelectByReplace = function (){
+                        if(vehicleListByReplace.length <= 0) return 
+                        let html = `<option>${ aData.vehicleNo }</option>`
+                        for(let item of vehicleListByReplace) {
+                            if(item.vehicleNo && item.vehicleNo != aData.vehicleNo) html += `<option>${ item.vehicleNo }</option>`
+                        }
+
+                        $('td:eq(1)', nRow).empty()
+                        $('td:eq(1)', nRow).prepend(`<select class="form-select form-select-sm" id="request-view-${ (aData.vehicleNo).replaceAll(" ","_") }">${html}</select>`);
+                        initChageRequestByVehicle(aData, nRow, vehicleListByReplace)
+                    }
+                    const initUnitByVehicle = function (){
+                        if(!aData.toHub && unitList) {
+                            let html = '<option></option>'
+                            for (let unit of unitList) {
+                                if(unit) html += `<option name="unitType" data-unit="${ unit.unit }" data-subUnit="${ unit.subUnit }">${ unit.unit }/${ unit.subUnit ?? '-' }</option>`
+                            }
+                            $('td:eq(3)', nRow).empty()
+                            $('td:eq(3)', nRow).prepend(`<select class="form-select form-select-sm" id="hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }">${html}</select>`);
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(aData.hub)
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
+                            $(`#hub-node-${ (aData.vehicleNo).replaceAll(" ","_") }`, nRow).trigger('change')
+    
+                            initFromToDate()
+                        }
+                    }
+                    initUnitByVehicle()
+                    if(requestType.toLowerCase() == 'replace' && moment().format('YYYY-MM-DD HH:mm') < moment(endTime, 'YYYY/MM/DD HH:mm').format('YYYY-MM-DD HH:mm')) {
+                        initVehicleNoSelectByReplace()
+                        console.log(startTime)
+                        console.log(endTime)
+                        initFromToDate()
+                    }
+                    if(requestType.toLowerCase() == 'replace') {
+                        initFromToDate()
+                    }
                     initLayDate(aData.vehicleNo, nRow, startTime, endTime)
                 }
             });
@@ -725,8 +687,8 @@ const initDetail = async function () {
                             if (!full.toHub) {
                                 return `<input class="form-control form-select" readonly="readonly"/>`
                             } else {
-                                let newNode = full.toNode ? `/${ full.toNode }` : ''
-                                return `${ full.toHub } ${ newNode }`
+                                let __toHubS = full.toNode ? `/${ full.toNode }` : ''
+                                return `${ full.toHub } ${ __toHubS }`
                             }
                         }
                     },
@@ -791,10 +753,56 @@ const initDetail = async function () {
                 fnCreatedRow: async function(nRow, aData, iDataIndex, full) {
                     let startTime = aData.startDateTime ? moment(aData.startDateTime).format('YYYY/MM/DD HH:mm') : requestStartTime;
                     let endTime = aData.endDateTime ? moment(aData.endDateTime).format('YYYY/MM/DD HH:mm') : requestEndTime;
-                    initDriverActionByHubNode(aData, unitList, nRow, requestHub, requestNode, startTime, endTime)
-                    initDriverAction(requestType, driverListByReplace, aData, nRow, startTime, endTime)
-                    initDriverActionByTime(aData, nRow, startTime, endTime)
-                    
+                    const initFromToDateByDriver = function (){
+                        $(`.from-date-input-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(startTime ? moment(startTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
+                        $(`.to-date-input-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(endTime ? moment(endTime, 'YYYY/MM/DD HH:mm').format('DD/MM/YYYY HH:mm') : '');
+                    }
+
+                    const initUnitByDriver = function (){
+                        if(!aData.toHub && unitList) {
+                            let html = '<option></option>'
+                            for (let unit of unitList) {
+                                if(unit) html += `<option name="unitType" data-unit="${ unit.unit }" data-subUnit="${ unit.subUnit }">${ unit.unit }/${ unit.subUnit ?? '-' }</option>`
+                            }
+                            if (aData.checkResult) {
+                                $('td:eq(4)', nRow).empty()
+                                $('td:eq(4)', nRow).prepend(`<label>${aData.hub}</label>`);
+                            } else {
+                                $('td:eq(4)', nRow).empty()
+                                $('td:eq(4)', nRow).prepend(`<select class="form-select form-select-sm" id="hub-node-${ (aData.driverId) }">${html}</select>`);
+                            }
+                        
+                            $(`#hub-node-${ (aData.driverId) }`, nRow).val(aData.hub)
+                            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-unit', requestHub)
+                            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).attr('data-subunit', requestNode)
+                            $(`#hub-node-${ (aData.driverId).toString().replaceAll(" ","_") }`, nRow).val(`${ requestHub }/${ requestNode ?? '-' }`)
+                            $(`#hub-node-${ (aData.driverId) }`, nRow).trigger('change')
+    
+                            initFromToDateByDriver()
+                        }
+                    }
+                    initUnitByDriver()
+
+                    const initDriverNameByReplace = function (){
+                        console.log(moment().format('YYYY-MM-DD HH:mm') < moment(endTime, 'YYYY/MM/DD HH:mm').format('YYYY-MM-DD HH:mm'))
+                        if(requestType.toLowerCase() == 'replace' && moment().format('YYYY-MM-DD HH:mm') < moment(endTime, 'YYYY/MM/DD HH:mm').format('YYYY-MM-DD HH:mm')) {
+                            console.log(driverListByReplace)
+                            if(driverListByReplace.length > 0){
+                                let html = `<option data-val='${ aData.driverId }'>${ aData.driverName }</option>`
+                                for(let item of driverListByReplace) {
+                                    if(item.driverId && item.driverId != aData.driverId) html += `<option data-val='${ item.driverId }'>${ item.driverName }</option>`
+                                }
+                                $('td:eq(1)', nRow).empty()
+                                $('td:eq(1)', nRow).prepend(`<select class="form-select form-select-sm" data-val id="request-view-${ aData.driverId }">${html}</select>`);
+                                initChageRequestByReplace(aData, nRow, driverListByReplace)
+                            }
+                            initFromToDateByDriver()
+                        }
+                    }
+                    initDriverNameByReplace()
+                    if(requestType.toLowerCase() == 'replace') {
+                        initFromToDateByDriver()
+                    }
                     initLayDate((aData.driverId).toString(), nRow, startTime, endTime)
                 }
             });
@@ -848,7 +856,7 @@ const initDetail = async function () {
                             errorMessage2.push(res.respMessage)
                         }
                         if(errorMessage2.length > 0 && errorMessage2[0]) {
-                            let error = errorMessage2.join(`<br>`)
+                            let error = errorMessage2.join('<br>')
                             $.alert({
                                 title: 'Warn',
                                 content: error
@@ -898,8 +906,8 @@ const initDetail = async function () {
     
             }
             for (let key in data) {
-                if(['fromHub', 'fromNode', 'hotoDateTime', 'toNode', 'driverName'].some(item => item == key)){
-                    continue
+                if(key == 'fromHub' || key == 'fromNode' || key == 'hotoDateTime' || key == 'toNode' || key == 'driverName'){
+                    continue 
                 }
                 if($('.resource-view').text() == 'Vehicle' && key == 'driverId'){
                     continue
@@ -912,6 +920,10 @@ const initDetail = async function () {
                     return false
                 }
             }
+            if(data.fromHub == data.toHub && data.fromNode == data.toNode) {
+                errorMessage.push(`${ opt } The hub/node of the hoto must be different from the current hub/node.`)
+                return false;
+            }  
             return true;
         }
     
@@ -999,83 +1011,62 @@ const initDetail = async function () {
             }
         }
         
-        const initHotoObj = function (optionObj){
-            let { newDriverId, newVehicleNo, newDriverName, hostHub, hostNode, startDate, endDate, data, errorMessage, hotoList } = optionObj;
-            let hoto = {
-                driverId: newDriverId,
-                vehicleNo: newVehicleNo,
-                driverName: newDriverName,
-                fromHub: data.unit,
-                fromNode: data.subUnit,
-                toHub: hostHub ?? data.toHub,
-                toNode: hostNode ?? data.toNode,
-                hotoDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                startDateTime: startDate,
-                endDateTime: endDate,
-                status: 'Assigned',
-                requestId: requestId
-            }
-            if(requestType.toLowerCase() == 'replace') hoto.id = data.hotoId;
-            let opt = data.driverName ? ` ${ data.driverName }` : ` ${ data.vehicleNo }`
-            let state = checkField(hoto, opt)
-            if(hoto.fromHub == hoto.toHub && hoto.fromNode == hoto.toNode) {
-                state = false
-                errorMessage.push(`${ opt } The hub/node of the hoto must be different from the current hub/node.`)
-            }
-            if(state) {
-                hotoList.push(hoto)
-            }
-        }
-        const initErrorList = function (hotoList, hotoIdList, errorMessage){
-            if(requestType.toLowerCase() == 'assign'){
-                if(hotoList.length == 0 && errorMessage.length <= 0) {
-                    errorMessage.push(`Please select the operation data.`)
-                }
-            } else if(requestType.toLowerCase() == 'approve' || requestType.toLowerCase() == 'return') {
-                if(hotoIdList.length == 0 && errorMessage.length <= 0) {
-                    errorMessage.push(`Select the data that meets the requirements.`)
-                }
-            }
-        }
-        const initDriverIdOrVehicleNo = function (data){
-            let option = null
-            let driverId = null; 
-            let vehicleNo = null; 
-            if(($('.resource-view').text()).toLowerCase() == 'vehicle'){
-                vehicleNo = data.vehicleNo
-                if(data.vehicleNo) option = (data.vehicleNo).toString()
-            } else {
-                driverId = data.driverId
-                if(data.driverId) option = (data.driverId).toString()
-            }
-            return { option, driverId, vehicleNo }
-        }
-        const initErrorDate = function (data, errorMessage){
-            let errorname = ` ${ data.driverName }`
-            if(!data.driverName) errorname = ` ${ data.vehicleNo }`
-            errorMessage.push(`${ errorname } Do not repeat operation.`)
-        }
         const initData = async function(){
-            let checkVehicleDetail = $(`.data-list .checkVehicleParent`)
+            let checkVehicleDetail = $(`.data-list .checkVehicleParent:checked`)
             let hotoList = []
             let hotoIdList = []
+            console.log(checkVehicleDetail)
             for(let item of checkVehicleDetail){
-                let checkAll = $(item).prop("checked")
-                if(!checkAll) continue
                 let data = dataTable.row($(item).val()).data()
-                let { option, driverId, vehicleNo } = initDriverIdOrVehicleNo(data)
-
+                let option = null
+                let driverId = null; 
+                let vehicleNo = null; 
+                const initOptionName = function (){
+                    if(($('.resource-view').text()).toLowerCase() == 'vehicle'){
+                        vehicleNo = data.vehicleNo
+                        if(data.vehicleNo) option = (data.vehicleNo).toString()
+                    } else {
+                        driverId = data.driverId
+                        if(data.driverId) option = (data.driverId).toString()
+                    }
+                }
+                initOptionName()
+  
                 if(requestType.toLowerCase() == 'assign' || requestType.toLowerCase() == 'replace') {
+                    let opt = data.driverName ?? data.vehicleNo 
                     if(!$(`.from-date-input-${ (option).replaceAll(" ","_") }`)[0]) {
-                        initErrorDate(data, errorMessage)
+                        errorMessage.push(`${ opt } Do not repeat operation.`)
                         continue
                     }
-                    const initAssignOrReplaceData = function (){
-                        let hostHub = $(`#hub-node-${ (option).replaceAll(" ","_") } option:selected`).data('unit') 
-                        let hostNode = $(`#hub-node-${ (option).replaceAll(" ","_") } option:selected`).data('subunit') 
-                        let startDate = $(`.from-date-input-${ (option).replaceAll(" ","_") }`).val() ? moment($(`.from-date-input-${ (option).replaceAll(" ","_") }`).val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null;
-                        let endDate = $(`.to-date-input-${ (option).replaceAll(" ","_") }`).val() ? moment($(`.to-date-input-${ (option).replaceAll(" ","_") }`).val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm') : null;
-                        let newVehicleNo = null;
+                    let hostHub = $(`#hub-node-${ (option).replaceAll(" ","_") } option:selected`).data('unit') 
+                    let hostNode = $(`#hub-node-${ (option).replaceAll(" ","_") } option:selected`).data('subunit') 
+                    let startDate = null;
+                    let endDate = null;
+                    const initStartEndDate = function (){
+                        if($(`.from-date-input-${ (option).replaceAll(" ","_") }`).val()){
+                            startDate = moment($(`.from-date-input-${ (option).replaceAll(" ","_") }`).val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
+                        }
+                        if($(`.to-date-input-${ (option).replaceAll(" ","_") }`).val()){
+                            endDate = moment($(`.to-date-input-${ (option).replaceAll(" ","_") }`).val(), 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm')
+                        }
+                    }
+                    initStartEndDate()
+                    let newVehicleNo = null;
+                    let newDriverId = null;
+                    let newDriverName = null;
+                    const getDriverAndVehicle = function (){
+                        if($('.resource-view').text().toLowerCase() == 'driver'){
+                            if($(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()){
+                                newDriverName = $(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()
+                            } else {
+                                newDriverName = data.driverName
+                            }
+                            if($(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).attr('data-val')){
+                                newDriverId = $(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).attr('data-val')
+                            } else {
+                                newDriverId = driverId
+                            }
+                        } 
                         if($('.resource-view').text().toLowerCase() == 'vehicle'){
                             if($(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()){
                                 newVehicleNo = $(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()
@@ -1083,40 +1074,47 @@ const initDetail = async function () {
                                 newVehicleNo = vehicleNo
                             }
                         }
-                        let newDriverId = null;
-                        if($('.resource-view').text().toLowerCase() == 'driver'){
-                            if($(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).attr('data-val')){
-                                newDriverId = $(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).attr('data-val')
-                            } else {
-                                newDriverId = driverId
-                            }
-                        }
-                        let newDriverName = null;
-                        if($('.resource-view').text().toLowerCase() == 'driver'){
-                            if($(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()){
-                                newDriverName = $(`#request-view-${ (option).replaceAll(" ","_") } option:selected`).val()
-                            } else {
-                                newDriverName = data.driverName
-                            }
-                        }
-                        
-                        let optionObj = {
-                            newDriverId, newVehicleNo, newDriverName, hostHub, hostNode, startDate, endDate, data, errorMessage, hotoList
-                        }
-                        initHotoObj(optionObj)
                     }
-                    initAssignOrReplaceData()
-                    
-                } else if((requestType.toLowerCase() == 'return' && data.status.toLowerCase() != 'completed') || (requestType.toLowerCase() == 'approve' && data.status.toLowerCase() != 'approved')) {
-                    hotoIdList.push(data.hotoId)
-                } 
+                    getDriverAndVehicle()
+                    const initHotoList = function (){
+                        let hoto = {
+                            driverId: newDriverId,
+                            vehicleNo: newVehicleNo,
+                            driverName: newDriverName,
+                            fromHub: data.unit,
+                            fromNode: data.subUnit,
+                            toHub: hostHub ?? data.toHub,
+                            toNode: hostNode ?? data.toNode,
+                            hotoDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                            startDateTime: startDate,
+                            endDateTime: endDate,
+                            status: 'Assigned',
+                            requestId: requestId
+                        }
+                        if(requestType.toLowerCase() == 'replace') hoto.id = data.hotoId;
+                        let state = checkField(hoto, opt)
+                        if(state) {
+                            hotoList.push(hoto)
+                        }  
+                    }
+                    initHotoList();
+                }  
+                const initHotoIdListByReturnOrApprove = function (){
+                    if((requestType.toLowerCase() == 'return' && data.status.toLowerCase() != 'completed') 
+                    || (requestType.toLowerCase() == 'approve' && data.status.toLowerCase() != 'approved')
+                    ) hotoIdList.push(data.hotoId)
+                }
+                initHotoIdListByReturnOrApprove()
             }
-
-            initErrorList(hotoList, hotoIdList, errorMessage)
-            return { hotoList, hotoIdList, errorMessage }
-        }
-        const initAction = async function (data){
-            let { hotoList, hotoIdList, errorMessage } = data;
+            const getDataError = function (){
+                if((requestType.toLowerCase() == 'assign' || requestType.toLowerCase() == 'replace') && (hotoList.length == 0 && errorMessage.length <= 0)){
+                    errorMessage.push(`Please select the operation data.`)
+                } 
+                if((requestType.toLowerCase() == 'approve' || requestType.toLowerCase() == 'return') && (hotoIdList.length == 0 && errorMessage.length <= 0)) {
+                    errorMessage.push(`Select the data that meets the requirements.`)
+                }
+            }
+            getDataError()
 
             if(hotoList.length > 0 || hotoIdList.length > 0){
                 if(requestType.toLowerCase() == 'assign') {
@@ -1135,27 +1133,26 @@ const initDetail = async function () {
                 }
                 initDetailPage(requestId)
             }
-            if(errorMessage.length > 0 && errorMessage[0]) {
-                let error = errorMessage.join('<br>')
-                $.confirm({
-                    title: 'Warn',
-                    content: error,
-                    buttons: {
-                        ok: {
-                            btnClass: 'btn-green',
-                            action: function () {
-                                dataTable.ajax.reload(null, true)
-                                errorMessage = []
+
+            const openError = function (){
+                if(errorMessage.length > 0 && errorMessage[0]) {
+                    let error = errorMessage.join('<br>')
+                    $.confirm({
+                        title: 'Warn',
+                        content: error,
+                        buttons: {
+                            ok: {
+                                btnClass: 'btn-green'
                             }
                         }
-                    }
-                });
+                    });
+                }
+                dataTable.ajax.reload(null, true)
+                errorMessage = []
             }
-            if(errorMessage.length == 0) dataTable.ajax.reload(null, true)
+            openError()
         }
-        let dataObj = await initData()
-        initAction(dataObj)
-        
+        initData()
     })
 
     const initTable2 = function () {

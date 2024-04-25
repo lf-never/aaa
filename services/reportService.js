@@ -9,25 +9,16 @@ const { sequelizeSystemObj } = require('../db/dbConf_system')
 const userService = require('../services/userService.js');
 const unitService = require('../services/unitService');
 
-const { MtAdmin } = require('../model/mtAdmin');
-const { Vehicle } = require('../model/vehicle.js');
-const { Driver } = require('../model/driver');
-const { Unit } = require('../model/unit.js');
-const { Task } = require('../model/task.js');
 const _ = require('lodash');
 const jsonfile = require('jsonfile');
 
 const checkNumber = function (number) {
-    if (number == Infinity 
+    return !(number == Infinity 
         || number == -Infinity 
         || number == null 
         || number == '' 
         || isNaN(number)
-        || typeof number == 'undefined') {
-        return false
-    } else {
-        return true
-    }
+        || typeof number == 'undefined')
 }
 const getDateLength = function (date1, date2) {
     let tempDate1 = moment(date1).format('YYYY-MM-DD HH:mm:ss')
@@ -214,22 +205,28 @@ const getIndentsReport = async function (month, groupId) {
 
         // If only preMonthQty = 0, update change to 1
         // If preMonthQty = 0 and currentMonthQty = 0, update change to 0
-        if (result.total.preMonthQty == 0) {
-            if (result.total.currentMonthQty == 0) result.total.change = 0
-            else result.total.change = 1
+        const checkResult1 = function () {
+            if (result.total.preMonthQty == 0) {
+                if (result.total.currentMonthQty == 0) result.total.change = 0
+                else result.total.change = 1
+            }
+            if (result.late.preMonthQty == 0) {
+                if (result.late.currentMonthQty == 0) result.late.change = 0
+                else result.late.change = 1
+            }
         }
-        if (result.late.preMonthQty == 0) {
-            if (result.late.currentMonthQty == 0) result.late.change = 0
-            else result.late.change = 1
+        const checkResult2 = function () {
+            if (result.amendment.preMonthQty == 0) {
+                if (result.amendment.currentMonthQty == 0) result.amendment.change = 0
+                else result.amendment.change = 1
+            }
+            if (result.cancel.preMonthQty == 0) {
+                if (result.cancel.currentMonthQty == 0) result.cancel.change = 0
+                else result.cancel.change = 1
+            }
         }
-        if (result.amendment.preMonthQty == 0) {
-            if (result.amendment.currentMonthQty == 0) result.amendment.change = 0
-            else result.amendment.change = 1
-        }
-        if (result.cancel.preMonthQty == 0) {
-            if (result.cancel.currentMonthQty == 0) result.cancel.change = 0
-            else result.cancel.change = 1
-        }
+        checkResult1()
+        checkResult2()
 
         result.total.change = checkNumber(result.total.change) ? result.total.change : 0
         result.late.change = checkNumber(result.late.change) ? result.late.change : 0
@@ -623,17 +620,9 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             return resultDataList;
         }
-        function initUnitInfo() {
-            if (user.userType == CONTENT.USER_TYPE.UNIT) {
-                if (user.unit) {
-                    selectedHub = user.unit;
-                }
-                if (user.subUnit) {
-                    selectedNode = user.subUnit;
-                }
-            }
-        }
-        initUnitInfo();
+        let result = initVehicleUnitInfo(user);
+        selectedHub = result.selectedHub ? result.selectedHub : selectedHub
+        selectedNode = result.selectedNode ? result.selectedNode : selectedNode
 
         //user unit info
         let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode);
@@ -665,14 +654,18 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
 
         //stat TO driver numbers
         let unitToInfoResult = await getUnitTOList(selectedHub, selectedNode, dbForamt, dateStr);
-        for (let unitInfo of resultUnitDataList) {
-            let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
-            if (unitToInfoList.length > 0) {
-                allUnitToNumber += unitToInfoList.length;
-                unitInfo.toNumber = unitToInfoList.length;
-                unitInfo.toIdList = unitToInfoList.map(toInfo => toInfo.driverId);
+
+        const updateUnitInfo = function () {
+            for (let unitInfo of resultUnitDataList) {
+                let unitToInfoList = unitToInfoResult.filter(item => item.unitId == unitInfo.unitId);
+                if (unitToInfoList.length) {
+                    allUnitToNumber += unitToInfoList.length;
+                    unitInfo.toNumber = unitToInfoList.length;
+                    unitInfo.toIdList = unitToInfoList.map(toInfo => toInfo.driverId);
+                }
             }
         }
+        updateUnitInfo()
 
         // month to workdays data
         let toMonthWorkdaysSql = `
@@ -687,7 +680,7 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
         for (let unitInfo of resultUnitDataList) {
             let unitToIdList = unitInfo.toIdList;
             let unitToDataList = [];
-            if (unitToIdList?.length > 0) {
+            if (unitToIdList.length) {
                 let planWorkDaysSelf = 0;
                 let planWorkDaysOthers = 0;
                 let actualWorkDaysSelf = 0;
@@ -761,6 +754,19 @@ const getTOUtilisationReport = async function (user, selectedYear, selectedMonth
     }
 }
 
+function initVehicleUnitInfo(user) {
+    let selectedHub = null, selectedNode = null
+    if (user.userType == CONTENT.USER_TYPE.UNIT) {
+        if (user.unit) {
+            selectedHub = user.unit;
+        }
+        if (user.subUnit) {
+            selectedNode = user.subUnit;
+        }
+    }
+    return { selectedHub, selectedNode }
+}
+
 const getVehicleUtilisationReport = async function (user, selectedYear, selectedMonth, selectedHub, selectedNode, vehicleType) {
     let resultDataList = {};
     try {
@@ -813,17 +819,10 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         if (user.userType == CONTENT.USER_TYPE.CUSTOMER || user.userType == CONTENT.USER_TYPE.LICENSING_OFFICER) {
             return resultDataList;
         }
-        function initVehicleUnitInfo() {
-            if (user.userType == CONTENT.USER_TYPE.UNIT) {
-                if (user.unit) {
-                    selectedHub = user.unit;
-                }
-                if (user.subUnit) {
-                    selectedNode = user.subUnit;
-                }
-            }
-        }
-        initVehicleUnitInfo();
+        let result = initVehicleUnitInfo(user);
+        selectedHub = result.selectedHub ? result.selectedHub : selectedHub
+        selectedNode = result.selectedNode ? result.selectedNode : selectedNode
+
         //user unit info
         let unitInfoResult = await getUserUnitInfos(user, selectedHub, selectedNode)
 
@@ -836,29 +835,33 @@ const getVehicleUtilisationReport = async function (user, selectedYear, selected
         let vehicleTypeList = await sequelizeObj.query(vehicleTypeSql, { type: QueryTypes.SELECT, replacements })
 
         let resultUnitDataList = [];
-        for(let unit of unitInfoResult) {
-            for (let vehicleType of vehicleTypeList) {
-                resultUnitDataList.push({
-                    unitId: unit.id,
-                    unitFullName: unit.unit + '/' + (unit.subUnit ? unit.subUnit : '-'),
-                    hub: unit.unit,
-                    node: unit.subUnit ? unit.subUnit : '-',
-                    vehicleType: vehicleType.vehicleName,
-                    vehicleNumber: 0,
-                    vehicleNoList: [],
-                    vehicleDatas: [],
-                    taskNumber: 0,
-                    planWorkDaysSelf: 0,
-                    planWorkDaysOthers: 0,
-                    actualWorkDaysSelf: 0,
-                    actualWorkDaysOthers: 0,
-                    vehicleLeaveDays: 0,
-                    vehicleHotoOutDays: 0,
-                    monthWorkDays: monthWorkDayNum
-                });
+        const getResultUnitDataList = function () {
+            for(let unit of unitInfoResult) {
+                for (let vehicleType of vehicleTypeList) {
+                    resultUnitDataList.push({
+                        unitId: unit.id,
+                        unitFullName: unit.unit + '/' + (unit.subUnit ? unit.subUnit : '-'),
+                        hub: unit.unit,
+                        node: unit.subUnit ? unit.subUnit : '-',
+                        vehicleType: vehicleType.vehicleName,
+                        vehicleNumber: 0,
+                        vehicleNoList: [],
+                        vehicleDatas: [],
+                        taskNumber: 0,
+                        planWorkDaysSelf: 0,
+                        planWorkDaysOthers: 0,
+                        actualWorkDaysSelf: 0,
+                        actualWorkDaysOthers: 0,
+                        vehicleLeaveDays: 0,
+                        vehicleHotoOutDays: 0,
+                        monthWorkDays: monthWorkDayNum
+                    });
+                }
             }
         }
-        if (resultUnitDataList.length == 0) {
+        getResultUnitDataList();
+        
+        if (resultUnitDataList.length) {
             return resultDataList;
         }
 
@@ -1319,6 +1322,7 @@ const getTOLicecsingReport2 = async function (params) {
                 dbForamt = '%Y';
                 dateStr = selectedYear;
             }
+            log.info('')
         }
         initParams();
 
@@ -2175,8 +2179,25 @@ module.exports = {
             `
             let limitHubNodeList = [], limitHubNodeReplacements = []
 
-            if (CONTENT.USER_TYPE.HQ == user.userType) {
+            const getLimitSql = async function () {
                 let { unitIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId)
+                    if (hub) {
+                        limitHubNodeList.push(` u.unit = ? `)
+                        limitHubNodeReplacements.push(hub)
+                    }
+                    if (node && node != '-') {
+                        limitHubNodeList.push(` u.subUnit = ? `)
+                        limitHubNodeReplacements.push(node)
+                    } else if (node == '-') {
+                        limitHubNodeList.push(` u.subUnit IS NULL `)
+                    }
+    
+                    if (unitIdList.length) {
+                        limitHubNodeList.push(` u.id in (?) `)
+                        limitHubNodeReplacements.push(unitIdList)
+                    }
+            }
+            const getLimitSql2 = async function () {
                 if (hub) {
                     limitHubNodeList.push(` u.unit = ? `)
                     limitHubNodeReplacements.push(hub)
@@ -2187,22 +2208,11 @@ module.exports = {
                 } else if (node == '-') {
                     limitHubNodeList.push(` u.subUnit IS NULL `)
                 }
-
-                if (unitIdList.length) {
-                    limitHubNodeList.push(` u.id in (?) `)
-                    limitHubNodeReplacements.push(unitIdList)
-                }
+            }
+            if (CONTENT.USER_TYPE.HQ == user.userType) {
+                await getLimitSql()
             } else {
-                if (hub) {
-                    limitHubNodeList.push(` u.unit = ? `)
-                    limitHubNodeReplacements.push(hub)
-                }
-                if (node && node != '-') {
-                    limitHubNodeList.push(` u.subUnit = ? `)
-                    limitHubNodeReplacements.push(node)
-                } else if (node == '-') {
-                    limitHubNodeList.push(` u.subUnit IS NULL `)
-                }
+                await getLimitSql2()
             }
 
             if (limitHubNodeList.length) {
@@ -2247,36 +2257,40 @@ module.exports = {
                 missing: 0,
                 nogoAlert: 0,
             }
-            for (let hubNode of hubNodeList) {
-                hubNode.speeding = 0
-                hubNode.hardBraking = 0
-                hubNode.rapidAcc = 0
-                hubNode.missing = 0
-                hubNode.nogoAlert = 0
-                for (let offence of offenceList) {
-                    if (offence.unitId == hubNode.unitId) {
-                        if (offence.violationType == CONTENT.ViolationType.Speeding) {
-                            hubNode.speeding = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.HardBraking) {
-                            hubNode.hardBraking = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.RapidAcc) {
-                            hubNode.rapidAcc = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.Missing) {
-                            hubNode.missing = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.NoGoZoneAlert) {
-                            hubNode.nogoAlert = offence.count
-                        } 
-                    }
-                }
-                
-                hubNode.total = hubNode.speeding + hubNode.hardBraking + hubNode.rapidAcc + hubNode.nogoAlert
 
-                all.total += hubNode.total
-                all.speeding += hubNode.speeding
-                all.hardBraking += hubNode.hardBraking
-                all.rapidAcc += hubNode.rapidAcc
-                all.nogoAlert += hubNode.nogoAlert
+            const initHubNodeList = function () {
+                for (let hubNode of hubNodeList) {
+                    hubNode.speeding = 0
+                    hubNode.hardBraking = 0
+                    hubNode.rapidAcc = 0
+                    hubNode.missing = 0
+                    hubNode.nogoAlert = 0
+                    for (let offence of offenceList) {
+                        if (offence.unitId == hubNode.unitId) {
+                            if (offence.violationType == CONTENT.ViolationType.Speeding) {
+                                hubNode.speeding = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.HardBraking) {
+                                hubNode.hardBraking = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.RapidAcc) {
+                                hubNode.rapidAcc = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.Missing) {
+                                hubNode.missing = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.NoGoZoneAlert) {
+                                hubNode.nogoAlert = offence.count
+                            } 
+                        }
+                    }
+                    
+                    hubNode.total = hubNode.speeding + hubNode.hardBraking + hubNode.rapidAcc + hubNode.nogoAlert
+    
+                    all.total += hubNode.total
+                    all.speeding += hubNode.speeding
+                    all.hardBraking += hubNode.hardBraking
+                    all.rapidAcc += hubNode.rapidAcc
+                    all.nogoAlert += hubNode.nogoAlert
+                }
             }
+            initHubNodeList()
 
             // filter 0
             hubNodeList = hubNodeList.filter(item => item.total != 0)
@@ -2334,7 +2348,7 @@ module.exports = {
             `
             let limitHubNodeList = [], limitHubNodeReplacements = []
 
-            if (CONTENT.USER_TYPE.HQ == user.userType) {
+            const getPermitSql1 = async function () { 
                 let { unitIdList } = await unitService.UnitUtils.getPermitUnitList(user.userId)
                 if (hub) {
                     limitHubNodeList.push(` u.unit = ? `)
@@ -2346,12 +2360,14 @@ module.exports = {
                 } else if (node == '-') {
                     limitHubNodeList.push(` u.subUnit IS NULL `)
                 }
-
+            
                 if (unitIdList.length) {
                     limitHubNodeList.push(` u.id in (?) `)
                     limitHubNodeReplacements.push(unitIdList)
                 }
-            } else {
+                log.info('')
+            }
+            const getPermitSql2 = async function () {
                 if (hub) {
                     limitHubNodeList.push(` u.unit = ? `)
                     limitHubNodeReplacements.push(hub)
@@ -2362,11 +2378,17 @@ module.exports = {
                 } else if (node == '-') {
                     limitHubNodeList.push(` u.subUnit IS NULL `)
                 }
-    
+            
                 if (driverId) {
                     limitHubNodeList.push(` us.driverId = ? `)
                     limitHubNodeReplacements.push(driverId)
                 }
+            }
+
+            if (CONTENT.USER_TYPE.HQ == user.userType) {
+                await getPermitSql1()
+            } else {
+                await getPermitSql2()
             }
 
             if (limitHubNodeList.length) {
@@ -2389,25 +2411,28 @@ module.exports = {
                 ) us ON us.driverId = th.deviceId 
                 WHERE th.dataFrom = 'mobile'
             `
-            if (dateTimeZone && dateTimeZone.length == 2) {
+            if (dateTimeZone?.length == 2) {
                 offenceSql += ` AND DATE(th.occTime) BETWEEN DATE(?) AND DATE(?) `
             }
             let limitOffenceHubNodeList = [], limitOffenceHubNodeReplacements = []
-            if (hub) {
-                limitOffenceHubNodeList.push(` us.hub = ? `)
-                limitOffenceHubNodeReplacements.push(hub)
+            const getLimitSql = function () {
+                if (hub) {
+                    limitOffenceHubNodeList.push(` us.hub = ? `)
+                    limitOffenceHubNodeReplacements.push(hub)
+                }
+                if (node && node != '-') {
+                    limitOffenceHubNodeList.push(` us.node = ? `)
+                    limitOffenceHubNodeReplacements.push(node)
+                } else if (node == '-') {
+                    limitHubNodeList.push(` us.node IS NULL `)
+                }
+    
+                if (driverId) {
+                    limitOffenceHubNodeList.push(` us.driverId = ? `)
+                    limitOffenceHubNodeReplacements.push(driverId)
+                }
             }
-            if (node && node != '-') {
-                limitOffenceHubNodeList.push(` us.node = ? `)
-                limitOffenceHubNodeReplacements.push(node)
-            } else if (node == '-') {
-                limitHubNodeList.push(` us.node IS NULL `)
-            }
-
-            if (driverId) {
-                limitOffenceHubNodeList.push(` us.driverId = ? `)
-                limitOffenceHubNodeReplacements.push(driverId)
-            }
+            getLimitSql()
 
             if (limitOffenceHubNodeList.length) {
                 offenceSql += ' AND ' + limitOffenceHubNodeList.join(' AND ')
@@ -2432,37 +2457,40 @@ module.exports = {
                 missing: 0,
                 nogoAlert: 0,
             }
-            for (let driver of driverList) {
-                driver.total = 0
-                driver.speeding = 0
-                driver.hardBraking = 0
-                driver.rapidAcc = 0
-                driver.missing = 0
-                driver.nogoAlert = 0
-                for (let offence of offenceList) {
-                    if (offence.driverId == driver.driverId) {
-                        if (offence.violationType == CONTENT.ViolationType.Speeding) {
-                            driver.speeding = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.HardBraking) {
-                            driver.hardBraking = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.RapidAcc) {
-                            driver.rapidAcc = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.Missing) {
-                            driver.missing = offence.count
-                        } else if (offence.violationType == CONTENT.ViolationType.NoGoZoneAlert) {
-                            driver.nogoAlert = offence.count
-                        } 
+            const initDriverList = function () {
+                for (let driver of driverList) {
+                    driver.total = 0
+                    driver.speeding = 0
+                    driver.hardBraking = 0
+                    driver.rapidAcc = 0
+                    driver.missing = 0
+                    driver.nogoAlert = 0
+                    for (let offence of offenceList) {
+                        if (offence.driverId == driver.driverId) {
+                            if (offence.violationType == CONTENT.ViolationType.Speeding) {
+                                driver.speeding = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.HardBraking) {
+                                driver.hardBraking = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.RapidAcc) {
+                                driver.rapidAcc = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.Missing) {
+                                driver.missing = offence.count
+                            } else if (offence.violationType == CONTENT.ViolationType.NoGoZoneAlert) {
+                                driver.nogoAlert = offence.count
+                            } 
+                        }
                     }
+    
+                    driver.total = driver.speeding + driver.hardBraking + driver.rapidAcc + driver.nogoAlert
+    
+                    all.total += driver.total
+                    all.speeding += driver.speeding
+                    all.hardBraking += driver.hardBraking
+                    all.rapidAcc += driver.rapidAcc
+                    all.nogoAlert += driver.nogoAlert
                 }
-
-                driver.total = driver.speeding + driver.hardBraking + driver.rapidAcc + driver.nogoAlert
-
-                all.total += driver.total
-                all.speeding += driver.speeding
-                all.hardBraking += driver.hardBraking
-                all.rapidAcc += driver.rapidAcc
-                all.nogoAlert += driver.nogoAlert
             }
+            initDriverList()
 
             // filter 0
             driverList = driverList.filter(item => item.total != 0)
