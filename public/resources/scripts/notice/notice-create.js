@@ -266,18 +266,21 @@ let currentNoticeID = null, currentNotice = null;
                 $('.notice-container>div:last-child').show()
             }
             
-            for (let item of data.toCategory) {
-                $('select[name="toCategory"]').append(`<option value="${ item }" ${ notice && notice.toCategory == item ? 'selected' : '' }>${ item }</option>`);
+            function buildPageHtml() {
+                for (let item of data.toCategory) {
+                    $('select[name="toCategory"]').append(`<option value="${ item }" ${ notice?.toCategory == item ? 'selected' : '' }>${ item }</option>`);
+                }
+                for (let item of data.toType) {
+                    $('select[name="toType"]').append(`<option value="${ item }" ${ notice?.toType == item ? 'selected' : '' }>${ item }</option>`);
+                }
+                for (let item of data.platform) {
+                    $('select[name="platform"]').append(`<option value="${ item }" ${ notice?.platform == item ? 'selected' : '' }>${ item }</option>`);
+                }
+                for (let item of groupList) {
+                    $('select[name="groupId"]').append(`<option value="${ item.id }" ${ notice?.groupId == item.id ? 'selected' : '' }>${ item.groupName }</option>`);
+                }
             }
-            for (let item of data.toType) {
-                $('select[name="toType"]').append(`<option value="${ item }" ${ notice && notice.toType == item ? 'selected' : '' }>${ item }</option>`);
-            }
-            for (let item of data.platform) {
-                $('select[name="platform"]').append(`<option value="${ item }" ${ notice && notice.platform == item ? 'selected' : '' }>${ item }</option>`);
-            }
-            for (let item of groupList) {
-                $('select[name="groupId"]').append(`<option value="${ item.id }" ${ notice && notice.groupId == item.id ? 'selected' : '' }>${ item.groupName }</option>`);
-            }
+            buildPageHtml();
         }
         const initAudience = async function (notice) {
             const getHubNodeRequest = async function () {
@@ -381,34 +384,37 @@ let currentNoticeID = null, currentNotice = null;
                 $('#edit-notice .modal-title').html('Edit Notice');
                 currentNoticeID = notice.id;
                 currentNotice = notice;
-                for (let key in notice) {
-                    if(key == 'startDateTime' || key == 'endDateTime') {
-                        $(`#edit-notice input[name=${ key }]`).val(moment(notice[key]).format('DD-MM-YYYY HH:mm'))
-                    } else if(key == 'scheduledTime') {
-                        if (notice[key]) {
-                            let time = notice[key].split(':').slice(0, 2).join(':')
-                            $(`#edit-notice input[name=${ key }]`).val(time)
+                function initEditPage() {
+                    for (let key in notice) {
+                        if(key == 'startDateTime' || key == 'endDateTime') {
+                            $(`#edit-notice input[name=${ key }]`).val(moment(notice[key]).format('DD-MM-YYYY HH:mm'))
+                        } else if(key == 'scheduledTime') {
+                            if (notice[key]) {
+                                let time = notice[key].split(':').slice(0, 2).join(':')
+                                $(`#edit-notice input[name=${ key }]`).val(time)
+                            }
+                        } else {
+                            $(`#edit-notice input[name=${ key }]`).val(notice[key])
+                            $(`#edit-notice textarea[name=${ key }]`).val(notice[key])
+                            $(`#edit-notice select[name=${ key }]`).val(notice[key]).trigger('change')
                         }
-                    } else {
-                        $(`#edit-notice input[name=${ key }]`).val(notice[key])
-                        $(`#edit-notice textarea[name=${ key }]`).val(notice[key])
-                        $(`#edit-notice select[name=${ key }]`).val(notice[key]).trigger('change')
-                    }
-                  
-                    // reload cover image
-                    if (notice.coverImage) {
-                        $('#edit-notice .coverImage-list').html(`
-                            <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="${ notice.coverImage }" />
-                        `);
-                    }
-
-                    // reload main image
-                    if (notice.mainImage) {
-                        $('#edit-notice .mainImage-list').html(`
-                            <img alt="" class="col-6 px-0" style="border-radius: 5px; width: auto;" src="${ notice.mainImage }" />
-                        `);
+                      
+                        // reload cover image
+                        if (notice.coverImage) {
+                            $('#edit-notice .coverImage-list').html(`
+                                <img alt="" class="col-6 px-0" style="border-radius: 5px; max-width: 100px;" src="${ notice.coverImage }" />
+                            `);
+                        }
+    
+                        // reload main image
+                        if (notice.mainImage) {
+                            $('#edit-notice .mainImage-list').html(`
+                                <img alt="" class="col-6 px-0" style="border-radius: 5px; width: auto;" src="${ notice.mainImage }" />
+                            `);
+                        }
                     }
                 }
+                initEditPage();
             }
         }
 
@@ -558,7 +564,7 @@ let currentNoticeID = null, currentNotice = null;
         layui.use('upload', function(){
             let upload = layui.upload;
             
-            let uploadCoverImage = upload.render({
+            upload.render({
                 elem: '.coverImage-select', 
                 url: '/upload/uploadImage', 
                 accept: 'images',
@@ -582,7 +588,7 @@ let currentNoticeID = null, currentNotice = null;
 
                 }
             });
-            let uploadMainImage = upload.render({
+            upload.render({
                 elem: '.mainImage-select', 
                 url: '/upload/uploadImage', 
                 accept: 'images',

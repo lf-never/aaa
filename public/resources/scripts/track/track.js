@@ -174,80 +174,59 @@ const initDriverAndDeviceList = async function (selectedDate) {
         });
 
     let data = [];
-	for (let result of resultList) {
-		if (result.type === 'mobile') {
-			let title = result.driverName ? result.driverName : '-';
+	
+    for (let result of resultList) {
+        if (result.type === 'mobile') {
+            let title = result.driverName || '-';
             // one driver maybe has few vehicle record, jasmin want to see only one driver from ui
-			// if (result.vehicleNo) title += ` (${ result.vehicleNo ? result.vehicleNo : '-' })`
-			let value = result.driverId + '_' + result.vehicleNo; // In case driverName with different vehicleNo
-			data.push({ 
-				title,
-				value, 
+            // if (result.vehicleNo) title += ` (${ result.vehicleNo ? result.vehicleNo : '-' })`
+            let value = result.driverId + '_' + result.vehicleNo; // In case driverName with different vehicleNo
+            data.push({ 
+                title,
+                value, 
                 driverId: result.driverId,
-				driverName: result.driverName ? result.driverName : '-',
-				// vehicleNo: result.vehicleNo ? result.vehicleNo : '-', 
-				type: 'mobile'
-		    });
-		} else if (result.type === 'obd') {
-			let title = result.vehicleNo ? result.vehicleNo : result.deviceId;
-			let value = result.deviceId + '_deviceId'; // In case deviceId === driverName
-			data.push({ 
-				title,
-				value, 
-				deviceId: result.deviceId, 
-				vehicleNo: result.vehicleNo ? result.vehicleNo : '-', 
-				type: 'obd'
-			});
-		}
-	}
-    // layui.use(['transfer'], function () {
-    //     transfer = layui.transfer;
-    //     transfer.render({
-    //         elem: '#convoy-select'
-    //         ,data: data
-    //         ,title: ['ALL', 'ALL']
-    //         ,showSearch: true
-    //         ,id: 'key-convoy-select'
-    //         ,text: {
-    //             none: 'No Data',
-    //             searchNone: 'No Data'
-    //         },
-    //         onchange: function (option, option2) {
-    //             let result = transfer.getData('key-convoy-select')
-    //             if (result.length > 1 || result.length == 0) {
-    //                 popupInfo('You should only select one target.');
-    //                 $('.search-user-position-history').addClass('disabled').attr('disabled', true).css('cursor', 'not-allowed')
-    //             } else {
-    //                 $('.search-user-position-history').removeClass('disabled').attr('disabled', false).css('cursor', 'pointer')
-    //             }
-    //         }
-    //     })
-        
-    //     $('#convoy-select .layui-input').attr('placeholder', 'Search')
-    // })
-
-    $('#convoy-select').empty();
-    let html = '<ul class="list-group list-group-flush">'
-    let index = 0
-    for (let item of data) {
-        index++;
-        html += `<li>
-            <div class="form-check">
-                <input class="form-check-input choose-device" type="radio" name="flexRadioDefault" id="flexRadioDefault${ index }" 
-                    data-type="${ item.deviceId ? 'obd' : 'mobile' }"
-                    data-driverId="${ item.driverId }"
-                    data-driverName="${ item.driverName }"
-                    data-deviceId="${ item.deviceId }"
-                    data-vehicleNo="${ item.vehicleNo }"
-                >
-                <label class="form-check-label" for="flexRadioDefault${ index }">
-                    ${ item.title }
-                </label>
-            </div>
-        </li>`
+                driverName: result.driverName || '-',
+                // vehicleNo: result.vehicleNo ? result.vehicleNo : '-', 
+                type: 'mobile'
+            });
+        } else if (result.type === 'obd') {
+            let title = result.vehicleNo || result.deviceId;
+            let value = result.deviceId + '_deviceId'; // In case deviceId === driverName
+            data.push({ 
+                title,
+                value, 
+                deviceId: result.deviceId, 
+                vehicleNo: result.vehicleNo || '-', 
+                type: 'obd'
+            });
+        }
     }
-    html += `</ul>`
-    $('#convoy-select').html(html);
+
+    function rebuildConvoySelectHtml() {
+        $('#convoy-select').empty();
+        let html = '<ul class="list-group list-group-flush">'
+        let index = 0
+        for (let item of data) {
+            index++;
+            html += `<li>
+                <div class="form-check">
+                    <input class="form-check-input choose-device" type="radio" name="flexRadioDefault" id="flexRadioDefault${ index }" 
+                        data-type="${ item.deviceId ? 'obd' : 'mobile' }"
+                        data-driverId="${ item.driverId }"
+                        data-driverName="${ item.driverName }"
+                        data-deviceId="${ item.deviceId }"
+                        data-vehicleNo="${ item.vehicleNo }"
+                    >
+                    <label class="form-check-label" for="flexRadioDefault${ index }">
+                        ${ item.title }
+                    </label>
+                </div>
+            </li>`
+        }
+        html += `</ul>`
+        $('#convoy-select').html(html);
+    }
+    rebuildConvoySelectHtml();
 };
 
 const searchHandler = async function () {
@@ -271,28 +250,32 @@ const searchHandler = async function () {
 
 
 
-    // clear marker
-    if (tempMarkerList.length) {
-        for (let tempLine of tempMarkerList) {
-            removeMapObject(tempLine);
+    function clearMapData() {
+        // clear marker
+        if (tempMarkerList.length) {
+            for (let tempLine of tempMarkerList) {
+                removeMapObject(tempLine);
+            }
+            tempMarkerList = [];
         }
-        tempMarkerList = [];
+    
+        // clear tempLine
+        if (tempLineList) {
+            for (let tempLine of tempLineList) {
+                removeMapObject(tempLine);
+            }
+            tempLineList = [];
+        }
+        // clear tempRoute
+        if (tempRouteList) {
+            for (let tempRoute of tempRouteList) {
+                removeMapObject(tempRoute);
+            }
+            tempRouteList = [];
+        }
     }
+    clearMapData();
 
-    // clear tempLine
-    if (tempLineList) {
-        for (let tempLine of tempLineList) {
-            removeMapObject(tempLine);
-        }
-        tempLineList = [];
-    }
-    // clear tempRoute
-    if (tempRouteList) {
-        for (let tempRoute of tempRouteList) {
-            removeMapObject(tempRoute);
-        }
-        tempRouteList = [];
-    }
     // clearInterval
     if (intervalList.length) {
         for (let interval of intervalList) clearInterval(interval);
@@ -560,19 +543,22 @@ const initSpeedChart = function () {
     $('.showRealTimeSpeed').attr('data-status', 'show')
 
     let list = []
-    if(tempTrackData){
-        for (let data of tempTrackData) {
-            if (data.list.length === 0) {
-                console.log(`There is no data about user ${ data.username }`)
-                continue;
-            }
-            for (let p of data.list) {
-                if (p.lat && p.lng) {
-                    list.push([ p.lat, p.lng, moment(p.createdAt).format('YYYY-MM-DD HH:mm:ss'), p.vehicleNo ?? p.deviceId, p.speed, data.limitSpeed, p.direction]);
+    function initListData() {
+        if(tempTrackData){
+            for (let data of tempTrackData) {
+                if (data.list.length === 0) {
+                    console.log(`There is no data about user ${ data.username }`)
+                    continue;
+                }
+                for (let p of data.list) {
+                    if (p.lat && p.lng) {
+                        list.push([ p.lat, p.lng, moment(p.createdAt).format('YYYY-MM-DD HH:mm:ss'), p.vehicleNo ?? p.deviceId, p.speed, data.limitSpeed, p.direction]);
+                    }
                 }
             }
         }
     }
+    initListData();
 
     if (list.length) {
         initTimeSlide(list);

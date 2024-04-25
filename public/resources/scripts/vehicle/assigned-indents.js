@@ -165,40 +165,48 @@ const initVehicleAssignedIndent = function(showMileageWarning) {
             {
                 "class": "text-center", "data": "endMileage", "title": "Action","orderable": false,
                 "render": function (data, type, full, meta) {
-                    if (data) {
-                        let operationList = full.operation.split(',')
-                        let editBtn = `
-                            <button class="btn btn-sm custom-btn-blue" style="margin-left: 20px;color: white;font-weight: bold;" 
-                                onclick="editTaskMileageInfo('${full.taskId}', ${full.startMileage}, ${full.endMileage})">Edit</button>
-                        `
-                        let endorseBtn = `
-                            <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 80px; background-color: #1B9063;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Endorsed')">Endorse</button>
-                            <button class="btn btn-sm custom-btn-gray" style="width: 80px;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Cancelled')">Cancel</button>
-                            <button class="btn btn-sm custom-btn-danger" style="width: 80px;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Rejected')">Reject</button>  
-                        `
-                        let approveBtn = `
-                            <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 80px; background-color: #1B9063;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Approved')">Approve</button>
-                            <button class="btn btn-sm custom-btn-gray" style="width: 80px;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Cancelled')">Cancel</button>  
-                            <button class="btn btn-sm custom-btn-danger" style="width: 80px;color: white;font-weight: bold;" 
-                                onclick="updateTaskMileageStatus('${full.taskId}', 'Rejected')">Reject</button>
-                        `
+                    if (!data) {
+                        return '-';
+                    }
+                    let operationList = full.operation.split(',')
+                    let editBtn = `
+                        <button class="btn btn-sm custom-btn-blue" style="margin-left: 20px;color: white;font-weight: bold;" 
+                            onclick="editTaskMileageInfo('${full.taskId}', ${full.startMileage}, ${full.endMileage})">Edit</button>
+                    `
+                    let endorseBtn = `
+                        <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 80px; background-color: #1B9063;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Endorsed')">Endorse</button>
+                        <button class="btn btn-sm custom-btn-gray" style="width: 80px;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Cancelled')">Cancel</button>
+                        <button class="btn btn-sm custom-btn-danger" style="width: 80px;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Rejected')">Reject</button>  
+                    `
+                    let approveBtn = `
+                        <button class="btn btn-sm" style="margin-left: 20px;border: solid 1px #1B9063; width: 80px; background-color: #1B9063;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Approved')">Approve</button>
+                        <button class="btn btn-sm custom-btn-gray" style="width: 80px;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Cancelled')">Cancel</button>  
+                        <button class="btn btn-sm custom-btn-danger" style="width: 80px;color: white;font-weight: bold;" 
+                            onclick="updateTaskMileageStatus('${full.taskId}', 'Rejected')">Reject</button>
+                    `
                         if (!full.status || full.status == 'Cancelled' || full.status == 'Rejected') {
-                            if (operationList.includes('Edit')) {
-                                return editBtn
-                            } else {
-                                return full.status ?? '-'
+                            function buildHtml1() {
+                                if (operationList.includes('Edit')) {
+                                    return editBtn
+                                } else {
+                                    return full.status ?? '-'
+                                }
                             }
+                            return buildHtml1();
                         } else if (full.status.toLowerCase() == 'edited') {
-                            if (operationList.includes('Endorse')) {
-                                return endorseBtn
-                            } else {
-                                return full.status ?? '-'
+                            function buildHtml2() {
+                                if (operationList.includes('Endorse')) {
+                                    return endorseBtn
+                                } else {
+                                    return full.status ?? '-'
+                                }
                             }
+                            return buildHtml2();
                         } else if (full.status.toLowerCase() == 'endorsed') {
                             if (operationList.includes('Approve')) {
                                 return approveBtn
@@ -208,8 +216,6 @@ const initVehicleAssignedIndent = function(showMileageWarning) {
                         } else if (full.status.toLowerCase() == 'approved') {
                             return 'Approved'
                         }
-                    }
-                    return "-"
                 }
             }
         ]

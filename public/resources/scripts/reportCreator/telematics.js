@@ -189,19 +189,22 @@ const createTaskReport = async function () {
     $('.div-report-data-filter > div').each(function () {
         let name = $(this).attr("data-filter")
         if (name == 'occTimeRange') {
-            filter['occTimeRange'] = $("#occTimeRange").val()
-            if (filter['occTimeRange']) {
-                if (filter['occTimeRange'].indexOf('~') != -1) {
-                    const dates = filter['occTimeRange'].split('~')
-                    if(dates.length > 0) {
-                        dates[0] = moment(dates[0], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
-                        dates[1] = moment(dates[1], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
-                        filter['occTimeRange'] = dates.join(' ~ ')
+            function initOccTimeRange() {
+                filter['occTimeRange'] = $("#occTimeRange").val()
+                if (filter['occTimeRange']) {
+                    if (filter['occTimeRange'].indexOf('~') != -1) {
+                        const dates = filter['occTimeRange'].split('~')
+                        if(dates.length > 0) {
+                            dates[0] = moment(dates[0], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
+                            dates[1] = moment(dates[1], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
+                            filter['occTimeRange'] = dates.join(' ~ ')
+                        }
+                    } else {
+                        filter['occTimeRange'] = moment(filter['occTimeRange'], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
                     }
-                } else {
-                    filter['occTimeRange'] = moment(filter['occTimeRange'], 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss')
                 }
             }
+            initOccTimeRange();
         } else if (name == "hubNode") {
             //let val = hubNodeFilterSelect.getValue()
             filter['hub'] = $("#hubFilter").val()

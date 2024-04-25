@@ -211,24 +211,29 @@ const createNoGoZoneHandler = async function () {
         if (alertType) {
             zone.alertType = 1
             let selectedWeeks = getSelectedWeeks();
-            if (!selectedWeeks.length) {
-                $.alert(`Please select week.`)
-                return
+            function checkParams() {
+                if (!selectedWeeks.length) {
+                    return `Please select week.`;
+                }
+                zone.selectedWeeks = selectedWeeks
+    
+                let selectedTimes = getSelectedTimes();
+                if (!selectedTimes.length) {
+                    return `Please select time.`;
+                }
+                zone.selectedTimes = selectedTimes
+    
+                let startDate = $('#startDate').val()
+                let endDate = $('#endDate').val()
+                if (!startDate || !endDate) {
+                    return `Please select date.`;
+                }
+                return null;
             }
-            zone.selectedWeeks = selectedWeeks
-
-            let selectedTimes = getSelectedTimes();
-            if (!selectedTimes.length) {
-                $.alert(`Please select time.`)
-                return
-            }
-            zone.selectedTimes = selectedTimes
-
-            let startDate = $('#startDate').val()
-            let endDate = $('#endDate').val()
-            if (!startDate || !endDate) {
-                $.alert(`Please select date.`)
-                return
+            let errorMsg = checkParams();
+            if (errorMsg) {
+                $.alert(errorMsg)
+                return;
             }
             zone.startDate = moment(startDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
             zone.endDate = moment(endDate, 'DD/MM/YYYY').format('YYYY-MM-DD')

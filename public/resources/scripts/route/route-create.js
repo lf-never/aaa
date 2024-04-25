@@ -25,18 +25,18 @@ let startMarker, endMarker, routeLineList = [];
 
 export async function initRouteCreatePage (route, type = 1) {
     const initSocketEvent = function (type) {
+        const transStrToLine = function (routePoints) {
+            let line = [];
+            routePoints.forEach(function (routePoint) {
+                if (routePoint !== '') {
+                    let point = routePoint.split(':');
+                    line.push({ lat: point[0], lng: point[1] });
+                }
+            });
+            return line;
+        }
+
         const initRouteLineFromMQ = function (message) {
-            const transStrToLine = function (routePoints) {
-                let line = [];
-                routePoints.forEach(function (routePoint) {
-                    if (routePoint !== '') {
-                        let point = routePoint.split(':');
-                        line.push({ lat: point[0], lng: point[1] });
-                    }
-                });
-                return line;
-            }
-            
             if (message.indexOf('-1') >= 0) {
                
                 customPopupInfo('Attention', 'Route cannot be found!');
@@ -59,29 +59,48 @@ export async function initRouteCreatePage (route, type = 1) {
             for (let line of lines) {
                 let routeInfoList = line.split('-');
                 for (let routeInfo of routeInfoList) {
-                    if (routeInfo.startsWith('d')) {
-                        distanceList.push(Number.parseInt(routeInfo.replace(/d\d=/g, '')));
+                    let startChar = routeInfo.substr(0, 1);
+                    switch(startChar) {
+                        case 'd':
+                            distanceList.push(Number.parseInt(routeInfo.replace(/d\d=/g, '')));
+                            // leave \t @2020/11/23 15:26
+                            let distance = Number.parseInt(routeInfo.replace(/d\d=/g, ''));
+                            let baseTimeNeed = distance / 1000;
+                            if (necessaryWaypoint) {
+                                timeList.push(Math.ceil(baseTimeNeed) + 30); // default add 30min
+                            } else {
+                                timeList.push(Math.ceil(baseTimeNeed));
+                            }
+                            break;
+                        case 'r':
+                            lineList.push(transStrToLine(routeInfo.replace(/r\d=/g, '').split(';')))
+                            break;
+                        case 'n':
+                            navigationList.push(routeInfo.replace(/n\d=/g, ''));
+                            break;
+                        case 'c':
+                            affectZoneList.push(routeInfo.replace(/c\d=/g, ''));
+                            break;
+                    }
+                    // if (routeInfo.startsWith('d')) {
+                    //     distanceList.push(Number.parseInt(routeInfo.replace(/d\d=/g, '')));
         
-                        // leave \t @2020/11/23 15:26
-                        let distance = Number.parseInt(routeInfo.replace(/d\d=/g, ''));
+                    //     // leave \t @2020/11/23 15:26
+                    //     let distance = Number.parseInt(routeInfo.replace(/d\d=/g, ''));
                         
-                        let baseTimeNeed = distance / 1000;
-                        if (necessaryWaypoint) {
-                            timeList.push(Math.ceil(baseTimeNeed) + 30); // default add 30min
-                        } else {
-                            timeList.push(Math.ceil(baseTimeNeed));
-                        }
-                    }
-                   
-                    else if (routeInfo.startsWith('r')) {
-                        lineList.push(transStrToLine(routeInfo.replace(/r\d=/g, '').split(';')))
-                    }
-                    else if (routeInfo.startsWith('n')) {
-                        navigationList.push(routeInfo.replace(/n\d=/g, ''));
-                    }
-                    else if (routeInfo.startsWith('c')) {
-                        affectZoneList.push(routeInfo.replace(/c\d=/g, ''));
-                    }
+                    //     let baseTimeNeed = distance / 1000;
+                    //     if (necessaryWaypoint) {
+                    //         timeList.push(Math.ceil(baseTimeNeed) + 30); // default add 30min
+                    //     } else {
+                    //         timeList.push(Math.ceil(baseTimeNeed));
+                    //     }
+                    // } else if (routeInfo.startsWith('r')) {
+                    //     lineList.push(transStrToLine(routeInfo.replace(/r\d=/g, '').split(';')))
+                    // } else if (routeInfo.startsWith('n')) {
+                    //     navigationList.push(routeInfo.replace(/n\d=/g, ''));
+                    // } else if (routeInfo.startsWith('c')) {
+                    //     affectZoneList.push(routeInfo.replace(/c\d=/g, ''));
+                    // }
                 }
 
                 // 2022-9-22: Jasmin: only get first one route

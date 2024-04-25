@@ -120,37 +120,6 @@ function isPoint(val) {
     return !!(isNumber(latlng[0]) && isNumber(latlng[1]));
 }
 
-function IsPtInPoly(ALon, ALat, APoints) {
-    let iSum = 0,
-        iCount;
-    let dLon1, dLon2, dLat1, dLat2, dLon;
-    if (APoints.length < 3) return false;
-    iCount = APoints.length;
-    for (let i = 0; i < iCount; i++) {
-        if (i === iCount - 1) {
-            dLon1 = APoints[i].lng;
-            dLat1 = APoints[i].lat;
-            dLon2 = APoints[0].lng;
-            dLat2 = APoints[0].lat;
-        } else {
-            dLon1 = APoints[i].lng;
-            dLat1 = APoints[i].lat;
-            dLon2 = APoints[i + 1].lng;
-            dLat2 = APoints[i + 1].lat;
-        }
-        if (((ALat >= dLat1) && (ALat < dLat2)) || ((ALat >= dLat2) && (ALat < dLat1))) {
-            if (Math.abs(dLat1 - dLat2) > 0) {
-                dLon = dLon1 - ((dLon1 - dLon2) * (dLat1 - ALat)) / (dLat1 - dLat2);
-                if (dLon < ALon)
-                    iSum++;
-            }
-        }
-    }
-    if (iSum % 2 !== 0)
-        return true;
-    return false;
-}
-
 // ************* PART FOR POPUP FUNC ****************
 
 function popupInfo(content, callBack) {

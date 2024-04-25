@@ -69,21 +69,24 @@ const initSpeedBandsHandler = async function () {
          */
 
         let roadType = ''
-        if (speedBands.RoadCategory == 'A') {
-            roadType = 'Expressways'
-        } else if (speedBands.RoadCategory == 'B') {
-            roadType = 'Major Arterial Roads'
-        } else if (speedBands.RoadCategory == 'C') {
-            roadType = 'Arterial Roads'
-        } else if (speedBands.RoadCategory == 'D') {
-            roadType = 'Minor Arterial Roads'
-        } else if (speedBands.RoadCategory == 'E') {
-            roadType = 'Small Roads'
-        } else if (speedBands.RoadCategory == 'F') {
-            roadType = 'Slip Roads'
-        } else if (speedBands.RoadCategory == 'G') {
-            roadType = 'No category info available'
-        } 
+        function initRoadType() {
+            if (speedBands.RoadCategory == 'A') {
+                roadType = 'Expressways'
+            } else if (speedBands.RoadCategory == 'B') {
+                roadType = 'Major Arterial Roads'
+            } else if (speedBands.RoadCategory == 'C') {
+                roadType = 'Arterial Roads'
+            } else if (speedBands.RoadCategory == 'D') {
+                roadType = 'Minor Arterial Roads'
+            } else if (speedBands.RoadCategory == 'E') {
+                roadType = 'Small Roads'
+            } else if (speedBands.RoadCategory == 'F') {
+                roadType = 'Slip Roads'
+            } else if (speedBands.RoadCategory == 'G') {
+                roadType = 'No category info available'
+            } 
+        }
+        initRoadType();
         
         let route = null
         

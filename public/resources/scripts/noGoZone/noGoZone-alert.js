@@ -52,32 +52,35 @@ const initNoGoZone = async function () {
         if (!currentDate) currentDate = moment().format('YYYY-MM-DD')
         currentDate = moment(currentDate, 'DD/MM/YYYY').format('YYYY-MM-DD')
     
-        for (let noGoZone of noGoZoneList) {
-            // check week
-            if (!checkWeek(noGoZone, currentDate)) continue;
-            // check time
-            if (!checkTime(noGoZone, currentDate)) continue;
-
-            let polygon = MapUtil.drawPolygon(noGoZone.polygon, { color: noGoZone.color, weight: 2 })
-            let html = `
-                <div class="py-2 px-2">
-                    <div class="row" style="min-width: 300px;">
-                        <div class="col-6 text-end pe-3 fw-bold">No Go Name: </div>
-                        <div class="col-6">${ noGoZone.zoneName }</div>
+        function buildNogoZonePage() {
+            for (let noGoZone of noGoZoneList) {
+                // check week
+                if (!checkWeek(noGoZone, currentDate)) continue;
+                // check time
+                if (!checkTime(noGoZone, currentDate)) continue;
+    
+                let polygon = MapUtil.drawPolygon(noGoZone.polygon, { color: noGoZone.color, weight: 2 })
+                let html = `
+                    <div class="py-2 px-2">
+                        <div class="row" style="min-width: 300px;">
+                            <div class="col-6 text-end pe-3 fw-bold">No Go Name: </div>
+                            <div class="col-6">${ noGoZone.zoneName }</div>
+                        </div>
+                        <div class="row mt-1" style="min-width: 300px;">
+                            <div class="col-6 text-end pe-3 fw-bold">Hub/Node/Group: </div>
+                            <div class="col-6">${ noGoZone.groupName || ( noGoZone.node ? `${ noGoZone.hub }/${ noGoZone.node }` : (noGoZone.hub ?? '-') ) }</div>
+                        </div>
+                        <div class="row mt-1" style="min-width: 300px;">
+                            <div class="col-6 text-end pe-3 fw-bold">Time Zone: </div>
+                            <div class="col-6">${ noGoZone.selectedTimes.split(',').join('<br>') }</div>
+                        </div>
                     </div>
-                    <div class="row mt-1" style="min-width: 300px;">
-                        <div class="col-6 text-end pe-3 fw-bold">Hub/Node/Group: </div>
-                        <div class="col-6">${ noGoZone.groupName ? noGoZone.groupName : ( noGoZone.node ? `${ noGoZone.hub }/${ noGoZone.node }` : (noGoZone.hub ?? '-') ) }</div>
-                    </div>
-                    <div class="row mt-1" style="min-width: 300px;">
-                        <div class="col-6 text-end pe-3 fw-bold">Time Zone: </div>
-                        <div class="col-6">${ noGoZone.selectedTimes.split(',').join('<br>') }</div>
-                    </div>
-                </div>
-            `
-            MapUtil.bindPopup(polygon, html, { offset: [ 0, 300 ] })
-            noGoZonePolygonList.push(polygon)
+                `
+                MapUtil.bindPopup(polygon, html, { offset: [ 0, 300 ] })
+                noGoZonePolygonList.push(polygon)
+            }
         }
+        buildNogoZonePage();
     } 
 }
 
