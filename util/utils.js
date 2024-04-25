@@ -8,6 +8,8 @@ const path = require('path');
 
 const log = require('../log/winston').logger('Utils');
 
+let systemConfig = jsonfile.readFileSync('./conf/systemConf.json')
+
 module.exports.response = function (code, respMessage) {
     // log.info('(Response): ', JSON.stringify(respMessage));
     return {
@@ -40,7 +42,9 @@ module.exports.generateMD5Code = function (str) {
 
 // 2023-08-29 encipherment.
 module.exports.generateAESCode = function (str) {
-    const ciper = crypto.createCipheriv('aes128', '0123456789abcdef', '0123456789abcdef');
+    let key = systemConfig.aesKey;
+    let iv = systemConfig.aesIv;
+    const ciper = crypto.createCipheriv('aes128', key, iv);
     let returnStr = ciper.update(str, 'utf8', 'hex');
     returnStr += ciper.final('hex');
     return returnStr;
@@ -48,7 +52,9 @@ module.exports.generateAESCode = function (str) {
 
 // 2023-08-29 decode.
 module.exports.decodeAESCode = function (str) {
-    const deciper = crypto.createDecipheriv('aes128', '0123456789abcdef', '0123456789abcdef');
+    let key = systemConfig.aesKey;
+    let iv = systemConfig.aesIv;
+    const deciper = crypto.createDecipheriv('aes128', key, iv);
     let descrped = deciper.update(str, 'hex', 'utf8');
     descrped += deciper.final('utf8')
     return descrped;

@@ -4,6 +4,7 @@ const path = require('path');
 const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const jsonfile = require('jsonfile')
 const ejs = require('ejs');
 const cors = require('cors');
 
@@ -13,6 +14,8 @@ const helmet = require('helmet');
 const crypto = require('crypto');
 
 const app = express();
+
+let systemConfig = jsonfile.readFileSync('./conf/systemConf.json')
 
 require('./log/winston').initLogger()
 const log = require('./log/winston').logger('APP');
@@ -62,7 +65,7 @@ app.use(bodyParser.json({limit: '10mb'}));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(session({
-	secret: 'personal-session',
+	secret: systemConfig.sessionSecret,
 	resave: false,
 	saveUninitialized: false
 }));
