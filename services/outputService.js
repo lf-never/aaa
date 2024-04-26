@@ -7,6 +7,7 @@ const fs = require('graceful-fs');
 const readline = require('readline')
 const { openSync, closeSync, appendFileSync } = require('fs');
 const moment = require('moment');
+const path = require('path');
 
 const checkFilePath = function (path) {
     try {
@@ -68,6 +69,13 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
         }
         return new Promise((resolve, reject) => {
             try {
+                filePath = filePath.replace(/%2e/ig, '.')
+                filePath = filePath.replace(/%2f/ig, '/')
+                filePath = filePath.replace(/%5c/ig, '\\')
+                filePath = filePath.replace(/^[/\\]?/, '/')
+                filePath = filePath.replace(/[/\\]\.\.[/\\]/, '/')
+                filePath = path.normalize(filePath).replace(/\\/g, '/').slice(1)
+
                 let rl = readline.createInterface({
                     input: fs.createReadStream(filePath)
                 })
