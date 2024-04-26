@@ -65,6 +65,13 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
         deviceId = deviceId.replace(/^[/\\]?/, '/')
         deviceId = deviceId.replace(/[/\\]\.\.[/\\]/, '/')
         deviceId = path.normalize(deviceId).replace(/\\/g, '/').slice(1)
+
+        date = date.replace(/%2e/ig, '.')
+        date = date.replace(/%2f/ig, '/')
+        date = date.replace(/%5c/ig, '\\')
+        date = date.replace(/^[/\\]?/, '/')
+        date = date.replace(/[/\\]\.\.[/\\]/, '/')
+        date = path.normalize(date).replace(/\\/g, '/').slice(1)
         
         let filePath = `${ conf.dataPath }/${ deviceId }/${ date }.txt`
         
