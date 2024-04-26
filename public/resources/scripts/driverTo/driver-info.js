@@ -344,7 +344,7 @@ const buildSimplePermitTypeMileageHtml = function(totalMileage, permitTypeStat) 
     $allPercentageDiv.empty();
     $allPercentageDiv.append(allPerHtml);
     $percentageDiv.find(".color-templete-div").remove();
-    $percentageDiv.append(perItemHtml);
+    $percentageDiv.append(DOMPurify.sanitize(perItemHtml));
 }
 
 const buildDetailPermitTypeMileageHtml = function(totalMileage, permitTypeStat) {
@@ -400,7 +400,7 @@ const buildDetailPermitTypeMileageHtml = function(totalMileage, permitTypeStat) 
     }
 
     $permitTypeDiv.empty();
-    $permitTypeDiv[0].innerHTML = baseHtml;
+    $permitTypeDiv[0].innerHTML = DOMPurify.sanitize(baseHtml);
 }
 
 const formatNumber = function(str, splitStr = ',') {
