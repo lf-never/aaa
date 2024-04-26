@@ -16,6 +16,7 @@ const { loan } = require('../model/loan');
 const { loanRecord } = require('../model/loanRecord');
 const { OperationRecord } = require('../model/operationRecord.js');
 const unitService = require('../services/unitService');
+const moment = require('moment');
 
 let TaskUtils = {
     findUser: async function (userId) {
@@ -116,9 +117,8 @@ let TaskUtils = {
                 SELECT b.id as taskId, a.referenceId, a.tripNo, b.createdAt, a.preParkDate, b.executionDate, d.vehicleNumber, 
                 b.executionTime, b.driverNo, a.noOfDriver, a.vehicleType, b.mobiusUnit, a.pickupDestination,r.purposeType,
                 a.dropoffDestination,b.poc,b.pocNumber,c.\`name\`, c.contactNumber, c.nric, c.driverId, a.instanceId, 
-                DATE_FORMAT(b.startDate, '%Y-%m-%d %H:%i:%s') as startDate, 
-                DATE_FORMAT(b.endDate, '%Y-%m-%d %H:%i:%s') as endDate,
-                if(b.taskStatus != 'unassigned', 
+                b.startDate, b.endDate,
+                if(b.taskStatus = 'assigned', 
                     if(c.\`status\` is null, if(d.vehicleStatus = 'available', 'Assigned', d.vehicleStatus), c.\`status\`)
                 , b.taskStatus) as taskStatus
                 FROM (
@@ -134,19 +134,36 @@ let TaskUtils = {
         `;
         replacements.push(operationList)
         let sql2 = `
-            SELECT COUNT(sys.id) jobTotal, sys.taskStatus FROM (
-                SELECT a.serviceTypeId, a.vehicleType, b.createdAt, b.executionDate, 
-                d.vehicleNumber, c.\`name\`, b.endDate, b.id, a.tripNo, b.mobiusUnit,
-                if(b.taskStatus != 'unassigned', 
-                    if(c.\`status\` is null, if(d.vehicleStatus = 'available', 'Assigned', d.vehicleStatus), c.\`status\`)
-                , b.taskStatus) as taskStatus
+            SELECT COUNT(*) jobTotal FROM (
+                SELECT a.vehicleType, b.createdAt, b.executionDate, 
+                b.endDate, b.id, a.tripNo, b.mobiusUnit,
+                ${
+                    vehicleType || vehicleNo ? ` d.vehicleNumber,` : ''
+                }
+                ${
+                    driverName ? ` c.\`name\`, ` : ''
+                }
+                ${
+                    taskStatus ? ` 
+                        if(b.taskStatus = 'assigned', 
+                            if(c.\`status\` is null, if(d.vehicleStatus = 'available', 'Assigned', d.vehicleStatus), c.\`status\`)
+                        , b.taskStatus) as taskStatus,
+                    ` : ''
+                }
+                a.serviceTypeId
                 FROM (
-                    SELECT createdAt, executionDate, endDate, id, tripId, mobiusUnit, taskStatus from job_task 
+                    SELECT id, createdAt, executionDate, executionTime, driverNo, mobiusUnit, 
+                    poc, pocNumber, startDate, endDate, taskStatus, tripId from job_task 
                     where (taskStatus = 'unassigned' OR taskStatus = 'assigned')
                 ) b
                 LEFT JOIN  job a ON a.id = b.tripId
-                LEFT JOIN driver c ON b.id = c.taskId
-                LEFT JOIN vehicle d ON b.id = d.taskId
+                ${
+                    (vehicleType || vehicleNo) || driverName || taskStatus ? `
+                    LEFT JOIN driver c ON b.id = c.taskId
+                    LEFT JOIN vehicle d ON b.id = d.taskId
+                    ` : ''
+                }
+
                 LEFT JOIN request r ON a.requestId = r.id 
                 where a.approve = 1 and r.purposeType != 'Urgent'
         `
@@ -173,31 +190,34 @@ let TaskUtils = {
         }
         await initServiceTypeSql()
 
-        // 2024-02-20 atms indent 
-        if(taskType) {
-            if(taskType == 'sys') {
-                sql += ` and a.referenceId is null `
-                sql2 += ` and a.referenceId is null `
-            } else if(taskType == 'atms') {
-                sql += ` and a.referenceId is not null `
-                sql2 += ` and a.referenceId is not null `
+        const initTypeDateSql = function (){
+            // 2024-02-20 atms indent 
+            if(taskType) {
+                if(taskType == 'sys') {
+                    sql += ` and a.referenceId is null `
+                    sql2 += ` and a.referenceId is null `
+                } else if(taskType == 'atms') {
+                    sql += ` and a.referenceId is not null `
+                    sql2 += ` and a.referenceId is not null `
+                }
+            }
+            
+            if (vehicleType) {
+                sql += ` and a.vehicleType = ?`
+                sql2 += ` and a.vehicleType = ?`
+                replacements.push(vehicleType)
+                replacements2.push(vehicleType)
+            }
+        
+            if (created_date) {
+                sql += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
+                sql2 += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
+                replacements.push(created_date)
+                replacements2.push(created_date)
             }
         }
+        initTypeDateSql()
         
-        if (vehicleType) {
-            sql += ` and a.vehicleType = ?`
-            sql2 += ` and a.vehicleType = ?`
-            replacements.push(vehicleType)
-            replacements2.push(vehicleType)
-        }
-       
-        if (created_date) {
-            sql += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
-            sql2 += ` and DATE_FORMAT(b.createdAt,'%Y-%m-%d') = ?`
-            replacements.push(created_date)
-            replacements2.push(created_date)
-        }
-
         const initExecutionDateSql = function (){
             if (execution_date) {
                 if (execution_date.indexOf('~') != -1) {
@@ -376,6 +396,8 @@ module.exports = {
                         }
 
                         if(loanByTaskId) {
+                            item.startDate = moment(item.startDate).format('YYYY-MM-DD HH:mm:ss')
+                            item.endDate = moment(item.endDate).format('YYYY-MM-DD HH:mm:ss')
                             let taskByVehicleOrDriverSql = `
                                 SELECT taskId, driverId, vehicleNumber, vehicleStatus 
                                 FROM task 

@@ -786,6 +786,7 @@ module.exports.getVehicleTasks = async function (req, res) {
                     }
                 }
                 buildAdminParams();
+                return true;
             }
         }
         let result = await initPermitSql();

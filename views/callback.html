@@ -77,25 +77,29 @@
                 nric: nric,
             }).then(res => {
                 if(res.data.respCode == 0) {
-                    layui.use('layer', function () {
-                        let layer = layui.layer;
-                        layer.ready(function() {
-                            layer.open({
-                                title: 'Login Fail',
-                                content: res.data.respMessage,
-                                btn: ['Ok'],
-                                yes: function (index) {
-                                    layer.close(index);
-                                    window.location = '/login';
-                                }
-                            });
-                        });
-                    });
+                    loginError(res.data.respMessage);
                 } else {
                     window.location = '/'
                 }
             });
         };
+
+        const loginError = function(msg) {
+            layui.use('layer', function () {
+                let layer = layui.layer;
+                layer.ready(function() {
+                    layer.open({
+                        title: 'Login Fail',
+                        content: msg,
+                        btn: ['Ok'],
+                        yes: function (index) {
+                            layer.close(index);
+                            window.location = '/login';
+                        }
+                    });
+                });
+            });
+        }
     </script>
 </body>
 </html>

@@ -2268,8 +2268,8 @@ const vehicleReportExcel = async function (reportGroupSelectionTitle, datas, rep
         pmCompleteTime = pmCompleteTime ? moment(pmCompleteTime).format('YYYY-MM-DD HH:mm') : null
         aviCompleteTime = aviCompleteTime ? moment(aviCompleteTime).format('YYYY-MM-DD HH:mm') : null
 
-        odometer = odometer ? odometer : 0
-        limitSpeed = limitSpeed ? limitSpeed : 0
+        odometer = odometer ?? 0
+        limitSpeed = limitSpeed ?? 0
         let days = apartDays(nextWpt1Time)
         days = days > 0 ? days : ''
         let days2 = apartDays(nextWpt2Time)
@@ -2447,8 +2447,8 @@ module.exports.getVehicleReportList = async function (req, res) {
                                 break;
                         }
                     })
+                    let screeningCondition = [];
                     const checkScreenCondition = function () {
-                        let screeningCondition = [];
                         if (MPTCompletionDateRange?.indexOf(' - ') != -1) {
                             let dates = MPTCompletionDateRange.split(' - ')
                             if(item.mptCompleteTime){

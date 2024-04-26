@@ -99,6 +99,7 @@ const initSelectedAndPage = async function () {
                 trigger: 'click',
                 range: '~',
                 btns: ['clear', 'confirm'],
+                value: `${moment().format("DD/MM/YYYY")} ~ ${moment().add(2, 'weeks').format("DD/MM/YYYY")}`,
                 done: function () {
                     tableReload()
                 }

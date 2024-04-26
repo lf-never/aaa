@@ -370,6 +370,15 @@ const initDrawRoute = function (driverList) {
 
 const showTracking = function () {
     // tempTrackData = [{ userName, vehicleNo, list }, ...]
+    const buildPointList = function() {
+        let points = []; // use for draw marker
+        for (let p of data.list) {
+            if (p.lat && p.lng) {
+                points.push([ p.lat, p.lng, moment(p.createdAt).format('YYYY-MM-DD HH:mm:ss'), p.vehicleNo ?? p.deviceId, p.speed, p.direction]);
+            }
+        }
+        return points;
+    }
     if(tempTrackData){
         for (let data of tempTrackData) {
             if (data.list.length === 0) {
@@ -377,16 +386,8 @@ const showTracking = function () {
                 popupInfo(`There is no data between ${ $('.selectTime').html() }`)
                 continue;
             }
-            let points = []; // use for draw marker
-            let __tempPoints = []; // use for draw history
-            for (let p of data.list) {
-                if (p.lat && p.lng) {
-                    points.push([ p.lat, p.lng, moment(p.createdAt).format('YYYY-MM-DD HH:mm:ss'), p.vehicleNo ?? p.deviceId, p.speed, p.direction]);
-                    __tempPoints.push(p);
-                }
-            }
             
-            __tempPoints = [];
+            let points = buildPointList();
     
             // let popTitle = data.type !== 'mobile' ? data.username : `${ data.username } (${ data.vehicleNo })`
             let popTitle = data.type !== 'mobile' ? data.username : `${ data.username }`
