@@ -59,23 +59,21 @@ const readFile = function (deviceId, vehicleNo, date, timezone) {
             throw Error(`Wrong timezone ${ JSON.stringify(timezone) }`)
         }
 
-        deviceId = utils.getSafePath(deviceId);
-        date = utils.getSafePath(date);
+        deviceId = deviceId.replace(/%2e/ig, '.')
+        deviceId = deviceId.replace(/%2f/ig, '/')
+        deviceId = deviceId.replace(/%5c/ig, '\\')
+        deviceId = deviceId.replace(/^[/\\]?/, '/')
+        deviceId = deviceId.replace(/[/\\]\.\.[/\\]/, '/')
+        deviceId = path.normalize(deviceId).replace(/\\/g, '/').slice(1)
         
         let filePath = `${ conf.dataPath }/${ deviceId }/${ date }.txt`
+        
         if (!checkFileExist(filePath)) {
             log.error(`${ filePath } does not exist.`);
             return [];
         }
         return new Promise((resolve, reject) => {
             try {
-                filePath = filePath.replace(/%2e/ig, '.')
-                filePath = filePath.replace(/%2f/ig, '/')
-                filePath = filePath.replace(/%5c/ig, '\\')
-                filePath = filePath.replace(/^[/\\]?/, '/')
-                filePath = filePath.replace(/[/\\]\.\.[/\\]/, '/')
-                filePath = path.normalize(filePath).replace(/\\/g, '/').slice(1)
-
                 let rl = readline.createInterface({
                     input: fs.createReadStream(filePath)
                 })
