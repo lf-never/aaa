@@ -1117,12 +1117,10 @@ const viewVehicleEventHandler = async function () {
     const clearVehicleMarker = function () {
         for (let marker of vehicleMarkerList) {
             MapUtil.removeMapObject(marker)
-            marker = null
         }
         vehicleMarkerList = []
         for (let marker of obdMarkerList) {
             MapUtil.removeMapObject(marker)
-            marker = null
         }
         obdMarkerList = []
     }
