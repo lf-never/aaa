@@ -561,7 +561,10 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
             for (let driver of driverList) {
                 let list = [];
                 try {
-                    list = await outputService.readFromFile(driver.driverId, null, [startDateTime, endDateTime])
+                    let dbDriver = await Driver.findByPk(driver.driverId);
+                    if (dbDriver) {
+                        list = await outputService.readFromFile(dbDriver.driverId, null, [startDateTime, endDateTime])
+                    }
                 } catch (error) {
                     log.error(error);
                 }
@@ -582,7 +585,10 @@ module.exports.getDriverAndDevicePositionList = async function (req, res) {
             for (let device of deviceList) {
                 let list = [];
                 try {
-                    list = await outputService.readFromFile(device.deviceId, null, [startDateTime, endDateTime])
+                    let dbDevice = await Device.findByPk(device.deviceId);
+                    if (dbDevice) {
+                        list = await outputService.readFromFile(dbDevice.deviceId, null, [startDateTime, endDateTime])
+                    }
                 } catch (error) {
                     log.error(error);
                 }
