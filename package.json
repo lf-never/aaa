@@ -20,7 +20,7 @@
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
-    "debug": "~2.2.0",
+    "debug": "~2.6.9",
     "destroy": "^1.0.4",
     "echarts": "^5.3.1",
     "ejs": "^3.1.8",
