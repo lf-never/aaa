@@ -46,7 +46,7 @@
     "leaflet.markercluster": "^1.5.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
-    "mqtt": "^4.2.8",
+    "mqtt": "^5.0.0",
     "mysql2": "^3.9.7",
     "node-fetch": "^2.6.2",
     "node-jose": "^2.2.0",
